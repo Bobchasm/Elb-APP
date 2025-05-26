@@ -1,0 +1,36 @@
+#dmj
+spring:
+  application:
+    name: elm_bk
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/elm
+    username: root
+    password: dmj142857
+logging:
+  level:
+    org.springframework.jdbc.support.JdbcTransactionManager: debug
+#cy
+#spring:
+#  application:
+#    name: elm_bk
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/elm
+#    username: root
+#    password: dmj142857
+#logging:
+#  level:
+#    org.springframework.jdbc.support.JdbcTransactionManager: debug
+#gc
+#spring:
+#  application:
+#    name: elm_bk
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/elm
+#    username: root
+#    password: dmj142857
+#logging:
+#  level:
+#    org.springframework.jdbc.support.JdbcTransactionManager: debug
