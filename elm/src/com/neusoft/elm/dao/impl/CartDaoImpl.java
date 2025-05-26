@@ -52,8 +52,7 @@ public class CartDaoImpl implements CartDao{
     @Override
     public int removeCart(Cart cart) throws Exception{
         int result = 0;
-        StringBuffer sql = new StringBuffer("delete from cart where userId=? and businessId=?
-                ");
+        StringBuffer sql = new StringBuffer("delete from cart where userId=? and businessId=? ");
         if(cart.getFoodId()!=null) {
             sql.append(" and foodId="+cart.getFoodId());
         }

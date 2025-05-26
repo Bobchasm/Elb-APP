@@ -83,8 +83,7 @@ public class DeliveryAddressDaoImpl implements DeliveryAddressDao{
     @Override
     public int updateDeliveryAddress(DeliveryAddress deliveryAddress) throws Exception{
         int result = 0;
-        String sql = "update deliveryAddress set
-        contactName=?,contactSex=?,contactTel=?,address=? where daId=?";
+        String sql = "update deliveryAddress set contactName=?,contactSex=?,contactTel=?,address=? where daId=?";
         try {
             con = DBUtil.getConnection();
             pst = con.prepareStatement(sql);
