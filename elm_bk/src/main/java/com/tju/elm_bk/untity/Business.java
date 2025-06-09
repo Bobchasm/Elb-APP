@@ -9,6 +9,9 @@ public class Business {
     private double starPrice; //起送费
     private double deliveryPrice; //配送费
     private String remarks;
+    private int monthSales;
+    private String phoneNumber;
+    private String password;
 
     //get、set ... ...
 
@@ -56,6 +59,22 @@ public class Business {
         return orderTypeId;
     }
 
+    public int getMonthSales() {
+        return monthSales;
+    }
+
+    public void setMonthSales(int monthSales) {
+        this.monthSales = monthSales;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
     public void setOrderTypeId(Integer orderTypeId) {
         this.orderTypeId = orderTypeId;
     }
@@ -82,5 +101,13 @@ public class Business {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
