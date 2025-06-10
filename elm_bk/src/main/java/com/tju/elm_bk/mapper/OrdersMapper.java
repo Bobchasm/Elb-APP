@@ -28,5 +28,5 @@ public interface OrdersMapper {
         int completeOrder(Integer orderId);
 
         @Select("select odId from orderdetailet where orderId=#{orderId}")
-        public List<Integer> listOdIdByOrderId(Orders orders);
+        public List<Integer> listOdIdByOrderId(Integer orderId);
 }

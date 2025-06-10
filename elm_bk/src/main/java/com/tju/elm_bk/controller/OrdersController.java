@@ -66,13 +66,13 @@ public class OrdersController {
         return ordersService.completeOrder(orderId);
     }
 
-    @PostMapping("/listOrderDetailetByOrderId")
-        public List<OrderDetailet> listOrderDetailetByOrderId(@RequestBody Orders orders){
-            return ordersService.listOrderDetailetByOrderId(orders);
+    @GetMapping("/listOrderDetailetByOrderId")
+        public List<OrderDetailet> listOrderDetailetByOrderId(@RequestParam Integer orderId){
+            return ordersService.listOrderDetailetByOrderId(orderId);
     }
     
-    @RequestMapping("/listOdIdByOrderId")
-        public List<Integer> listOdIdByOrderId(@RequestBody Orders orders){
-            return ordersService.listOdIdByOrderId(orders);
+    @GetMapping("/listOdIdByOrderId")
+        public List<Integer> listOdIdByOrderId(@RequestParam Integer orderId){
+            return ordersService.listOdIdByOrderId(orderId);
     }
 }

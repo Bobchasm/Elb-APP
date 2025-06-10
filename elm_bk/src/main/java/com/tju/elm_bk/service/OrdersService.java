@@ -12,7 +12,7 @@ public interface OrdersService {
     public Orders getOrdersById(Integer orderId);
     public List<Orders> listOrdersByUserId(String userId);
     public int completeOrder(Integer orderId);
-    public List<OrderDetailet> listOrderDetailetByOrderId(Orders orders);
+    public List<OrderDetailet> listOrderDetailetByOrderId(Integer orderId);
  
-    public List<Integer> listOdIdByOrderId(Orders orders);
+    public List<Integer> listOdIdByOrderId(Integer orderId);
 }

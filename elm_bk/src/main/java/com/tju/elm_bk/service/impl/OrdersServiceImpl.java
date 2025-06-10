@@ -111,8 +111,8 @@ public class OrdersServiceImpl implements OrdersService {
         }
     }
 
-    public List<OrderDetailet> listOrderDetailetByOrderId(Orders orders){
-        List<OrderDetailet> orderDetails = orderDetailetMapper.listOrderDetailetByOrderId(orders.getOrderId());
+    public List<OrderDetailet> listOrderDetailetByOrderId(Integer orderId){
+        List<OrderDetailet> orderDetails = orderDetailetMapper.listOrderDetailetByOrderId(orderId);
         
         // 为每个订单明细填充食品信息
         for (OrderDetailet detail : orderDetails) {
@@ -125,8 +125,8 @@ public class OrdersServiceImpl implements OrdersService {
 	
 	
 	
-	public List<Integer> listOdIdByOrderId(Orders orders){
-		 return ordersMapper.listOdIdByOrderId(orders);
+	public List<Integer> listOdIdByOrderId(Integer orderId){
+		 return ordersMapper.listOdIdByOrderId(orderId);
 	 }
 
 }
