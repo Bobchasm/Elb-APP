@@ -35,7 +35,11 @@ public interface BusinessMapper {
             + " WHERE b.businessId =#{businessId}")
     public int updateBusiness(Business business);
 
-
+    @Update("UPDATE business_user a SET a.businessAddress =#{businessAddress}, a.businessExplain =#{businessExplain},  a.businessName =#{businessName},"
+            + " a.starPrice =#{starPrice},"
+            + " a.deliveryPrice =#{deliveryPrice}"
+            + " WHERE a.businessId =#{businessId}")
+            public int updateBusinessUser(Business business);
 
     @Select("SELECT * FROM elm.business where businessId in\r\n" +
             "(SELECT business.businessId FROM elm.food right join elm.business on food.businessId=business.businessId "

@@ -2,11 +2,13 @@ package com.tju.elm_bk.controller;
 
 import com.tju.elm_bk.service.BusinessService;
 import com.tju.elm_bk.untity.Business;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/BusinessController")
 public class BusinessController {
@@ -37,6 +39,7 @@ public class BusinessController {
 
     @PostMapping("/updateBusiness")
     public int updateBusiness(@RequestBody Business business) throws Exception {
+        log.info("hhh");
         return businessService.updateBusiness(business);
     }
 
