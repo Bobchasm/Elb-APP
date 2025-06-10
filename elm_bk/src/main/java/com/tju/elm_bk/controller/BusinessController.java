@@ -27,12 +27,12 @@ public class BusinessController {
 
     /**
      * 根据商家编号查询商家信息
-     * @param business 商家编号
+     * @param businessId 商家编号
      * @return 商家详情
      */
-    @PostMapping("/getBusinessById")
-    public Business getBusinessById(@RequestBody Business business) {
-        return businessService.getBusinessById(business);
+    @GetMapping("/getBusinessById")
+    public Business getBusinessById(@RequestParam Integer businessId) {
+        return businessService.getBusinessById(businessId);
     }
 
     @PostMapping("/updateBusiness")

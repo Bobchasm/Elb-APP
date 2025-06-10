@@ -128,29 +128,31 @@ export default {
             }
 
             // 获取商家信息
-            axios.post('BusinessController/getBusinessById', {
-                businessId: businessUser.businessId
-            }).then(response => {
-                if (response.data) {
-                    // 填充已有的商家信息到表单中
-                    const business = response.data;
-                    user.userName = business.businessName || '';
-                    user.userAddress = business.businessAddress || '';
-                    user.userExplain = business.businessExplain || '';
-                    user.userImg = business.businessImg || '';
-                    user.userqi = business.startPrice || 0;
-                    user.userpei = business.deliveryPrice || 0;
-                    user.usertype = business.orderTypeId || '1';
+            axios.get('BusinessController/getBusinessById', {
+    params: {
+        businessId: businessUser.businessId
+    }
+}).then(response => {
+    if (response.data) {
+        // 填充已有的商家信息到表单中
+        const business = response.data;
+        user.userName = business.businessName || '';
+        user.userAddress = business.businessAddress || '';
+        user.userExplain = business.businessExplain || '';
+        user.userImg = business.businessImg || '';
+        user.userqi = business.startPrice || 0;
+        user.userpei = business.deliveryPrice || 0;
+        user.usertype = business.orderTypeId || '1';
 
-                    // 如果有商家图片，设置预览
-                    if (business.businessImg) {
-                        previewImage.value = business.businessImg;
-                    }
-                }
-            }).catch(error => {
-                console.error('获取商家信息失败:', error);
-                alert('获取商家信息失败，请稍后重试！');
-            });
+        // 如果有商家图片，设置预览
+        if (business.businessImg) {
+            previewImage.value = business.businessImg;
+        }
+    }
+}).catch(error => {
+    console.error('获取商家信息失败:', error);
+    alert('获取商家信息失败，请稍后重试！');
+});
         });
 
         const businessId = route.query.businessId;
@@ -236,6 +238,7 @@ export default {
                     alert('请选择店铺类型！');
                     return;
                 }
+                
 
                 const businessUser = JSON.parse(sessionStorage.getItem('businessUser'));
                 

@@ -51,15 +51,19 @@
 	  });
   
 	  const listDeliveryAddressByUserId = () => {
-		// 查询送货地址
-		axios.post('DeliveryAddressController/listDeliveryAddressByUserId', {
-		  userId: user.value.userId
-		}).then(response => {
-		  deliveryAddressArr.value = response.data;
-		}).catch(error => {
-		  console.error(error);
-		});
-	  };
+    // 查询送货地址
+    axios.get('DeliveryAddressController/listDeliveryAddressByUserId', {
+        params: {
+            userId: user.value.userId
+        }
+    }).then(response => {
+        deliveryAddressArr.value = response.data;
+    }).catch(error => {
+        console.error('获取送货地址列表失败:', error);
+        // 可以添加错误提示，例如：
+        // toast.error('获取送货地址失败');
+    });
+};
   
 	  const setDeliveryAddress = (deliveryAddress) => {
 		// 把用户选择的默认送货地址存储到localStorage中

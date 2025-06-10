@@ -7,6 +7,9 @@
       
       <div class="content">
         <div class="user-info-container">
+          <div class="avatar">
+            <img :src="userInfo.userImg || 'https://via.placeholder.com/150'" alt="用户头像">
+          </div>
           <div class="info-section">
             <div class="info-item nickname" @click="modifyNickname">
               <span class="label">昵称:</span>
@@ -22,9 +25,7 @@
             </div>
           </div>
           
-          <div class="avatar">
-            <img :src="userInfo.userImg || 'https://via.placeholder.com/150'" alt="用户头像">
-          </div>
+          
         </div>
         
         <div class="buttons-section">

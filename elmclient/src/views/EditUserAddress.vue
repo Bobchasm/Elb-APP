@@ -76,12 +76,17 @@
 		daId.value = route.query.daId;
 		user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : {};
   
-		axios.post('DeliveryAddressController/getDeliveryAddressById',{ daId: daId.value })
-		  .then(response => {
-			deliveryAddress.value = response.data;
-		  }).catch(error => {
-			console.error(error);
-		  });
+		axios.get('DeliveryAddressController/getDeliveryAddressById', {
+    params: { 
+        daId: daId.value 
+    }
+})
+.then(response => {
+    deliveryAddress.value = response.data;
+})
+.catch(error => {
+    console.error(error);
+});
 	  });
   
 	  const editUserAddress = () => {

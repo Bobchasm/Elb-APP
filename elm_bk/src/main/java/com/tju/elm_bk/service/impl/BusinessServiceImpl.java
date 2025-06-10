@@ -21,8 +21,8 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public Business getBusinessById(Business business) {
-        return businessMapper.getBusinessById(business.getBusinessId());
+    public Business getBusinessById(Integer business) {
+        return businessMapper.getBusinessById(business);
     }
 
     @Override

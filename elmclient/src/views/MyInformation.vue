@@ -152,23 +152,25 @@ export default {
       }
 
       try {
-        const response = await axios.post('UserController/getUserByIdByPass', {
-          userId: user.value.userId,
-          password: user.value.password,
-        });
-        
-        if (response.data) {
-          user2.value = response.data;
-          // 如果返回的用户数据中有新的头像URL，更新本地状态
-          if (response.data.userImg) {
-            user.value.userImg = response.data.userImg;
-            sessionStorage.setItem('user', JSON.stringify(user.value));
-          }
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error);
-        toast.error('获取用户信息失败，请重试！');
-      }
+  const response = await axios.get('UserController/getUserByIdByPass', {
+    params: {
+      userId: user.value.userId,
+      password: user.value.password
+    }
+  });
+  
+  if (response.data) {
+    user2.value = response.data;
+    // 如果返回的用户数据中有新的头像URL，更新本地状态
+    if (response.data.userImg) {
+      user.value.userImg = response.data.userImg;
+      sessionStorage.setItem('user', JSON.stringify(user.value));
+    }
+  }
+} catch (error) {
+  console.error('获取用户信息失败:', error);
+  toast.error('获取用户信息失败，请重试！');
+}
     });
 
     const logout = () => {

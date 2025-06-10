@@ -121,24 +121,26 @@ import axios from 'axios';
   
 		loading.value = true;
 		try {
-		  const response = await axios.post('OrdersController/getOrdersById', { 
-			orderId: orderId.value 
-		  });
-  
-		  if (response.data && response.data.orderId) {
-			orders.value = response.data;
-			// 获取订单详情
-			await fetchOrderDetails();
-		  } else {
-			throw new Error('未获取到订单数据');
-		  }
-		} catch (error) {
-		  console.error('获取订单信息失败:', error);
-		  alert('获取订单信息失败，请重试！');
-		  router.push({ path: '/index' });
-		} finally {
-		  loading.value = false;
-		}
+  const response = await axios.get('OrdersController/getOrdersById', {
+    params: {
+      orderId: orderId.value
+    }
+  });
+
+  if (response.data && response.data.orderId) {
+    orders.value = response.data;
+    // 获取订单详情
+    await fetchOrderDetails();
+  } else {
+    throw new Error('未获取到订单数据');
+  }
+} catch (error) {
+  console.error('获取订单信息失败:', error);
+  alert('获取订单信息失败，请重试！');
+  router.push({ path: '/index' });
+} finally {
+  loading.value = false;
+}
 	  };
   
 	  onBeforeMount(async () => {
@@ -158,12 +160,19 @@ import axios from 'axios';
 		}
   
 		try {
-		  await axios.post('OrdersController/payOk', { orderId: orderId.value });
-		  router.push({ path: '/successfulPayment', query: { orderId: orderId.value } });
-		} catch (error) {
-		  console.error('支付失败:', error);
-		  alert('支付失败，请重试！');
-		}
+  await axios.get('OrdersController/payOk', {
+    params: { 
+      orderId: orderId.value 
+    }
+  });
+  router.push({ 
+    path: '/successfulPayment', 
+    query: { orderId: orderId.value } 
+  });
+} catch (error) {
+  console.error('支付失败:', error);
+  alert('支付失败，请重试！');
+}
 	  };
   
 	  const selectPayment = (type) => {
