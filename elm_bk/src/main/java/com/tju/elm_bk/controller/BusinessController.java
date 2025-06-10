@@ -17,12 +17,12 @@ public class BusinessController {
 
     /**
      * 根据点餐分类编号查询商家信息
-     * @param business 含分类编号
+     * @param orderTypeId 含分类编号
      * @return 商家列表
      */
-    @PostMapping("/listBusinessByOrderTypeId")
-    public List<Business> listBusinessByOrderTypeId(@RequestBody Business business) {
-        return businessService.listBusinessByOrderTypeId(business);
+    @GetMapping("/listBusinessByOrderTypeId")
+    public List<Business> listBusinessByOrderTypeId(@RequestParam Integer orderTypeId) {
+        return businessService.listBusinessByOrderTypeId(orderTypeId);
     }
 
     /**

@@ -209,9 +209,7 @@ export default {
 
         // 获取商家列表
         const getBusinessList = () => {
-            axios.post('BusinessController/listBusinessByOrderTypeId', {
-                orderTypeId: 1  // 默认显示美食类商家
-            })
+            axios.get('BusinessController/listBusinessByOrderTypeId?orderTypeId=1')
                 .then(response => {
                     businessList.value = response.data;
                 })

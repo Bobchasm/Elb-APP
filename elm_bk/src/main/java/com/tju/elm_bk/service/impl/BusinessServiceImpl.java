@@ -15,8 +15,8 @@ public class BusinessServiceImpl implements BusinessService {
 
 
     @Override
-    public List<Business> listBusinessByOrderTypeId(Business business) {
-        List<Business> businessList= businessMapper.listBusinessByOrderTypeId(business.getOrderTypeId());  // 通过实例调用方法
+    public List<Business> listBusinessByOrderTypeId(Integer type) {
+        List<Business> businessList= businessMapper.listBusinessByOrderTypeId(type);  // 通过实例调用方法
         return businessList;
     }
 

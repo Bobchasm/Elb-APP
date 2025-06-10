@@ -124,9 +124,9 @@ export default {
             businessId.value = businessUser.businessId;
 
             // 根据businessId查询商家信息
-            axios.post('BusinessController/getBusinessById', {
-                businessId: businessId.value
-            }).then(response => {
+            axios.get(
+			"BusinessController/getBusinessById?businessId=" + businessId.value)
+		  .then(response => {
                 business.value = response.data;
                 // 再次检查信息完整性
                 if (!business.value.businessName || !business.value.businessAddress || 
@@ -140,9 +140,8 @@ export default {
             });
 
             // 根据businessId查询所属食品信息
-            axios.post('FoodController/listFoodByBusinessId', {
-                businessId: businessId.value
-            }).then(response => {
+            axios.get("FoodController/listFoodByBusinessId?businessId="+businessId.value
+            ).then(response => {
                 foodArr.value = response.data.map(item => ({ ...item, quantity: 0 }));
             }).catch(handleError);
         });
