@@ -17,12 +17,12 @@ public class BusinessController {
 
     /**
      * 根据点餐分类编号查询商家信息
-     * @param orderTypeId 分类编号
+     * @param business 含分类编号
      * @return 商家列表
      */
-    @GetMapping("/listBusinessByOrderTypeId")
-    public List<Business> listBusinessByOrderTypeId(@RequestParam Integer orderTypeId) {
-        return businessService.listBusinessByOrderTypeId(orderTypeId);
+    @PostMapping("/listBusinessByOrderTypeId")
+    public List<Business> listBusinessByOrderTypeId(@RequestBody Business business) {
+        return businessService.listBusinessByOrderTypeId(business);
     }
 
     /**
@@ -35,12 +35,12 @@ public class BusinessController {
         return businessService.getBusinessById(business);
     }
 
-    @RequestMapping("/updateBusiness")
+    @PostMapping("/updateBusiness")
     public int updateBusiness(@RequestBody Business business) throws Exception {
         return businessService.updateBusiness(business);
     }
 
-    @RequestMapping("/saveBusiness")
+    @PostMapping("/saveBusiness")
     public int saveBusiness(@RequestBody Business business) throws Exception{
         return businessService.saveBusiness(business);
     }
@@ -50,7 +50,7 @@ public class BusinessController {
         return businessService.getBusinessIdByPhoneNumber(business);
     }
 
-    @RequestMapping("/checkBusiness")
+    @PostMapping("/checkBusiness")
     public int checkBusiness (@RequestBody Business business) throws Exception{
         return businessService.checkBusiness(business);
     }
@@ -60,7 +60,7 @@ public class BusinessController {
         return businessService.getBusinessByIdByPass(business);
     }
 
-    @RequestMapping("/listBusinessByBusinessName")
+    @PostMapping("/listBusinessByBusinessName")
     public List<Business> listBusinessByBusinessName(@RequestBody Business business) throws Exception {
         return businessService.listBusinessByBusinessName(business.getBusinessName());
     }
