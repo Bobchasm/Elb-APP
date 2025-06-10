@@ -12,9 +12,10 @@ import EditUserAddress from '../views/EditUserAddress.vue'
 import Register from '../views/Register.vue'
 import SuccessfulPayment from '../views/SuccessfulPayment.vue'
 import MyInformation from '@/views/MyInformation.vue'
-import CommentBusiness from '@/views/CommentBusiness.vue'
+
 import Search from '@/views/Search.vue'
 import Cart from '@/views/Cart.vue'
+//import Discover from '@/views/Discover.vue'
 import LChoose from '@/views/LChoose.vue'
 import RChoose from '@/views/RChoose.vue'
 import BusinessLogin from '@/views/BusinessLogin.vue'
@@ -24,7 +25,7 @@ import BusinessView from '@/views/BusinessView.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
 import Myfavorite from '@/views/Myfavorite.vue'
 import LikesList from '@/views/LikesList.vue'
-import CommentsList from '@/views/CommentsList.vue'
+
 // 定义路由
 const routes = [
   {
@@ -97,11 +98,7 @@ const routes = [
     name: 'MyInformation',
     component: MyInformation
   },
-  {
-    path: '/commentBusiness',
-    name: 'CommentBusiness',
-    component: CommentBusiness
-  },
+ //
   {
     path: '/search',
     name: 'Search',
@@ -112,6 +109,7 @@ const routes = [
     name: 'Cart',
     component: Cart
   },
+ //
   {
     path: '/lChoose',
     name: 'LChoose',
@@ -162,11 +160,7 @@ const routes = [
     name:'LikesList',
     component:LikesList
   },
-  {
-    path:'/comments',
-    name:'CommentsList',
-    component:CommentsList
-  }
+ //
 ]
 
 // 解决重复路由报异常问题
