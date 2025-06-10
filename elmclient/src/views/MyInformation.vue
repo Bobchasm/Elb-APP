@@ -41,7 +41,7 @@
         </div>
       </div>
     </div>
-    <Footer /> <!-- Footer组件放在页面底部 -->
+    <Footer />
   </div>
 </template>
 
@@ -76,13 +76,11 @@ export default {
         console.log('文件类型:', file.type);
         console.log('文件大小:', file.size);
 
-        // 放宽文件类型限制，只要是图片就可以
         if (!file.type.includes('image')) {
           toast.warning('请选择图片文件！');
           event.target.value = '';
           return;
         }
-        // 放宽文件大小限制到10MB
         if (file.size > 10 * 1024 * 1024) {
           toast.warning('图片大小不能超过10MB！');
           event.target.value = '';
@@ -98,7 +96,7 @@ export default {
             try {
               console.log('准备发送的数据:', {
                 userId: user.value.userId,
-                userImg: base64String.substring(0, 100) + '...' // 只打印开头部分避免日志过长
+                userImg: base64String.substring(0, 100) + '...'
               });
 
               const response = await axios.post('UserController/changeUserAvatar', {
@@ -109,12 +107,10 @@ export default {
               console.log('服务器响应:', response);
 
               if (response.data.code === 1) {
-                // 更新头像显示
                 user.value.userImg = base64String;
                 if (user2.value) {
                   user2.value.userImg = base64String;
                 }
-                // 更新sessionStorage中的用户信息
                 sessionStorage.setItem('user', JSON.stringify(user.value));
                 toast.success('头像修改成功！');
               } else {
@@ -139,7 +135,6 @@ export default {
           toast.error('处理文件失败，请重试！');
         }
       }
-      // 清空文件输入框，允许选择相同的文件
       event.target.value = '';
     };
 
@@ -152,25 +147,24 @@ export default {
       }
 
       try {
-  const response = await axios.get('UserController/getUserByIdByPass', {
-    params: {
-      userId: user.value.userId,
-      password: user.value.password
-    }
-  });
-  
-  if (response.data) {
-    user2.value = response.data;
-    // 如果返回的用户数据中有新的头像URL，更新本地状态
-    if (response.data.userImg) {
-      user.value.userImg = response.data.userImg;
-      sessionStorage.setItem('user', JSON.stringify(user.value));
-    }
-  }
-} catch (error) {
-  console.error('获取用户信息失败:', error);
-  toast.error('获取用户信息失败，请重试！');
-}
+        const response = await axios.get('UserController/getUserByIdByPass', {
+          params: {
+            userId: user.value.userId,
+            password: user.value.password
+          }
+        });
+        
+        if (response.data) {
+          user2.value = response.data;
+          if (response.data.userImg) {
+            user.value.userImg = response.data.userImg;
+            sessionStorage.setItem('user', JSON.stringify(user.value));
+          }
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        toast.error('获取用户信息失败，请重试！');
+      }
     });
 
     const logout = () => {
@@ -294,7 +288,7 @@ export default {
   flex-direction: column;
   min-height: 100vh;
   padding-bottom: 8vh;
-  background-color: #f8f9fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
 }
 
 .my-information {
@@ -302,36 +296,73 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px 0;
 }
 
 .header {
   width: 100%;
-  height: 10vw;
-  background-color: #0097ff;
+  height: 12vw;
+  max-height: 80px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% { transform: rotate(30deg) translate(-10%, -10%); }
+  100% { transform: rotate(30deg) translate(10%, 10%); }
 }
 
 .header h1 {
   color: white;
-  font-size: 4.5vw;
+  font-size: 5vw;
+  max-font-size: 24px;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
 }
 
 .content {
   width: 92%;
+  max-width: 600px;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: #ffffff;
-  border-radius: 12px;
-  margin-top: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 15px 0;
+  border-radius: 16px;
+  margin-top: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
 }
 
 .user-info-container {
@@ -340,19 +371,28 @@ export default {
   display: flex;
   align-items: center;
   gap: 20px;
-  margin: 2vw auto;
+  margin: 20px auto;
 }
 
 .avatar {
   position: relative;
   cursor: pointer;
-  width: 20vw;
-  height: 20vw;
+  width: 25vw;
+  height: 25vw;
+  max-width: 120px;
+  max-height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #0097ff;
-  box-shadow: 0 4px 12px rgba(0, 151, 255, 0.2);
+  border: 3px solid white;
+  box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 151, 255, 0.4);
 }
 
 .avatar img {
@@ -361,11 +401,6 @@ export default {
   object-fit: cover;
   border-radius: 50%;
   transition: all 0.3s ease;
-}
-
-.avatar:hover img {
-  filter: brightness(85%);
-  transform: scale(1.05);
 }
 
 .avatar-overlay {
@@ -389,17 +424,20 @@ export default {
 }
 
 .avatar-overlay span {
-  font-size: 2.5vw;
+  font-size: 3vw;
+  max-font-size: 14px;
   text-align: center;
-  padding: 1vw;
+  padding: 2vw;
+  font-weight: 500;
 }
 
 .details {
   flex: 1;
   background-color: #f8f9fa;
-  padding: 3vw;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
 }
 
 .nickname {
@@ -407,67 +445,86 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 1.5vw;
+  padding: 12px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  margin-bottom: 1.5vw;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 10px;
+  font-size: 4vw;
+  max-font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.nickname:hover {
+  background-color: #f1f8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .nickname::after {
-  content: '点击修改';
+  content: '✏️ 点击修改';
   margin-left: auto;
-  color: #999;
-  font-size: 2.8vw;
-  padding-left: 2vw;
+  color: #666;
+  font-size: 3vw;
+  max-font-size: 14px;
+  padding-left: 10px;
+  opacity: 0.8;
 }
 
 .phone,
 .gender {
-  font-size: 3.5vw;
-  margin: 1.5vw 0;
-  color: #2c3e50;
+  font-size: 3.8vw;
+  max-font-size: 16px;
+  margin: 8px 0;
+  color: #495057;
   display: flex;
   align-items: center;
-  padding: 1.5vw;
+  padding: 12px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-weight: 500;
 }
 
 .actions {
   width: 90%;
   max-width: 500px;
-  margin: 2vw auto;
+  margin: 20px auto;
   display: flex;
   flex-direction: column;
-  gap: 2vw;
+  gap: 12px;
 }
 
 .main-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 2vw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
   width: 100%;
 }
 
 .main-buttons button {
-  padding: 2.5vw;
+  padding: 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   color: white;
-  font-size: 4vw;
-  width: 100%;
+  font-size: 3.8vw;
+  max-font-size: 16px;
   text-align: center;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .main-buttons button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .main-buttons button:active {
@@ -475,23 +532,23 @@ export default {
 }
 
 .btn-red {
-  background-color: #ff3b30 !important;
+  background: linear-gradient(135deg, #ff5e62, #ff2400);
 }
 
 .btn-orange {
-  background-color: #ff9500 !important;
+  background: linear-gradient(135deg, #ff9966, #ff5e62);
 }
 
 .btn-yellow {
-  background-color: #05cf37 !important;
+  background: linear-gradient(135deg, #00b09b, #96c93d);
 }
 
 .btn-blue {
-  background-color: #0097ff !important;
+  background: linear-gradient(135deg, #4b6cb7, #182848);
 }
 
 .btn-purple {
-  background-color: #9932cc !important;
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
 }
 
 .edit-nickname,
@@ -500,72 +557,72 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5vw;
-  margin-top: -1vw;
-  margin-bottom: 1vw;
+  gap: 12px;
+  margin: 10px 0;
   background-color: #f8f9fa;
-  padding: 2.5vw;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
 }
 
 .edit-nickname input,
 .edit-password input {
-  height: 9vw;
-  font-size: 3.5vw;
-  padding: 0 2.5vw;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  height: 45px;
+  font-size: 16px;
+  padding: 0 15px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
   background-color: white;
+  transition: all 0.2s ease;
+}
+
+.edit-nickname input:focus,
+.edit-password input:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: none;
 }
 
 .edit-nickname button,
 .ep button {
-  margin-top: 1.5vw;
-  height: 9vw;
+  margin-top: 10px;
+  height: 45px;
+  background: linear-gradient(135deg, #4b6cb7, #182848);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-@media (min-width: 768px) {
-  .content {
-    width: 85%;
-    max-width: 600px;
+.edit-nickname button:hover,
+.ep button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 480px) {
+  .main-buttons {
+    grid-template-columns: 1fr;
   }
   
   .user-info-container {
-    gap: 30px;
-  }
-  
-  .avatar {
-    width: 100px;
-    height: 100px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   
   .nickname::after {
-    font-size: 12px;
+    display: none;
   }
   
   .nickname,
   .phone,
-  .gender,
-  .avatar_name {
-    font-size: 16px;
-  }
-  
-  .main-buttons button {
-    font-size: 16px;
-    padding: 12px;
-  }
-  
-  .avatar-overlay span {
-    font-size: 14px;
-  }
-  
-  .header {
-    height: 60px;
-  }
-  
-  .header h1 {
-    font-size: 20px;
+  .gender {
+    justify-content: center;
   }
 }
 </style>
