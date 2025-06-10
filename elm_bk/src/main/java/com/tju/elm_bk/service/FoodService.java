@@ -4,4 +4,5 @@ import java.util.List;
 
 public interface FoodService {
     public List<Food> listFoodByBusinessId(Integer businessId);
+    public int addFood(Food food);
 }

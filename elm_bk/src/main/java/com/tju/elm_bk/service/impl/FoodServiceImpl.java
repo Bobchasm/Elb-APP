@@ -15,4 +15,10 @@ public class FoodServiceImpl implements FoodService {
 
         return foodMapper.listFoodByBusinessId(businessId);
     }
+
+    @Override
+    public int addFood(Food food) {
+        return foodMapper.insertFood(food);
+    }
+
 }

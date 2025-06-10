@@ -2,6 +2,7 @@ package com.tju.elm_bk.mapper;
 import java.util.List;
 
 import com.tju.elm_bk.untity.Food;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -21,4 +22,6 @@ public interface FoodMapper {
             """)
     Food getFoodById(Integer foodId);
 
+    @Insert("INSERT INTO food (foodName,foodExplain,foodImg,foodPrice,businessId) VALUES (#{foodName},#{foodExplain},#{foodImg},#{foodPrice},#{businessId})")
+    public int insertFood(Food food);
 }
