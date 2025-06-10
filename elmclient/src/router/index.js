@@ -23,8 +23,7 @@ import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
-import Myfavorite from '@/views/Myfavorite.vue'
-import LikesList from '@/views/LikesList.vue'
+//
 
 // 定义路由
 const routes = [
@@ -145,21 +144,9 @@ const routes = [
     name:'SubmitItems',
     component:SubmitItems
   },
-  {
-    path:'/myfavorite',
-    name:'Myfavorite',
-    component:Myfavorite
-  },
-  {
-    path:'/favorites',
-    name:'Favorites',
-    component:Myfavorite
-  },
-  {
-    path:'/likes',
-    name:'LikesList',
-    component:LikesList
-  },
+ //
+//
+  //
  //
 ]
 
