@@ -7,15 +7,13 @@
       <div class="content">
         <div class="user-info-container">
           <div class="details">
-            <p class="nickname" @click="editNickname">昵称: {{ user?.userName }}</p>
+            <!-- <p class="nickname" @click="editNickname">昵称: {{ user?.userName }}</p> -->
+            <p class="nickname">昵称: {{ user?.userName }}</p>
             <p class="phone">电话: {{ user?.userId }}</p>
             <p class="gender">性别: {{ user?.userSex === 1 ? '男' : '女' }}</p>
           </div>
-          <div class="avatar" @click="showUpload">
-            <img :src="user2?.userImg || user?.userImg" alt="点击更换头像" />
-            <div class="avatar-overlay">
-              <span>点击更换头像</span>
-            </div>
+          <div class="avatar" >
+            <img :src="user2?.userImg || require('@/assets/default-avatar.png')" alt="用户头像" />
           </div>
         </div>
         <div class="actions">
@@ -32,10 +30,10 @@
           </div>
           <input type="file" ref="fileInput" @change="uploadAvatar" accept="image/*" style="display:none;" />
           <div class="main-buttons">
-            <button class="btn-red" @click="editpasswd">修改密码</button>
+            <!-- <button class="btn-red" @click="editpasswd">修改密码</button>
             <button class="btn-orange" @click="myfavorite">收藏列表</button>
             <button class="btn-yellow" @click="goToLikesList">点赞列表</button>
-            <button class="btn-blue" @click="goToCommentsList">评论列表</button>
+            <button class="btn-blue" @click="goToCommentsList">评论列表</button> -->
             <button class="btn-purple" @click="logout">退出登录</button>
           </div>
         </div>
@@ -63,80 +61,80 @@ export default {
     const showEditPassword = ref(false);
     const newPassword = ref('');
     const oldPassword = ref('');
-    const fileInput = ref(null);
+    // const fileInput = ref(null);
 
-    const showUpload = () => {
-      fileInput.value.click();
-    };
+    // const showUpload = () => {
+    //   fileInput.value.click();
+    // };
 
-    const uploadAvatar = async (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        console.log('选择的文件:', file);
-        console.log('文件类型:', file.type);
-        console.log('文件大小:', file.size);
+    // const uploadAvatar = async (event) => {
+    //   const file = event.target.files[0];
+    //   if (file) {
+    //     console.log('选择的文件:', file);
+    //     console.log('文件类型:', file.type);
+    //     console.log('文件大小:', file.size);
 
-        if (!file.type.includes('image')) {
-          toast.warning('请选择图片文件！');
-          event.target.value = '';
-          return;
-        }
-        if (file.size > 10 * 1024 * 1024) {
-          toast.warning('图片大小不能超过10MB！');
-          event.target.value = '';
-          return;
-        }
+    //     if (!file.type.includes('image')) {
+    //       toast.warning('请选择图片文件！');
+    //       event.target.value = '';
+    //       return;
+    //     }
+    //     if (file.size > 10 * 1024 * 1024) {
+    //       toast.warning('图片大小不能超过10MB！');
+    //       event.target.value = '';
+    //       return;
+    //     }
 
-        try {
-          const reader = new FileReader();
-          reader.onload = async (e) => {
-            const base64String = e.target.result;
-            console.log('图片转base64长度:', base64String.length);
+    //     try {
+    //       const reader = new FileReader();
+    //       reader.onload = async (e) => {
+    //         const base64String = e.target.result;
+    //         console.log('图片转base64长度:', base64String.length);
 
-            try {
-              console.log('准备发送的数据:', {
-                userId: user.value.userId,
-                userImg: base64String.substring(0, 100) + '...'
-              });
+    //         try {
+    //           console.log('准备发送的数据:', {
+    //             userId: user.value.userId,
+    //             userImg: base64String.substring(0, 100) + '...'
+    //           });
 
-              const response = await axios.post('UserController/changeUserAvatar', {
-                userId: user.value.userId,
-                userImg: base64String
-              });
+    //           const response = await axios.post('UserController/changeUserAvatar', {
+    //             userId: user.value.userId,
+    //             userImg: base64String
+    //           });
 
-              console.log('服务器响应:', response);
+    //           console.log('服务器响应:', response);
 
-              if (response.data.code === 1) {
-                user.value.userImg = base64String;
-                if (user2.value) {
-                  user2.value.userImg = base64String;
-                }
-                sessionStorage.setItem('user', JSON.stringify(user.value));
-                toast.success('头像修改成功！');
-              } else {
-                console.error('服务器返回错误:', response.data);
-                toast.error(response.data.msg || '头像修改失败，请重试！');
-              }
-            } catch (error) {
-              console.error('修改头像请求失败:', error);
-              console.error('错误详情:', error.response?.data || error.message);
-              toast.error('头像上传失败，请重试！');
-            }
-          };
+    //           if (response.data.code === 1) {
+    //             user.value.userImg = base64String;
+    //             if (user2.value) {
+    //               user2.value.userImg = base64String;
+    //             }
+    //             sessionStorage.setItem('user', JSON.stringify(user.value));
+    //             toast.success('头像修改成功！');
+    //           } else {
+    //             console.error('服务器返回错误:', response.data);
+    //             toast.error(response.data.msg || '头像修改失败，请重试！');
+    //           }
+    //         } catch (error) {
+    //           console.error('修改头像请求失败:', error);
+    //           console.error('错误详情:', error.response?.data || error.message);
+    //           toast.error('头像上传失败，请重试！');
+    //         }
+    //       };
 
-          reader.onerror = (error) => {
-            console.error('文件读取错误:', error);
-            toast.error('读取文件失败，请重试！');
-          };
+    //       reader.onerror = (error) => {
+    //         console.error('文件读取错误:', error);
+    //         toast.error('读取文件失败，请重试！');
+    //       };
 
-          reader.readAsDataURL(file);
-        } catch (error) {
-          console.error('文件处理错误:', error);
-          toast.error('处理文件失败，请重试！');
-        }
-      }
-      event.target.value = '';
-    };
+    //       reader.readAsDataURL(file);
+    //     } catch (error) {
+    //       console.error('文件处理错误:', error);
+    //       toast.error('处理文件失败，请重试！');
+    //     }
+    //   }
+    //   event.target.value = '';
+    // };
 
     onBeforeMount(async () => {
       user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
@@ -268,9 +266,9 @@ export default {
       showEditPassword,
       newPassword,
       oldPassword,
-      showUpload,
-      uploadAvatar,
-      fileInput,
+      // showUpload,
+      // uploadAvatar,
+      // fileInput,
       myfavorite,
       goToLikesList,
       goToCommentsList
@@ -332,7 +330,7 @@ export default {
 .header h1 {
   color: white;
   font-size: 5vw;
-  max-font-size: 24px;
+  /* max-font-size: 24px; */
   margin: 0;
   font-weight: 600;
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -375,8 +373,8 @@ export default {
 }
 
 .avatar {
-  position: relative;
-  cursor: pointer;
+  /* position: relative;
+  cursor: pointer; */
   width: 25vw;
   height: 25vw;
   max-width: 120px;
@@ -386,14 +384,14 @@ export default {
   border: 3px solid white;
   box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
-  transition: all 0.3s ease;
-  z-index: 1;
+  /* transition: all 0.3s ease;
+  z-index: 1; */
 }
 
-.avatar:hover {
+/* .avatar:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 25px rgba(0, 151, 255, 0.4);
-}
+} */
 
 .avatar img {
   width: 100%;
@@ -423,13 +421,13 @@ export default {
   opacity: 1;
 }
 
-.avatar-overlay span {
+/* .avatar-overlay span {
   font-size: 3vw;
   max-font-size: 14px;
   text-align: center;
   padding: 2vw;
   font-weight: 500;
-}
+} */
 
 .details {
   flex: 1;
@@ -441,7 +439,7 @@ export default {
 }
 
 .nickname {
-  cursor: pointer;
+  /* cursor: pointer; */
   position: relative;
   display: flex;
   align-items: center;
@@ -451,19 +449,19 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 10px;
   font-size: 4vw;
-  max-font-size: 18px;
+  /* max-font-size: 18px; */
   font-weight: 500;
   color: #333;
   transition: all 0.2s ease;
 }
 
-.nickname:hover {
+/* .nickname:hover {
   background-color: #f1f8ff;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-}
+} */
 
-.nickname::after {
+/* .nickname::after {
   content: '✏️ 点击修改';
   margin-left: auto;
   color: #666;
@@ -471,12 +469,12 @@ export default {
   max-font-size: 14px;
   padding-left: 10px;
   opacity: 0.8;
-}
+} */
 
 .phone,
 .gender {
   font-size: 3.8vw;
-  max-font-size: 16px;
+  /* max-font-size: 16px; */
   margin: 8px 0;
   color: #495057;
   display: flex;
@@ -511,7 +509,7 @@ export default {
   cursor: pointer;
   color: white;
   font-size: 3.8vw;
-  max-font-size: 16px;
+  /* max-font-size: 16px; */
   text-align: center;
   font-weight: 500;
   transition: all 0.3s ease;
