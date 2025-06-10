@@ -39,7 +39,6 @@ public class BusinessController {
 
     @PostMapping("/updateBusiness")
     public int updateBusiness(@RequestBody Business business) throws Exception {
-        log.info("hhh");
         return businessService.updateBusiness(business);
     }
 

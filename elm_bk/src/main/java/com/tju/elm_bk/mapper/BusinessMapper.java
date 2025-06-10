@@ -67,4 +67,7 @@ public interface BusinessMapper {
     @Options(useGeneratedKeys=true,keyProperty="businessId",keyColumn="businessId")
     public int saveBusiness(Business business);
 
+    @Insert("insert into business (businessId,businessName,businessAddress,businessExplain,businessImg,orderTypeId,starPrice,deliveryPrice) " +
+            "values(#{businessId},#{businessName},#{businessAddress},#{businessExplain},#{businessImg},#{orderTypeId},#{starPrice},#{deliveryPrice})")
+    public int saveBusinessMsg(Business business);
 }

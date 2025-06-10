@@ -27,8 +27,13 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public int updateBusiness(Business business) {
-        businessMapper.updateBusinessUser(business);
-        return businessMapper.updateBusiness(business);
+        businessMapper.updateBusiness(business);
+        Business b=businessMapper.getBusinessById(business.getBusinessId());
+        if(b==null)
+            businessMapper.saveBusinessMsg(business);
+        else
+            businessMapper.updateBusiness(business);
+        return businessMapper.updateBusinessUser(business);
     }
 
     @Override
