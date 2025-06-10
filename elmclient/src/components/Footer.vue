@@ -4,10 +4,6 @@
 		<i class="fa fa-home"></i>
 		<p>首页</p>
 	  </li>
-	  <!-- <li @click="toDiscover">
-		<i class="fa fa-compass"></i>
-		<p>发现</p>
-	  </li> -->
 	  <li @click="toOrderList">
 		<i class="fa fa-file-text-o"></i>
 		<p>订单</p>
@@ -36,14 +32,10 @@
 	  const toMyInformation = () => {
 		router.push({ path: '/myInformation' });
 	  };
-	//   const toDiscover = () => {
-	// 	router.push({ path: '/discover' });
-	//   };
 	  return {
 		toIndex,
 		toOrderList,
 		toMyInformation,
-		//toDiscover
 	  };
 	},
   });
