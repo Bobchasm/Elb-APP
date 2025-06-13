@@ -23,7 +23,7 @@
 						</div>
 					</div>
 					<ul class="order-detailet" v-show="item.isShowDetailet">
-						<li v-for="de in detailet">
+						<li v-for="de in item.detailet">
 							<p>{{ de.foodName }} x{{ de.quantity }}</p>
 							<p>&#165;{{ (de.foodPrice * de.quantity).toFixed(2) }}</p>
 						</li>
@@ -35,16 +35,6 @@
 				</li>
 			</template>
 		</ul>
-
-
-		
-
-
-
-
-
-
-
 
 		<h3>已支付订单信息：</h3>
 		<ul class="order">
@@ -60,7 +50,7 @@
 						</div>
 					</div>
 					<ul class="order-detailet" v-show="item.isShowDetailet">
-						<li v-for="de in detailet">
+						<li v-for="de in item.detailet">
 							<p>{{ de.foodName }} x{{ de.quantity }}</p>
 							<p>&#165;{{ (de.foodPrice * de.quantity).toFixed(2) }}</p>
 						</li>
@@ -88,8 +78,6 @@ export default {
     const orderArr = ref([]);
     const user = ref({});
     const router = useRouter();
-    const detailet = ref([]);
-    const index = ref([]);
 
     const handleError = (error) => {
       console.error("Failed to fetch data:", error);
@@ -100,24 +88,28 @@ export default {
       console.log("获取订单详情，orderId:", order.orderId);
       
       try {
+        // 如果已经加载过详情，直接切换显示状态
+        if (order.detailet) {
+          order.isShowDetailet = !order.isShowDetailet;
+          return;
+        }
+        
         // 获取订单明细
         const detailResponse = await axios.post("/OrdersController/listOrderDetailetByOrderId", {
           orderId: order.orderId
         });
         console.log("订单明细:", detailResponse.data);
-        detailet.value = detailResponse.data;
         
         // 获取订单项ID列表
         const odIdResponse = await axios.post("OrdersController/listOdIdByOrderId", {
           orderId: order.orderId
         });
         console.log("订单项ID列表:", odIdResponse.data);
-        index.value = odIdResponse.data;
         
-        // 切换详情显示状态
-        order.isShowDetailet = !order.isShowDetailet;
-        console.log(index.value);
-        console.log(detailet.value);
+        // 将详情数据存储到当前订单对象中
+        order.detailet = detailResponse.data;
+        order.index = odIdResponse.data;
+        order.isShowDetailet = true;
         
       } catch (error) {
         console.error("获取订单详情失败:", error);
@@ -151,6 +143,8 @@ export default {
           
           result.forEach((order) => {
             order.isShowDetailet = false;
+            order.detailet = null; // 初始化详情数据
+            order.index = null;    // 初始化索引数据
           });
           
           orderArr.value = result;
@@ -170,22 +164,21 @@ export default {
       user,
       detailetShow,
       navigateTo,
-      navigateToPayment,
-      detailet
+      navigateToPayment
     };
   }
 };
 </script>
   
-  <style scoped>
-  /****************** 总容器 ******************/
-  .wrapper {
+<style scoped>
+/****************** 总容器 ******************/
+.wrapper {
 	width: 100%;
 	height: 100%;
-  }
+}
   
-  /****************** header部分 ******************/
-  .wrapper header {
+/****************** header部分 ******************/
+.wrapper header {
 	width: 100%;
 	height: 12vw;
 	background-color: #0097ff;
@@ -198,27 +191,27 @@ export default {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-  }
+}
   
-  /****************** 历史订单列表部分 ******************/
-  .wrapper h3 {
+/****************** 历史订单列表部分 ******************/
+.wrapper h3 {
 	margin-top: 12vw;
 	box-sizing: border-box;
 	padding: 4vw;
 	font-size: 4vw;
 	font-weight: 300;
 	color: #999;
-  }
+}
   
-  .wrapper .order {
+.wrapper .order {
 	width: 100%;
-  }
+}
   
-  .wrapper .order li {
+.wrapper .order li {
 	width: 100%;
-  }
+}
   
-  .wrapper .order li .order-info {
+.wrapper .order li .order-info {
 	box-sizing: border-box;
 	padding: 2vw 4vw;
 	font-size: 4vw;
@@ -226,26 +219,26 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-  }
+}
   
-  .wrapper .order li .order-info .order-info-right {
+.wrapper .order li .order-info .order-info-right {
 	display: flex;
-  }
+}
   
-  .wrapper .order li .order-info .order-info-right .order-info-right-icon {
+.wrapper .order li .order-info .order-info-right .order-info-right-icon {
 	background-color: #f90;
 	color: #fff;
 	border-radius: 3px;
 	margin-left: 2vw;
 	user-select: none;
 	cursor: pointer;
-  }
+}
   
-  .wrapper .order li .order-detailet {
+.wrapper .order li .order-detailet {
 	width: 100%;
-  }
+}
   
-  .wrapper .order li .order-detailet li {
+.wrapper .order li .order-detailet li {
 	width: 100%;
 	box-sizing: border-box;
 	padding: 1vw 4vw;
@@ -254,6 +247,5 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-  }
-  </style>
-  
+}
+</style>
