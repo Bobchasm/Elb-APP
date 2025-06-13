@@ -25,7 +25,7 @@
 					<ul class="order-detailet" v-show="item.isShowDetailet">
 						<li v-for="de in detailet">
 							<p>{{ de.foodName }} x{{ de.quantity }}</p>
-							<p>&#165;{{ (de.priceAtThatTime * de.quantity).toFixed(2) }}</p>
+							<p>&#165;{{ (de.foodPrice * de.quantity).toFixed(2) }}</p>
 						</li>
 						<li>
 							<p>配送费</p>

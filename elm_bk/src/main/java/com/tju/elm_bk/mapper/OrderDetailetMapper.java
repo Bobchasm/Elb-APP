@@ -22,6 +22,6 @@ public interface OrderDetailetMapper {
     @Select("select * from elm.orderdetailet where orderId = #{orderId}")
     List<OrderDetailet> listOrderDetailetByOrderId(Integer orderId);
 
-    @Select("select * from elm.orderdetailet where orderId=#{orderId}")
-        List<OrderDetailet> listorderDetailetByOrderId(Orders orders);
+//    @Select("select * from elm.orderdetailet where orderId=#{orderId}")
+//        List<OrderDetailet> listorderDetailetByOrderId(Orders orders);
 }
