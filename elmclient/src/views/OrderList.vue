@@ -61,12 +61,12 @@
 					</div>
 					<ul class="order-detailet" v-show="item.isShowDetailet">
 						<li v-for="de in detailet">
-							<p>{{ de.foodName }} x{{ de.quantity }}</p>//////////////食物名字
-							<p>&#165;{{ (de.foodPrice * de.quantity).toFixed(2) }}</p>//////////////食物价格
+							<p>{{ de.foodName }} x{{ de.quantity }}</p>
+							<p>&#165;{{ (de.foodPrice * de.quantity).toFixed(2) }}</p>
 						</li>
 						<li>
 							<p>配送费</p>
-							<p>&#165;{{ item.deliveryPrice }}</p>//////////////////商家配送费
+							<p>&#165;{{ item.deliveryPrice }}</p>
 						</li>
 					</ul>
 				</li>
@@ -77,99 +77,105 @@
 	</div>
 </template>
   
-  <script>
-  import { ref, onMounted, reactive } from "vue";
-  import Footer from "../components/Footer.vue";
-  import { useRouter } from "vue-router";
-  import axios from "axios";
-  import qs from "qs";
-  export default {
-	name: "OrderList",
-	components: {
-	  Footer,
-	},
-	setup() {
-	  const orderArr = ref([]);
-	  const user = reactive({});
-	  const router = useRouter();
-	  const detailet = ref([]);
-	  const index = ref([]);
-	  onMounted(async () => {
-		user.value = sessionStorage.getItem("user")
-		  ? JSON.parse(sessionStorage.getItem("user"))
-		  : null;
-  
-		if (user.value) {
-		  await axios
-			.get(
-			  "OrdersController/listOrdersByUserId?userId=" + user.value.userId
-			)
-			.then((response) => {
-			  let result = response.data;
-			  console.log(result);
-			  result.forEach((order) => {
-				order.isShowDetailet = false;
-			  });
-			  orderArr.value = result;
-			})
-			.catch(handleError);
-		} else {
-		  alert("用户未登录，请先登录！");
-		  router.push({ path: "/login" });
-		}
-	  });
-  
-	  const detailetShow = async (order) => {
-    console.log("orderId", order.orderId);
-    
-    await axios
-      .get("/OrdersController/listOrderDetailetByOrderId", {
-        params: { orderId: order.orderId }
-      })
-      .then((response) => {
-        console.log(response.data);
-        detailet.value = response.data;
-      })
-      .catch(handleError);
-    
-    await axios
-      .get("OrdersController/listOdIdByOrderId", {
-        params: { orderId: order.orderId }
-      })
-      .then((response) => {
-        console.log(response.data);
-        index.value = response.data;
-      })
-      .catch(handleError);
-    
-    console.log(index.value);
-    console.log(detailet.value);
-    order.isShowDetailet = !order.isShowDetailet;
+<script>
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
+
+export default {
+  name: "OrderList",
+  setup() {
+    const orderArr = ref([]);
+    const user = ref({});
+    const router = useRouter();
+    const detailet = ref([]);
+    const index = ref([]);
+
+    const handleError = (error) => {
+      console.error("Failed to fetch data:", error);
+      alert("请求失败，请稍后重试！");
+    };
+
+    const detailetShow = async (order) => {
+      console.log("获取订单详情，orderId:", order.orderId);
+      
+      try {
+        // 获取订单明细
+        const detailResponse = await axios.post("/OrdersController/listOrderDetailetByOrderId", {
+          orderId: order.orderId
+        });
+        console.log("订单明细:", detailResponse.data);
+        detailet.value = detailResponse.data;
+        
+        // 获取订单项ID列表
+        const odIdResponse = await axios.post("OrdersController/listOdIdByOrderId", {
+          orderId: order.orderId
+        });
+        console.log("订单项ID列表:", odIdResponse.data);
+        index.value = odIdResponse.data;
+        
+        // 切换详情显示状态
+        order.isShowDetailet = !order.isShowDetailet;
+        console.log(index.value);
+        console.log(detailet.value);
+        
+      } catch (error) {
+        console.error("获取订单详情失败:", error);
+        handleError(error);
+      }
+    };
+
+    const navigateToPayment = (orderId) => {
+      console.log(orderId);
+      router.push({ path: "/payment", query: { orderId } });
+    };
+
+    const navigateTo = (path) => {
+      router.push(path);
+    };
+
+    onMounted(async () => {
+      // 获取用户信息
+      const userData = sessionStorage.getItem("user");
+      user.value = userData ? JSON.parse(userData) : null;
+
+      // 获取订单列表
+      if (user.value) {
+        try {
+          const ordersResponse = await axios.post("OrdersController/listOrdersByUserId", {
+            userId: user.value.userId
+          });
+          
+          let result = ordersResponse.data;
+          console.log("订单列表:", result);
+          
+          result.forEach((order) => {
+            order.isShowDetailet = false;
+          });
+          
+          orderArr.value = result;
+          
+        } catch (error) {
+          console.error("获取订单列表失败:", error);
+          handleError(error);
+        }
+      } else {
+        alert("用户未登录，请先登录！");
+        router.push({ path: "/login" });
+      }
+    });
+
+    return {
+      orderArr,
+      user,
+      detailetShow,
+      navigateTo,
+      navigateToPayment,
+      detailet
+    };
+  }
 };
-	  const navigateToPayment = (orderId) => {
-		console.log(orderId);
-		router.push({ path: "/payment", query: { orderId } });
-	  };
-	  const navigateTo = (path) => {
-		router.push(path);
-	  };
-  
-	  const handleError = (error) => {
-		console.error("Failed to fetch data:", error);
-		alert("请求失败，请稍后重试！");
-	  };
-  
-	  return {
-		orderArr,
-		user,
-		detailetShow,
-		navigateTo,
-		navigateToPayment,
-		detailet,
-	  };
-	},
-  };
-  </script>
+</script>
   
   <style scoped>
   /****************** 总容器 ******************/

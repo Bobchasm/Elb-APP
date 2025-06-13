@@ -115,10 +115,8 @@ export default {
 				if (savedAddress) {
 					deliveryaddress.value = JSON.parse(savedAddress);
 					try {
-						const response = await axios.get('DeliveryAddressController/getDeliveryAddressById', {
-							params: {
-								daId: deliveryaddress.value.daId
-							}
+						const response = await axios.post('DeliveryAddressController/getDeliveryAddressById', {
+							daId: deliveryaddress.value.daId
 						});
 						if (response.data) {
 							deliver.value = response.data;
@@ -134,32 +132,31 @@ export default {
 				}
 
 				// 获取商家信息
-				if (businessId.value) {
-					try {
-						const businessResponse = await axios.get('BusinessController/getBusinessById', {
-							params: {
-								businessId: businessId.value
-							}
-						});
-						if (businessResponse.data) {
-							business.value = businessResponse.data;
-						} else {
-							throw new Error('商家信息获取失败');
-						}
-					} catch (error) {
-						console.error('获取商家信息失败:', error);
-						throw new Error('商家信息获取失败');
-					}
-				} else {
-					throw new Error('商家ID无效');
-				}
+if (businessId.value) {
+  try {
+    const businessResponse = await axios.post('BusinessController/getBusinessById', 
+      {
+        businessId: businessId.value  // 参数放在请求体中
+      }
+    );
+    
+    if (businessResponse.data) {
+      business.value = businessResponse.data;
+    } else {
+      throw new Error('商家信息获取失败');
+    }
+  } catch (error) {
+    console.error('获取商家信息失败:', error);
+    throw new Error('商家信息获取失败');
+  }
+} else {
+  throw new Error('商家ID无效');
+}
 
 				// 获取购物车信息
-				const cartResponse = await axios.get('CartController/listCart', {
-					params: {
-						userId: user.value.userId,
-						businessId: businessId.value
-					}
+				const cartResponse = await axios.post('CartController/listCart', {
+					userId: user.value.userId,
+					businessId: businessId.value
 				});
 				if (cartResponse.data) {
 					cartArr.value = cartResponse.data;

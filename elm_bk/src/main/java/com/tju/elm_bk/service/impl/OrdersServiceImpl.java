@@ -46,14 +46,18 @@ public class OrdersServiceImpl implements OrdersService {
             orders.setBusinessId(request.getBusinessId());
             orders.setDaId(request.getDaId());
             orders.setOrderTotal(request.getOrderTotal());
-            orders.setDeliveryPrice(request.getDeliveryPrice()); // 添加配送费设置
+
+            // 添加配送费设置
+            orders.setDeliveryPrice(businessMapper.getBusinessById(request.getBusinessId()).getDeliveryPrice());
             orderId = ordersMapper.saveOrders(orders);
             orderId = orders.getOrderId();
 
             // 3. 批量插入订单明细
             List<OrderDetailet> orderDetails = new ArrayList<>();
             for (Cart cart : cartList) {
+
                 OrderDetailet od = new OrderDetailet();
+                cart.setFood(foodMapper.getFoodById(cart.getFoodId()));
                 Food currentFood = cart.getFood(); // 直接从购物车获取食品信息
 
                 od.setOrderId(orderId);

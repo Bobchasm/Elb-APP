@@ -32,7 +32,7 @@ public class BusinessController {
      * @param business 商家编号
      * @return 商家详情
      */
-    @PostMapping("/getBusinessById")
+    @PostMapping("/getBusinessById")//
     public Business getBusinessById(@RequestBody Business business) {
         return businessService.getBusinessById(business);
     }

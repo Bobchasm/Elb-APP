@@ -71,23 +71,23 @@
 	  const route = useRoute();
 	  const router = useRouter();
 	  const reg = /^1[3456789]\d{9}$/;
-	  onMounted(() => {
-		businessId.value = route.query.businessId;
-		daId.value = route.query.daId;
-		user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : {};
-  
-		axios.get('DeliveryAddressController/getDeliveryAddressById', {
-    params: { 
-        daId: daId.value 
-    }
-})
-.then(response => {
-    deliveryAddress.value = response.data;
-})
-.catch(error => {
-    console.error(error);
-});
-	  });
+		onMounted(async () => {
+			businessId.value = route.query.businessId;
+			daId.value = route.query.daId;
+			user.value = sessionStorage.getItem('user')
+				? JSON.parse(sessionStorage.getItem('user'))
+				: {};
+
+			try {
+				// 修改为POST请求，参数放在请求体中
+				const response = await axios.post('DeliveryAddressController/getDeliveryAddressById', {
+					daId: daId.value
+				});
+				deliveryAddress.value = response.data;
+			} catch (error) {
+				console.error('获取配送地址失败:', error);
+			}
+		});
   
 	  const editUserAddress = () => {
 		if (!(deliveryAddress.value.contactName.trim())) {

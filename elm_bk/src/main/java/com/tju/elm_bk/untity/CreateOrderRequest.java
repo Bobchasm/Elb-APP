@@ -7,7 +7,7 @@ public class CreateOrderRequest {
     private Integer businessId;
     private Integer daId;
     private Double orderTotal;
-    private Double deliveryPrice;
+//    private Double deliveryPrice;
 
     public CreateOrderRequest(String userId, Integer businessId, Double orderTotal) {
         this.userId = userId;
@@ -41,10 +41,10 @@ public class CreateOrderRequest {
     public void setOrderTotal(Double orderTotal) {
         this.orderTotal = orderTotal;
     }
-    public Double getDeliveryPrice() {
-        return deliveryPrice;
-    }
-    public void setDeliveryPrice(Double deliveryPrice) {
-        this.deliveryPrice = deliveryPrice;
-    }
+//    public Double getDeliveryPrice() {
+//        return deliveryPrice;
+//    }
+//    public void setDeliveryPrice(Double deliveryPrice) {
+//        this.deliveryPrice = deliveryPrice;
+//    }
 }

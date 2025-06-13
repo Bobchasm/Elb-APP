@@ -147,26 +147,30 @@
 	  };
   
 	  onMounted(async () => {
-		orderTypeId.value = route.query.orderTypeId;
-		user.value = sessionStorage.getItem("user")
-		  ? JSON.parse(sessionStorage.getItem("user"))
-		  : null;
+  orderTypeId.value = route.query.orderTypeId;
+  user.value = sessionStorage.getItem("user")
+    ? JSON.parse(sessionStorage.getItem("user"))
+    : null;
+
+  if (!user.value) {
+    alert("用户未登录，请先登录！");
+    router.push({ path: "/login" });
+    return;
+  }
   
-		if (!user.value) {
-		  alert("用户未登录，请先登录！");
-		  router.push({ path: "/login" });
-		  return;
-		}
-		try {
-		  // 获取商家列表
-		  const businessResponse = await axios.get(
-			`/BusinessController/listBusinessByOrderTypeId?orderTypeId=${orderTypeId.value}`
-		  );
-		  businessArr.value = businessResponse.data;
-		} catch (error) {
-		  console.error("加载数据失败:", error);
-		}
-	  });
+  try {
+    // 获取商家列表 (GET → POST)
+    const businessResponse = await axios.post(
+      "/BusinessController/listBusinessByOrderTypeId",
+      {
+        orderTypeId: orderTypeId.value  // 参数改为放在请求体中
+      }
+    );
+    businessArr.value = businessResponse.data;
+  } catch (error) {
+    console.error("加载数据失败:", error);
+  }
+});
 	  const listCart = async () => {
 		try {
 		  const response = await axios.post(
