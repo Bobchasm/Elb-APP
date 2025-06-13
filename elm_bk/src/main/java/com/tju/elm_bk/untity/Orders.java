@@ -10,7 +10,7 @@ public class Orders {
     private Double orderTotal;
     private Integer daId; //送货地址编号
     private Integer orderState; //订单状态（0：未支付； 1：已支付）
-
+    private double deliveryPrice;
     //多对一：所属商家
     private Business business;
     //一对多：订单明细
@@ -88,5 +88,12 @@ public class Orders {
 
     public void setList(List<OrderDetailet> list) {
         this.list = list;
+    }
+
+    public double getDeliveryPrice() {
+        return deliveryPrice;
+    }
+    public void setDeliveryPrice(double deliveryPrice) {
+        this.deliveryPrice = deliveryPrice;
     }
 }

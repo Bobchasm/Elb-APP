@@ -10,7 +10,7 @@ import java.util.List;
 public interface OrdersMapper {
 //     @Insert("insert into orders(userId, businessId, orderDate, orderTotal, daId, orderState) " +
 //             "values(#{userId}, #{businessId}, #{orderDate}, #{orderTotal}, #{daId}, 0)")
-        @Insert("insert into orders (userId,businessId,orderDate,orderTotal,daId,orderState) values(#{userId},#{businessId},#{orderDate},#{orderTotal},#{daId},0)")
+        @Insert("insert into orders (userId,businessId,orderDate,orderTotal,daId,orderState,deliveryPrice) values(#{userId},#{businessId},#{orderDate},#{orderTotal},#{daId},0,#{deliveryPrice})")
         @Options(useGeneratedKeys=true,keyProperty="orderId",keyColumn="orderId")    
         int saveOrders(Orders orders);
 
@@ -20,7 +20,7 @@ public interface OrdersMapper {
     Orders getOrdersById(Integer orderId);
 
     @Select("select o.*, b.businessId as bbusinessId, b.businessName as bbusinessName, " +
-            "b.deliveryPrice as bdeliveryPrice from elm.orders o " +
+            "o.deliveryPrice as bdeliveryPrice from elm.orders o " +
             "left join elm.business b on o.businessId = b.businessId where o.userId = #{userId}")
     List<Orders> listOrdersByUserId(String userId);
 

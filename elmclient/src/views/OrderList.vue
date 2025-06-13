@@ -1,74 +1,81 @@
 <template>
 	<div class="wrapper">
-	  <!-- header部分 -->
-	  <header>
-		<p>我的订单</p>
-	  </header>
-  
-	  <!-- 订单列表部分 -->
-	  <h3>未支付订单信息：</h3>
-	  <ul class="order">
-		<template v-for="item in orderArr">
-		  <li v-if="item.orderState === 0">
-			<div class="order-info">
-			  <p>
-				{{ item.business.businessName }}
-				<i class="fa fa-caret-down" @click="detailetShow(item)"></i>
-			  </p>
-			  <div class="order-info-right">
-				<p>&#165;{{ item.orderTotal }}</p>
-				<div
-				  class="order-info-right-icon"
-				  @click="navigateToPayment(item.orderId)"
-				>
-				  去支付
-				</div>
-			  </div>
-			</div>
-			<ul class="order-detailet" v-show="item.isShowDetailet">
-			  <li v-for="de in detailet">
-				<p>{{ de.foodName }} x{{ de.quantity }}</p>
-				<p>&#165;{{ (de.priceAtThatTime * de.quantity).toFixed(2) }}</p>
-			  </li>
-			  <li>
-				<p>配送费</p>
-				<p>&#165;{{ item.business.deliveryPrice }}</p>
-			  </li>
-			</ul>
-		  </li>
-		</template>
-	  </ul>
-  
-	  <h3>已支付订单信息：</h3>
-	  <ul class="order">
-		<template v-for="item in orderArr">
-		  <li v-if="item.orderState === 1">
-			<div class="order-info">
-			  <p>
-				{{ item.business.businessName }}
-				<i class="fa fa-caret-down" @click="detailetShow(item)"></i>
-			  </p>
-			  <div class="order-info-right">
-				<p>&#165;{{ item.orderTotal }}</p>
-			  </div>
-			</div>
-			<ul class="order-detailet" v-show="item.isShowDetailet">
-			  <li v-for="de in detailet">
-				<p>{{ de.food.foodName }} x{{ de.quantity }}</p>
-				<p>&#165;{{ (de.food.foodPrice * de.quantity).toFixed(2) }}</p>
-			  </li>
-			  <li>
-				<p>配送费</p>
-				<p>&#165;{{ item.business.deliveryPrice }}</p>
-			  </li>
-			</ul>
-		  </li>
-		</template>
-	  </ul>
-  
-	  <!-- 底部菜单部分 -->
+		<!-- header部分 -->
+		<header>
+			<p>我的订单</p>
+		</header>
+
+		<!-- 订单列表部分 -->
+		<h3>未支付订单信息：</h3>
+		<ul class="order">
+			<template v-for="item in orderArr">
+				<li v-if="item.orderState === 0">
+					<div class="order-info">
+						<p>
+							{{ item.business.businessName }}
+							<i class="fa fa-caret-down" @click="detailetShow(item)"></i>
+						</p>
+						<div class="order-info-right">
+							<p>&#165;{{ item.orderTotal }}</p>
+							<div class="order-info-right-icon" @click="navigateToPayment(item.orderId)">
+								去支付
+							</div>
+						</div>
+					</div>
+					<ul class="order-detailet" v-show="item.isShowDetailet">
+						<li v-for="de in detailet">
+							<p>{{ de.foodName }} x{{ de.quantity }}</p>
+							<p>&#165;{{ (de.priceAtThatTime * de.quantity).toFixed(2) }}</p>
+						</li>
+						<li>
+							<p>配送费</p>
+							<p>&#165;{{ item.business.deliveryPrice }}</p>
+						</li>
+					</ul>
+				</li>
+			</template>
+		</ul>
+
+
+		
+
+
+
+
+
+
+
+
+		<h3>已支付订单信息：</h3>
+		<ul class="order">
+			<template v-for="item in orderArr">
+				<li v-if="item.orderState === 1">
+					<div class="order-info">
+						<p>
+							{{ item.business.businessName }}
+							<i class="fa fa-caret-down" @click="detailetShow(item)"></i>
+						</p>
+						<div class="order-info-right">
+							<p>&#165;{{ item.orderTotal }}</p>
+						</div>
+					</div>
+					<ul class="order-detailet" v-show="item.isShowDetailet">
+						<li v-for="de in detailet">
+							<p>{{ de.foodName }} x{{ de.quantity }}</p>//////////////食物名字
+							<p>&#165;{{ (de.foodPrice * de.quantity).toFixed(2) }}</p>//////////////食物价格
+						</li>
+						<li>
+							<p>配送费</p>
+							<p>&#165;{{ item.deliveryPrice }}</p>//////////////////商家配送费
+						</li>
+					</ul>
+				</li>
+			</template>
+		</ul>
+
+		<!-- 底部菜单部分 -->
 	</div>
-  </template>
+</template>
   
   <script>
   import { ref, onMounted, reactive } from "vue";
@@ -94,8 +101,8 @@
   
 		if (user.value) {
 		  await axios
-			.post(
-			  'OrdersController/listOrdersByUserId',{userId:user.value.userId}
+			.get(
+			  "OrdersController/listOrdersByUserId?userId=" + user.value.userId
 			)
 			.then((response) => {
 			  let result = response.data;
@@ -116,15 +123,26 @@
     console.log("orderId", order.orderId);
     
     await axios
-      .post("/OrdersController/listOrderDetailetByOrderId", {
-         orderId: order.orderId
+      .get("/OrdersController/listOrderDetailetByOrderId", {
+        params: { orderId: order.orderId }
       })
       .then((response) => {
         console.log(response.data);
         detailet.value = response.data;
       })
       .catch(handleError);
-
+    
+    await axios
+      .get("OrdersController/listOdIdByOrderId", {
+        params: { orderId: order.orderId }
+      })
+      .then((response) => {
+        console.log(response.data);
+        index.value = response.data;
+      })
+      .catch(handleError);
+    
+    console.log(index.value);
     console.log(detailet.value);
     order.isShowDetailet = !order.isShowDetailet;
 };

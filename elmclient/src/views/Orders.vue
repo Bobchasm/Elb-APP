@@ -37,6 +37,36 @@
 				<p>&#165;{{ business.deliveryPrice }}</p>
 			</div>
 
+
+
+
+			<ul class="cart">
+				<li v-for="item in cartItems" :key="item.foodId">
+					<!-- 先检查 food[item.foodId] 是否存在 -->
+					<template v-if="food[item.foodId]">
+						<div class="cart-img">
+							<img :src="food[item.foodId].foodImg">
+							<div class="cart-img-quantity" v-show="item.quantity > 0">{{ item.quantity }}</div>
+						</div>
+						<div class="cart-info">
+							<h3>{{ food[item.foodId].foodName }}</h3>
+							<p>&#165;{{ food[item.foodId].foodPrice }} / 份</p>
+						</div>
+					</template>
+					<!-- 可选：显示加载状态或默认内容 -->
+					<template v-else>
+						<div>加载中...</div>
+					</template>
+				</li>
+			</ul>
+
+
+
+
+
+
+
+
 			<!-- 合计部分 -->
 			<div class="total">
 				<div class="total-left">
@@ -85,49 +115,56 @@ export default {
 				if (savedAddress) {
 					deliveryaddress.value = JSON.parse(savedAddress);
 					try {
-    const response = await axios.post('DeliveryAddressController/getDeliveryAddressById', {
-            daId: deliveryaddress.value.daId
-    });
-    if (response.data) {
-        deliver.value = response.data;
-    } else {
-        deliveryaddress.value = null;
-        localStorage.removeItem(user.value.userId);
-    }
-} catch (error) {
-    console.error('获取配送地址详情失败:', error);
-    deliveryaddress.value = null;
-    localStorage.removeItem(user.value.userId);
-}
+						const response = await axios.get('DeliveryAddressController/getDeliveryAddressById', {
+							params: {
+								daId: deliveryaddress.value.daId
+							}
+						});
+						if (response.data) {
+							deliver.value = response.data;
+						} else {
+							deliveryaddress.value = null;
+							localStorage.removeItem(user.value.userId);
+						}
+					} catch (error) {
+						console.error('获取配送地址详情失败:', error);
+						deliveryaddress.value = null;
+						localStorage.removeItem(user.value.userId);
+					}
 				}
 
 				// 获取商家信息
 				if (businessId.value) {
-    try {
-        const businessResponse = await axios.post('BusinessController/getBusinessById', {
-                businessId: businessId.value
-        });
-        if (businessResponse.data) {
-            business.value = businessResponse.data;
-        } else {
-            throw new Error('商家信息获取失败');
-        }
-    } catch (error) {
-        console.error('获取商家信息失败:', error);
-        throw new Error('商家信息获取失败');
-    }
-} else {
-    throw new Error('商家ID无效');
-}
+					try {
+						const businessResponse = await axios.get('BusinessController/getBusinessById', {
+							params: {
+								businessId: businessId.value
+							}
+						});
+						if (businessResponse.data) {
+							business.value = businessResponse.data;
+						} else {
+							throw new Error('商家信息获取失败');
+						}
+					} catch (error) {
+						console.error('获取商家信息失败:', error);
+						throw new Error('商家信息获取失败');
+					}
+				} else {
+					throw new Error('商家ID无效');
+				}
 
 				// 获取购物车信息
-				const cartResponse = await axios.post('CartController/listCart', {
-        			userId: user.value.userId,
-        			businessId: businessId.value
+				const cartResponse = await axios.get('CartController/listCart', {
+					params: {
+						userId: user.value.userId,
+						businessId: businessId.value
+					}
 				});
 				if (cartResponse.data) {
-    				cartArr.value = cartResponse.data;
+					cartArr.value = cartResponse.data;
 				}
+
 			} catch (error) {
 				console.error('初始化订单数据失败:', error);
 				toast.error('加载订单数据失败，请重试！');

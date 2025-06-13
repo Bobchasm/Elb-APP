@@ -6,27 +6,19 @@
 		</header>
 
 		<!-- 购物车列表部分 -->
-		
-
 		<ul class="cart">
-  <li v-for="item in cartItems" :key="item.foodId">
-    <!-- 先检查 food[item.foodId] 是否存在 -->
-    <template v-if="food[item.foodId]">
-      <div class="cart-img">
-        <img :src="food[item.foodId].foodImg">
-        <div class="cart-img-quantity" v-show="item.quantity > 0">{{ item.quantity }}</div>
-      </div>
-      <div class="cart-info">
-        <h3>{{ food[item.foodId].foodName }}</h3>
-        <p>&#165;{{ food[item.foodId].foodPrice }} / 份</p>
-      </div>
-    </template>
-    <!-- 可选：显示加载状态或默认内容 -->
-    <template v-else>
-      <div>加载中...</div>
-    </template>
-  </li>
-</ul>
+			<li v-for="item in cartItems" :key="item.foodId">
+				<div class="cart-img" >
+					<img :src="food[item.foodId].foodImg">
+					<div class="cart-img-quantity" v-show="item.quantity > 0">{{ item.quantity }}</div>
+				</div>
+				<div class="cart-info">
+					<h3>{{ food[item.foodId].foodName }}</h3>
+					<p>&#165;{{ food[item.foodId].foodPrice }} / 份</p>
+				</div>
+				
+			</li>
+		</ul>
 
 		<!-- 底部菜单部分 -->
 		<!-- <Footer /> -->
@@ -52,35 +44,27 @@ export default {
 			user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
 
 			if (user.value) {
-    axios.post('FoodController/listFoodByBusinessId', {
-            businessId: businessId
-    })
-    .then(response => {
-        food.value = response.data;
-    })
-    .catch(error => {
-        console.error(error);
-    });
-    
-    listCart();
-} else {
-    alert('用户未登录，请先登录！');
-    router.push({ path: '/login' });
-}
+                axios.post('FoodController/listFoodByBusinessId', {businessId: businessId})
+				.then(response => {
+					food.value = response.data;
+				}).catch(error => {
+					console.error(error);
+				});
+				listCart();
+			} else {
+				alert('用户未登录，请先登录！');
+				router.push({ path: '/login' });
+			}
 		});
 
 		const listCart = () => {
-    axios.post('CartController/listCart', {
-            userId: user.value.userId,
-            businessId: businessId
-    })
-    .then(response => {
-        cartItems.value = response.data;
-    })
-    .catch(error => {
-        console.error(error);
-    });
-};
+			axios.post('CartController/listCart', { userId: user.value.userId ,businessId: businessId})
+				.then(response => {
+					cartItems.value = response.data;
+				}).catch(error => {
+					console.error(error);
+				});
+		};
 
 	
 

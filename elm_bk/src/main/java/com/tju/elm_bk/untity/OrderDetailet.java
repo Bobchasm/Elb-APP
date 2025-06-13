@@ -5,6 +5,8 @@ public class OrderDetailet {
     private Integer orderId;
     private Integer foodId;
     private Integer quantity;
+    private Double foodPrice;
+    private String foodName;
 
     //多对一：所属食品
     private Food food;
@@ -49,5 +51,21 @@ public class OrderDetailet {
 
     public void setFood(Food food) {
         this.food = food;
+    }
+
+    public Double getFoodPrice() {
+        return foodPrice;
+    }
+
+    public void setFoodPrice(Double foodPrice) {
+        this.foodPrice = foodPrice;
+    }
+
+    public String getFoodName() {
+        return foodName;
+    }
+
+    public void setFoodName(String foodName) {
+        this.foodName = foodName;
     }
 }

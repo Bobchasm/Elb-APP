@@ -41,25 +41,26 @@ public class OrdersServiceImpl implements OrdersService {
 
             // 2. 创建订单
             Orders orders = new Orders();
-
-            //数据库非空
-            orders.setOrderDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())); // 设置当前时间
-
-
+            orders.setOrderDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             orders.setUserId(request.getUserId());
             orders.setBusinessId(request.getBusinessId());
             orders.setDaId(request.getDaId());
             orders.setOrderTotal(request.getOrderTotal());
+            orders.setDeliveryPrice(request.getDeliveryPrice()); // 添加配送费设置
             orderId = ordersMapper.saveOrders(orders);
-            orderId = orders.getOrderId(); // 获取自动生成的订单编号
+            orderId = orders.getOrderId();
 
             // 3. 批量插入订单明细
             List<OrderDetailet> orderDetails = new ArrayList<>();
             for (Cart cart : cartList) {
                 OrderDetailet od = new OrderDetailet();
+                Food currentFood = cart.getFood(); // 直接从购物车获取食品信息
+
                 od.setOrderId(orderId);
                 od.setFoodId(cart.getFoodId());
                 od.setQuantity(cart.getQuantity());
+                od.setFoodName(currentFood.getFoodName()); // 使用创建时的食品名称
+                od.setFoodPrice(currentFood.getFoodPrice()); // 使用创建时的食品价格
                 orderDetails.add(od);
             }
             orderDetailetMapper.saveOrderDetailetBatch(orderDetails);
@@ -77,7 +78,7 @@ public class OrdersServiceImpl implements OrdersService {
     public Orders getOrdersById(Orders order) {
         Orders orders = ordersMapper.getOrdersById(order.getOrderId());
         if (orders != null) {
-            // 关联商家信息
+            // 关联商家信息??????
             orders.setBusiness(businessMapper.getBusinessById(orders.getBusinessId()));
 
             // 关联订单明细
@@ -94,7 +95,7 @@ public class OrdersServiceImpl implements OrdersService {
             // 关联商家信息
             orders.setBusiness(businessMapper.getBusinessById(orders.getBusinessId()));
 
-            // 关联订单明细
+            // 关联订单明细,为了插入当前的食品信息
             List<OrderDetailet> details = orderDetailetMapper.listOrderDetailetByOrderId(orders.getOrderId());
             orders.setList(details);
         }
