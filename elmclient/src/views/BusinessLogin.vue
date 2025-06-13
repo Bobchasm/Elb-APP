@@ -81,10 +81,8 @@
 			alert('用户名或密码不正确！');
 		  } else {
 			// 检查商家信息是否已完善
-			const businessInfoResponse = await axios.get('BusinessController/getBusinessById', {
-   				params: {
-        			businessId: businessId.value
-    			}
+			const businessInfoResponse = await axios.post('BusinessController/getBusinessById', {
+        		businessId: businessId.value
 			});
 			
 			const businessInfo = businessInfoResponse.data;

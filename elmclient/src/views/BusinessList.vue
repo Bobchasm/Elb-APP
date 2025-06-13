@@ -169,8 +169,10 @@
 	  });
 	  const listCart = async () => {
 		try {
-		  const response = await axios.get(
-			`/CartController/listCart?userId=${user.value.userId}`
+		  const response = await axios.post(
+			'/CartController/listCart',{
+				userId:user.value.userId
+			}
 		  );
 		  const cartArr = response.data;
   

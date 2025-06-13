@@ -52,10 +52,8 @@
   
 	  const listDeliveryAddressByUserId = () => {
     // 查询送货地址
-    axios.get('DeliveryAddressController/listDeliveryAddressByUserId', {
-        params: {
+    axios.post('DeliveryAddressController/listDeliveryAddressByUserId', {
             userId: user.value.userId
-        }
     }).then(response => {
         deliveryAddressArr.value = response.data;
     }).catch(error => {

@@ -121,10 +121,8 @@ import axios from 'axios';
   
 		loading.value = true;
 		try {
-  const response = await axios.get('OrdersController/getOrdersById', {
-    params: {
+  const response = await axios.post('OrdersController/getOrdersById', {
       orderId: orderId.value
-    }
   });
 
   if (response.data && response.data.orderId) {
@@ -160,10 +158,8 @@ import axios from 'axios';
 		}
   
 		try {
-  await axios.get('OrdersController/payOk', {
-    params: { 
+  await axios.post('OrdersController/payOk', {
       orderId: orderId.value 
-    }
   });
   router.push({ 
     path: '/successfulPayment', 

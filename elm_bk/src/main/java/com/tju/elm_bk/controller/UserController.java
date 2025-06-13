@@ -19,11 +19,10 @@ public class UserController {
      * 返回值：User
      * 功能：根据用户编号和密码查询用户表返回的行数
      */
-    @GetMapping("/getUserByIdByPass")
+    @PostMapping("/getUserByIdByPass")
     public User getUserByIdByPass(
-            @RequestParam String userId,
-            @RequestParam String password) {
-        return userService.getUserByIdByPass(userId, password);
+            @RequestBody User user) {
+        return userService.getUserByIdByPass(user);
     }
 
     /**
@@ -32,9 +31,9 @@ public class UserController {
      * 返回值：int（返回行数）
      * 功能：根据用户编号查询用户表返回的行数
      */
-    @GetMapping("/getUserById")
-    public Integer getUserById(@RequestParam String userId) {
-        return userService.getUserById(userId);
+    @PostMapping("/getUserById")
+    public Integer getUserById(@RequestBody User user) {
+        return userService.getUserById(user);
     }
 
     /**

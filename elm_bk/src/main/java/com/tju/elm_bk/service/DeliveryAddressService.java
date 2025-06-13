@@ -12,14 +12,18 @@ public class DeliveryAddressService {
     @Autowired
     DeliveryAddressMapper deliveryAddressMapper;
 
-    public List<DeliveryAddress> listDeliveryAddressByUserId(String userId)
+    public List<DeliveryAddress> listDeliveryAddressByUserId(DeliveryAddress deliveryAddress)
     {
-        return deliveryAddressMapper.listDeliveryAddress(userId);
+        if(null!=deliveryAddressMapper)
+            return deliveryAddressMapper.listDeliveryAddress(deliveryAddress.getUserId());
+        return null;
     }
 
-    public DeliveryAddress getDeliveryAddressById(int daId)
+    public DeliveryAddress getDeliveryAddressById(DeliveryAddress deliveryAddress)
     {
-        return deliveryAddressMapper.getDeliveryAddressById(daId);
+        if(null!=deliveryAddressMapper)
+            return deliveryAddressMapper.getDeliveryAddressById(deliveryAddress.getDaId());
+        return null;
     }
 
     public int addDeliveryAddress(String contactName,int contactSex,String contactTel,String address,String userId)

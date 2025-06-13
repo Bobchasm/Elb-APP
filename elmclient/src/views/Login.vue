@@ -70,18 +70,11 @@
 		  userId: userId.value,
 		  password: password.value
 		};
-  
-		axios({
-			method: "get",
-        url:
-          "UserController/getUserByIdByPass?userId=" +
-          loginData.userId +
-          "&password=" +
-          loginData.password,
-        headers: {
-          "Content-Type": "application/json",
-        },
-		}).then(response => {
+ 
+		axios.post('UserController/getUserByIdByPass', {
+			userId: userId.value,
+			password: password.value
+        }).then(response => {
 		  const user = response.data;
 		  if (!user) {
 			alert('用户名或密码不正确！');

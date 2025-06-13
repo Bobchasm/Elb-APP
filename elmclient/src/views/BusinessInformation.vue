@@ -128,10 +128,8 @@ export default {
             }
 
             // 获取商家信息
-            axios.get('BusinessController/getBusinessById', {
-    params: {
+            axios.post('BusinessController/getBusinessById', {
         businessId: businessUser.businessId
-    }
 }).then(response => {
     if (response.data) {
         // 填充已有的商家信息到表单中

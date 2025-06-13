@@ -4,6 +4,7 @@ import com.tju.elm_bk.service.OrdersService;
 import com.tju.elm_bk.untity.CreateOrderRequest;
 import com.tju.elm_bk.untity.OrderDetailet;
 import com.tju.elm_bk.untity.Orders;
+import com.tju.elm_bk.untity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,9 +44,9 @@ public class OrdersController {
      * 返回值：orders对象（包括多对一：商家信息； 一对多：订单明细信息）
      * 功能：根据订单编号查询订单信息，包括所属商家信息，和此订单的所有订单明细信息
      */
-    @GetMapping("/getOrdersById")
-    public Orders getOrdersById(@RequestParam Integer orderId) {
-        return ordersService.getOrdersById(orderId);
+    @PostMapping("/getOrdersById")
+    public Orders getOrdersById(@RequestBody Orders order) {
+        return ordersService.getOrdersById(order);
     }
 
     /**
@@ -55,24 +56,24 @@ public class OrdersController {
      * 功能：根据用户编号查询此用户的所有订单信息
      */
 
-    @GetMapping("/listOrdersByUserId")
-    public List<Orders> listOrdersByUserId(@RequestParam String userId) {
-        return ordersService.listOrdersByUserId(userId);
+    @PostMapping("/listOrdersByUserId")
+    public List<Orders> listOrdersByUserId(@RequestBody User user) {
+        return ordersService.listOrdersByUserId(user);
     }
 
     // 改变订单状态为已完成
-    @GetMapping("/payOk")
-    public int payOk(@RequestParam Integer orderId) {
-        return ordersService.completeOrder(orderId);
+    @PostMapping("/payOk")
+    public int payOk(@RequestBody Orders order) {
+        return ordersService.completeOrder(order);
     }
 
-    @GetMapping("/listOrderDetailetByOrderId")
-        public List<OrderDetailet> listOrderDetailetByOrderId(@RequestParam Integer orderId){
-            return ordersService.listOrderDetailetByOrderId(orderId);
+    @PostMapping("/listOrderDetailetByOrderId")
+        public List<OrderDetailet> listOrderDetailetByOrderId(@RequestBody Orders orders) {
+            return ordersService.listOrderDetailetByOrderId(orders);
     }
     
-    @GetMapping("/listOdIdByOrderId")
-        public List<Integer> listOdIdByOrderId(@RequestParam Integer orderId){
-            return ordersService.listOdIdByOrderId(orderId);
+    @PostMapping("/listOdIdByOrderId")
+        public List<Integer> listOdIdByOrderId(@RequestBody Orders order) {
+            return ordersService.listOdIdByOrderId(order);
     }
 }

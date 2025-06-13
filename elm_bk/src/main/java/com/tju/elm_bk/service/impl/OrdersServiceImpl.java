@@ -74,22 +74,22 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders getOrdersById(Integer orderId) {
-        Orders orders = ordersMapper.getOrdersById(orderId);
+    public Orders getOrdersById(Orders order) {
+        Orders orders = ordersMapper.getOrdersById(order.getOrderId());
         if (orders != null) {
             // 关联商家信息
             orders.setBusiness(businessMapper.getBusinessById(orders.getBusinessId()));
 
             // 关联订单明细
-            List<OrderDetailet> details = orderDetailetMapper.listOrderDetailetByOrderId(orderId);
+            List<OrderDetailet> details = orderDetailetMapper.listOrderDetailetByOrderId(order.getOrderId());
             orders.setList(details);
         }
         return orders;
     }
 
     @Override
-    public List<Orders> listOrdersByUserId(String userId) {
-        List<Orders> ordersList = ordersMapper.listOrdersByUserId(userId);
+    public List<Orders> listOrdersByUserId(User user) {
+        List<Orders> ordersList = ordersMapper.listOrdersByUserId(user.getUserId());
         for (Orders orders : ordersList) {
             // 关联商家信息
             orders.setBusiness(businessMapper.getBusinessById(orders.getBusinessId()));
@@ -102,17 +102,18 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public int completeOrder(Integer orderId) {
+    public int completeOrder(Orders order) {
         try {
             // 更新订单状态为已完成
-            return ordersMapper.completeOrder(orderId);
+            return ordersMapper.completeOrder(order.getOrderId());
         } catch (Exception e) {
             throw new RuntimeException("更新订单状态失败", e);
         }
     }
 
-    public List<OrderDetailet> listOrderDetailetByOrderId(Integer orderId){
-        List<OrderDetailet> orderDetails = orderDetailetMapper.listOrderDetailetByOrderId(orderId);
+    public List<OrderDetailet> listOrderDetailetByOrderId(Orders orders){
+        if(null==orders) return null;
+        List<OrderDetailet> orderDetails = orderDetailetMapper.listOrderDetailetByOrderId(orders.getOrderId());
         
         // 为每个订单明细填充食品信息
         for (OrderDetailet detail : orderDetails) {
@@ -125,8 +126,8 @@ public class OrdersServiceImpl implements OrdersService {
 	
 	
 	
-	public List<Integer> listOdIdByOrderId(Integer orderId){
-		 return ordersMapper.listOdIdByOrderId(orderId);
+	public List<Integer> listOdIdByOrderId(Orders order){
+		 return ordersMapper.listOdIdByOrderId(order.getOrderId());
 	 }
 
 }

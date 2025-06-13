@@ -13,36 +13,36 @@ public class CartController {
     @Autowired
     CartService cartService;
 
-    @GetMapping("/listCart")
-    public List<Cart> listCart(@RequestParam String userId, @RequestParam Integer businessId)
+    @PostMapping("/listCart")
+    public List<Cart> listCart(@RequestBody Cart cart)
     {
-        return cartService.listCart(userId,businessId);
+        return cartService.listCart(cart);
     }
 
-    @GetMapping("/saveCart")
-    public int saveCart(@RequestParam String userId, @RequestParam Integer businessId, @RequestParam Integer foodId)
+    @PostMapping ("/saveCart")
+    public int saveCart(@RequestBody Cart cart)
     {
-        if (userId == null || businessId == null || foodId == null) {
+        if (null==cart) {
             return -1; // Return error code for invalid parameters
         }
-        return cartService.saveCart(userId,businessId,foodId);
+        return cartService.saveCart(cart);
     }
 
-    @GetMapping("/updateCart")
-    public int updateCart(@RequestParam String userId, @RequestParam Integer businessId, @RequestParam Integer foodId, @RequestParam Integer quantity)
+    @PostMapping("/updateCart")
+    public int updateCart(@RequestBody Cart cart)
     {
-        if (userId == null || businessId == null || foodId == null || quantity == null) {
+        if (null==cart) {
             return -1; // Return error code for invalid parameters
         }
-        return cartService.updateCart(userId,businessId,foodId,quantity);
+        return cartService.updateCart(cart);
     }
 
-    @GetMapping("/removeCart")
-    public int removeCart(@RequestParam String userId, @RequestParam Integer businessId, @RequestParam Integer foodId)
+    @PostMapping("/removeCart")
+    public int removeCart(@RequestBody Cart cart)
     {
-        if (userId == null || businessId == null || foodId == null) {
+        if (null==cart) {
             return -1; // Return error code for invalid parameters
         }
-        return cartService.removeCart(userId,businessId,foodId);
+        return cartService.removeCart(cart);
     }
 }

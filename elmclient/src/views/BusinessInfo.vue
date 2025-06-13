@@ -120,9 +120,9 @@
   
 		//根据businessId查询商家信息;
 		axios
-		  .get(
-			"BusinessController/getBusinessById?businessId=" + businessId.value
-		  )
+		  .post(
+			'BusinessController/getBusinessById',{businessId:businessId.value
+			})
 		  .then((response) => {
 			console.log("Business data:", response.data);
 			business.value = response.data;
@@ -134,8 +134,8 @@
   
 		//根据businessId查询所属食品信息;
 		axios
-		  .get(
-			"FoodController/listFoodByBusinessId?businessId=" + businessId.value
+		  .post(
+			'FoodController/listFoodByBusinessId',{businessId: businessId.value}
 		  )
 		  .then((response) => {
 			console.log("Food data:", response.data);
@@ -159,11 +159,10 @@
 	  };
 	  const listCart = () => {
 		axios
-		  .get(
-			"CartController/listCart?userId=" +
-			  user.value.userId +
-			  "&businessId=" +
-			  businessId.value
+		  .post(
+			'CartController/listCart' ,{
+			userId:user.value.userId,
+			  businessId:businessId.value}
 		  )
 		  .then((response) => {
 			let cartArr = response.data;
@@ -208,8 +207,8 @@
   
 	  const savaCart = (index) => {
 		axios
-		  .get(
-			`/CartController/saveCart?userId=${user.value.userId}&businessId=${businessId.value}&foodId=${foodArr.value[index].foodId}`
+		  .post(
+			'/CartController/saveCart',{userId:user.value.userId,businessId:businessId.value,foodId:foodArr.value[index].foodId}
 		  )
 		  .then((response) => {
 			if (response.data) {
@@ -225,12 +224,14 @@
   
 	  const updateCart = (index, num) => {
 		axios
-		  .get(
-			`CartController/updateCart?userId=${user.value.userId}&businessId=${
-			  businessId.value
-			}&foodId=${foodArr.value[index].foodId}&num=${num}&quantity=${
-			  foodArr.value[index].quantity + 1
-			}`
+		  .post(
+			'CartController/updateCart',{
+				userId:user.value.userId,
+				businessId:businessId.value,
+				foodId:foodArr.value[index].foodId,
+				num:num,
+				quantity:foodArr.value[index].quantity + 1
+			}
 		  )
 		  .then((response) => {
 			if (response.data) {
@@ -246,8 +247,11 @@
   
 	  const removeCart = (index) => {
 		axios
-		  .get(
-			`CartController/removeCart?userId=${user.value.userId}&businessId=${businessId.value}&foodId=${foodArr.value[index].foodId}`
+		  .post(
+			'CartController/removeCart',{
+				userId:user.value.userId,
+				businessId:businessId.value,
+				foodId:foodArr.value[index].foodId}
 		  )
 		  .then((response) => {
 			console.log(response);

@@ -13,13 +13,13 @@ public class CartService {
     @Autowired
     CartMapper cartMapper;
 
-    public List<Cart> listCart(String userId,Integer businessId)
+    public List<Cart> listCart(Cart ca)
     {
         List<Cart> carts=new ArrayList<>();
-        if(businessId!=null)
-            carts=cartMapper.listCartByUserIdAndBusinessId(userId,businessId);
+        if(ca.getBusinessId()!=null)
+            carts=cartMapper.listCartByUserIdAndBusinessId(ca.getUserId(),ca.getBusinessId());
         else
-            carts=cartMapper.listCartByUserId(userId);
+            carts=cartMapper.listCartByUserId(ca.getUserId());
         for(Cart cart:carts)
         {
             cart.setFood(cartMapper.selectByFoodId(cart.getFoodId()));
@@ -27,21 +27,21 @@ public class CartService {
         return carts;
     }
 
-    public int saveCart(String userId,int businessId,int foodId)
+    public int saveCart(Cart cart)
     {
-        return cartMapper.insertCart(userId,businessId,foodId);
+        return cartMapper.insertCart(cart.getUserId(),cart.getBusinessId(),cart.getFoodId());
     }
 
-    public int updateCart(String userId,int businessId,int foodId,int quantity)
+    public int updateCart(Cart cart)
     {
-        return cartMapper.updateCart(userId,businessId,foodId,quantity);
+        return cartMapper.updateCart(cart.getUserId(),cart.getBusinessId(),cart.getFoodId(),cart.getQuantity());
     }
 
-    public int removeCart(String userId,Integer businessId,Integer foodId)
+    public int removeCart(Cart cart)
     {
-        if(foodId!=null)
-            return cartMapper.deleteCartByFood(userId,businessId,foodId);
+        if(cart.getFoodId()!=null)
+            return cartMapper.deleteCartByFood(cart.getUserId(),cart.getBusinessId(),cart.getFoodId());
         else
-            return cartMapper.deleteCartByBusinessId(userId,businessId);
+            return cartMapper.deleteCartByBusinessId(cart.getUserId(),cart.getBusinessId());
     }
 }

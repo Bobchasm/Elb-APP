@@ -145,11 +145,9 @@ export default {
       }
 
       try {
-        const response = await axios.get('UserController/getUserByIdByPass', {
-          params: {
+        const response = await axios.post('UserController/getUserByIdByPass', {
             userId: user.value.userId,
             password: user.value.password
-          }
         });
         
         if (response.data) {

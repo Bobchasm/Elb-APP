@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface BusinessService {
     public List<Business> listBusinessByOrderTypeId(Integer type);
-    public Business getBusinessById(Integer business);
+    public Business getBusinessById(Business business);
     public int updateBusiness(Business business);
     public List<Business> listBusinessByBusinessName(String businessName);
     public int saveBusiness(Business business);

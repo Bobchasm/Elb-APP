@@ -52,10 +52,8 @@ export default {
 			user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
 
 			if (user.value) {
-    axios.get('FoodController/listFoodByBusinessId', {
-        params: {
+    axios.post('FoodController/listFoodByBusinessId', {
             businessId: businessId
-        }
     })
     .then(response => {
         food.value = response.data;
@@ -72,11 +70,9 @@ export default {
 		});
 
 		const listCart = () => {
-    axios.get('CartController/listCart', {
-        params: {
+    axios.post('CartController/listCart', {
             userId: user.value.userId,
             businessId: businessId
-        }
     })
     .then(response => {
         cartItems.value = response.data;

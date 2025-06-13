@@ -94,8 +94,8 @@
   
 		if (user.value) {
 		  await axios
-			.get(
-			  "OrdersController/listOrdersByUserId?userId=" + user.value.userId
+			.post(
+			  'OrdersController/listOrdersByUserId',{userId:user.value.userId}
 			)
 			.then((response) => {
 			  let result = response.data;
@@ -116,8 +116,8 @@
     console.log("orderId", order.orderId);
     
     await axios
-      .get("/OrdersController/listOrderDetailetByOrderId", {
-        params: { orderId: order.orderId }
+      .post("/OrdersController/listOrderDetailetByOrderId", {
+         orderId: order.orderId
       })
       .then((response) => {
         console.log(response.data);
@@ -126,8 +126,8 @@
       .catch(handleError);
     
     await axios
-      .get("OrdersController/listOdIdByOrderId", {
-        params: { orderId: order.orderId }
+      .post("OrdersController/listOdIdByOrderId", {
+        orderId: order.orderId
       })
       .then((response) => {
         console.log(response.data);

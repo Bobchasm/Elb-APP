@@ -14,9 +14,9 @@ public class FoodController {
     @Autowired
     private FoodService foodService;
 
-    @GetMapping("/listFoodByBusinessId")
-    public List<Food> listFoodByBusinessId(@RequestParam Integer businessId) {
-        return foodService.listFoodByBusinessId(businessId);
+    @PostMapping("/listFoodByBusinessId")
+    public List<Food> listFoodByBusinessId(@RequestBody Food food) {
+        return foodService.listFoodByBusinessId(food);
     }
 
     @PostMapping("/addFood")

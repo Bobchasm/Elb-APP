@@ -3,6 +3,6 @@ import com.tju.elm_bk.untity.Food;
 import java.util.List;
 
 public interface FoodService {
-    public List<Food> listFoodByBusinessId(Integer businessId);
+    public List<Food> listFoodByBusinessId(Food food);
     public int addFood(Food food);
 }

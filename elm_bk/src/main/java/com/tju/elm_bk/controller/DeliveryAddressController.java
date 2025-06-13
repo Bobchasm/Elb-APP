@@ -13,16 +13,16 @@ public class DeliveryAddressController {
     @Autowired
     private DeliveryAddressService deliveryAddressService;
 
-    @GetMapping("/listDeliveryAddressByUserId")
-    public List<DeliveryAddress> listDeliveryAddressByUserId(String userId)
+    @PostMapping("/listDeliveryAddressByUserId")
+    public List<DeliveryAddress> listDeliveryAddressByUserId(@RequestBody DeliveryAddress deliveryAddress)
     {
-        return deliveryAddressService.listDeliveryAddressByUserId(userId);
+        return deliveryAddressService.listDeliveryAddressByUserId(deliveryAddress);
     }
 
-    @GetMapping("/getDeliveryAddressById")
-    public DeliveryAddress getDeliveryAddressById(int daId)
+    @PostMapping("/getDeliveryAddressById")
+    public DeliveryAddress getDeliveryAddressById(@RequestBody DeliveryAddress deliveryAddress)
     {
-        return deliveryAddressService.getDeliveryAddressById(daId);
+        return deliveryAddressService.getDeliveryAddressById(deliveryAddress);
     }
 
     @PostMapping("/saveDeliveryAddress")
