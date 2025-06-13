@@ -159,11 +159,13 @@
   }
   
   try {
-    // 获取商家列表 (GET → POST)
-    const businessResponse = await axios.post(
-      "/BusinessController/listBusinessByOrderTypeId",
+    // 获取商家列表 (改为 GET 请求)
+    const businessResponse = await axios.get(
+      "/BusinessController/listBusinessByOrderTypeId", 
       {
-        orderTypeId: orderTypeId.value  // 参数改为放在请求体中
+        params: {  // GET 请求的参数放在 params 中
+          orderTypeId: orderTypeId.value
+        }
       }
     );
     businessArr.value = businessResponse.data;
