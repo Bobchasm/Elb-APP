@@ -124,18 +124,7 @@
         detailet.value = response.data;
       })
       .catch(handleError);
-    
-    await axios
-      .post("OrdersController/listOdIdByOrderId", {
-        orderId: order.orderId
-      })
-      .then((response) => {
-        console.log(response.data);
-        index.value = response.data;
-      })
-      .catch(handleError);
-    
-    console.log(index.value);
+
     console.log(detailet.value);
     order.isShowDetailet = !order.isShowDetailet;
 };
