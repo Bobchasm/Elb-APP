@@ -75,7 +75,7 @@
 		  <!-- 不够起送费 -->
 		  <div
 			class="cart-right-item"
-			v-show="totalSettle < business.starPrice"
+			v-show="totalSettle- business.deliveryPrice< business.starPrice"
 			style="background-color: #535356; cursor: default"
 		  >
 			&#165;{{ business.starPrice }}起送

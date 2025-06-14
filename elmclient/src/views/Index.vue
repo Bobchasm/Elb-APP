@@ -115,20 +115,14 @@
                     <div class="business-info-detail">
                         <h3>{{ business.businessName }}</h3>
                         <div class="business-info-rating">
-                            <span class="rating">
-                                <i v-for="n in 5" :key="n" class="fa fa-star" :class="{ 'active': n <= business.score }"></i>
-                            </span>
-                            <span class="sales">月售 {{ business.sales || 0 }}单</span>
+
                         </div>
                         <div class="business-info-delivery">
                             <span>起送 ¥{{ business.starPrice }}</span>
                             <span>配送 ¥{{ business.deliveryPrice }}</span>
-                            <span>{{ business.deliveryTime || '30-45' }}分钟</span>
                         </div>
                         <div class="business-info-promotion">
                             <div class="business-info-promotion-left">
-                                <div class="business-info-promotion-left-incon">特</div>
-                                <p>特价商品5元起</p>
                             </div>
                         </div>
                     </div>

@@ -48,14 +48,6 @@
 					<input type="radio" v-model="user.userSex" value="0" style="width:6vw;height: 3.2vw;">女
 				</div>
 			</li>
-			<li>
-				<div class="title">
-					上传头像：
-				</div>
-				<div class="content">
-					<input type="file" @change="handleFileUpload" accept="image/*">
-				</div>
-			</li>
 		</ul>
 
 		<div class="button-login">

@@ -18,13 +18,6 @@
 			  <div class="business-header">
 				<h3>{{ business.businessName }}</h3>
 				<div class="business-rating">
-				  <span class="stars">
-					<i class="fa fa-star" v-for="n in 5" :key="n"></i>
-				  </span>
-				  <span class="rating-score">{{ business.rating || "4.9" }}</span>
-				  <span class="rating-count"
-					>月售{{ business.monthSales || "345" }}单</span
-				  >
 				</div>
 			  </div>
 			  <p class="description">{{ business.businessExplain }}</p>
@@ -32,8 +25,6 @@
 				<div class="price-info">
 				  <span>起送 ¥{{ business.starPrice }}</span>
 				  <span>配送 ¥{{ business.deliveryPrice }}</span>
-				  <span>{{ business.deliveryTime || "30分钟" }}</span>
-				  <span>{{ business.distance || "3.22km" }}</span>
 				</div>
 				<div
 				  class="business-tags"
@@ -46,10 +37,6 @@
 				  >
 					{{ promo }}
 				  </span>
-				</div>
-				<div class="business-tags" v-else>
-				  <span class="tag new">新用户立减9元</span>
-				  <span class="tag special">特价商品5元起</span>
 				</div>
 			  </div>
 			</div>

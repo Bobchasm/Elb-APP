@@ -12,6 +12,7 @@
 				<li v-if="item.orderState === 0">
 					<div class="order-info">
 						<p>
+							{{ item.orderDate}}<br>
 							{{ item.business.businessName }}
 							<i class="fa fa-caret-down" @click="detailetShow(item)"></i>
 						</p>
@@ -42,6 +43,7 @@
 				<li v-if="item.orderState === 1">
 					<div class="order-info">
 						<p>
+							{{ item.orderDate}}<br>
 							{{ item.business.businessName }}
 							<i class="fa fa-caret-down" @click="detailetShow(item)"></i>
 						</p>
