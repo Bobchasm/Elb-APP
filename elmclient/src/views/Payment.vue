@@ -31,7 +31,7 @@
 			  <template v-if="orderDetails.length > 0">
 				<div class="detail-item" v-for="item in orderDetails" :key="item.odId">
 				  <span class="item-name">{{ item.foodName || '未知商品' }} × {{ item.quantity || 0 }}</span>
-				  <span class="item-price">&#165;{{ (item.priceAtThatTime * item.quantity).toFixed(2) }}</span>
+				  <span class="item-price">&#165;{{ (item.foodPrice * item.quantity).toFixed(2) }}</span>
 				</div>
 			  </template>
 			  <div class="detail-item delivery-fee">

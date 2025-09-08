@@ -9,12 +9,12 @@
 		<ul class="cart">
 			<li v-for="item in cartItems" :key="item.foodId">
 				<div class="cart-img" >
-					<img :src="food[item.foodId].foodImg">
+					<img :src="food?.find(f => f.foodId === item.foodId)?.foodImg">
 					<div class="cart-img-quantity" v-show="item.quantity > 0">{{ item.quantity }}</div>
 				</div>
 				<div class="cart-info">
-					<h3>{{ food[item.foodId].foodName }}</h3>
-					<p>&#165;{{ food[item.foodId].foodPrice }} / 份</p>
+					<h3>{{ food?.find(f => f.foodId === item.foodId)?.foodName }}</h3>
+					<p>&#165;{{ food?.find(f => f.foodId === item.foodId)?.foodPrice }} / 份</p>
 				</div>
 				
 			</li>
@@ -38,7 +38,7 @@ export default {
 		const route = useRoute();
 		const router = useRouter();
         const businessId = route.query.businessId;
-        const food = ref({});
+        const food = ref([]);
         console.log(businessId);
 		onMounted(() => {
 			user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
