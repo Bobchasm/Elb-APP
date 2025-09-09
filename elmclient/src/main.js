@@ -18,7 +18,7 @@ import {
 
 // 设置 axios 的基础配置
 // axios.defaults.baseURL = process.env.VITE_API_BASE_URL;
-axios.defaults.baseURL = 'http://localhost:8081';
+axios.defaults.baseURL = 'http://localhost:8080';
 axios.defaults.timeout = 10000; // 设置超时时间为 10 秒
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 axios.defaults.headers.common['Accept'] = 'application/json';

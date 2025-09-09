@@ -214,7 +214,7 @@ export default {
 
         // 处理图片加载失败
         const handleImageError = (e) => {
-            e.target.src = '/src/assets/default-business.png';
+            e.target.src = '../assets/default-business.png';
         };
 
         // 跳转到商家详情页
