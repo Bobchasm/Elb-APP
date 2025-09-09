@@ -1,7 +1,7 @@
 // UserMapper.java
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.untity.User;
+import com.tju.elm_bk.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;

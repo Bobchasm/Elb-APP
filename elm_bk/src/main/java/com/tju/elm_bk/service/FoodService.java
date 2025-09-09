@@ -1,5 +1,5 @@
 package com.tju.elm_bk.service;
-import com.tju.elm_bk.untity.Food;
+import com.tju.elm_bk.entity.Food;
 import java.util.List;
 
 public interface FoodService {

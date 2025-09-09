@@ -1,6 +1,6 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.untity.DeliveryAddress;
+import com.tju.elm_bk.entity.DeliveryAddress;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

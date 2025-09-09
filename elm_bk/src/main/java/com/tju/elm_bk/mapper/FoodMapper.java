@@ -1,7 +1,7 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
 
-import com.tju.elm_bk.untity.Food;
+import com.tju.elm_bk.entity.Food;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;

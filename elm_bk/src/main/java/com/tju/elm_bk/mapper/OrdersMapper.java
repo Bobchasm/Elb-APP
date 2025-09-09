@@ -1,6 +1,6 @@
 // OrdersMapper.java
 package com.tju.elm_bk.mapper;
-import com.tju.elm_bk.untity.Orders;
+import com.tju.elm_bk.entity.Orders;
 
 import org.apache.ibatis.annotations.*;
 

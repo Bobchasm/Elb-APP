@@ -1,7 +1,7 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.untity.Cart;
-import com.tju.elm_bk.untity.Food;
+import com.tju.elm_bk.entity.Cart;
+import com.tju.elm_bk.entity.Food;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
