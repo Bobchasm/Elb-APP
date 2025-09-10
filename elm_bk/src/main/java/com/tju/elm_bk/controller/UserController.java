@@ -1,5 +1,6 @@
 package com.tju.elm_bk.controller;
 
+import com.tju.elm_bk.result.Result;
 import com.tju.elm_bk.service.UserService;
 import com.tju.elm_bk.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +49,26 @@ public class UserController {
      */
     @Operation(summary = "创建用户")
     @PostMapping("/saveUser")
-    public Integer saveUser(@RequestBody User user) {
+    public Result saveUser(@RequestBody User user) {
         return userService.saveUser(user);
+    }
+
+    /**
+     * UserController/login
+     * 登录功能
+     * 参数：userId、password
+     * 返回值：Result
+     * 功能：用户登录
+     */
+    @Operation(summary = "用户登录")
+    @PostMapping("/login")
+    public Result login(@RequestBody User user) {
+        return userService.login(user);
+    }
+
+    @Operation(summary = "退出登录")
+    @PostMapping("/logout")
+    public Result logout() {
+        return userService.logout();
     }
 }

@@ -1,9 +1,14 @@
 package com.tju.elm_bk.service;
 
 import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.result.Result;
 
 public interface UserService {
     public User getUserByIdByPass(User user);
     public int getUserById(User user);
-    public int saveUser(User user);
+    public Result saveUser(User user);
+
+    Result login(User user);
+
+    Result logout();
 }

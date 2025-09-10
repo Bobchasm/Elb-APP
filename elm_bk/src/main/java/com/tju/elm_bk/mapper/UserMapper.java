@@ -16,5 +16,11 @@ public interface UserMapper {
 
     @Insert("INSERT INTO elm.user(userId, password, userName, userSex) " +
             "VALUES(#{userId}, #{password}, #{userName}, #{userSex})")
-    int saveUser(User user);
+    void saveUser(User user);
+
+    @Select("SELECT * FROM elm.user WHERE userName = #{username}")
+    User getUserByName(String username);
+
+    @Select("SELECT * FROM elm.user WHERE userId = #{userId}")
+    User getUserById(String userId);
 }
