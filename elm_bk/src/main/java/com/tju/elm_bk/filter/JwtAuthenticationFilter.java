@@ -27,10 +27,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    //跨域请求允许的域名(Origin头)
+    private static final String[] ALLOWED_ORIGINS = new String[]{"*"};
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        //配置跨域
+        String origin = request.getHeader("Origin");
+        for (String allowedOrigin : ALLOWED_ORIGINS) {
+            if (allowedOrigin.equals(origin)) {
+                response.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+                response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, PATCH");
+                response.setHeader("Access-Control-Max-Age", "3600");
+                response.setHeader("Access-Control-Allow-Headers", "access-control-allow-origin, authority, content-type, version-info, X-Requested-With, token");
+                break;
+            }
+        }
 
         String token = request.getHeader("Authorization");
 

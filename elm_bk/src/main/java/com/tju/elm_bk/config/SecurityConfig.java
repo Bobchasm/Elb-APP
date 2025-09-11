@@ -40,7 +40,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/UserController/saveUser",
-                                "/BusinessController/saveBusiness"
+                                "/BusinessController/saveBusiness",
+                                "/v3/api-docs",
+                                "/swagger-ui"
                         ).permitAll() // 登录接口允许匿名访问
                         .anyRequest().authenticated() // 其他接口需要认证
                 )
