@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/UserController/saveUser",
+                                "checkBusiness",
                                 "/BusinessController/saveBusiness",
                                 "/v3/api-docs",
                                 "/swagger-ui"

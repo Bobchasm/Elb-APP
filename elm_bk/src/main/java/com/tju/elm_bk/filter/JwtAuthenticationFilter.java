@@ -46,6 +46,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
+        String uri = request.getRequestURI();//请求后缀 协议://域名"/xxx/xxx"
+        String ip = request.getHeader("X-Real-IP");
+        log.info("收到请求 " + uri);
+
         String token = request.getHeader("Authorization");
 
         if (StringUtils.hasText(token)) {

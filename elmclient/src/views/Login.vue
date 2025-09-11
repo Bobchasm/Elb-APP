@@ -12,7 +12,7 @@
 			手机号码：
 		  </div>
 		  <div class="content">
-			<input type="text" v-model="userId" placeholder="手机号码">
+			<input type="text" v-model="phoneNumber" placeholder="手机号码">
 		  </div>
 		</li>
 		<li>
@@ -47,7 +47,7 @@
   export default {
 	name: 'Login',
 	setup() {
-	  const userId = ref('');
+	  const phoneNumber = ref('');
 	  const password = ref('');
 	  const router = useRouter();
 
@@ -56,7 +56,7 @@
       window.sessionStorage.setItem(key, JSON.stringify(value)); // 自定义会话存储函数
     };
 	  const login = () => {
-		if (userId.value === '') {
+		if (phoneNumber.value === '') {
 		  alert('手机号码不能为空！');
 		  return;
 		}
@@ -67,14 +67,18 @@
   
 		// 登录请求
 		const loginData = {
-		  userId: userId.value,
+		  phoneNumber: phoneNumber.value,
 		  password: password.value
 		};
  
-		axios.post('UserController/getUserByIdByPass', {
-			userId: userId.value,
+		axios.post('/auth/login', {
+			phoneNumber: phoneNumber.value,
 			password: password.value
-        }).then(response => {
+        },{
+			headers:{
+				'userType':'customer'
+			}
+		}).then(response => {
 		  const user = response.data;
 		  if (!user) {
 			alert('用户名或密码不正确！');
@@ -110,7 +114,7 @@
 	  };
   
 	  return {
-		userId,
+		phoneNumber,
 		password,
 		login,
 		register
