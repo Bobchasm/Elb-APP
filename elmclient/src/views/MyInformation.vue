@@ -7,13 +7,21 @@
       <div class="content">
         <div class="user-info-container">
           <div class="details">
-            <!-- <p class="nickname" @click="editNickname">昵称: {{ user?.userName }}</p> -->
-            <p class="nickname">昵称: {{ user?.userName }}</p>
+            <p class="nickname" @click="editNickname">
+              昵称: {{ user?.userName }}
+              <span class="edit-hint">修改</span>
+            </p>
             <p class="phone">电话: {{ user?.userId }}</p>
-            <p class="gender">性别: {{ user?.userSex === 1 ? '男' : '女' }}</p>
+            <p class="gender" @click="editGender">
+              性别: {{ user?.userSex === 1 ? '男' : '女' }}
+              <span class="edit-hint">修改</span>
+            </p>
           </div>
-          <div class="avatar" >
+          <div class="avatar" @click="showUpload">
             <img :src="user2?.userImg || require('@/assets/default-avatar.png')" alt="用户头像" />
+            <div class="avatar-overlay">
+              <span>修改</span>
+            </div>
           </div>
         </div>
         <div class="actions">
@@ -27,6 +35,13 @@
               <input type="password" v-model="newPassword" placeholder="输入新密码" />
             </div>
             <button @click="submitPassword">提交</button>
+          </div>
+          <div class="edit-gender" v-if="showEditGender">
+            <select v-model="newGender">
+              <option value="1">男</option>
+              <option value="0">女</option>
+            </select>
+            <button @click="submitGender">提交</button>
           </div>
           <input type="file" ref="fileInput" @change="uploadAvatar" accept="image/*" style="display:none;" />
           <div class="main-buttons">
@@ -61,80 +76,82 @@ export default {
     const showEditPassword = ref(false);
     const newPassword = ref('');
     const oldPassword = ref('');
-    // const fileInput = ref(null);
+    const showEditGender = ref(false);
+    const newGender = ref('');
+    const fileInput = ref(null);
 
-    // const showUpload = () => {
-    //   fileInput.value.click();
-    // };
+    const showUpload = () => {
+      fileInput.value.click();
+    };
 
-    // const uploadAvatar = async (event) => {
-    //   const file = event.target.files[0];
-    //   if (file) {
-    //     console.log('选择的文件:', file);
-    //     console.log('文件类型:', file.type);
-    //     console.log('文件大小:', file.size);
+    const uploadAvatar = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        console.log('选择的文件:', file);
+        console.log('文件类型:', file.type);
+        console.log('文件大小:', file.size);
 
-    //     if (!file.type.includes('image')) {
-    //       toast.warning('请选择图片文件！');
-    //       event.target.value = '';
-    //       return;
-    //     }
-    //     if (file.size > 10 * 1024 * 1024) {
-    //       toast.warning('图片大小不能超过10MB！');
-    //       event.target.value = '';
-    //       return;
-    //     }
+        if (!file.type.includes('image')) {
+          toast.warning('请选择图片文件！');
+          event.target.value = '';
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          toast.warning('图片大小不能超过10MB！');
+          event.target.value = '';
+          return;
+        }
 
-    //     try {
-    //       const reader = new FileReader();
-    //       reader.onload = async (e) => {
-    //         const base64String = e.target.result;
-    //         console.log('图片转base64长度:', base64String.length);
+        try {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const base64String = e.target.result;
+            console.log('图片转base64长度:', base64String.length);
 
-    //         try {
-    //           console.log('准备发送的数据:', {
-    //             userId: user.value.userId,
-    //             userImg: base64String.substring(0, 100) + '...'
-    //           });
+            try {
+              console.log('准备发送的数据:', {
+                userId: user.value.userId,
+                userImg: base64String.substring(0, 100) + '...'
+              });
 
-    //           const response = await axios.post('UserController/changeUserAvatar', {
-    //             userId: user.value.userId,
-    //             userImg: base64String
-    //           });
+              const response = await axios.post('UserController/changeUserAvatar', {
+                userId: user.value.userId,
+                userImg: base64String
+              });
 
-    //           console.log('服务器响应:', response);
+              console.log('服务器响应:', response);
 
-    //           if (response.data.code === 1) {
-    //             user.value.userImg = base64String;
-    //             if (user2.value) {
-    //               user2.value.userImg = base64String;
-    //             }
-    //             sessionStorage.setItem('user', JSON.stringify(user.value));
-    //             toast.success('头像修改成功！');
-    //           } else {
-    //             console.error('服务器返回错误:', response.data);
-    //             toast.error(response.data.msg || '头像修改失败，请重试！');
-    //           }
-    //         } catch (error) {
-    //           console.error('修改头像请求失败:', error);
-    //           console.error('错误详情:', error.response?.data || error.message);
-    //           toast.error('头像上传失败，请重试！');
-    //         }
-    //       };
+              if (response.data.code === 1 || response.data === 1) {
+                user.value.userImg = base64String;
+                if (user2.value) {
+                  user2.value.userImg = base64String;
+                }
+                sessionStorage.setItem('user', JSON.stringify(user.value));
+                toast.success('头像修改成功！');
+              } else {
+                console.error('服务器返回错误:', response.data);
+                toast.error(response.data.msg || '头像修改失败，请重试！');
+              }
+            } catch (error) {
+              console.error('修改头像请求失败:', error);
+              console.error('错误详情:', error.response?.data || error.message);
+              toast.error('头像上传失败，请重试！');
+            }
+          };
 
-    //       reader.onerror = (error) => {
-    //         console.error('文件读取错误:', error);
-    //         toast.error('读取文件失败，请重试！');
-    //       };
+          reader.onerror = (error) => {
+            console.error('文件读取错误:', error);
+            toast.error('读取文件失败，请重试！');
+          };
 
-    //       reader.readAsDataURL(file);
-    //     } catch (error) {
-    //       console.error('文件处理错误:', error);
-    //       toast.error('处理文件失败，请重试！');
-    //     }
-    //   }
-    //   event.target.value = '';
-    // };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('文件处理错误:', error);
+          toast.error('处理文件失败，请重试！');
+        }
+      }
+      event.target.value = '';
+    };
 
     onBeforeMount(async () => {
       user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
@@ -187,19 +204,22 @@ export default {
           userName: newNickname.value,
         })
         .then((response) => {
-          if (response.data === 1) {
+          console.log('昵称修改响应:', response);
+          if (response.data === 1 || response.data.code === 1) {
             user.value.userName = newNickname.value;
             sessionStorage.setItem('user', JSON.stringify(user.value));
             toast.success('昵称修改成功！');
             showEditNickname.value = false;
             newNickname.value = '';
           } else {
-            toast.error('昵称修改失败！');
+            console.error('昵称修改失败，服务器响应:', response.data);
+            toast.error(response.data.msg || '昵称修改失败！');
           }
         })
         .catch((error) => {
-          console.error(error);
-          toast.error('昵称修改失败！');
+          console.error('昵称修改请求失败:', error);
+          console.error('错误详情:', error.response?.data || error.message);
+          toast.error('昵称修改失败，请检查网络连接！');
         });
     };
 
@@ -224,18 +244,21 @@ export default {
           newPassword: newPassword.value,
         })
         .then((response) => {
-          if (response.data === 1) {
+          console.log('密码修改响应:', response);
+          if (response.data === 1 || response.data.code === 1) {
             toast.success('密码修改成功！');
             showEditPassword.value = false;
             oldPassword.value = '';
             newPassword.value = '';
           } else {
-            toast.error('密码修改失败！');
+            console.error('密码修改失败，服务器响应:', response.data);
+            toast.error(response.data.msg || '密码修改失败！');
           }
         })
         .catch((error) => {
-          console.error(error);
-          toast.error('密码修改失败！');
+          console.error('密码修改请求失败:', error);
+          console.error('错误详情:', error.response?.data || error.message);
+          toast.error('密码修改失败，请检查网络连接！');
         });
     };
 
@@ -251,6 +274,42 @@ export default {
       router.push({ path: '/comments' });
     };
 
+    const editGender = () => {
+      showEditGender.value = true;
+      newGender.value = user.value.userSex.toString();
+    };
+
+    const submitGender = () => {
+      if (newGender.value === '') {
+        toast.warning('请选择性别！');
+        return;
+      }
+      
+      axios
+        .post('UserController/changeUserSex', {
+          userId: user.value.userId,
+          userSex: parseInt(newGender.value),
+        })
+        .then((response) => {
+          console.log('性别修改响应:', response);
+          if (response.data === 1 || response.data.code === 1) {
+            user.value.userSex = parseInt(newGender.value);
+            sessionStorage.setItem('user', JSON.stringify(user.value));
+            toast.success('性别修改成功！');
+            showEditGender.value = false;
+            newGender.value = '';
+          } else {
+            console.error('性别修改失败，服务器响应:', response.data);
+            toast.error(response.data.msg || '性别修改失败！');
+          }
+        })
+        .catch((error) => {
+          console.error('性别修改请求失败:', error);
+          console.error('错误详情:', error.response?.data || error.message);
+          toast.error('性别修改失败，请检查网络连接！');
+        });
+    };
+
     return {
       user,
       user2,
@@ -264,9 +323,13 @@ export default {
       showEditPassword,
       newPassword,
       oldPassword,
-      // showUpload,
-      // uploadAvatar,
-      // fileInput,
+      showUpload,
+      uploadAvatar,
+      fileInput,
+      editGender,
+      submitGender,
+      showEditGender,
+      newGender,
       myfavorite,
       goToLikesList,
       goToCommentsList
@@ -371,8 +434,8 @@ export default {
 }
 
 .avatar {
-  /* position: relative;
-  cursor: pointer; */
+  position: relative;
+  cursor: pointer;
   width: 25vw;
   height: 25vw;
   max-width: 120px;
@@ -382,14 +445,14 @@ export default {
   border: 3px solid white;
   box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
-  /* transition: all 0.3s ease;
-  z-index: 1; */
+  transition: all 0.3s ease;
+  z-index: 1;
 }
 
-/* .avatar:hover {
+.avatar:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 25px rgba(0, 151, 255, 0.4);
-} */
+}
 
 .avatar img {
   width: 100%;
@@ -401,10 +464,10 @@ export default {
 
 .avatar-overlay {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  height: 30%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -412,20 +475,20 @@ export default {
   color: white;
   opacity: 0;
   transition: opacity 0.3s ease;
-  border-radius: 50%;
+  border-radius: 0 0 50% 50%;
 }
 
 .avatar:hover .avatar-overlay {
   opacity: 1;
 }
 
-/* .avatar-overlay span {
+.avatar-overlay span {
   font-size: 3vw;
   max-font-size: 14px;
   text-align: center;
   padding: 2vw;
   font-weight: 500;
-} */
+}
 
 .details {
   flex: 1;
@@ -437,51 +500,66 @@ export default {
 }
 
 .nickname {
-  /* cursor: pointer; */
+  cursor: pointer;
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 12px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 10px;
   font-size: 4vw;
-  /* max-font-size: 18px; */
   font-weight: 500;
   color: #333;
   transition: all 0.2s ease;
 }
 
-/* .nickname:hover {
+.nickname:hover {
   background-color: #f1f8ff;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-} */
+}
 
-/* .nickname::after {
-  content: '✏️ 点击修改';
-  margin-left: auto;
+.edit-hint {
   color: #666;
   font-size: 3vw;
   max-font-size: 14px;
-  padding-left: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-weight: 400;
+}
+
+.nickname:hover .edit-hint,
+.gender:hover .edit-hint {
   opacity: 0.8;
-} */
+}
 
 .phone,
 .gender {
   font-size: 3.8vw;
-  /* max-font-size: 16px; */
   margin: 8px 0;
   color: #495057;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 12px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.gender {
+  cursor: pointer;
+}
+
+.gender:hover {
+  background-color: #f1f8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .actions {
@@ -549,7 +627,8 @@ export default {
 
 .edit-nickname,
 .edit-password,
-.ep {
+.ep,
+.edit-gender {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -563,7 +642,8 @@ export default {
 }
 
 .edit-nickname input,
-.edit-password input {
+.edit-password input,
+.edit-gender select {
   height: 45px;
   font-size: 16px;
   padding: 0 15px;
@@ -574,14 +654,16 @@ export default {
 }
 
 .edit-nickname input:focus,
-.edit-password input:focus {
+.edit-password input:focus,
+.edit-gender select:focus {
   border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   outline: none;
 }
 
 .edit-nickname button,
-.ep button {
+.ep button,
+.edit-gender button {
   margin-top: 10px;
   height: 45px;
   background: linear-gradient(135deg, #4b6cb7, #182848);
@@ -595,7 +677,8 @@ export default {
 }
 
 .edit-nickname button:hover,
-.ep button:hover {
+.ep button:hover,
+.edit-gender button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

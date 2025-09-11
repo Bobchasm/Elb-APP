@@ -6,9 +6,9 @@ spring:
     name: elm
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://REDACTED_IP:3306/elm
-    username: elm_user
-    password: zhijiage123
+    url: jdbc:mysql://127.0.0.1:3306/elm
+    username: root
+    password: 123456
 logging:
   level:
     org.springframework.jdbc.support.JdbcTransactionManager: debug
