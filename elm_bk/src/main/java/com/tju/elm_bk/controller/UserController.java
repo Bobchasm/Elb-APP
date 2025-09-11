@@ -53,18 +53,6 @@ public class UserController {
         return userService.saveUser(user);
     }
 
-    /**
-     * UserController/login
-     * 登录功能
-     * 参数：userId、password
-     * 返回值：Result
-     * 功能：用户登录
-     */
-    @Operation(summary = "用户登录")
-    @PostMapping("/login")
-    public Result login(@RequestBody User user) {
-        return userService.login(user);
-    }
 
     @Operation(summary = "退出登录")
     @PostMapping("/logout")

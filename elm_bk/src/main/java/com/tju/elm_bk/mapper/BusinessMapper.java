@@ -70,4 +70,7 @@ public interface BusinessMapper {
     @Insert("insert into business (businessId,businessName,businessAddress,businessExplain,businessImg,orderTypeId,starPrice,deliveryPrice) " +
             "values(#{businessId},#{businessName},#{businessAddress},#{businessExplain},#{businessImg},#{orderTypeId},#{starPrice},#{deliveryPrice})")
     public int saveBusinessMsg(Business business);
+
+    @Select("select * from business_user where phoneNumber=#{phoneNumber}")
+    Business getBusinessByPhoneNumber(String phoneNumber);
 }

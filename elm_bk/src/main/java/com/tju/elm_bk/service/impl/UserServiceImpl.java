@@ -60,35 +60,7 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
         userMapper.saveUser(user);
-        return Result.success("注册成功");
-    }
-
-    @Override
-    public Result login(User user) {
-        try {
-            // 认证
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(user.getUserId(), user.getPassword());
-
-            Authentication authenticate = authenticationManager.authenticate(authenticationToken);
-
-            if (authenticate.isAuthenticated()) {
-                // 认证成功，生成JWT
-                LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
-                String userId = loginUser.getUser().getUserId().toString();
-                String jwt = jwtUtil.createJWT(userId);
-
-                // 将用户信息存入Redis
-                String redisKey = "login:user:" + userId;
-                redisTemplate.opsForValue().set(redisKey, loginUser, 7, TimeUnit.DAYS);
-
-                return Result.success(jwt);
-            }
-
-            return Result.fail("认证失败");
-        } catch (AuthenticationException e) {
-            return Result.fail("用户名或密码错误");
-        }
+        return new Result(0, "注册成功");
     }
 
     @Override
@@ -96,9 +68,9 @@ public class UserServiceImpl implements UserService {
         //获取SecurityContextHolder中的用户id
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        String userId = loginUser.getUser().getUserId();
+        String userId = loginUser.getUsername();
         //删除redis中的用户信息
-        String redisKey = "login:user:" + userId;
+        String redisKey = "login:customer:" + userId;
         Boolean deleteResult = redisTemplate.delete(redisKey);
 
         if (Boolean.TRUE.equals(deleteResult)) {

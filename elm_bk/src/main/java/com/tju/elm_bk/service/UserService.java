@@ -8,7 +8,5 @@ public interface UserService {
     public int getUserById(User user);
     public Result saveUser(User user);
 
-    Result login(User user);
-
     Result logout();
 }

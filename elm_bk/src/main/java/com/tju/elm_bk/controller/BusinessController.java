@@ -1,5 +1,7 @@
 package com.tju.elm_bk.controller;
 
+import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.result.Result;
 import com.tju.elm_bk.service.BusinessService;
 import com.tju.elm_bk.entity.Business;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +51,7 @@ public class BusinessController {
 
     @Operation(summary = "新增商家")
     @PostMapping("/saveBusiness")
-    public int saveBusiness(@RequestBody Business business) throws Exception{
+    public Result saveBusiness(@RequestBody Business business) throws Exception{
         return businessService.saveBusiness(business);
     }
 
@@ -75,5 +77,11 @@ public class BusinessController {
     @PostMapping("/listBusinessByBusinessName")
     public List<Business> listBusinessByBusinessName(@RequestBody Business business) throws Exception {
         return businessService.listBusinessByBusinessName(business.getBusinessName());
+    }
+
+    @Operation(summary = "退出登录")
+    @PostMapping("/logout")
+    public Result logout() {
+        return businessService.logout();
     }
 }
