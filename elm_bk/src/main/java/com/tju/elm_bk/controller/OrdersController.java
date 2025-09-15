@@ -3,7 +3,7 @@ package com.tju.elm_bk.controller;
 import com.tju.elm_bk.service.OrdersService;
 import com.tju.elm_bk.entity.CreateOrderRequest;
 import com.tju.elm_bk.entity.OrderDetailet;
-import com.tju.elm_bk.entity.Orders;
+import com.tju.elm_bk.entity.Order;
 import com.tju.elm_bk.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,7 +50,7 @@ public class OrdersController {
      */
     @Operation(summary = "根据订单id获取订单信息")
     @PostMapping("/getOrdersById")
-    public Orders getOrdersById(@RequestBody Orders order) {
+    public Order getOrdersById(@RequestBody Order order) {
         return ordersService.getOrdersById(order);
     }
 
@@ -62,25 +62,25 @@ public class OrdersController {
      */
     @Operation(summary = "获取用户订单列表")
     @PostMapping("/listOrdersByUserId")
-    public List<Orders> listOrdersByUserId(@RequestBody User user) {
+    public List<Order> listOrdersByUserId(@RequestBody User user) {
         return ordersService.listOrdersByUserId(user);
     }
 
     @Operation(summary = "修改订单状态为已完成")
     @PostMapping("/payOk")
-    public int payOk(@RequestBody Orders order) {
+    public int payOk(@RequestBody Order order) {
         return ordersService.completeOrder(order);
     }
 
     @Operation(summary = "获取订单详细信息")
     @PostMapping("/listOrderDetailetByOrderId")
-        public List<OrderDetailet> listOrderDetailByOrderId(@RequestBody Orders orders) {
+        public List<OrderDetailet> listOrderDetailByOrderId(@RequestBody Order orders) {
             return ordersService.listOrderDetailetByOrderId(orders);
     }
 
     @Operation(summary = "获取订单中的商品id列表")
     @PostMapping("/listOdIdByOrderId")
-        public List<Integer> listOdIdByOrderId(@RequestBody Orders order) {
+        public List<Integer> listOdIdByOrderId(@RequestBody Order order) {
             return ordersService.listOdIdByOrderId(order);
     }
 }

@@ -5,24 +5,49 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cart {
-    @Schema(description = "购物车id")
-    private Integer cartId;
-    @Schema(description = "商品id")
-    private Integer foodId;
-    @Schema(description = "商家id")
-    private Integer businessId;
-    @Schema(description = "用户id")
-    private String userId;
+    @Schema(description = "购物车ID")
+    private Long id;
+
     @Schema(description = "商品数量")
     private Integer quantity;
 
-    @Schema(description = "商品信息")
-    private Food food;
-    @Schema(description = "商家信息")
+    @Schema(description = "创建时间")
+    private LocalDateTime createTime;
+
+    @Schema(description = "创建人ID")
+    private Long creator;
+
+    @Schema(description = "是否删除")
+    private Boolean isDeleted;
+
+    @Schema(description = "更新时间")
+    private LocalDateTime updateTime;
+
+    @Schema(description = "更新人ID")
+    private Long updater;
+
+    @Schema(description = "客户ID")
+    private Long customerId;
+
+    @Schema(description = "商家ID")
+    private Long businessId;
+
+    @Schema(description = "商品ID")
+    private Long foodId;
+
+    // 关联字段
+    @Schema(description = "所属客户")
+    private User customer;
+
+    @Schema(description = "所属商家")
     private Business business;
 
+    @Schema(description = "商品信息")
+    private Food food;
 }

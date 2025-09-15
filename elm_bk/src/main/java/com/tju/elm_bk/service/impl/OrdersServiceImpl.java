@@ -40,7 +40,7 @@ public class OrdersServiceImpl implements OrdersService {
             List<Cart> cartList = cartMapper.listCart(request.getUserId(), request.getBusinessId());
 
             // 2. 创建订单
-            Orders orders = new Orders();
+            Order orders = new Order();
             orders.setOrderDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             orders.setUserId(request.getUserId());
             orders.setBusinessId(request.getBusinessId());
@@ -79,8 +79,8 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders getOrdersById(Orders order) {
-        Orders orders = ordersMapper.getOrdersById(order.getOrderId());
+    public Order getOrdersById(Order order) {
+        Order orders = ordersMapper.getOrdersById(order.getOrderId());
         if (orders != null) {
             // 关联商家信息??????
             orders.setBusiness(businessMapper.getBusinessById(orders.getBusinessId()));
@@ -93,9 +93,9 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public List<Orders> listOrdersByUserId(User user) {
-        List<Orders> ordersList = ordersMapper.listOrdersByUserId(user.getUserId());
-        for (Orders orders : ordersList) {
+    public List<Order> listOrdersByUserId(User user) {
+        List<Order> ordersList = ordersMapper.listOrdersByUserId(user.getUserId());
+        for (Order orders : ordersList) {
             // 关联商家信息
             orders.setBusiness(businessMapper.getBusinessById(orders.getBusinessId()));
 
@@ -107,7 +107,7 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public int completeOrder(Orders order) {
+    public int completeOrder(Order order) {
         try {
             // 更新订单状态为已完成
             return ordersMapper.completeOrder(order.getOrderId());
@@ -116,7 +116,7 @@ public class OrdersServiceImpl implements OrdersService {
         }
     }
 
-    public List<OrderDetailet> listOrderDetailetByOrderId(Orders orders){
+    public List<OrderDetailet> listOrderDetailetByOrderId(Order orders){
         if(null==orders) return null;
         List<OrderDetailet> orderDetails = orderDetailetMapper.listOrderDetailetByOrderId(orders.getOrderId());
         
@@ -131,7 +131,7 @@ public class OrdersServiceImpl implements OrdersService {
 	
 	
 	
-	public List<Integer> listOdIdByOrderId(Orders order){
+	public List<Integer> listOdIdByOrderId(Order order){
 		 return ordersMapper.listOdIdByOrderId(order.getOrderId());
 	 }
 

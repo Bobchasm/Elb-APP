@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.swing.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,24 +12,18 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Food {
-    @Schema(description = "食品ID")
+public class Order {
+    @Schema(description = "订单ID")
     private Long id;
 
-    @Schema(description = "食品名称")
-    private String foodName;
+    @Schema(description = "订单总金额")
+    private BigDecimal orderTotal;
 
-    @Schema(description = "食品价格")
-    private BigDecimal foodPrice;
+    @Schema(description = "订单状态（0-待支付，1-已支付，2-已取消，3-已完成）")
+    private Integer orderState;
 
-    @Schema(description = "食品说明")
-    private String foodExplain;
-
-    @Schema(description = "食品图片")
-    private String foodImg;
-
-    @Schema(description = "备注")
-    private String remarks;
+    @Schema(description = "下单时间")
+    private LocalDateTime orderDate;
 
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
@@ -47,16 +40,25 @@ public class Food {
     @Schema(description = "更新人ID")
     private Long updater;
 
-    @Schema(description = "所属商家ID")
+    @Schema(description = "客户ID")
+    private Long customerId;
+
+    @Schema(description = "商家ID")
     private Long businessId;
 
+    @Schema(description = "地址ID")
+    private Long addressId;
+
     // 关联字段
+    @Schema(description = "下单客户")
+    private User customer;
+
     @Schema(description = "所属商家")
     private Business business;
 
-    @Schema(description = "关联的订单详情列表")
-    private List<OrderDetailet> orderDetailets;
+    @Schema(description = "配送地址")
+    private DeliveryAddress deliveryAddress;
 
-    @Schema(description = "关联的购物车列表")
-    private List<Cart> carts;
+    @Schema(description = "订单详情列表")
+    private List<OrderDetailet> orderDetailets;
 }
