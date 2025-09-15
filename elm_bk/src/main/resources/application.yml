@@ -6,8 +6,8 @@ spring:
     name: elm
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://REDACTED_IP:3306/elm
-    username: elm_user
+    url: jdbc:mysql://REDACTED_IP:3306/elm_v2
+    username: elm_v2
     password: zhijiage123
   data:
     redis:
