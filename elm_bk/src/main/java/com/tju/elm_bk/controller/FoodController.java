@@ -11,7 +11,7 @@ import java.util.List;
 
 @Tag(name = "商品接口")
 @RestController
-@RequestMapping("/FoodController")
+@RequestMapping("/api/foods")
 public class FoodController {
 
     @Autowired

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Tag(name = "地址接口")
 @RestController
-@RequestMapping("/DeliveryAddressController")
+@RequestMapping("/api/addresses")
 public class DeliveryAddressController {
     @Autowired
     private DeliveryAddressServiceImpl deliveryAddressServiceImpl;

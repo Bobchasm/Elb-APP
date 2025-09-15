@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "用户接口")
 @RestController
-@RequestMapping("/UserController")
+@RequestMapping("/api/users")
 public class UserController {
 
     @Autowired

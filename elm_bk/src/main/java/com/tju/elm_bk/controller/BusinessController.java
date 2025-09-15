@@ -15,7 +15,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "商家接口")
 @RestController
-@RequestMapping("/BusinessController")
+@RequestMapping("/api/businesses")
 public class BusinessController {
 
     @Autowired

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Tag(name = "购物车接口")
 @RestController
-@RequestMapping("/CartController")
+@RequestMapping("/api/carts")
 public class CartController {
     @Autowired
     CartServiceImpl cartService;
