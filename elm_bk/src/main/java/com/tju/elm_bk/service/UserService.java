@@ -1,9 +1,7 @@
 package com.tju.elm_bk.service;
 
 import com.tju.elm_bk.entity.User;
-import com.tju.elm_bk.result.Result;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface UserService {

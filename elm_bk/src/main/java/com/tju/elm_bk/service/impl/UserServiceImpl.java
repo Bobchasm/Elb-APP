@@ -3,16 +3,10 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.mapper.UserMapper;
-import com.tju.elm_bk.result.Result;
 import com.tju.elm_bk.service.UserService;
 import com.tju.elm_bk.entity.User;
 import com.tju.elm_bk.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

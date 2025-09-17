@@ -1,8 +1,11 @@
 package com.tju.elm_bk.result;
 
 
+import lombok.Getter;
+
 import java.io.Serializable;
 
+@Getter
 public class HttpResult<T> implements Serializable {
 
     /**
@@ -55,6 +58,12 @@ public class HttpResult<T> implements Serializable {
         this.code = resultCode.getCode();
         this.message = message;
     }
+
+    private HttpResult(String code, String message) {
+        this.success = false;
+        this.code = code;
+        this.message = message;
+    }
     // 构造器结束
 
     /**
@@ -90,32 +99,20 @@ public class HttpResult<T> implements Serializable {
         return new HttpResult<T>(resultCode,message);
     }
 
-    public Boolean getSuccess() {
-        return success;
+    public static<T> HttpResult<T> failure(String code, String message){
+        return new HttpResult<T>(code,message);
     }
 
     public void setSuccess(Boolean success) {
         this.success = success;
     }
 
-    public String getCode() {
-        return code;
-    }
-
     public void setCode(String code) {
         this.code = code;
     }
 
-    public T getData() {
-        return data;
-    }
-
     public void setData(T data) {
         this.data = data;
-    }
-
-    public String getMessage() {
-        return message;
     }
 
     public void setMessage(String message) {
