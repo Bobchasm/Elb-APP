@@ -21,4 +21,6 @@ public interface DeliveryAddressMapper {
 
     @Delete("DELETE FROM deliveryaddress WHERE daId=#{daId}")
     public int deleteDeliveryAddress(int daId);
+
+    void insert(DeliveryAddress address);
 }

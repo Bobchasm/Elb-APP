@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8080
 
 spring:
   application:
@@ -9,24 +9,26 @@ spring:
     url: jdbc:mysql://REDACTED_IP:3306/elm_v2
     username: elm_v2
     password: zhijiage123
-  data:
-    redis:
-      host: REDACTED_IP
-      port: 6379
-      password: 123456
+
+#  data:
+#    redis:
+#      host: REDACTED_IP
+#      port: 6379
+#      password: 123456
 logging:
   level:
     org.springframework.jdbc.support.JdbcTransactionManager: debug
 
 mybatis:
   configuration:
+    #开启驼峰命名
     map-underscore-to-camel-case: true
 
-# 自定义配置
+
 jwt:
-  secret: Abc123!@#Def456$%^Ghi789&*()Jkl012_-+=Mnop  # JWT密钥
-  expiration: 86400000  # 24小时
-  token-header: Authorization
+  secret: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz123456
+  token-validity-in-seconds: 86400
+  token-validity-in-seconds-for-remember-me: 108000
 
 # swagger
 springdoc:

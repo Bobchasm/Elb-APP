@@ -15,6 +15,24 @@ public class Authority {
     @Schema(description = "权限名称")
     private String name;
 
-    @Schema(description = "拥有该权限的用户列表")
-    private List<User> users;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Authority authority = (Authority) o;
+
+        return name != null ? name.equals(authority.name) : authority.name == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return name != null ? name.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

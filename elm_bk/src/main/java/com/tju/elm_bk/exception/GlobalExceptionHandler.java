@@ -79,4 +79,5 @@ public class GlobalExceptionHandler {
         // 无错误码 返回-1和message
         return Result.fail(ex.getMessage());
     }
+
 }

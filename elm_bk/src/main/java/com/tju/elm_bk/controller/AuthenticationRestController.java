@@ -1,0 +1,80 @@
+package com.tju.elm_bk.controller;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tju.elm_bk.dto.LoginDTO;
+import com.tju.elm_bk.security.TokenProvider;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api")
+@Tag(name = "认证管理", description = "提供JWT认证相关接口")
+public class AuthenticationRestController {
+
+    private final TokenProvider tokenProvider;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+
+    public AuthenticationRestController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder) {
+        this.tokenProvider = tokenProvider;
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
+    }
+
+    @PostMapping("/auth")
+    @Operation(description = "身份认证成功后获取令牌")
+    public ResponseEntity authorize(@Valid @RequestBody LoginDTO loginDto) {
+        try{
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
+
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        boolean rememberMe = loginDto.isRememberMe() != null && loginDto.isRememberMe();
+        String jwt = tokenProvider.createToken(authentication, rememberMe);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + jwt);
+
+        return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
+    } catch (BadCredentialsException e) {
+        // 捕获密码错误异常，返回自定义消息
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("用户名或密码错误"); // 使用项目统一的Result格式
+    } catch (AuthenticationException e) {
+        // 处理其他认证异常（如用户未激活、账号锁定等）
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("认证失败：" + e.getMessage());
+    }
+    }
+
+    public static class JWTToken {
+        private String idToken;
+
+        public JWTToken(String idToken) {
+            this.idToken = idToken;
+        }
+
+        @JsonProperty("id_token")
+        public String getIdToken() {
+            return idToken;
+        }
+
+        public void setIdToken(String idToken) {
+            this.idToken = idToken;
+        }
+    }
+}
