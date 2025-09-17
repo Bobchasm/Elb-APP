@@ -51,6 +51,24 @@ axios.interceptors.response.use(
   error => {
     // 对响应错误做点什么
     console.error('响应错误:', error);
+
+    // ✅ 添加模拟接口的代码 - 就在这里添加
+    const url = error.config?.url || '';
+    
+    // 模拟修改昵称接口
+    //Tips:当响应错误发生时，才会进入这个拦截器的错误处理部分
+    if (url.includes('changeUserName')) {
+      console.log('🐛 [模拟] 修改昵称接口响应');
+      return Promise.resolve({
+        data: 1,
+        status: 200,
+        statusText: 'OK',
+        config: error.config,
+        headers: {}
+      });
+    }
+
+    //原有的错误处理保持不变
     if (error.response && error.response.status === 500) {
       console.error('服务器错误:', error.response.data);
     }
