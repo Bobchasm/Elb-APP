@@ -49,16 +49,16 @@ public class Order {
     @Schema(description = "地址ID")
     private Long addressId;
 
-    // 关联字段
-    @Schema(description = "下单客户")
-    private User customer;
-
-    @Schema(description = "所属商家")
-    private Business business;
-
-    @Schema(description = "配送地址")
-    private DeliveryAddress deliveryAddress;
-
-    @Schema(description = "订单详情列表")
-    private List<OrderDetailet> orderDetailets;
+//    // 关联字段
+//    @Schema(description = "下单客户")
+//    private User customer;
+//
+//    @Schema(description = "所属商家")
+//    private Business business;
+//
+//    @Schema(description = "配送地址")
+//    private DeliveryAddress deliveryAddress;
+//
+//    @Schema(description = "订单详情列表")
+//    private List<OrderDetailet> orderDetailets;
 }

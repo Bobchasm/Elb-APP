@@ -148,7 +148,10 @@
         ORDER BY f.create_time DESC
     </select>
 
-
+    <insert id="insertFoodVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO food (create_time, creator, is_deleted, update_time, updater, food_explain, food_img, food_name, food_price, remarks, business_id)
+        VALUES (#{id},#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
+    </insert>
 
 
 </mapper>

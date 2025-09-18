@@ -16,9 +16,6 @@ public interface FoodMapper {
 
     FoodVO selectFoodVOById(Long id);
 
-    @Insert("""
-        INSERT INTO food (id, create_time, creator, is_deleted, update_time, updater, food_explain, food_img, food_name, food_price, remarks, business_id) 
-        VALUES (#{id},#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
-    """)
+
     void insertFoodVO(Food food);
 }

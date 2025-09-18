@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FoodServiceImpl implements FoodService {
@@ -39,10 +40,11 @@ public class FoodServiceImpl implements FoodService {
         Food food = new Food();
         BeanUtils.copyProperties(foodCreateDTO, food);
         food.setBusinessId(foodCreateDTO.getBusiness().getId());
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-
-        food.setCreator(user.getId());
+        //String username = SecurityUtils.getCurrentUsername().get();
+        //User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        //food.setCreator(user.getId());
         food.setCreateTime(LocalDateTime.now());
+        food.setIsDeleted(false);
         foodMapper.insertFoodVO(food);
         return foodMapper.selectFoodVOById(food.getId());
     }

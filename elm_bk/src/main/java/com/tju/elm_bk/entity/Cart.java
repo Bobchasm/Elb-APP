@@ -41,13 +41,13 @@ public class Cart {
     @Schema(description = "商品ID")
     private Long foodId;
 
-    // 关联字段
-    @Schema(description = "所属客户")
-    private User customer;
-
-    @Schema(description = "所属商家")
-    private Business business;
-
-    @Schema(description = "商品信息")
-    private Food food;
+//    // 关联字段
+//    @Schema(description = "所属客户")
+//    private User customer;
+//
+//    @Schema(description = "所属商家")
+//    private Business business;
+//
+//    @Schema(description = "商品信息")
+//    private Food food;
 }
