@@ -61,11 +61,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         String[] permitUrlArr = {
-                "/api/auth",
-                "/api/register",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html"
+//                "/api/auth",
+//                "/api/register",
+//                "/v3/api-docs/**",
+//                "/swagger-ui/**",
+//                "/swagger-ui.html"
+                "/**"
         };
 
         http

@@ -1,5 +1,6 @@
 package com.tju.elm_bk.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -47,7 +48,8 @@ public class Business {
     private Long creator;
 
     @Schema(description = "是否删除")
-    private Boolean isDeleted;
+    @JsonProperty("deleted")
+    private Boolean deleted;
 
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
