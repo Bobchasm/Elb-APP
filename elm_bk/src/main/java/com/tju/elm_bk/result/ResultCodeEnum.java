@@ -15,7 +15,9 @@ public enum ResultCodeEnum {
     PARAM_NOT_MATCHED("PARAM_NOT_MATCHED","参数不匹配"),
     NOT_SUPPORTED("NOT_SUPPORTED","请求方式不支持"),
     NOT_KNOWN_ERROR("NOT_KNOWN_ERROR","未知错误"),
-    PARAM_VERIFIED_FAILED("PARAM_VERIFIED_FAILED","参数校验不对")
+    PARAM_VERIFIED_FAILED("PARAM_VERIFIED_FAILED","参数校验不对"),
+
+    VALUE_MISSED("VALUE_MISSED","值不存在"),
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 
