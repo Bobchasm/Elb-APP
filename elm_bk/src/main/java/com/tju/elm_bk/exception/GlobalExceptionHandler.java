@@ -67,9 +67,9 @@ public class GlobalExceptionHandler {
         }
         // 如果有错误码
         if (ex instanceof APIException) {
-            Integer code = ((APIException) ex).getCode();
+            String code = ((APIException) ex).getCode();
             if (code != null) {
-                return HttpResult.failure(code.toString(), ex.getMessage());
+                return HttpResult.failure(code, ex.getMessage());
             }
         }
         // 其他提示

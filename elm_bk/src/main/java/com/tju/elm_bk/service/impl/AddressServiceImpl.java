@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+
 @Service
 public class AddressServiceImpl implements AddressService {
     @Autowired
@@ -63,7 +64,7 @@ public class AddressServiceImpl implements AddressService {
             addressVO.setCustomer(userVO);
             return HttpResult.success(addressVO);
         }else {
-            throw new APIException( 403,"权限不足，无法为该用户添加地址");
+            throw new APIException(ResultCodeEnum.ADDRESS_PERMISSION_DENIED);
         }
     }
 }
