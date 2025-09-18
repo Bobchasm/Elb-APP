@@ -9,6 +9,8 @@ public enum ResultCodeEnum {
     // 服务器错误
     SERVER_ERROR("GENERAL_ERROR","server error"),
 
+    COMMON_ERROR("COMMON_ERROR","通用返回失败"),
+
     CLIENT_ABORT("CLIENT_ABORT","异常中止"),
     PARAM_NOT_MATCHED_GET("PARAM_NOT_MATCHED_GET","GET参数有误"),
     PARAM_NOT_MATCHED_POST("PARAM_NOT_MATCHED_POST","POST参数有误"),
