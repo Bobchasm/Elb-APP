@@ -1,4 +1,3 @@
-<!--尝试加入点击收货地址item之后出现切换收货地址的页面选项-->
 <template>
   <div class="container">
     <div class="top-background">
@@ -40,7 +39,7 @@
           <span class="menu-text">我的订单</span>
           <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
-        <div class="menu-item" @click="navigateTo('address')">
+        <div class="menu-item" @click="showAddressSection = !showAddressSection">
           <div class="menu-icon">
             <i class="fas fa-map-marker-alt"></i>
           </div>
@@ -63,7 +62,9 @@
         </div>
       </div>
     </div>
-
+    
+    <AddressManager v-if="showAddressSection" :userId="user?.userId" />
+    
     <div class="button-section">
       <button class="switch-btn" @click="switchToMerchant">
         <i class="fas fa-store"></i>切换为商家
@@ -114,12 +115,17 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
+import AddressManager from '../components/AddressManager.vue'; // 引入新的组件
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast';
 
 export default {
   name: 'MyApplication',
+  components: {
+    Footer,
+    AddressManager // 注册组件
+  },
   setup() {
     const router = useRouter();
     const user = ref({});
@@ -139,8 +145,12 @@ export default {
       return user.value.userId.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
     });
 
+    // 只保留一个状态变量来控制地址部分的显示/隐藏
+    const showAddressSection = ref(false);
+
     onMounted(async () => {
       await loadUserData();
+      // 不再需要在这里加载地址列表
     });
 
     const loadUserData = async () => {
@@ -235,22 +245,20 @@ export default {
 
     const navigateTo = (page) => {
       const pageRoutes = {
-    'address': '/address',
-    'orders': '/orders',
-    'notifications': '/notifications'
-  };
-     // toast.info(`即将跳转到: ${pageNames[page]}页面`);
-     if (pageRoutes[page]) {
+        'orders': '/orders',
+        'notifications': '/notifications'
+      };
+      if (pageRoutes[page]) {
         router.push({ path: pageRoutes[page] });
-     } else {
-           toast.warning('功能待开发');
-       }
+      } else {
+        toast.warning('功能待开发');
+      }
     };
 
     const switchToMerchant = () => {
       toast.info('切换商家模式功能待开发');
     };
-
+    
     return {
       user,
       formattedPhone,
@@ -264,19 +272,15 @@ export default {
       submitEdits,
       myfavorite,
       navigateTo,
-      switchToMerchant
+      switchToMerchant,
+      showAddressSection,
     };
-  },
-  components: {
-    Footer,
   },
 };
 </script>
 
 <style scoped>
-/* 这里放置你新HTML中的所有CSS样式 */
-/* 注意：由于使用了scoped属性，可能需要深度选择器来修改子组件样式 */
-
+/* 保持所有通用样式和个人信息编辑模态框的样式不变 */
 .container {
   max-width: 600px;
   margin: 0 auto;
@@ -290,7 +294,6 @@ export default {
   align-items: center;
   position: relative;
 }
-
 .top-background {
   width: 100%;
   height: 100px;
@@ -302,9 +305,8 @@ export default {
   border-radius: 16px 16px 0 0;
   position: relative;
   overflow: hidden;
-  margin-bottom: 50px; /* Adjust to create space for the card */
+  margin-bottom: 50px;
 }
-
 .top-background::before {
   content: '';
   position: absolute;
@@ -316,12 +318,10 @@ export default {
   transform: rotate(30deg);
   animation: shine 6s infinite linear;
 }
-
 @keyframes shine {
   0% { transform: rotate(30deg) translate(-10%, -10%); }
   100% { transform: rotate(30deg) translate(10%, 10%); }
 }
-
 .top-background h1 {
   color: white;
   font-size: 1.8rem;
@@ -331,11 +331,10 @@ export default {
   margin: 0;
   z-index: 1;
 }
-
 .user-card {
   width: 92%;
   max-width: 500px;
-  margin: 0 auto 20px; /* Remove negative margin */
+  margin: 0 auto 20px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -345,9 +344,8 @@ export default {
   gap: 20px;
   position: relative;
   z-index: 2;
-  transform: translateY(-50px); /* Move card up to align with top-background */
+  transform: translateY(-50px);
 }
-
 .avatar {
   width: 100px;
   height: 100px;
@@ -359,14 +357,12 @@ export default {
   background: #f8f9fa;
   margin-left: 15px;
 }
-
 .avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-
 .user-details {
   flex: 1;
   background-color: #f8f9fa;
@@ -379,7 +375,6 @@ export default {
   gap: 10px;
   margin-right: 15px;
 }
-
 .user-name, .user-full-name, .user-phone, .user-email {
   font-size: 0.95rem;
   color: #495057;
@@ -390,18 +385,15 @@ export default {
   display: flex;
   align-items: center;
 }
-
 .user-name {
   font-size: 1.1rem;
   font-weight: 500;
   color: #333;
   margin-bottom: 8px;
 }
-
 .user-full-name .first-name {
   margin-right: 5px;
 }
-
 .user-name .edit-icon, 
 .user-full-name .full-name-icon,
 .user-phone .phone-icon,
@@ -409,21 +401,18 @@ export default {
   margin-right: 8px;
   color: #3498db;
 }
-
 .edit-icon {
-  margin-left: auto; /* Push icon to the right */
+  margin-left: auto;
   color: #3498db;
   font-size: 16px;
   cursor: pointer;
 }
-
 .menu-section {
   width: 92%;
   max-width: 500px;
   margin: 20px auto;
-  transform: translateY(-50px); /* Keep menu section aligned with the card */
+  transform: translateY(-50px);
 }
-
 .section-title {
   font-size: 1.1rem;
   color: #2c3e50;
@@ -432,14 +421,12 @@ export default {
   font-weight: 600;
   border-left: 4px solid #3498db;
 }
-
 .menu-list {
   background: white;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
-
 .menu-item {
   display: flex;
   align-items: center;
@@ -448,17 +435,14 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .menu-item:hover {
   background-color: #f1f8ff;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
-
 .menu-item:last-child {
   border-bottom: none;
 }
-
 .menu-icon {
   width: 22px;
   height: 22px;
@@ -468,19 +452,16 @@ export default {
   justify-content: center;
   align-items: center;
 }
-
 .menu-text {
   flex: 1;
   font-size: 0.95rem;
   color: #34495e;
   font-weight: 500;
 }
-
 .menu-arrow {
   color: #bdc3c7;
   font-size: 14px;
 }
-
 .button-section {
   width: 92%;
   max-width: 500px;
@@ -488,9 +469,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  transform: translateY(-50px); /* Keep button section aligned */
+  transform: translateY(-50px);
 }
-
 .switch-btn {
   width: 100%;
   padding: 14px;
@@ -506,12 +486,10 @@ export default {
   transition: all 0.3s ease;
   margin-bottom: 10px;
 }
-
 .switch-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
-
 .logout-btn {
   width: 100%;
   padding: 14px;
@@ -526,17 +504,14 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .logout-btn:hover {
   background: #ffeaea;
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
-
 .logout-btn i {
   margin-right: 8px;
 }
-
 .loading {
   text-align: center;
   padding: 15px;
@@ -544,7 +519,6 @@ export default {
   font-size: 1rem;
   transform: translateY(-50px);
 }
-
 .error-message {
   text-align: center;
   padding: 10px;
@@ -555,7 +529,6 @@ export default {
   font-size: 0.9rem;
   transform: translateY(-50px);
 }
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -568,51 +541,44 @@ export default {
   align-items: center;
   z-index: 1000;
 }
-
 .modal-content {
   background: white;
   padding: 20px;
   border-radius: 12px;
   max-width: 400px;
   width: 80%;
-  box-sizing: border-box; /* Ensures padding doesn't affect overall width */
-  text-align: center; /* Center the title */
+  box-sizing: border-box;
+  text-align: center;
 }
-
 .modal-content h3 {
   margin-top: 0;
   color: #2c3e50;
   margin-bottom: 20px;
 }
-
 .modal-item {
   margin-bottom: 15px;
-  text-align: left; /* Aligns label and input to the left */
+  text-align: left;
 }
-
 .modal-item label {
   display: block;
   font-weight: 500;
   color: #555;
   margin-bottom: 5px;
 }
-
-.modal-content input {
+.modal-content input, .modal-content textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 16px;
-  box-sizing: border-box; /* Crucial for preventing overflow */
+  box-sizing: border-box;
 }
-
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
 }
-
 .modal-buttons button {
   padding: 8px 16px;
   border: none;
@@ -620,23 +586,19 @@ export default {
   cursor: pointer;
   font-size: 1rem;
 }
-
 .modal-buttons button:first-child {
   background: #3498db;
   color: white;
   transition: background-color 0.3s;
 }
-
 .modal-buttons button:first-child:hover {
   background: #2980b9;
 }
-
 .modal-buttons button:last-child {
   background: #e0e0e0;
   color: #333;
   transition: background-color 0.3s;
 }
-
 .modal-buttons button:last-child:hover {
   background: #c7c7c7;
 }
@@ -659,7 +621,7 @@ export default {
     align-items: center;
     gap: 10px;
     padding: 20px 0;
-    margin-top: 0; /* Adjust for smaller screens */
+    margin-top: 0;
     transform: translateY(-50px);
     width: 90%;
   }
