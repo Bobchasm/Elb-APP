@@ -2,6 +2,7 @@ package com.tju.elm_bk.controller;
 
 import com.tju.elm_bk.dto.LoginDTO;
 import com.tju.elm_bk.dto.PersonCreateDTO;
+import com.tju.elm_bk.dto.PersonUpdateDTO;
 import com.tju.elm_bk.dto.UserCreateDTO;
 import com.tju.elm_bk.entity.Authority;
 import com.tju.elm_bk.entity.Person;
@@ -10,13 +11,17 @@ import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.AuthorityMapper;
 import com.tju.elm_bk.mapper.PersonMapper;
 import com.tju.elm_bk.mapper.UserMapper;
+import com.tju.elm_bk.result.HttpResult;
+import com.tju.elm_bk.service.PersonService;
 import com.tju.elm_bk.service.UserModelDetailsService;
+import com.tju.elm_bk.service.UserService;
 import com.tju.elm_bk.vo.PersonVO;
 import com.tju.elm_bk.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,25 +37,18 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 @Tag(name = "用户管理", description = "提供用户的增删改查操作")
 public class UserRestController {
-
-    private final UserMapper userMapper;
-    private final PersonMapper personMapper;
-    private final AuthorityMapper authorityMapper;
-    private final UserModelDetailsService userModelDetailsService;
-    private final PasswordEncoder passwordEncoder;
-
-    public UserRestController(
-            UserMapper userMapper,
-            PersonMapper personMapper,
-            AuthorityMapper authorityMapper,
-            UserModelDetailsService userModelDetailsService,
-            PasswordEncoder passwordEncoder) {
-        this.userMapper = userMapper;
-        this.personMapper = personMapper;
-        this.authorityMapper = authorityMapper;
-        this.userModelDetailsService = userModelDetailsService;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private AuthorityMapper authorityMapper;
+    @Autowired
+    private UserModelDetailsService userModelDetailsService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PersonService personService;
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/users")
     @Operation(summary = "新增用户(仅管理员)", description = "创建一个新的用户")
@@ -62,7 +60,7 @@ public class UserRestController {
         }
 
         // 检查数据库中是否已存在相同用户名
-        User existingUser = userMapper.findByUsername(username);
+        User existingUser = userService.findByUsername(username);
         if (existingUser != null) {
             throw new APIException("用户名已存在，请更换其他用户名");
         }
@@ -81,7 +79,7 @@ public class UserRestController {
         user.setPassword(passwordEncoder.encode(user.getPassword() != null ? user.getPassword() : "password"));
 
         // 保存用户
-        userMapper.insert(user);
+        userService.addUser(user);
 
         // 分配默认USER角色
         if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
@@ -96,7 +94,7 @@ public class UserRestController {
             }
         }
 
-        User user1 = userMapper.findByUsernameWithAuthorities(user.getUsername());
+        User user1 = userService.getUserWithAuthorities(user.getUsername());
         UserVO userVO=new UserVO();
         BeanUtils.copyProperties(user1, userVO);
         // 返回包含权限信息的用户对象
@@ -112,6 +110,17 @@ public class UserRestController {
         return ResponseEntity.ok(userVO);
     }
 
+    @GetMapping("/person")
+    @Operation(summary = "获取当前登录用户及其自然人属性", description = "获取当前登录用户及其自然人信息")
+    public ResponseEntity<PersonVO> getActualPerson() {
+        User currentUser = getCurrentUser();
+        PersonVO personVO=new PersonVO();
+        BeanUtils.copyProperties(currentUser, personVO);
+        Person person = personService.getPersonByUserId(currentUser.getId());
+        BeanUtils.copyProperties(person, personVO);
+        return ResponseEntity.ok(personVO);
+    }
+
     @PostMapping("/password")
     @Operation(summary = "修改密码", description = "已登录用户可修改自己的密码，管理员可修改任何用户的密码")
     public ResponseEntity<String> updateUserPassword(@Valid @RequestBody LoginDTO loginDto) {
@@ -119,7 +128,7 @@ public class UserRestController {
         boolean isAdmin = currentUser.getAuthorities().stream()
                 .anyMatch(auth -> "ADMIN".equals(auth.getName()));
 
-        User targetUser = userMapper.findByUsernameWithAuthorities(loginDto.getUsername());
+        User targetUser = userService.getUserWithAuthorities(loginDto.getUsername());
         if (targetUser == null) {
             return ResponseEntity.badRequest().body("用户不存在");
         }
@@ -129,7 +138,7 @@ public class UserRestController {
             targetUser.setPassword(passwordEncoder.encode(loginDto.getPassword()));
             targetUser.setUpdateTime(LocalDateTime.now());
             targetUser.setUpdater(currentUser.getId());
-            userMapper.update(targetUser);
+            userService.updateUser(targetUser);
 
             // 清除用户缓存
             userModelDetailsService.clearUserCache(targetUser.getUsername());
@@ -150,7 +159,7 @@ public class UserRestController {
         }
 
         // 检查数据库中是否已存在相同用户名
-        User existingUser = userMapper.findByUsername(username);
+        User existingUser = userService.findByUsername(username);
         if (existingUser != null) {
             throw new APIException("用户名已存在，请更换其他用户名");
         }
@@ -168,7 +177,7 @@ public class UserRestController {
         String rawPassword = createDTO.getPassword() != null ? createDTO.getPassword() : "password";
         user.setPassword(passwordEncoder.encode(rawPassword));
         // 保存User，获取自增ID
-        userMapper.insert(user);
+        userService.addUser(user);
         Person person = new Person();
         person.setId(user.getId());
         person.setEmail(createDTO.getEmail());
@@ -179,7 +188,7 @@ public class UserRestController {
         person.setPhoto(createDTO.getPhoto());
         person.setUser(user); // 关联User对象（若MyBatis存储时不需要，可只存user_id）
         // 保存Person
-        personMapper.insert(person);
+        personService.addPerson(person);
 
         List<String> authorityNames = new ArrayList<>();
         if (createDTO.getAuthorities() != null && !createDTO.getAuthorities().isEmpty()) {
@@ -200,7 +209,7 @@ public class UserRestController {
             userMapper.insertUserAuthority(user.getId(), authName);
         }
 
-        User userWithAuthorities = userMapper.findByUsernameWithAuthorities(user.getUsername());
+        User userWithAuthorities = userService.getUserWithAuthorities(user.getUsername());
         if (userWithAuthorities == null) {
             throw new APIException("新增用户后查询失败");
         }
@@ -213,7 +222,7 @@ public class UserRestController {
     }
 
     @PostMapping("/register")
-    @Operation(summary = "新增用户", description = "创建一个新的用户")
+    @Operation(summary = "新增用户(仅允许顾客注册)", description = "创建一个新的用户")
     public ResponseEntity<UserVO> addUser(@Valid @RequestBody UserCreateDTO newUser) {
         String username = newUser.getUsername();
         if (username == null || username.trim().isEmpty()) {
@@ -221,7 +230,7 @@ public class UserRestController {
         }
 
         // 检查数据库中是否已存在相同用户名
-        User existingUser = userMapper.findByUsername(username);
+        User existingUser = userService.findByUsername(username);
         if (existingUser != null) {
             throw new APIException("用户名已存在，请更换其他用户名");
         }
@@ -237,9 +246,13 @@ public class UserRestController {
         user.setPassword(passwordEncoder.encode(user.getPassword() != null ? user.getPassword() : "password"));
 
         // 保存用户
-        userMapper.insert(user);
+        userService.addUser(user);
 
         // 分配默认USER角色
+//        Authority userAuthority = authorityMapper.findByName("USER");
+//        if (userAuthority != null) {
+//            userMapper.insertUserAuthority(user.getId(), userAuthority.getName());
+//        }
         if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
             Authority userAuthority = authorityMapper.findByName("USER");
             if (userAuthority != null) {
@@ -252,18 +265,41 @@ public class UserRestController {
             }
         }
 
-        User user1 = userMapper.findByUsernameWithAuthorities(user.getUsername());
+        User user1 = userService.getUserWithAuthorities(user.getUsername());
         UserVO userVO=new UserVO();
         BeanUtils.copyProperties(user1, userVO);
         // 返回包含权限信息的用户对象
         return ResponseEntity.ok(userVO);
     }
 
+    @PatchMapping("/{username}/status")
+    @Operation(summary = "启用/禁用用户", description = "根据用户名切换用户的启用/禁用状态，仅管理员可操作")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public HttpResult<UserVO> changeUserStatus(@PathVariable String username) {
+        UserVO updatedUser = userService.changeUserStatus(username);
+        return HttpResult.success(updatedUser);
+    }
+
+    @DeleteMapping("/{username}")
+    @Operation(summary = "删除用户", description = "逻辑删除用户（标记isDeleted=true），仅管理员可操作")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public HttpResult deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
+        return HttpResult.success();
+    }
+
+    @PutMapping("/person/info")
+    @Operation(summary = "修改个人信息", description = "支持修改邮箱、姓名、头像（需先调用文件上传接口获取URL）、手机号、性别")
+    public HttpResult<Person> updatePersonInfo(@Valid @RequestBody PersonUpdateDTO updateDTO) {
+        Person updatedPerson = personService.updatePerson(updateDTO);
+        return HttpResult.success(updatedPerson);
+    }
+
     // 获取当前登录用户
     private User getCurrentUser() {
         String username = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication().getName();
-        return userMapper.findByUsernameWithAuthorities(username);
+        return userService.getUserWithAuthorities(username);
     }
 
     private PersonVO convertToResponseVO(Person person, User user) {

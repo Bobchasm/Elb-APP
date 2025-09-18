@@ -6,6 +6,7 @@ import com.tju.elm_bk.security.TokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +26,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "认证管理", description = "提供JWT认证相关接口")
 public class AuthenticationRestController {
 
-    private final TokenProvider tokenProvider;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
-
-    public AuthenticationRestController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder) {
-        this.tokenProvider = tokenProvider;
-        this.authenticationManagerBuilder = authenticationManagerBuilder;
-    }
+    @Autowired
+    private TokenProvider tokenProvider;
+    @Autowired
+    private AuthenticationManagerBuilder authenticationManagerBuilder;
 
     @PostMapping("/auth")
     @Operation(description = "身份认证成功后获取令牌")
@@ -57,9 +55,9 @@ public class AuthenticationRestController {
     } catch (AuthenticationException e) {
         // 处理其他认证异常（如用户未激活、账号锁定等）
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body("认证失败：" + e.getMessage());
+                .body("认证失败：" + e.getMessage());}
     }
-    }
+
 
     public static class JWTToken {
         private String idToken;

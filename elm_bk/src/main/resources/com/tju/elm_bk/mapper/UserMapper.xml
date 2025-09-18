@@ -31,6 +31,15 @@
                  LEFT JOIN authority a ON ua.authority_name = a.name
         WHERE u.username = #{username} AND u.is_deleted = 0
     </select>
+    <select id="findByUserIdWithAuthorities" resultMap="UserWithAuthoritiesResultMap">
+        SELECT
+            u.*,
+            a.name as authority_name
+        FROM users u
+                 LEFT JOIN user_authority ua ON u.id = ua.user_id
+                 LEFT JOIN authority a ON ua.authority_name = a.name
+        WHERE u.id = #{id} AND u.is_deleted = 0
+    </select>
 
     <insert id="insert" parameterType="com.tju.elm_bk.entity.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO users (

@@ -34,13 +34,12 @@ public class UserModelDetailsService implements UserDetailsService{
     public UserDetails loadUserByUsername(final String login) {
         log.debug("Authenticating user '{}'", login);
 
-        String lowercaseLogin = login.toLowerCase();
-        User user = userMapper.findByUsernameWithAuthorities(lowercaseLogin);
+        User user = userMapper.findByUsernameWithAuthorities(login);
 
         if (user == null) {
-            throw new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database");
+            throw new UsernameNotFoundException("User " + login + " was not found in the database");
         } else if (user.getActivated() == null||!user.getActivated()) {
-            throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
+            throw new UserNotActivatedException("User " + login + " was not activated");
         }
 
         log.debug("用户 {} 的权限原始数据：{}", user.getUsername(), user.getAuthorities());
@@ -58,7 +57,7 @@ public class UserModelDetailsService implements UserDetailsService{
 // 增加非空校验
         if (grantedAuthorities.isEmpty()) {
             grantedAuthorities.add(new SimpleGrantedAuthority("USER")); // 默认角色
-            log.warn("用户 {} 未分配任何权限，已自动添加默认权限 ROLE_USER", user.getUsername());
+            log.warn("用户 {} 未分配任何权限，已自动添加默认权限USER", user.getUsername());
         }
 
 
