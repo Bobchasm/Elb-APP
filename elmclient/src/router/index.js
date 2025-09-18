@@ -23,7 +23,6 @@ import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
-//
 
 // 定义路由
 const routes = [
@@ -148,6 +147,7 @@ const routes = [
 //
   //
  //
+
 ]
 
 // 解决重复路由报异常问题

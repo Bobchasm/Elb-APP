@@ -1,3 +1,4 @@
+<!--尝试加入点击收货地址item之后出现切换收货地址的页面选项-->
 <template>
   <div class="container">
     <div class="top-background">
@@ -233,12 +234,17 @@ export default {
     };
 
     const navigateTo = (page) => {
-      const pageNames = {
-        'orders': '我的订单',
-        'address': '收货地址',
-        'notifications': '消息与通知'
-      };
-      toast.info(`即将跳转到: ${pageNames[page]}页面`);
+      const pageRoutes = {
+    'address': '/address',
+    'orders': '/orders',
+    'notifications': '/notifications'
+  };
+     // toast.info(`即将跳转到: ${pageNames[page]}页面`);
+     if (pageRoutes[page]) {
+        router.push({ path: pageRoutes[page] });
+     } else {
+           toast.warning('功能待开发');
+       }
     };
 
     const switchToMerchant = () => {
@@ -648,7 +654,6 @@ export default {
     margin-bottom: 50px;
     border-radius: 0;
   }
-  
   .user-card {
     flex-direction: column;
     align-items: center;
