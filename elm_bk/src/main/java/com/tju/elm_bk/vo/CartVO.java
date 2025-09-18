@@ -41,6 +41,7 @@ public class CartVO {
     @Schema(description = "商品ID")
     private Long foodId;
 
+
     @Schema(description = "所属客户")
     private UserVO customer;
 

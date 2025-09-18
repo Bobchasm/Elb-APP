@@ -2,7 +2,9 @@ package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.dto.OrderDTO;
 import com.tju.elm_bk.entity.Order;
+import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.OrdersMapper;
+import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.OrderService;
 import com.tju.elm_bk.vo.OrderVO;
 import org.springframework.beans.BeanUtils;
@@ -30,6 +32,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderVO addOrder(OrderDTO orderDTO) {
+        if (!orderDTO.verify()) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
         Order order = new Order();
         BeanUtils.copyProperties(orderDTO, order);
         order.setCreateTime(LocalDateTime.now());

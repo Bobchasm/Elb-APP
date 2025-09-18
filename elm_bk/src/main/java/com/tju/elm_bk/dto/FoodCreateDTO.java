@@ -54,4 +54,11 @@ public class FoodCreateDTO {
 
     @Schema(description = "所属商家")
     private BusinessVO business;
+
+    public Boolean verify() {
+        if(business == null || business.getId() == null || foodName == null ||foodPrice == null) {
+            return false;
+        }
+        return true;
+    }
 }

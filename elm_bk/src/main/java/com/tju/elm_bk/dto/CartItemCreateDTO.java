@@ -48,4 +48,12 @@ public class CartItemCreateDTO {
 
     @Schema(description = "商品数量")
     private Integer quantity;
+
+    public Boolean verify() {
+        if(business == null || business.getId() == null || customer == null || customer.getId() == null) {
+            return false;
+        }
+        return true;
+    }
+
 }

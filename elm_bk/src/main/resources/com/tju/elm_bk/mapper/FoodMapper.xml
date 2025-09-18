@@ -40,7 +40,7 @@
 
     <resultMap id="userVOResultMap" type="com.tju.elm_bk.vo.UserVO">
         <id property="id" column="user_id"/>
-
+        <result property="username" column="user_username"/>
         <result property="createTime" column="user_create_time"/>
         <result property="creator" column="user_creator"/>
         <result property="isDeleted" column="user_deleted"/>
@@ -150,7 +150,7 @@
 
     <insert id="insertFoodVO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO food (create_time, creator, is_deleted, update_time, updater, food_explain, food_img, food_name, food_price, remarks, business_id)
-        VALUES (#{id},#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
+        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
     </insert>
 
 

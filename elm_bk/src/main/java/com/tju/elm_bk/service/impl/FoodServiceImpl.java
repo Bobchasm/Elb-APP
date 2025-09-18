@@ -37,6 +37,9 @@ public class FoodServiceImpl implements FoodService {
 
     @Override
     public FoodVO addFood(FoodCreateDTO foodCreateDTO) {
+        if(!foodCreateDTO.verify()) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
         Food food = new Food();
         BeanUtils.copyProperties(foodCreateDTO, food);
         food.setBusinessId(foodCreateDTO.getBusiness().getId());

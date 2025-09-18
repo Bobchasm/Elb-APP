@@ -2,6 +2,8 @@ package com.tju.elm_bk.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tju.elm_bk.exception.APIException;
+import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.vo.AddressVO;
 import com.tju.elm_bk.vo.BusinessVO;
 import com.tju.elm_bk.vo.UserVO;
@@ -56,4 +58,11 @@ public class OrderDTO {
 
     @Schema(description = "地址对象")
     private AddressVO deliveryAddress;
+
+    public Boolean verify() {
+        if(business == null || business.getId() == null || customer == null || customer.getId() == null || orderTotal == null) {
+            return false;
+        }
+        return true;
+    }
 }
