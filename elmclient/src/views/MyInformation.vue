@@ -45,6 +45,7 @@
           </div>
           <input type="file" ref="fileInput" @change="uploadAvatar" accept="image/*" style="display:none;" />
           <div class="main-buttons">
+            <button class="btn-blue" @click="goBusiness">商家端</button>
             <!-- <button class="btn-red" @click="editpasswd">修改密码</button>
             <button class="btn-orange" @click="myfavorite">收藏列表</button>
             <button class="btn-yellow" @click="goToLikesList">点赞列表</button>
@@ -79,6 +80,16 @@ export default {
     const showEditGender = ref(false);
     const newGender = ref('');
     const fileInput = ref(null);
+
+    const goBusiness = () => {
+      const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
+      if (!businessUser || !businessUser.isBusiness) {
+        toast.warning('请先登录商家账号！');
+        router.push('/businessLogin');
+        return;
+      }
+      router.push({ path: '/businessOrderManage', query: { businessId: businessUser.businessId } });
+    };
 
     const showUpload = () => {
       fileInput.value.click();
@@ -314,6 +325,7 @@ export default {
       user,
       user2,
       logout,
+      goBusiness,
       editNickname,
       submitNickname,
       showEditNickname,

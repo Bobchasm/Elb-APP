@@ -22,6 +22,7 @@ import BusinessLogin from '@/views/BusinessLogin.vue'
 import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
+import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
 //
 
@@ -138,6 +139,11 @@ const routes = [
     path:'/businessView',
     name:'BusinessView',
     component:BusinessView
+  },
+  {
+    path:'/businessOrderManage',
+    name:'BusinessOrderManage',
+    component:BusinessOrderManage
   },
   {
     path:'/submitItems',
