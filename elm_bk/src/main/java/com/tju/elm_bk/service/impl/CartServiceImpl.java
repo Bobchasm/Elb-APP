@@ -61,7 +61,6 @@ public class CartServiceImpl implements CartService {
         BeanUtils.copyProperties(customer,userVO);
         cartVO.setCustomer(userVO);
         cartVO.setBusiness(businessMapper.selectBusinessVO(cartVO.getBusinessId()));
-
         return cartVO;
     }
 }

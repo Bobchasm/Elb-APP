@@ -50,10 +50,7 @@ public class CartItemCreateDTO {
     private Integer quantity;
 
     public Boolean verify() {
-        if(business == null || business.getId() == null || food == null || food.getId() == null || quantity == null) {
-            return false;
-        }
-        return true;
+        return business != null && business.getId() != null && food != null && food.getId() != null && quantity != null;
     }
 
 }
