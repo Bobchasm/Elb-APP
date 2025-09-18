@@ -18,4 +18,9 @@ public interface FoodMapper {
 
 
     void insertFoodVO(Food food);
+
+    @Select("""
+        SELECT * FROM food WHERE is_deleted = 0 AND id = #{id}
+    """)
+    Food selectFoodById(Long id);
 }

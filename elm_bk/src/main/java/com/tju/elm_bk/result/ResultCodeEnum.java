@@ -19,6 +19,7 @@ public enum ResultCodeEnum {
 
     ADDRESS_PERMISSION_DENIED("ADDRESS_PERMISSION_DENIED","权限不足，无法为该用户添加地址"),
     VALUE_MISSED("VALUE_MISSED","值不存在"),
+    FOOD_MISSED("FOOD_MISSED","商品不存在"),
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 

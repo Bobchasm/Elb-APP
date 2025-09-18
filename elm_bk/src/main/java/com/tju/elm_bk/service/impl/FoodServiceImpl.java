@@ -43,10 +43,11 @@ public class FoodServiceImpl implements FoodService {
         Food food = new Food();
         BeanUtils.copyProperties(foodCreateDTO, food);
         food.setBusinessId(foodCreateDTO.getBusiness().getId());
-        //String username = SecurityUtils.getCurrentUsername().get();
-        //User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        //food.setCreator(user.getId());
+        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        food.setCreator(user.getId());
         food.setCreateTime(LocalDateTime.now());
+        food.setCreator(user.getId());
+        food.setUpdateTime(LocalDateTime.now());
         food.setIsDeleted(false);
         foodMapper.insertFoodVO(food);
         return foodMapper.selectFoodVOById(food.getId());
