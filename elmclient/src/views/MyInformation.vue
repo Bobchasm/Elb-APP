@@ -39,6 +39,13 @@
           <span class="menu-text">我的订单</span>
           <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
+        <div class="menu-item" @click="goManageBusiness">
+          <div class="menu-icon">
+            <i class="fas fa-store"></i>
+          </div>
+          <span class="menu-text">商铺管理</span>
+          <i class="fas fa-chevron-right menu-arrow"></i>
+        </div>
         <div class="menu-item" @click="showAddressSection = !showAddressSection">
           <div class="menu-icon">
             <i class="fas fa-map-marker-alt"></i>
@@ -256,7 +263,10 @@ export default {
     };
 
     const switchToMerchant = () => {
-      toast.info('切换商家模式功能待开发');
+      router.push({ path: '/businessOrderManage' });
+    };
+    const goManageBusiness = () => {
+      router.push({ path: '/manageBusiness' });
     };
     
     return {
@@ -273,6 +283,7 @@ export default {
       myfavorite,
       navigateTo,
       switchToMerchant,
+      goManageBusiness,
       showAddressSection,
     };
   },

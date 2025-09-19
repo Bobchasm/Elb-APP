@@ -115,7 +115,7 @@
                     <div class="business-info-detail">
                         <h3>{{ business.businessName }}</h3>
                         <div class="business-info-rating">
-
+                            <span class="rating-number">评分：{{ getBusinessRating(business.businessId) }}</span>
                         </div>
                         <div class="business-info-delivery">
                             <span>起送 ¥{{ business.starPrice }}</span>
@@ -149,6 +149,79 @@ export default {
         const user = ref({});
         const isuser = ref(false);
         const businessList = ref([]);
+        const ratingMap = ref({});
+        const getUserKey = () => {
+            try {
+                const stored = sessionStorage.getItem('user');
+                if (stored) {
+                    const u = JSON.parse(stored);
+                    if (u && u.userId) return `u_${u.userId}`;
+                }
+            } catch (e) {}
+            let anon = localStorage.getItem('anonId');
+            if (!anon) {
+                anon = `a_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+                localStorage.setItem('anonId', anon);
+            }
+            return anon;
+        };
+
+        const loadReactions = () => {
+            try {
+                return JSON.parse(localStorage.getItem('reactions')) || { likes: {}, favorites: {} };
+            } catch (e) {
+                return { likes: {}, favorites: {} };
+            }
+        };
+        
+        const getReactionCount = (businessId) => {
+            const reactions = loadReactions();
+            const likesMap = reactions.likes[String(businessId)] || {};
+            const favsMap = reactions.favorites[String(businessId)] || {};
+            const likes = Object.keys(likesMap).length;
+            const favs = Object.keys(favsMap).length;
+            return likes + favs;
+        };
+
+        const guessCommentCount = (biz) => {
+            // 兼容不同后端字段命名，若不存在则为0
+            return (
+                biz.commentCount ??
+                biz.comments ??
+                biz.remarkNum ??
+                biz.reviewCount ??
+                0
+            ) || 0;
+        };
+
+        const computeRatings = () => {
+            const entries = businessList.value || [];
+            if (!entries.length) { ratingMap.value = {}; return; }
+            const reactionCounts = entries.map(b => getReactionCount(b.businessId));
+            const commentCounts = entries.map(b => guessCommentCount(b));
+            const rMin = Math.min(...reactionCounts);
+            const rMax = Math.max(...reactionCounts);
+            const cMin = Math.min(...commentCounts);
+            const cMax = Math.max(...commentCounts);
+            const weights = { comments: 0.6, reactions: 0.4 };
+            const map = {};
+            entries.forEach((b, idx) => {
+                const r = reactionCounts[idx];
+                const c = commentCounts[idx];
+                const rNorm = rMax > rMin ? (r - rMin) / (rMax - rMin) : (r > 0 ? 1 : 0);
+                const cNorm = cMax > cMin ? (c - cMin) / (cMax - cMin) : (c > 0 ? 1 : 0);
+                const combined = weights.comments * cNorm + weights.reactions * rNorm;
+                let rating = 1 + combined * 4; // map to [1,5]
+                if (rating < 1) rating = 1;
+                if (rating > 5) rating = 5;
+                map[b.businessId] = rating.toFixed(1);
+            });
+            ratingMap.value = map;
+        };
+
+        const getBusinessRating = (businessId) => {
+            return ratingMap.value[businessId] || '1.0';
+        };
 
         const navigateToOrders = () => {
             router.push({ path: '/orders' });
@@ -206,6 +279,7 @@ export default {
             axios.get('BusinessController/listBusinessByOrderTypeId?orderTypeId=1')
                 .then(response => {
                     businessList.value = response.data;
+                    computeRatings();
                 })
                 .catch(error => {
                     console.error('获取商家列表失败:', error);
@@ -236,7 +310,8 @@ export default {
             navigateToSearch,
             businessList,
             toBusinessInfo,
-            handleImageError
+            handleImageError,
+            getBusinessRating
         };
     },
     components: {
@@ -556,6 +631,7 @@ export default {
     display: flex;
     align-items: center;
     margin-bottom: 2vw;
+    justify-content: flex-end;
 }
 
 .wrapper .business-list li .business-info .business-info-rating .rating {
@@ -569,6 +645,11 @@ export default {
 
 .wrapper .business-list li .business-info .business-info-rating .rating .fa-star.active {
     color: #ffd700;
+}
+
+.wrapper .business-list li .business-info .business-info-rating .rating-number {
+    font-size: 2.8vw;
+    color: #999;
 }
 
 .wrapper .business-list li .business-info .business-info-rating .sales {

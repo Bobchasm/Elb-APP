@@ -15,11 +15,11 @@
 
 		<!-- 订单列表 -->
 		<ul class="order-list">
-			<li v-for="item in displayedOrders" :key="item.orderId" class="order-item">
+			<!-- 用户端：点击订单项跳转到订单详情（共用 ListDetail） -->
+			<li v-for="item in displayedOrders" :key="item.orderId" class="order-item" @click="goDetail(item)" title="查看详情">
 				<img class="thumb" :src="getThumb(item)" alt="thumb">
 				<div class="meta">
 					<p class="name">{{ getName(item) }}</p>
-					<p class="sub">{{ getName(item) }}</p>
 					<p class="price">¥ {{ Number(item.orderTotal).toFixed(2) }}</p>
 					<span class="status-badge" :class="statusClass(item.orderId, item)">{{ statusText(item.orderId, item) }}</span>
 				</div>
@@ -74,8 +74,7 @@ export default {
     const confirmedMap = ref({}); // 已完成（完成按钮）
     const canceledMap = ref({});  // 已取消（接单前）
     const paidMap = ref({});      // 本地支付完成（进入待接单）
-    const deadlineMap = ref({});  // 未支付倒计时截止时间戳
-    const nowTick = ref(Date.now());
+    // 已移除未支付倒计时
 
     const handleError = (error) => {
       console.error("Failed to fetch data:", error);
@@ -124,6 +123,14 @@ export default {
       router.push(path);
     };
 
+    const goDetail = (order) => {
+      try { sessionStorage.setItem('selectedOrder', JSON.stringify(order)); } catch (e) {}
+      router.push({
+        path: '/listDetail',
+        query: { orderId: order.orderId }
+      });
+    };
+
     // 展示名称：优先展示第一个明细商品名，否则商家名
     const getName = (order) => {
       const first = Array.isArray(order.detailet) && order.detailet.length > 0 ? order.detailet[0] : null;
@@ -145,31 +152,20 @@ export default {
     };
     const cancelOrder = (orderId) => {
       canceledMap.value[orderId] = true;
-      delete deadlineMap.value[orderId];
     };
     const payOrder = (orderId) => {
       paidMap.value[orderId] = true;
-      delete deadlineMap.value[orderId];
       router.push({ path: "/payment", query: { orderId } });
     };
 
-    const formatRemain = (ms) => {
-      const s = Math.max(0, Math.floor(ms / 1000));
-      const mm = String(Math.floor(s / 60)).padStart(2, "0");
-      const ss = String(s % 60).padStart(2, "0");
-      return `${mm}:${ss}`;
-    };
+    // 已移除倒计时格式化函数
 
     const statusText = (orderId, order) => {
       if (isConfirmed(orderId)) return "已完成";
       if (isCanceled(orderId)) return "已取消";
       if (isAccepted(order)) return "已接单";
       if (isPendingAccept(order)) return "待接单";
-      if (isUnpaid(order)) {
-        const deadline = deadlineMap.value[orderId];
-        const remain = deadline ? deadline - nowTick.value : 0;
-        return remain > 0 ? `待支付 · ${formatRemain(remain)}` : "待支付";
-      }
+      if (isUnpaid(order)) return "待支付";
       return "";
     };
     const statusClass = (orderId, order) => {
@@ -224,8 +220,11 @@ export default {
 
           // ===== 虚拟订单 开始 (仅用于前端联调与UI测试) =====
           const now = new Date().toLocaleString();
-          const mockBusiness = (name) => ({ businessName: name });
+          const mockBusiness = (name, addr, delivery) => ({ businessName: name, businessAddress: addr, deliveryPrice: delivery });
           const mockDetail = (name, price, quantity = 1) => ([{ foodName: name, foodPrice: price, quantity }]);
+          const mockUserName = user.value?.userName || '测试用户';
+          const mockUserPhone = user.value?.userTel || '13800001111';
+          const mockUserAddr = '天津市 南开区 测试街道 100 号';
 
           const mockOrders = [
             {
@@ -233,8 +232,11 @@ export default {
               orderTotal: 100.0,
               orderState: 0, // 未支付
               orderDate: now,
-              business: mockBusiness("汉堡王测试店"),
+              business: mockBusiness("汉堡王测试店", "南开区海光寺街道1号", 5),
               detailet: mockDetail("汉堡", 100, 1),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             },
@@ -243,8 +245,11 @@ export default {
               orderTotal: 48.0,
               orderState: 0, // 未支付
               orderDate: now,
-              business: mockBusiness("川菜测试店"),
+              business: mockBusiness("川菜测试店", "河西区围堤道88号", 4),
               detailet: mockDetail("回锅肉", 48, 1),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             },
@@ -253,8 +258,11 @@ export default {
               orderTotal: 58.0,
               orderState: 1, // 已接单(以1代表商家已接单)
               orderDate: now,
-              business: mockBusiness("披萨测试店"),
+              business: mockBusiness("披萨测试店", "和平区南京路188号", 6),
               detailet: mockDetail("披萨", 58, 1),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             },
@@ -263,8 +271,11 @@ export default {
               orderTotal: 32.0,
               orderState: 0, // 待接单（通过本地 paidMap 标记为已支付）
               orderDate: now,
-              business: mockBusiness("粉面测试店"),
+              business: mockBusiness("粉面测试店", "津南区海教园测试路9号", 3),
               detailet: mockDetail("牛肉粉", 32, 1),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             },
@@ -273,8 +284,11 @@ export default {
               orderTotal: 22.0,
               orderState: -1, // 已取消（接单前）
               orderDate: now,
-              business: mockBusiness("小吃测试店"),
+              business: mockBusiness("小吃测试店", "红桥区丁字沽三号路66号", 2),
               detailet: mockDetail("烤肠", 11, 2),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             },
@@ -283,8 +297,11 @@ export default {
               orderTotal: 66.0,
               orderState: 1, // 已接单
               orderDate: now,
-              business: mockBusiness("寿司测试店"),
+              business: mockBusiness("寿司测试店", "西青区学府工业区22号", 5),
               detailet: mockDetail("寿司拼盘", 66, 1),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             },
@@ -293,8 +310,11 @@ export default {
               orderTotal: 18.0,
               orderState: 1, // 已接单 -> 我们将其标记为已完成
               orderDate: now,
-              business: mockBusiness("甜品测试店"),
+              business: mockBusiness("甜品测试店", "东丽区空港经济区3号", 4),
               detailet: mockDetail("蛋挞", 9, 2),
+              userName: mockUserName,
+              userPhone: mockUserPhone,
+              userAddress: mockUserAddr,
               isShowDetailet: false,
               index: null
             }
@@ -304,15 +324,6 @@ export default {
           // 追加到现有订单数组末尾
           orderArr.value = [...orderArr.value, ...mockOrders];
           // ===== 虚拟订单 结束 =====
-
-          // 为未支付订单设置5分钟倒计时
-          orderArr.value.forEach(o => {
-            if (o.orderState === 0 && !paidMap.value[o.orderId] && !canceledMap.value[o.orderId]) {
-              if (!deadlineMap.value[o.orderId]) {
-                deadlineMap.value[o.orderId] = Date.now() + 5 * 60 * 1000;
-              }
-            }
-          });
 
           // 初始化本地状态：将 99904 设为已支付(待接单)，将 99907 设为已完成
           paidMap.value[99904] = true; // 待接单
@@ -326,20 +337,7 @@ export default {
         alert("用户未登录，请先登录！");
         router.push({ path: "/login" });
       }
-      // 启动倒计时心跳
-      const timer = setInterval(() => {
-        nowTick.value = Date.now();
-        // 自动取消：未支付且到期
-        orderArr.value.forEach(o => {
-          const deadline = deadlineMap.value[o.orderId];
-          if (deadline && nowTick.value >= deadline && !paidMap.value[o.orderId] && !canceledMap.value[o.orderId]) {
-            canceledMap.value[o.orderId] = true;
-            delete deadlineMap.value[o.orderId];
-          }
-        });
-      }, 1000);
-      // 清理
-      window.addEventListener('beforeunload', () => clearInterval(timer));
+      // 已移除倒计时心跳与清理
     });
 
     return {
@@ -362,7 +360,8 @@ export default {
       statusClass,
       detailetShow,
       navigateTo,
-      navigateToPayment
+      navigateToPayment,
+      goDetail
     };
   }
 };

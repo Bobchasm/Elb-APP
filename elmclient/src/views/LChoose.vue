@@ -1,13 +1,12 @@
 <template>
   <!-- Top Bar -->
   <div class="top-bar">
-    请选择登陆方式
+    用户登录
   </div>
 
   <!-- Middle section with buttons -->
   <div class="container">
-    <button class="btn" @click="handleMerchantLogin">商家登录</button>
-    <button class="btn" @click="handlePersonalLogin">个人登录</button>
+    <button class="btn" @click="handlePersonalLogin">用户登录</button>
   </div>
 </template>
 
@@ -19,17 +18,11 @@ export default {
   setup() {
     const router = useRouter();
 
-    const handleMerchantLogin = () => {
-      // Handle merchant registration logic
-      router.push({ path: '/businessLogin' });
-    };
-
     const handlePersonalLogin = () => {
       router.push({ path: '/login' });
     };
 
     return {
-      handleMerchantLogin,
       handlePersonalLogin
     };
   }

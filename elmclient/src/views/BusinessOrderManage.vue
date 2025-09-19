@@ -8,43 +8,55 @@
     <!-- 页面标题，与 OrderList 保持一致 -->
     <div class="page-title">订单管理中心</div>
 
-    <!-- 店铺切换，沿用 OrderList 的 tabs 样式 -->
-    <ul class="tabs">
+    <!-- 店铺切换，沿用 OrderList 的 tabs 样式（支持左右滑动） -->
+    <ul class="tabs tabs-scroll">
       <li
         v-for="(s, idx) in shops"
         :key="s.businessId || idx"
         :class="{ active: activeShopIndex === idx }"
-        @click="activeShopIndex = idx"
+        @click="selectShop(idx)"
       >
         {{ s.businessName || `店铺${idx + 1}` }}
       </li>
     </ul>
 
+    <!-- 订单状态分类 -->
+    <ul class="tabs">
+      <li
+        v-for="(t, i) in statusTabs"
+        :key="t"
+        :class="{ active: activeStatusTab === i }"
+        @click="activeStatusTab = i"
+      >
+        {{ t }}
+      </li>
+    </ul>
+
     <!-- 订单列表，沿用 OrderList 的结构与样式 -->
+    <!-- 商家端：点击订单项跳转到订单详情（共用 ListDetail） -->
     <ul class="order-list">
-      <li v-for="o in currentOrders" :key="o.orderId" class="order-item">
+      <li v-for="o in currentOrdersFiltered" :key="o.orderId" class="order-item" @click="goDetail(o)" title="查看订单详情">
         <img class="thumb" src="/baozi.jpg" alt="thumb">
         <div class="meta">
           <p class="name">订单号：#{{ o.orderId }}</p>
           <p class="sub">顾客：{{ o.userName || '-' }}</p>
-          <p class="sub">商品：{{ o.itemsText }}</p>
+          
           <p class="price">¥ {{ Number(o.orderTotal).toFixed(2) }}</p>
           <span class="status-badge" :class="badgeClass(o.status)">{{ statusText(o.status) }}</span>
         </div>
         <div class="actions">
           <template v-if="o.status === '待接单'">
-            <button class="cancel-btn" @click="reject(o)">拒单</button>
-            <button class="confirm-btn" @click="accept(o)">接单</button>
+            <button class="cancel-btn" @click.stop="reject(o)">拒单</button>
+            <button class="confirm-btn" @click.stop="accept(o)">接单</button>
           </template>
-          <template v-else-if="o.status === '待签收'">
-            <button class="cancel-btn" @click="cancel(o)">取消</button>
-            <button class="confirm-btn" @click="finish(o)">完成</button>
+          <template v-else-if="o.status === '已接单'">
+            <button class="confirm-btn" @click.stop="finish(o)">完成</button>
           </template>
           <template v-else-if="o.status === '已取消'">
-            <button class="cancel-btn disabled" disabled>已取消</button>
+            <button class="cancel-btn disabled" disabled @click.stop>已取消</button>
           </template>
           <template v-else>
-            <button class="confirm-btn disabled" disabled>已完成</button>
+            <button class="confirm-btn disabled" disabled @click.stop>已完成</button>
           </template>
         </div>
       </li>
@@ -70,15 +82,39 @@ export default {
     const shops = ref([]);
     const activeShopIndex = ref(0);
     const orderMap = ref({}); // businessId -> orders
+    const statusTabs = ref(['全部', '待接单', '已接单', '已取消', '已完成']);
+    const activeStatusTab = ref(0);
 
     const currentBusinessId = computed(() => shops.value[activeShopIndex.value]?.businessId);
     const currentOrders = computed(() => orderMap.value[currentBusinessId.value] || []);
+    const currentOrdersFiltered = computed(() => {
+      const all = currentOrders.value;
+      switch (activeStatusTab.value) {
+        case 1: return all.filter(o => o.status === '待接单');
+        case 2: return all.filter(o => o.status === '已接单');
+        case 3: return all.filter(o => o.status === '已取消');
+        case 4: return all.filter(o => o.status === '已完成');
+        default: return all;
+      }
+    });
+
+    const tabWithCount = (t, i) => {
+      const counts = {
+        all: currentOrders.value.length,
+        pending: currentOrders.value.filter(o => o.status === '待接单').length,
+        accepted: currentOrders.value.filter(o => o.status === '已接单').length,
+        canceled: currentOrders.value.filter(o => o.status === '已取消').length,
+        done: currentOrders.value.filter(o => o.status === '已完成').length
+      };
+      const map = [counts.all, counts.pending, counts.accepted, counts.canceled, counts.done];
+      return `${t} (${map[i]})`;
+    };
 
     const statusText = (s) => s;
     const badgeClass = (s) => {
       switch (s) {
         case '待接单': return 'pending';
-        case '待签收': return 'accepted';
+        case '已接单': return 'accepted';
         case '已取消': return 'canceled';
         case '已完成': return 'done';
         default: return '';
@@ -101,7 +137,7 @@ export default {
         orderTotal: raw.orderTotal || 0,
         userName: raw.userName || raw.user?.userName,
         itemsText: raw.itemsText || '—',
-        status: raw.status // 字符串：待接单/待签收/已取消/已完成
+        status: raw.status // 字符串：待接单/已接单/已取消/已完成
       };
     };
 
@@ -124,9 +160,9 @@ export default {
       } catch (e) {
         // ===== 虚拟店铺 开始 =====
         shops.value = [
-          { businessId: `${businessId}-A`, businessName: '美味小厨' },
-          { businessId: `${businessId}-B`, businessName: '街角奶茶店' },
-          { businessId: `${businessId}-C`, businessName: '深夜食堂' }
+          { businessId: `${businessId}-A`, businessName: '美味小厨', businessAddress: '和平区南京路188号', deliveryPrice: 5 },
+          { businessId: `${businessId}-B`, businessName: '街角奶茶店', businessAddress: '南开区鼓楼北街20号', deliveryPrice: 3 },
+          { businessId: `${businessId}-C`, businessName: '深夜食堂', businessAddress: '河西区围堤道88号', deliveryPrice: 4 }
         ];
         // ===== 虚拟店铺 结束 =====
       }
@@ -149,7 +185,7 @@ export default {
       // 0:未支付 1:已接单 ... 这里只映射为商家视角的四态
       let status = '待接单';
       if (o.orderState === -1) status = '已取消';
-      else if (o.orderState === 1) status = '待签收';
+      else if (o.orderState === 1) status = '已接单';
       else if (o.orderState === 2) status = '已完成';
       return { ...o, status };
     };
@@ -163,18 +199,18 @@ export default {
       const presets = [
         [
           { orderId: nowId(1), userName: '张三', itemsText: '红烧肉套餐 x1，可乐 x1', orderTotal: 35, status: '待接单' },
-          { orderId: nowId(2), userName: '李四', itemsText: '宫保鸡丁 x1，米饭 x2', orderTotal: 28, status: '待签收' },
+          { orderId: nowId(2), userName: '李四', itemsText: '宫保鸡丁 x1，米饭 x2', orderTotal: 28, status: '已接单' },
           { orderId: nowId(3), userName: '王五', itemsText: '麻辣香锅 x1', orderTotal: 56, status: '已完成' },
           { orderId: nowId(4), userName: '赵六', itemsText: '鱼香肉丝 x1，米饭 x1', orderTotal: 26, status: '已取消' }
         ],
         [
           { orderId: nowId(1), userName: '小李', itemsText: '黑糖珍珠奶茶 x2', orderTotal: 24, status: '待接单' },
-          { orderId: nowId(2), userName: '小王', itemsText: '芝士奶盖绿茶 x1', orderTotal: 16, status: '待签收' },
+          { orderId: nowId(2), userName: '小王', itemsText: '芝士奶盖绿茶 x1', orderTotal: 16, status: '已接单' },
           { orderId: nowId(3), userName: '小赵', itemsText: '抹茶拿铁 x1', orderTotal: 18, status: '已完成' }
         ],
         [
           { orderId: nowId(1), userName: '夜猫', itemsText: '牛肉拉面 x1', orderTotal: 22, status: '待接单' },
-          { orderId: nowId(2), userName: '加班狗', itemsText: '炒饭 x1，可乐 x1', orderTotal: 20, status: '待签收' },
+          { orderId: nowId(2), userName: '加班狗', itemsText: '炒饭 x1，可乐 x1', orderTotal: 20, status: '已接单' },
           { orderId: nowId(3), userName: '码农', itemsText: '煎饺 x1', orderTotal: 15, status: '已完成' }
         ]
       ];
@@ -184,10 +220,58 @@ export default {
     };
 
     // 操作
-    const accept = (o) => { o.status = '待签收'; };
+    const accept = (o) => { o.status = '已接单'; };
     const reject = (o) => { o.status = '已取消'; };
     const cancel = (o) => { o.status = '已取消'; };
     const finish = (o) => { o.status = '已完成'; };
+
+    // 解析 itemsText -> 明细数组的简易兜底
+    const parseItemsText = (text = '', total = 0) => {
+      if (!text) return [];
+      const parts = text.split(/[，,]/).map(s => s.trim()).filter(Boolean);
+      const items = parts.map(p => {
+        const m = p.match(/(.+?)\s*[x×]\s*(\d+)/i);
+        return {
+          foodName: m ? m[1].trim() : p,
+          quantity: m ? Number(m[2]) : 1,
+          foodPrice: 0
+        };
+      });
+      const qtySum = items.reduce((s, it) => s + (Number(it.quantity) || 0), 0) || 1;
+      const unit = Number(total) / qtySum;
+      items.forEach(it => { it.foodPrice = unit; });
+      return items;
+    };
+
+    const goDetail = (o) => {
+      const biz = shops.value[activeShopIndex.value] || {};
+      // 映射为 ListDetail 可识别的结构
+      const mappedOrder = {
+        orderId: o.orderId,
+        orderTotal: o.orderTotal,
+        // 提供字符串状态，ListDetail 将兼容渲染
+        status: o.status,
+        // 尽量给出数值状态（用于后端一致性），无法精准映射时留空
+        orderState: o.status === '已取消' ? -1 : (o.status === '已完成' ? 2 : (o.status === '已接单' ? 1 : 0)),
+        userName: o.userName || '-',
+        userPhone: o.userPhone || '—',
+        userAddress: o.userAddress || '—',
+        business: {
+          businessName: biz.businessName || '—',
+          businessAddress: biz.businessAddress || '地址未知',
+          deliveryPrice: biz.deliveryPrice ?? 0
+        },
+        // 优先后端明细；如没有，解析 itemsText 兜底
+        detailet: Array.isArray(o.detailet) && o.detailet.length > 0 ? o.detailet : parseItemsText(o.itemsText, o.orderTotal)
+      };
+      try { sessionStorage.setItem('selectedOrder', JSON.stringify(mappedOrder)); } catch (e) {}
+      router.push({ path: '/listDetail', query: { orderId: o.orderId } });
+    };
+
+    const selectShop = (idx) => {
+      activeShopIndex.value = idx;
+      activeStatusTab.value = 0; // 重置为“全部”
+    };
 
     onMounted(() => {
       const bu = ensureBusinessLogin();
@@ -199,12 +283,18 @@ export default {
       shops,
       activeShopIndex,
       currentOrders,
+      currentOrdersFiltered,
+      tabWithCount,
       accept,
       reject,
       cancel,
       finish,
       statusText,
-      badgeClass
+      badgeClass,
+      goDetail,
+      selectShop,
+      statusTabs,
+      activeStatusTab
     };
   }
 };
@@ -243,6 +333,14 @@ export default {
   padding: 0 4vw;
   border-bottom: 1px solid #f0f0f0;
 }
+.tabs-scroll {
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none; /* Firefox */
+}
+.tabs-scroll::-webkit-scrollbar { /* Chrome/Safari */
+  display: none;
+}
 .tabs li {
   margin-right: 6vw;
   padding: 2vw 0;
@@ -250,6 +348,7 @@ export default {
   color: #666;
   position: relative;
   cursor: pointer;
+  flex: 0 0 auto;
 }
 .tabs li.active {
   color: #333;

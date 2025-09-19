@@ -6,31 +6,28 @@
 	  </header>
   
 	  <!-- 表单部分 -->
-	  <ul class="form-box">
-		<li>
-		  <div class="title">
-			手机号码：
-		  </div>
-		  <div class="content">
-			<input type="text" v-model="userId" placeholder="手机号码">
-		  </div>
-		</li>
-		<li>
-		  <div class="title">
-			密码：
-		  </div>
-		  <div class="content">
-			<input type="password" v-model="password" placeholder="密码">
-		  </div>
-		</li>
-	  </ul>
-  
-	  <div class="button-login">
-		<button @click="login">登陆</button>
-	  </div>
-	  <div class="button-register">
-		<button @click="register">去注册</button>
-	  </div>
+      <ul class="form-box">
+      <li>
+        <div class="title">
+          用户名：
+        </div>
+        <div class="content">
+          <input type="text" v-model="userName" placeholder="用户名">
+        </div>
+      </li>
+      <li>
+        <div class="title">
+          密码：
+        </div>
+        <div class="content">
+          <input type="password" v-model="password" placeholder="密码">
+        </div>
+      </li>
+    </ul>
+
+    <div class="button-login">
+      <button @click="login">用户登录</button>
+    </div>
   
 	  <!-- 底部菜单部分 -->
 
@@ -47,7 +44,7 @@
   export default {
 	name: 'Login',
 	setup() {
-	  const userId = ref('');
+    const userName = ref('');
 	  const password = ref('');
 	  const router = useRouter();
 
@@ -55,29 +52,30 @@
 	  const setSessionStorage = (key, value) => {
       window.sessionStorage.setItem(key, JSON.stringify(value)); // 自定义会话存储函数
     };
-	  const login = () => {
-		if (userId.value === '') {
-		  alert('手机号码不能为空！');
-		  return;
-		}
+    const login = () => {
+    if (userName.value === '') {
+      alert('用户名不能为空！');
+      return;
+    }
 		if (password.value === '') {
 		  alert('密码不能为空！');
 		  return;
 		}
   
 		// 登录请求
-		const loginData = {
-		  userId: userId.value,
-		  password: password.value
-		};
+    const loginData = {
+      userName: userName.value,
+      password: password.value
+    };
  
-		axios.post('UserController/getUserByIdByPass', {
-			userId: userId.value,
-			password: password.value
+    // 后端仅提供按 userId 登录的接口，这里用“用户名”输入作为 userId 传递
+    axios.post('UserController/getUserByIdByPass', {
+      userId: userName.value,
+      password: password.value
         }).then(response => {
 		  const user = response.data;
 		  if (!user) {
-			alert('用户名或密码不正确！');
+      alert('用户名或密码不正确！');
 		  } else {
 			setSessionStorage('user', user);
 			router.push({ path: '/index' });
@@ -105,15 +103,10 @@
 		});
 	  };
   
-	  const register = () => {
-		router.push({ path: 'register' });
-	  };
-  
 	  return {
-		userId,
+    userName,
 		password,
 		login,
-		register
 	  };
 	},
 	components: {

@@ -7,6 +7,7 @@ import Orders from '../views/Orders.vue'
 import UserAddress from '../views/UserAddress.vue'
 import Payment from '../views/Payment.vue'
 import OrderList from '../views/OrderList.vue'
+import ListDetail from '../views/ListDetail.vue'
 import AddUserAddress from '../views/AddUserAddress.vue'
 import EditUserAddress from '../views/EditUserAddress.vue'
 import Register from '../views/Register.vue'
@@ -24,6 +25,7 @@ import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
+import ManageBusiness from '@/views/ManageBusiness.vue'
 
 // 定义路由
 const routes = [
@@ -71,6 +73,11 @@ const routes = [
     path: '/orderList',
     name: 'OrderList',
     component: OrderList
+  },
+  {
+    path: '/listDetail',
+    name: 'ListDetail',
+    component: ListDetail
   },
   {
     path: '/addUserAddress',
@@ -143,6 +150,11 @@ const routes = [
     path:'/businessOrderManage',
     name:'BusinessOrderManage',
     component:BusinessOrderManage
+  },
+  {
+    path:'/manageBusiness',
+    name:'ManageBusiness',
+    component:ManageBusiness
   },
   {
     path:'/submitItems',
