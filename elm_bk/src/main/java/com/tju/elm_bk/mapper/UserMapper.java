@@ -25,4 +25,7 @@ public interface UserMapper {
     @Select("select id from users where username = #{username}")
     Long getUserIdByUsername(String username);
 
+    @Select("SELECT * FROM users WHERE id = #{userId} AND is_deleted = 0")
+    Integer countUserById(@Param("userId") Long userId);
+
 }
