@@ -1,17 +1,22 @@
 package com.tju.elm_bk.service;
 
 import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.vo.UserVO;
 
 import java.util.Optional;
 
 public interface UserService {
-    public Optional<User> getUserWithAuthorities();
+    User getUserWithAuthorities(String username);
 
-    public User addUser(User user);
+    void addUser(User user);
 
-    public User updateUser(User user);
+    void updateUser(User user);
 
-    public boolean isEmptyUserTable();
+    boolean isEmptyUserTable();
 
-    public Optional<User> findByUsername(String username);
+    User findByUsername(String username);
+
+    UserVO changeUserStatus(String username);
+
+    void deleteUser(String username);
 }

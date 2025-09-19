@@ -1,5 +1,6 @@
 package com.tju.elm_bk.service.impl;
 
+import com.tju.elm_bk.constant.MessageConstant;
 import com.tju.elm_bk.dto.AddressCreateDTO;
 import com.tju.elm_bk.entity.DeliveryAddress;
 import com.tju.elm_bk.entity.User;
@@ -18,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-
+import java.util.List;
 
 @Service
 public class AddressServiceImpl implements AddressService {
@@ -38,7 +39,7 @@ public class AddressServiceImpl implements AddressService {
             throw new APIException("当前用户不存在");
         }
         if (targetUser == null) {
-            throw  new APIException("用户不存在");
+            throw  new APIException("目标用户不存在");
         }
 
         // 检查权限：只能新增自己的地址，或者管理员可以新增任何人的地址
@@ -64,7 +65,49 @@ public class AddressServiceImpl implements AddressService {
             addressVO.setCustomer(userVO);
             return HttpResult.success(addressVO);
         }else {
-            throw new APIException(ResultCodeEnum.ADDRESS_PERMISSION_DENIED);
+            return HttpResult.failure(ResultCodeEnum.NOT_ENOUGH_PERMISSION);
         }
+    }
+
+    @Override
+    public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(DeliveryAddress deliveryAddress) {
+        String currentUsername = SecurityUtils.getCurrentUsername()
+                .orElseThrow(() -> new APIException("当前用户未登录"));
+        User targetUser = userMapper.findByUserIdWithAuthorities(deliveryAddress.getUserId());
+        User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+        if (currentUser == null) {
+            throw new APIException("当前用户不存在");
+        }
+        if (targetUser == null) {
+            throw  new APIException("目标用户不存在");
+        }
+        if (currentUser.getUsername().equals(targetUser.getUsername()) || isAdmin){
+            return HttpResult.success(deliveryAddressMapper.listDeliveryAddressByUserId(deliveryAddress));
+        }else {
+            return HttpResult.failure(ResultCodeEnum.NOT_ENOUGH_PERMISSION);
+        }
+    }
+
+    @Override
+    public HttpResult<DeliveryAddress> getDeliveryAddressById(DeliveryAddress deliveryAddress) {
+        return HttpResult.success(deliveryAddressMapper.getDeliveryAddressById(deliveryAddress.getId()));
+    }
+
+    @Override
+    public HttpResult updateDeliveryAddress(DeliveryAddress deliveryAddress) {
+        String currentUsername = SecurityUtils.getCurrentUsername()
+                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
+        LocalDateTime now = LocalDateTime.now();
+        deliveryAddress.setUpdateTime(now);
+        deliveryAddress.setUpdater(currentUser.getId());
+        return HttpResult.success(deliveryAddressMapper.updateDeliveryAddress(deliveryAddress));
+    }
+
+    @Override
+    public HttpResult deleteDeliveryAddress(DeliveryAddress deliveryAddress) {
+        return HttpResult.success(deliveryAddressMapper.updateDeliveryAddress(deliveryAddress));
     }
 }

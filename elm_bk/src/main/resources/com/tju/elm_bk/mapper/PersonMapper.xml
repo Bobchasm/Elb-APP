@@ -33,4 +33,16 @@
         #{photo}
         )
     </insert>
+    <update id="updateById">
+        UPDATE person
+        <set>
+            <if test="email != null">email = #{email},</if>
+            <if test="firstName != null">first_name = #{firstName},</if>
+            <if test="lastName != null">last_name = #{lastName},</if>
+            <if test="photo != null">photo = #{photo},</if> <!-- 存储图片URL -->
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="gender != null">gender = #{gender},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
 </mapper>

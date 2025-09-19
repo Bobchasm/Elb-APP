@@ -10,6 +10,7 @@ spring:
     username: elm_v2
     password: zhijiage123
 
+
 #  data:
 #    redis:
 #      host: REDACTED_IP

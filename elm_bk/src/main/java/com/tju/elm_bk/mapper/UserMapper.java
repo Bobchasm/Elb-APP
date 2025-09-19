@@ -13,6 +13,7 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE username = #{username} AND is_deleted = 0")
     User findByUsername(String username);
     User findByUsernameWithAuthorities(String username);
+    User findByUserIdWithAuthorities(Long userId);
     void insert(User user);
     void update(User user);
     @Select("SELECT COUNT(*) FROM users WHERE is_deleted = 0")

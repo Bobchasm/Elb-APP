@@ -18,6 +18,7 @@ public enum ResultCodeEnum {
     PARAM_VERIFIED_FAILED("PARAM_VERIFIED_FAILED","参数校验不对"),
 
     ADDRESS_PERMISSION_DENIED("ADDRESS_PERMISSION_DENIED","权限不足，无法为该用户添加地址"),
+    NOT_ENOUGH_PERMISSION("NOT_ENOUGH_PERMISSION","权限不足")
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 
