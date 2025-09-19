@@ -4,7 +4,6 @@
 		<div class="content">
 			<div class="toolbar">
 				<button class="back" @click="goBack">返回</button>
-				<button class="add" @click="startCreate">新增商铺</button>
 			</div>
 			<ul class="store-list">
 				<li v-for="s in storeList" :key="s.businessId" class="store-item">
@@ -19,6 +18,11 @@
 					</div>
 				</li>
 			</ul>
+
+			<!-- 底部新增按钮 -->
+			<div class="bottom-bar">
+				<button class="add" @click="startCreate">新增商铺</button>
+			</div>
 
 			<!-- 编辑/新增弹出层 -->
 			<div v-if="editor.visible" class="editor">
@@ -151,6 +155,18 @@ export default {
 .editor-actions { display: flex; justify-content: flex-end; gap: 2vw; }
 .editor-actions .cancel { background: #eee; color: #333; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
 .editor-actions .save { background: #1e80ff; color: #fff; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
+
+.bottom-bar {
+  position: fixed;
+  right: 4vw;
+  bottom: 18vw; /* 再往上，留更大底部间距 */
+  background: transparent;
+}
+.bottom-bar .add {
+  border-radius: 8vw;
+  padding: 2.2vw 5vw;
+  box-shadow: 0 6px 16px rgba(30,128,255,.35);
+}
 </style>
 
 
