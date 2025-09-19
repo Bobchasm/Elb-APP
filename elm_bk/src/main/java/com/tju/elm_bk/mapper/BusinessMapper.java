@@ -1,76 +1,65 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
 
-import com.tju.elm_bk.entity.Business;
+import com.tju.elm_bk.dto.BusinessDTO;
+import com.tju.elm_bk.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.entity.Authority;
+import com.tju.elm_bk.vo.BusinessVO;
 import org.apache.ibatis.annotations.*;
 
 
 @Mapper
 public interface BusinessMapper {
-    @Select("""
-    select 
-    businessId,businessName,businessAddress,
-    businessExplain,businessImg,orderTypeId,
-    starPrice,deliveryPrice,remarks 
-    from elm.business where orderTypeId=#{orderTypeId}
-    """)
+
+    BusinessVO getBusinessById(Integer businessId);
+
+    // 更新商户信息
+    int updateBusiness(@Param("id") Integer id, @Param("updateDto") BusinessUpdateDTO updateDto);
+
+    // 更新商户所有者信息
+    int updateBusinessOwner(@Param("id") Integer id, @Param("updateDto") BusinessUpdateDTO updateDto);
+
+    // 嵌套查询方法
+    List<Authority> selectAuthoritiesByUserId(@Param("userId") Integer userId);
+
+    // 逻辑删除商户并返回删除前的信息
+    @Update("UPDATE business SET is_deleted = 1 WHERE id = #{id} AND is_deleted = 0")
+    int deleteBusiness(@Param("id") Integer id);
+
+    int insertBusiness(@Param("businessDto") BusinessDTO businessDto);
+
+    List<BusinessVO> getBusinesses();
+
+   /**
     List<Business> listBusinessByOrderTypeId(Integer orderTypeId);
 
-    @Select("""
-    select 
-    businessId,businessName,businessAddress,
-    businessExplain,businessImg,orderTypeId,
-    starPrice,deliveryPrice,remarks 
-    from elm.business where businessId= #{businessId}
-    """)
-    Business getBusinessById(Integer businessId);
 
-    @Update("UPDATE business b SET b.businessAddress =#{businessAddress},"
-            + " b.businessExplain =#{businessExplain},"
-            + " b.businessImg =#{businessImg},"
-            + " b.businessName =#{businessName},"
-            + " b.starPrice =#{starPrice},"
-            + " b.deliveryPrice =#{deliveryPrice},"
-            + " b.orderTypeId =#{orderTypeId}"
-            + " WHERE b.businessId =#{businessId}")
-    public int updateBusiness(Business business);
+    List<Business> listBusinessByCategoryName(String category);
 
-    @Update("UPDATE business_user a SET a.businessAddress =#{businessAddress}, a.businessExplain =#{businessExplain},  a.businessName =#{businessName},"
-            + " a.starPrice =#{starPrice},"
-            + " a.deliveryPrice =#{deliveryPrice}"
-            + " WHERE a.businessId =#{businessId}")
-            public int updateBusinessUser(Business business);
+    @Select("SELECT * FROM business_user WHERE phoneNumber = #{phoneNumber} AND password = #{password}")
+    Business getBusinessByIdByPass(Business business);
 
-    @Select("SELECT * FROM elm.business where businessId in\r\n" +
-            "(SELECT business.businessId FROM elm.food right join elm.business on food.businessId=business.businessId "
-            + "where businessName like concat('%',#{businessOrFoodName},'%') or foodName like concat('%',#{businessOrFoodName},'%'))")
-    public List<Business> listBusinessByBusinessName(String businessOrFoodName);
+    @Select("SELECT COUNT(*) FROM business_user WHERE phoneNumber = #{phoneNumber}")
+    int checkBusiness(Business business);
 
+//    @Select("SELECT businessId FROM business_user WHERE phoneNumber = #{phoneNumber}")
+//    int getBusinessIdByPhoneNumber(Business business);
 
-    @Select("SELECT * FROM business WHERE businessName LIKE CONCAT('%',#{businessName},'%')")
-    public List<Business> listBusinessBySearchName(String businessName);
+    List<Business> listBusinessBySearchName(String businessName);
 
-    @Select("SELECT * FROM business WHERE businessName LIKE CONCAT('%',#{category},'%') OR " +
-            "remarks LIKE CONCAT('%',#{category},'%')")
-    public List<Business> listBusinessByCategoryName(String category);
+//
+//    @Insert("INSERT INTO business_user(phoneNumber, password) VALUES(#{phoneNumber}, #{password})")
+//    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "businessId")
+//    int saveBusiness(Business business);
 
-    @Select("select * from business_user where phoneNumber=#{phoneNumber} and password=#{password}")
-    public Business getBusinessByIdByPass(Business business);
+    @Insert("INSERT INTO business (businessId, businessName, businessAddress, businessExplain, businessImg, orderTypeId, starPrice, deliveryPrice) VALUES(#{id}, #{businessName}, #{businessAddress}, #{businessExplain}, #{businessImg}, #{orderTypeId}, #{startPrice}, #{deliveryPrice})")
+    int saveBusinessMsg(Business business);
+    
+    @Update("UPDATE business_user SET businessAddress = #{businessAddress}, businessExplain = #{businessExplain}, businessName = #{businessName}, starPrice = #{startPrice}, deliveryPrice = #{deliveryPrice} WHERE businessId = #{id}")
+    int updateBusinessUser(Business business);
+    
+    // 根据商家名称或商品名称搜索（复杂JOIN查询）
+    List<Business> listBusinessByBusinessName(String businessOrFoodName);
+*/
 
-    @Select("select count(*) from business_user where phoneNumber=#{phoneNumber}")
-    public int checkBusiness(Business business);
-
-    @Select("select businessId from business_user where phoneNumber=#{phoneNumber}")
-    public int getBusinessIdByPhoneNumber(Business business);
-
-    @Insert("insert into business_user(phoneNumber,password) values(#{phoneNumber},#{password})")
-    @Options(useGeneratedKeys=true,keyProperty="businessId",keyColumn="businessId")
-    public int saveBusiness(Business business);
-
-    @Insert("insert into business (businessId,businessName,businessAddress,businessExplain,businessImg,orderTypeId,starPrice,deliveryPrice) " +
-            "values(#{businessId},#{businessName},#{businessAddress},#{businessExplain},#{businessImg},#{orderTypeId},#{starPrice},#{deliveryPrice})")
-    public int saveBusinessMsg(Business business);
-
-    @Select("select * from business_user where phoneNumber=#{phoneNumber}")
-    Business getBusinessByPhoneNumber(String phoneNumber);
 }
