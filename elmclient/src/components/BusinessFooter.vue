@@ -2,11 +2,15 @@
   <ul class="footer">
     <li @click="toBusinessView">
       <i class="fa fa-store"></i>
-      <p>商品管理</p>
+      <p>商铺管理</p>
+    </li>
+    <li @click="toBusinessOrders">
+      <i class="fa fa-list"></i>
+      <p>订单管理</p>
     </li>
     <li @click="toBusinessInfo">
       <i class="fa fa-user-o"></i>
-      <p>商家信息</p>
+      <p>商家管理</p>
     </li>
   </ul>
 </template>
@@ -51,9 +55,20 @@ export default defineComponent({
       }
     };
 
+    const toBusinessOrders = () => {
+      const businessUser = checkBusinessLogin();
+      if (businessUser) {
+        router.push({
+          path: '/businessOrderManage',
+          query: { businessId: businessUser.businessId }
+        });
+      }
+    };
+
     return {
       toBusinessView,
-      toBusinessInfo
+      toBusinessInfo,
+      toBusinessOrders
     };
   },
 });

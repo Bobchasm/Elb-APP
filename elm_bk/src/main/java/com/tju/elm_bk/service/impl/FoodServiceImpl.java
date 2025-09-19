@@ -1,6 +1,6 @@
 package com.tju.elm_bk.service.impl;
 import com.tju.elm_bk.service.FoodService;
-import com.tju.elm_bk.untity.Food;
+import com.tju.elm_bk.entity.Food;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tju.elm_bk.mapper.FoodMapper;

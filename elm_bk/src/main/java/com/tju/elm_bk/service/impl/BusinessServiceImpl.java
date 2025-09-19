@@ -2,7 +2,7 @@ package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.service.BusinessService;
-import com.tju.elm_bk.untity.Business;
+import com.tju.elm_bk.entity.Business;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

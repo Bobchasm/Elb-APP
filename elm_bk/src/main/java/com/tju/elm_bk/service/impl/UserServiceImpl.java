@@ -4,7 +4,7 @@ package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.service.UserService;
-import com.tju.elm_bk.untity.User;
+import com.tju.elm_bk.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

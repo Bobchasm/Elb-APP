@@ -1,6 +1,6 @@
 package com.tju.elm_bk.service;
 import java.util.List;
-import com.tju.elm_bk.untity.Business;
+import com.tju.elm_bk.entity.Business;
 import org.springframework.stereotype.Service;
 
 @Service

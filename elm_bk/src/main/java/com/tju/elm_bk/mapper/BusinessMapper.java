@@ -1,7 +1,7 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
 
-import com.tju.elm_bk.untity.Business;
+import com.tju.elm_bk.entity.Business;
 import org.apache.ibatis.annotations.*;
 
 

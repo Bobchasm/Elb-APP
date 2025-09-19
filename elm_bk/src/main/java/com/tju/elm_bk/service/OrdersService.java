@@ -1,10 +1,10 @@
 package com.tju.elm_bk.service;
 import java.util.List;
 
-import com.tju.elm_bk.untity.CreateOrderRequest;
-import com.tju.elm_bk.untity.OrderDetailet;
-import com.tju.elm_bk.untity.Orders;
-import com.tju.elm_bk.untity.User;
+import com.tju.elm_bk.entity.CreateOrderRequest;
+import com.tju.elm_bk.entity.OrderDetailet;
+import com.tju.elm_bk.entity.Orders;
+import com.tju.elm_bk.entity.User;
 import org.springframework.stereotype.Service;
 
 @Service
