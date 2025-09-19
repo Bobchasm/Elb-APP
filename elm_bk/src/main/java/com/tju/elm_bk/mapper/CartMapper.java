@@ -27,19 +27,17 @@ public interface CartMapper {
     """)
     List<CartItemVO> selectCartItems(Long userId,Long businessId);
 
-    @Select("select * from cart where customer_id = #{userId} and food_id = #{foodId}")
-    Cart selectCartById(Long userId,Long foodId);
-
-    @Insert("insert into cart (customer_id,food_id,quantity) values (#{customerId},#{foodId},#{quantity})")
-    Integer insertCartItem(Long customerId,Long foodId,Integer quantity);
+    @Select("select * from cart where id = #{cartId} and is_deleted = 0")
+    Cart selectCartById(Long cartId);
 
     @Update("update cart set quantity = #{quantity} where id = #{cartId}")
-    Integer updateCartItem(Long cartId,Integer quantity);
+    void updateCartItem(Long cartId,Integer quantity);
 
     @Update("update cart set is_deleted = 1 where customer_id = #{userId} and business_id = #{businessId}")
-    Integer clearCart(Long userId,Long businessId);
+    void clearCart(Long userId,Long businessId);
 
     @Update("update cart set is_deleted = 1 where id = #{cartId}")
-    Integer removeCartItem(Long cartId);
+    void removeCartItem(Long cartId);
+
 
 }

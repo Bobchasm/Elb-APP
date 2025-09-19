@@ -1,6 +1,5 @@
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.dto.OrderCreateDTO;
 import com.tju.elm_bk.dto.OrderDTO;
 import com.tju.elm_bk.entity.*;
 import com.tju.elm_bk.exception.APIException;
@@ -8,7 +7,7 @@ import com.tju.elm_bk.mapper.*;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.OrderService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.OrderFoodVO;
+import com.tju.elm_bk.vo.CartItemVO;
 import com.tju.elm_bk.vo.OrderItemDetailVO;
 import com.tju.elm_bk.vo.OrderItemVO;
 import com.tju.elm_bk.vo.OrderVO;
@@ -35,6 +34,8 @@ public class OrderServiceImpl implements OrderService {
     private FoodMapper foodMapper;
     @Autowired
     private OrderDetailetMapper orderDetailetMapper;
+    @Autowired
+    private DeliveryAddressMapper deliveryAddressMapper;
 
     // 订单状态(0-待支付,1-待接单,2-已结单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
@@ -42,6 +43,9 @@ public class OrderServiceImpl implements OrderService {
     static {
         orderStatusList = List.of(0,1,2,3,4);
     }
+
+    @Autowired
+    private CartMapper cartMapper;
 
     @Override
     public List<OrderVO> getCustomerOrderList(Long customerId) {
@@ -54,24 +58,67 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderVO addOrder(OrderDTO orderDTO) {
         if (!orderDTO.verify()) {
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
         }
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        Business business = businessMapper.selectBusinessById(orderDTO.getBusiness().getId());
+        if (business == null) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
+        }
+        DeliveryAddress deliveryAddress = deliveryAddressMapper.getDeliveryAddressById(orderDTO.getDeliveryAddress().getId());
+        if (deliveryAddress == null) {
+            throw new APIException(ResultCodeEnum.ADDRESS_MISSED);
+        }
 
+        // 设置订单信息
+        Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        List<CartItemVO> cartItemsInBusiness = cartMapper.selectCartItems(userId,business.getId());
         Order order = new Order();
-        BeanUtils.copyProperties(orderDTO, order);
-        order.setCreator(user.getId());
+        order.setBusinessId(business.getId());
+        order.setOrderDate(LocalDateTime.now());
+        order.setCustomerId(userId);
+        order.setAddressId(deliveryAddress.getId());
+
+        order.setOrderState(0);
+        order.setCreator(userId);
+        order.setUpdater(userId);
         order.setCreateTime(LocalDateTime.now());
-        order.setUpdater(user.getId());
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
-        order.setBusinessId(orderDTO.getBusiness().getId());
-        order.setCustomerId(user.getId());
-        order.setAddressId(orderDTO.getDeliveryAddress().getId());
-        order.setOrderState(0);
+
+        // 计算总价
+        double totalPrice = 0.0;
+        for (CartItemVO cartItemVO : cartItemsInBusiness) {
+            totalPrice += (cartItemVO.getFoodPrice() * cartItemVO.getQuantity());
+        }
+        order.setOrderTotal(BigDecimal.valueOf(totalPrice));
+
+        // 插入订单数据到数据库
         ordersMapper.insertOrder(order);
+
+        // 插入订单详情
+        for (CartItemVO cartItemVO : cartItemsInBusiness) {
+
+            OrderDetailet orderDetailet = new OrderDetailet();
+
+            orderDetailet.setOrderId(order.getId());
+            orderDetailet.setQuantity(cartItemVO.getQuantity());
+            orderDetailet.setFoodId(cartItemVO.getFoodId());
+
+            orderDetailet.setCreator(userId);
+            orderDetailet.setUpdater(userId);
+            orderDetailet.setCreateTime(LocalDateTime.now());
+            orderDetailet.setUpdateTime(LocalDateTime.now());
+            orderDetailet.setIsDeleted(false);
+
+            orderDetailetMapper.saveOrderDetail(orderDetailet);
+        }
+
+        // 清空该用户在当前商家的购物车
+        cartMapper.clearCart(userId,orderDTO.getBusiness().getId());
+
         return ordersMapper.selectOrderById(order.getId());
     }
 
@@ -137,46 +184,60 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Long orderSubmit(OrderCreateDTO orderCreateDTO) {
-        if (!orderCreateDTO.verify()) {
-            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+    public Long orderSubmit(Long businessId,Long addressId) {
+        // 商家是否存在
+        Business business = businessMapper.selectBusinessById(businessId);
+        if (null == business) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
-        Long userId = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))).getId();
 
+        // 设置订单信息
+        Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        List<CartItemVO> cartItemsInBusiness = cartMapper.selectCartItems(userId,businessId);
         Order order = new Order();
+        order.setBusinessId(businessId);
+        order.setOrderDate(LocalDateTime.now());
+        order.setCustomerId(userId);
+        order.setAddressId(addressId);
+
+        order.setOrderState(0);
         order.setCreator(userId);
-        order.setCreateTime(LocalDateTime.now());
         order.setUpdater(userId);
+        order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
-        order.setBusinessId(orderCreateDTO.getBusinessId());
-        order.setCustomerId(userId);
-        order.setAddressId(orderCreateDTO.getAddressId());
-        order.setOrderState(0);
 
-        Double orderTotal = 0.0;
-        List<OrderFoodVO> foodList = orderCreateDTO.getFoodList();
-        for (OrderFoodVO food : foodList) {
-            Food f = foodMapper.selectFoodById(food.getFoodId());
-            if (null == f) {
-                throw new APIException(ResultCodeEnum.FOOD_MISSED);
-            }
-            orderTotal += (f.getFoodPrice().doubleValue() * food.getQuantity());
+        // 计算总价
+        double totalPrice = 0.0;
+        for (CartItemVO cartItemVO : cartItemsInBusiness) {
+            totalPrice += (cartItemVO.getFoodPrice() * cartItemVO.getQuantity());
+        }
+        order.setOrderTotal(BigDecimal.valueOf(totalPrice));
+
+        // 插入订单数据到数据库
+        ordersMapper.insertOrder(order);
+
+        // 插入订单详情
+        for (CartItemVO cartItemVO : cartItemsInBusiness) {
+
             OrderDetailet orderDetailet = new OrderDetailet();
-            orderDetailet.setQuantity(food.getQuantity());
+
             orderDetailet.setOrderId(order.getId());
-            orderDetailet.setFoodId(f.getId());
+            orderDetailet.setQuantity(cartItemVO.getQuantity());
+            orderDetailet.setFoodId(cartItemVO.getFoodId());
+
             orderDetailet.setCreator(userId);
-            orderDetailet.setCreateTime(LocalDateTime.now());
             orderDetailet.setUpdater(userId);
+            orderDetailet.setCreateTime(LocalDateTime.now());
             orderDetailet.setUpdateTime(LocalDateTime.now());
             orderDetailet.setIsDeleted(false);
 
             orderDetailetMapper.saveOrderDetail(orderDetailet);
         }
 
-        order.setOrderTotal(new BigDecimal(orderTotal));
-        ordersMapper.insertOrder(order);
+        // 清空该用户在当前商家的购物车
+        cartMapper.clearCart(userId,businessId);
+
         return order.getId();
     }
 }

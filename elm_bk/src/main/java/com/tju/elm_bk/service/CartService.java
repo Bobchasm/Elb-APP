@@ -16,12 +16,12 @@ public interface CartService {
 
     List<CartItemVO> getCartItemList(Long businessId);
 
-    Integer addItem(Long foodId,Integer quantity);
+    Long addItem(Long foodId,Integer quantity);
 
-    Integer updateItem(Long cartId,Integer quantity);
+    Long updateItem(Long cartId,Integer quantity);
 
-    Integer clearCart(Long businessId);
+    Long clearCart(Long businessId);
 
-    Integer removeItem(Long cartId);
+    Long removeItem(Long cartId);
 
 }

@@ -21,7 +21,7 @@ public class CartItemVO {
     private Long businessId;
 
     @Schema(description = "商家名")
-    private Long businessName;
+    private String businessName;
 
     @Schema(description = "商品ID")
     private Long foodId;

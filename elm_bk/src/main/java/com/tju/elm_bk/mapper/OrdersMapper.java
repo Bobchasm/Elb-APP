@@ -17,6 +17,8 @@ public interface OrdersMapper {
 
     OrderVO selectOrderById(Long orderId);
 
+
+
     void insertOrder(Order order);
 
     @Select("""
@@ -36,6 +38,7 @@ public interface OrdersMapper {
                     and o.customer_id = #{userId}
                 </if>
             </where>
+              order by o.order_date desc
         </script>
     """)
     List<OrderItemVO> selectOrderItemsList(Long businessId, Integer orderState,Long userId);
@@ -56,6 +59,8 @@ public interface OrdersMapper {
 
     @Select("select * from orders where id = #{orderId}")
     Order getOrderById(Long orderId);
+
+
 
 
 }

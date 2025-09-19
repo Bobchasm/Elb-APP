@@ -1,8 +1,6 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.OrderCreateDTO;
 import com.tju.elm_bk.dto.OrderDTO;
-import com.tju.elm_bk.service.impl.OrderServiceImpl;
 import com.tju.elm_bk.vo.OrderItemDetailVO;
 import com.tju.elm_bk.vo.OrderItemVO;
 import com.tju.elm_bk.vo.OrderVO;
@@ -28,5 +26,5 @@ public interface OrderService {
 
     Long setOrderState(Long orderId, Integer orderState);
 
-    Long orderSubmit(OrderCreateDTO orderCreateDTO);
+    Long orderSubmit(Long businessId,Long addressId);
 }
