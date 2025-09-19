@@ -8,10 +8,10 @@
 				<li v-for="b in businessList" :key="b.businessId" class="business-item">
 					<div class="info" @click="enterBusiness(b)">
 						<img :src="b.businessImg || defaultImg" alt="logo" class="logo" @error="onImgError">
-						<div class="meta">
-							<p class="name">{{ b.businessName }}</p>
-							<p class="addr">{{ b.businessAddress || '地址未填写' }}</p>
-						</div>
+                        <div class="meta">
+                            <p class="name" :class="{ disabled: b.disabled }">{{ b.businessName }}</p>
+                            <p class="addr" :class="{ disabled: b.disabled }">{{ b.businessAddress || '地址未填写' }}</p>
+                        </div>
 					</div>
 					<div class="actions">
 						<button class="toggle" @click.stop="toggleEnable(b)">{{ b.disabled ? '启用' : '禁用' }}</button>
@@ -20,25 +20,7 @@
 			</ul>
 
 			<!-- 当前商家下的门店管理 -->
-			<div v-if="currentBusiness" class="store-section">
-				<h2 class="section-title">{{ currentBusiness.businessName }} 的商铺</h2>
-				<div class="toolbar">
-					<button class="add" @click="startCreate">新增商铺</button>
-				</div>
-				<ul class="store-list">
-					<li v-for="s in storeList" :key="s.businessId" class="store-item">
-						<img :src="s.businessImg || defaultImg" alt="logo" class="logo" @error="onImgError">
-						<div class="meta">
-							<p class="name">{{ s.businessName }}</p>
-							<p class="addr">{{ s.businessAddress }}</p>
-						</div>
-						<div class="actions">
-							<button class="edit" @click="startEdit(s)">编辑</button>
-							<button class="del" @click="removeStore(s)">删除</button>
-						</div>
-					</li>
-				</ul>
-			</div>
+			<!-- 精简：仅展示商家，不在本页显示门店明细 -->
 
 			<!-- 编辑/新增弹出层 -->
 			<div v-if="editor.visible" class="editor">
@@ -64,15 +46,17 @@
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 export default {
 	name: 'ManageBusiness',
 	setup() {
-		const businessList = ref([]);
+    const businessList = ref([]);
 		const storeList = ref([]);
 		const currentBusiness = ref(null);
 		const defaultImg = '/R-C.png';
+    const router = useRouter();
 
 		const editor = reactive({
 			visible: false,
@@ -101,10 +85,9 @@ export default {
 			}
 		};
 
-		const enterBusiness = async (biz) => {
-			currentBusiness.value = biz;
-			await loadStores(biz.businessId);
-		};
+    const enterBusiness = async (biz) => {
+        router.push({ path: '/manageShop', query: { ownerId: biz.businessId, businessName: biz.businessName } });
+    };
 
 		const loadStores = async (ownerId) => {
 			try {
@@ -188,11 +171,6 @@ export default {
 			onImgError,
 			enterBusiness,
 			toggleEnable,
-			startEdit,
-			startCreate,
-			closeEditor,
-			saveStore,
-			removeStore,
 			editor
 		};
 	}
@@ -212,6 +190,7 @@ export default {
 .meta { display: flex; flex-direction: column; }
 .name { font-size: 4vw; color: #333; }
 .addr { font-size: 3.2vw; color: #777; margin-top: .6vw; }
+.name.disabled, .addr.disabled { color: #bbb; }
 .store-item .actions { display: flex; flex-direction: row; align-items: center; gap: 2vw; white-space: nowrap; }
 .business-item .actions { display: flex; flex-direction: row; align-items: center; gap: 2vw; white-space: nowrap; }
 .actions button { margin-left: 0; }

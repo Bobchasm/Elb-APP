@@ -26,6 +26,7 @@ import BusinessView from '@/views/BusinessView.vue'
 import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
 import ManageBusiness from '@/views/ManageBusiness.vue'
+import ManageShop from '@/views/ManageShop.vue'
 
 // 定义路由
 const routes = [
@@ -155,6 +156,11 @@ const routes = [
     path:'/manageBusiness',
     name:'ManageBusiness',
     component:ManageBusiness
+  },
+  {
+    path:'/manageShop',
+    name:'ManageShop',
+    component:ManageShop
   },
   {
     path:'/submitItems',
