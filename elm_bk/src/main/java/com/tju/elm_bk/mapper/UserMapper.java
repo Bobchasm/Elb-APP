@@ -2,6 +2,7 @@
 package com.tju.elm_bk.mapper;
 
 import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.vo.UserVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
@@ -20,4 +21,8 @@ public interface UserMapper {
     int count();
     @Insert("INSERT INTO user_authority (user_id, authority_name) VALUES (#{userId}, #{authorityName})")
     void insertUserAuthority(@Param("userId") Long userId, @Param("authorityName") String authorityName);
+
+    @Select("select id from users where username = #{username}")
+    Long getUserIdByUsername(String username);
+
 }

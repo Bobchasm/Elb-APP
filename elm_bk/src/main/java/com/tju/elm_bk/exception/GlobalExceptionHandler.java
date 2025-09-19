@@ -76,8 +76,8 @@ public class GlobalExceptionHandler {
         if(ex.getMessage().length() > 50){
             return HttpResult.failure(ResultCodeEnum.NOT_KNOWN_ERROR);
         }
-        // 无错误码 返回-1和message
-        return HttpResult.failure("-1",ex.getMessage());
+        // 无错误码 返回默认和message
+        return HttpResult.failure(ResultCodeEnum.WITHOUT_ERROR_CODE.getCode(),ex.getMessage());
     }
 
 }

@@ -50,13 +50,13 @@ public class Food {
     @Schema(description = "所属商家ID")
     private Long businessId;
 
-    // 关联字段
-    @Schema(description = "所属商家")
-    private Business business;
-
-    @Schema(description = "关联的订单详情列表")
-    private List<OrderDetailet> orderDetailets;
-
-    @Schema(description = "关联的购物车列表")
-    private List<Cart> carts;
+//    // 关联字段
+//    @Schema(description = "所属商家")
+//    private Business business;
+//
+//    @Schema(description = "关联的订单详情列表")
+//    private List<OrderDetailet> orderDetailets;
+//
+//    @Schema(description = "关联的购物车列表")
+//    private List<Cart> carts;
 }

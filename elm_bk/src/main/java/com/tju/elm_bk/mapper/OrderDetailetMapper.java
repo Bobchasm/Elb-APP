@@ -9,18 +9,11 @@ import java.util.List;
 
 @Mapper
 public interface OrderDetailetMapper {
-    @Insert("<script>" +
-            "insert into elm.orderdetailet (orderId, foodId, quantity, foodName, foodPrice) values " +
-            "<foreach collection='list' item='item' separator=','>" +
-            "(#{item.orderId}, #{item.foodId}, #{item.quantity}, #{item.foodName}, #{item.foodPrice})" +
-            "</foreach>" +
-            "</script>")
-    int saveOrderDetailetBatch(@Param("list") List<OrderDetailet> list);
+    @Insert("""
+        insert into orderdetailet (create_time, creator, is_deleted, update_time, updater, quantity, food_id, order_id)
+        values (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{quantity}, #{foodId}, #{orderId})
+    """)
+    Integer saveOrderDetail(OrderDetailet orderDetailet);
 
-    //通过orderId查询订单详情
-    @Select("select * from elm.orderdetailet where orderId = #{orderId}")
-    List<OrderDetailet> listOrderDetailetByOrderId(Integer orderId);
 
-//    @Select("select * from elm.orderdetailet where orderId=#{orderId}")
-//        List<OrderDetailet> listorderDetailetByOrderId(Orders orders);
 }

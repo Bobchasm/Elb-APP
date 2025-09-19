@@ -5,6 +5,8 @@ import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Authority;
 import com.tju.elm_bk.vo.BusinessVO;
+import com.tju.elm_bk.entity.Business;
+import com.tju.elm_bk.vo.BusinessVO;
 import org.apache.ibatis.annotations.*;
 
 
@@ -30,36 +32,9 @@ public interface BusinessMapper {
 
     List<BusinessVO> getBusinesses();
 
-   /**
-    List<Business> listBusinessByOrderTypeId(Integer orderTypeId);
+    @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
+    BusinessVO selectBusinessVO(Long businessId);
 
-
-    List<Business> listBusinessByCategoryName(String category);
-
-    @Select("SELECT * FROM business_user WHERE phoneNumber = #{phoneNumber} AND password = #{password}")
-    Business getBusinessByIdByPass(Business business);
-
-    @Select("SELECT COUNT(*) FROM business_user WHERE phoneNumber = #{phoneNumber}")
-    int checkBusiness(Business business);
-
-//    @Select("SELECT businessId FROM business_user WHERE phoneNumber = #{phoneNumber}")
-//    int getBusinessIdByPhoneNumber(Business business);
-
-    List<Business> listBusinessBySearchName(String businessName);
-
-//
-//    @Insert("INSERT INTO business_user(phoneNumber, password) VALUES(#{phoneNumber}, #{password})")
-//    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "businessId")
-//    int saveBusiness(Business business);
-
-    @Insert("INSERT INTO business (businessId, businessName, businessAddress, businessExplain, businessImg, orderTypeId, starPrice, deliveryPrice) VALUES(#{id}, #{businessName}, #{businessAddress}, #{businessExplain}, #{businessImg}, #{orderTypeId}, #{startPrice}, #{deliveryPrice})")
-    int saveBusinessMsg(Business business);
-    
-    @Update("UPDATE business_user SET businessAddress = #{businessAddress}, businessExplain = #{businessExplain}, businessName = #{businessName}, starPrice = #{startPrice}, deliveryPrice = #{deliveryPrice} WHERE businessId = #{id}")
-    int updateBusinessUser(Business business);
-    
-    // 根据商家名称或商品名称搜索（复杂JOIN查询）
-    List<Business> listBusinessByBusinessName(String businessOrFoodName);
-*/
-
+    @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
+    Business selectBusinessById(Long businessId);
 }
