@@ -21,5 +21,7 @@ public interface UserMapper {
     @Insert("INSERT INTO user_authority (user_id, authority_name) VALUES (#{userId}, #{authorityName})")
     void insertUserAuthority(@Param("userId") Long userId, @Param("authorityName") String authorityName);
 
+    @Select("select id from users where username = #{username}")
+    Long getUserIdByUsername(String username);
 
 }

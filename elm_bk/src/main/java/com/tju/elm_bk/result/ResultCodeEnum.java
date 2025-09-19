@@ -24,6 +24,16 @@ public enum ResultCodeEnum {
     VALUE_MISSED("VALUE_MISSED","值不存在"),
     FOOD_MISSED("FOOD_MISSED","商品不存在"),
 
+
+    ORDER_MISSED("ORDER_MISSED","订单不存在"),
+    ORDER_STATUS_UNMATCHED("ORDER_STATUS_UNMATCHED","订单状态错误"),
+    ORDER_PAY_FAILED("ORDER_PAY_FAILED","订单支付失败"),
+    ORDER_ACCEPT_FAILED("ORDER_ACCEPT_FAILED","接单失败"),
+    ORDER_CANCEL_DENY("ORDER_CANCEL_DENY","无法取消已被接收的订单"),
+    ORDER_CANCEL_FAILED("ORDER_CANCEL_FAILED","订单取消失败"),
+
+    QUANTITY_ILLEGAL("QUANTITY_ILLEGAL","数量不合法"),
+
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 
     // 1000～1999 区间表示用户模块错误

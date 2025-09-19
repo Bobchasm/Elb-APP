@@ -10,4 +10,8 @@ import org.apache.ibatis.annotations.*;
 public interface BusinessMapper {
     @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
     BusinessVO selectBusinessVO(Long businessId);
+
+
+    @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
+    Business selectBusinessById(Long businessId);
 }
