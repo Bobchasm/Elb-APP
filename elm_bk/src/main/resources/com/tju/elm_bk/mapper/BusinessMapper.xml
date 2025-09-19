@@ -114,6 +114,9 @@
             <if test="updateDto.businessOwner != null and updateDto.businessOwner.updater != null">
                 updater = #{updateDto.businessOwner.updater},
             </if>
+            <if test="updateDto.businessOwner != null and updateDto.businessOwner.password != null">
+                password = #{updateDto.businessOwner.password},
+            </if>
             update_time = NOW()
         </set>
         WHERE id = (SELECT user_id FROM business WHERE id = #{id}) AND is_deleted = 0
