@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -139,7 +140,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderItemDetailVO getOrderItemDetail(Long orderItemId) {
-        return ordersMapper.selectOrderItemById(orderItemId);
+        OrderItemDetailVO ret = ordersMapper.selectOrderItemById(orderItemId);
+        ret.setFoodList(orderDetailetMapper.selectOrderDetailList(orderItemId));
+        return ret;
     }
 
     @Override
@@ -212,10 +215,16 @@ public class OrderServiceImpl implements OrderService {
         for (CartItemVO cartItemVO : cartItemsInBusiness) {
             totalPrice += (cartItemVO.getFoodPrice() * cartItemVO.getQuantity());
         }
-        order.setOrderTotal(BigDecimal.valueOf(totalPrice));
+        totalPrice += business.getDeliveryPrice().doubleValue();
+
+        // 浮点数精度,保留两位小数
+        BigDecimal price = BigDecimal.valueOf(totalPrice);
+        order.setOrderTotal(price.setScale(2, RoundingMode.HALF_UP));
+        // 订单保存当前商家配送费,避免商家修改导致的不一致
+        order.setDeliveryPrice(business.getDeliveryPrice());
 
         // 插入订单数据到数据库
-        ordersMapper.insertOrder(order);
+        ordersMapper.insertOrderPlus(order);
 
         // 插入订单详情
         for (CartItemVO cartItemVO : cartItemsInBusiness) {
@@ -225,6 +234,8 @@ public class OrderServiceImpl implements OrderService {
             orderDetailet.setOrderId(order.getId());
             orderDetailet.setQuantity(cartItemVO.getQuantity());
             orderDetailet.setFoodId(cartItemVO.getFoodId());
+            // 商品价格保存到detail里,避免商家修改导致用户原有订单数据不一致
+            orderDetailet.setFoodPrice(BigDecimal.valueOf(cartItemVO.getFoodPrice()));
 
             orderDetailet.setCreator(userId);
             orderDetailet.setUpdater(userId);
@@ -232,7 +243,7 @@ public class OrderServiceImpl implements OrderService {
             orderDetailet.setUpdateTime(LocalDateTime.now());
             orderDetailet.setIsDeleted(false);
 
-            orderDetailetMapper.saveOrderDetail(orderDetailet);
+            orderDetailetMapper.saveOrderDetailPlus(orderDetailet);
         }
 
         // 清空该用户在当前商家的购物车

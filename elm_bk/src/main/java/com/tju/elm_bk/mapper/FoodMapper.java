@@ -3,10 +3,11 @@ import java.util.List;
 
 import com.tju.elm_bk.dto.FoodCreateDTO;
 import com.tju.elm_bk.entity.Food;
+import com.tju.elm_bk.vo.FoodItemVO;
 import com.tju.elm_bk.vo.FoodVO;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface FoodMapper {
@@ -17,8 +18,22 @@ public interface FoodMapper {
     FoodVO selectFoodVOById(Long id);
 
 
-    void insertFoodVO(Food food);
+    void insertFood(Food food);
 
     @Select("SELECT * FROM food WHERE is_deleted = 0 AND id = #{id}")
     Food selectFoodById(Long id);
+
+
+
+    List<FoodItemVO> selectFoodItemVOList(Long businessId,Integer shelveStatus);
+
+    @Update("update food set shelve_status = #{shelveStatus} where id = #{foodId}")
+    void updateFoodStatus(Long foodId,Integer shelveStatus);
+
+    @Update("update food set update_time = #{updateTime}, updater = #{updater}, food_explain = #{foodExplain}, food_img = #{foodImg}, food_name = #{foodName}, food_price = #{foodPrice}, remarks = #{remarks}, business_id = #{business_id} where id = #{id}")
+    void updateFoodMessage(Food food);
+
+    @Update("update food set is_deleted = 1 where id = #{foodId}")
+    void deleteFood(Long foodId);
+
 }

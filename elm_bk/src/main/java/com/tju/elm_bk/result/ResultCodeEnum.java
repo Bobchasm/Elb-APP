@@ -27,7 +27,8 @@ public enum ResultCodeEnum {
     FOOD_MISSED("FOOD_MISSED","商品不存在"),
     USER_DENIED("USER_DENIED","无法对别的用户进行操作"),
     CART_MISSED("CART_MISSED","购物车商品不存在"),
-
+    FOOD_UNSHELVED("CART_MISSED","商品已下架"),
+    FOOD_STATUS_SET_FAILED("FOOD_STATUS_SET_FAILED","商品上下架失败"),
 
     ORDER_MISSED("ORDER_MISSED","订单不存在"),
     ORDER_STATUS_UNMATCHED("ORDER_STATUS_UNMATCHED","订单状态错误"),

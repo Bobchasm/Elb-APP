@@ -59,7 +59,7 @@ public class OrderController {
     }
 
     @GetMapping("/submit")
-    @Operation(summary = "下单(前端调这个)")
+    @Operation(summary = "(前端调这个)下单")
     public HttpResult<Long> orderSubmit(@RequestParam Long businessId,@RequestParam Long addressId) {
         return HttpResult.success(orderService.orderSubmit(businessId,addressId));
     }

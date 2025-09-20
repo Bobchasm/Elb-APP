@@ -1,7 +1,6 @@
 package com.tju.elm_bk.controller;
 
 import com.tju.elm_bk.dto.CartItemCreateDTO;
-import com.tju.elm_bk.dto.FoodCreateDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.CartService;
 import com.tju.elm_bk.vo.CartItemVO;

@@ -53,6 +53,9 @@ public class Order {
     @Schema(description = "地址ID")
     private Long addressId;
 
+    @Schema(description = "订单配送费")
+    private BigDecimal deliveryPrice;
+
 //    // 关联字段
 //    @Schema(description = "下单客户")
 //    private User customer;

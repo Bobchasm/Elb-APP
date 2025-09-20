@@ -88,6 +88,9 @@ public class CartServiceImpl implements CartService {
         if (food == null) {
             throw new APIException(ResultCodeEnum.FOOD_MISSED);
         }
+        if (food.getShelveStatus() != 1) {
+            throw new APIException(ResultCodeEnum.FOOD_UNSHELVED);
+        }
         Business business = businessMapper.selectBusinessById(food.getBusinessId());
         if (business == null) {
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
@@ -97,7 +100,6 @@ public class CartServiceImpl implements CartService {
             throw new APIException(ResultCodeEnum.QUANTITY_ILLEGAL);
         }
 
-        String name = SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED));
         Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         Cart cart = new Cart();
 

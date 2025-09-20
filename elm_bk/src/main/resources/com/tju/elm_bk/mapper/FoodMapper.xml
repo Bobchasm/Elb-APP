@@ -148,10 +148,26 @@
         ORDER BY f.create_time DESC
     </select>
 
-    <insert id="insertFoodVO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertFood" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO food (create_time, creator, is_deleted, update_time, updater, food_explain, food_img, food_name, food_price, remarks, business_id)
         VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
     </insert>
+
+
+
+
+    <select id="selectFoodItemVOList" resultType="com.tju.elm_bk.vo.FoodItemVO">
+        select f.*, b.business_name
+        from food f
+        left join business b on b.id = f.businessId and b.is_deleted = 0
+        <where>
+            f.is_deleted = 0 and b.id = #{businessId}
+            <if test="shelveStatus != null">
+                and f.shelve_status = #{shelveStatus}
+            </if>
+        </where>
+    </select>
+
 
 
 </mapper>
