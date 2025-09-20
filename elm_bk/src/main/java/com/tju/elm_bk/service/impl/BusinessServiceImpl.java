@@ -47,6 +47,25 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public BusinessVO updateBusiness(Integer id, BusinessUpdateDTO updateDto) {
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
+
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new RuntimeException("无法获取当前用户信息");
+        }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+        }
         System.out.println("前端--更新商家信息为: " + updateDto);
         // 1. 更新商户基本信息
         int result = businessMapper.updateBusiness(id, updateDto);
@@ -58,6 +77,25 @@ public class BusinessServiceImpl implements BusinessService {
     }
     @Override
     public BusinessVO deleteBusiness(Integer id) {
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
+
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new RuntimeException("无法获取当前用户信息");
+        }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+        }
         BusinessVO businessVo =businessMapper.getBusinessById(id);
         int result =businessMapper.deleteBusiness(id);
         if (result == 0) {
@@ -68,7 +106,25 @@ public class BusinessServiceImpl implements BusinessService {
     }
     @Override
     public BusinessVO patchBusiness(Integer id, BusinessUpdateDTO updateDto) {
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
 
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new RuntimeException("无法获取当前用户信息");
+        }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+        }
         int result = businessMapper.updateBusiness(id, updateDto);
         if (result == 0) {
             throw new RuntimeException("更新商户信息失败，商户不存在或已被删除");
@@ -190,7 +246,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
         if (!hasBusinessPermission && !isAdmin) {
-            throw new RuntimeException("权限不足，需要 BUSINESS 或 ADMIN 权限");
+            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
         }
 
         // 设置基础信息

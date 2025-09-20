@@ -135,9 +135,6 @@ public class BusinessController {
         return HttpResult.success(businessService.applyForAddBusiness(business));
     }
 
-//    改权限判断
-// search接口需要加上销售量
-
 
 
 
