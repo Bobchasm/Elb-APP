@@ -220,8 +220,8 @@
         #{userId},
         #{creator},
         #{updater},
-        NOW(),
-        NOW(),
+        #{createTime},
+        #{updateTime},
         0,
         #{status}
         )

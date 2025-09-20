@@ -43,7 +43,7 @@ public interface BusinessMapper {
     @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
     Business selectBusinessById(Long businessId);
 
-    @Update("UPDATE business SET status = #{status},update_time=NOW(),updater=#{updater} WHERE id = #{id}")
+    @Update("UPDATE business SET status = #{status},update_time=#{updateTime},updater=#{updater} WHERE id = #{id}")
     void updateBusinessStatus(BusinessPermissionDTO businessPermissionDTO);
 
     void insertBusinessPermission(BusinessPermissionDTO businessPermissionDTO);

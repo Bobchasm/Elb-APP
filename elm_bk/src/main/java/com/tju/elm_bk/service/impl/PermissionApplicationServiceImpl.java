@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +52,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
      * 顾客申请成为商家
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public PermissionApplication applyMerchant() {
         // 1. 获取当前登录用户ID
         String currentUsername = SecurityUtils.getCurrentUsername()
@@ -75,6 +77,8 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         application.setUserId(currentUserId);
         application.setStatus(0);
         application.setIsDeleted(false);
+        application.setCreateTime(LocalDateTime.now());
+        application.setUpdateTime(LocalDateTime.now());
 
         // 5. 保存到数据库
         applicationMapper.insert(application);
@@ -110,7 +114,8 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         }
 
         // 3. 更新申请状态
-        application.setStatus(auditDTO.getAuditResult()); // 1-同意，2-拒绝
+        application.setStatus(auditDTO.getAuditResult());// 1-同意，2-拒绝
+        application.setUpdateTime(LocalDateTime.now());
         applicationMapper.updateAuditStatus(application);
 
         // 4. 如果同意申请，给用户添加BUSINESS权限
@@ -131,6 +136,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
      * 顾客申请开店
      **/
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessPermissionVO applyShop(BusinessPermissionDTO businessPermissionDTO) {
         String currentUsername = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
@@ -145,9 +151,11 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         businessPermissionDTO.setUserId(currentUserId);
         businessPermissionDTO.setCreator(currentUserId);
         businessPermissionDTO.setUpdater(currentUserId);
+        businessPermissionDTO.setCreateTime(LocalDateTime.now());
+        businessPermissionDTO.setUpdateTime(LocalDateTime.now());
         businessMapper.insertBusinessPermission(businessPermissionDTO);
         try {
-            sendMerchantApplyNotification(currentUserId, currentUser.getUsername());
+            sendShopApplyNotification(currentUserId, currentUser.getUsername());
         } catch (JSONException e) {
             throw new APIException("消息发送失败");
         }
@@ -162,6 +170,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
                 .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
         Long currentUserId = userMapper.getUserIdByUsername(currentUsername);
         businessPermissionDTO.setUpdater(currentUserId);
+        businessPermissionDTO.setUpdateTime(LocalDateTime.now());
         if (businessMapper.selectBusinessById(businessPermissionDTO.getId()) == null) {
             throw new APIException("申请记录不存在");
         }
@@ -216,11 +225,14 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         userAuthorityMapper.insertUserAuthority(userId, businessAuthority);
     }
 
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     /**
      * 推送"审核通过"通知给顾客
      */
     private void sendAuditPassNotification(Long userId,Integer type) {
         JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         if(type==0){
             message.put("type", 0); // 0表示申请成为商家的回复
             message.put("content", "恭喜！您的商家申请已通过审核，现在可以开展商家业务了");
@@ -237,6 +249,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
      */
     private void sendAuditRejectNotification(Long userId,Integer type) {
         JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         if(type==0){
             message.put("type", 0); // 0表示申请成为商家的回复
             message.put("content", "抱歉，您的商家申请未通过审核");
@@ -256,6 +269,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     private void sendMerchantApplyNotification(Long userId, String username) throws JSONException {
         // 构建消息体（包含type、userId、content）
         JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         message.put("type", 0); // 0表示申请成为商家
         message.put("userId", userId);
         message.put("content", "用户[" + username + "]申请成为商家，请及时审核");
@@ -271,6 +285,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     private void sendShopApplyNotification(Long userId, String username) throws JSONException {
         // 构建消息体（包含type、userId、content）
         JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         message.put("type", 1); // 1表示申请开店
         message.put("userId", userId);
         message.put("content", "商家[" + username + "]申请开店，请及时审核");

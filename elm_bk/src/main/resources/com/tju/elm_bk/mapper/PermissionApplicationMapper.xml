@@ -4,6 +4,6 @@
 <mapper namespace="com.tju.elm_bk.mapper.PermissionApplicationMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO permission_application (userId, status, is_deleted) VALUES (#{userId}, #{status}, #{isDeleted})
+        INSERT INTO permission_application (userId, status, is_deleted, create_time, update_time) VALUES (#{userId}, #{status}, #{isDeleted},#{createTime},#{updateTime})
     </insert>
 </mapper>
