@@ -11,7 +11,7 @@
  Target Server Version : 50744 (5.7.44-log)
  File Encoding         : 65001
 
- Date: 19/09/2025 16:06:39
+ Date: 21/09/2025 00:08:32
 */
 
 SET NAMES utf8mb4;
@@ -50,7 +50,7 @@ CREATE TABLE `business`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id`) USING BTREE,
   CONSTRAINT `business_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for cart
@@ -74,7 +74,7 @@ CREATE TABLE `cart`  (
   CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `cart_ibfk_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for delivery_address
@@ -98,19 +98,6 @@ CREATE TABLE `delivery_address`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for favorite
--- ----------------------------
-DROP TABLE IF EXISTS `favorite`;
-CREATE TABLE `favorite`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `userId` bigint(20) NOT NULL,
-  `businessId` bigint(20) NOT NULL,
-  `option` tinyint(4) NOT NULL COMMENT '0-点赞 1-收藏',
-  `is_deleted` tinyint(4) NULL DEFAULT 0 COMMENT '0-正常 1-删除',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
 -- Table structure for food
 -- ----------------------------
 DROP TABLE IF EXISTS `food`;
@@ -127,10 +114,33 @@ CREATE TABLE `food`  (
   `food_price` decimal(10, 2) NOT NULL,
   `remarks` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `business_id` bigint(20) NOT NULL,
+  `shelve_status` tinyint(4) NULL DEFAULT 1 COMMENT '0-已下架 1-已上架',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `business_id`(`business_id`) USING BTREE,
   CONSTRAINT `food_ibfk_1` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for merchant_interaction
+-- ----------------------------
+DROP TABLE IF EXISTS `merchant_interaction`;
+CREATE TABLE `merchant_interaction`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `merchant_id` bigint(20) NOT NULL COMMENT '商家ID',
+  `liked` tinyint(1) NULL DEFAULT 0 COMMENT '是否点赞(0:否,1:是)',
+  `collected` tinyint(1) NULL DEFAULT 0 COMMENT '是否收藏(0:否,1:是)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_user_merchant`(`user_id`, `merchant_id`) USING BTREE COMMENT '用户商家唯一索引',
+  INDEX `idx_merchant_id`(`merchant_id`) USING BTREE COMMENT '商家ID索引',
+  INDEX `idx_user_id`(`user_id`) USING BTREE COMMENT '用户ID索引',
+  INDEX `idx_liked`(`liked`) USING BTREE COMMENT '点赞状态索引',
+  INDEX `idx_collected`(`collected`) USING BTREE COMMENT '收藏状态索引',
+  CONSTRAINT `fk_interaction_business` FOREIGN KEY (`merchant_id`) REFERENCES `business` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_interaction_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '商家互动表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for orderdetailet
@@ -146,12 +156,13 @@ CREATE TABLE `orderdetailet`  (
   `quantity` int(11) NULL DEFAULT NULL,
   `food_id` bigint(20) NOT NULL,
   `order_id` bigint(20) NOT NULL,
+  `food_price` decimal(10, 2) NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `food_id`(`food_id`) USING BTREE,
   INDEX `order_id`(`order_id`) USING BTREE,
   CONSTRAINT `orderdetailet_ibfk_1` FOREIGN KEY (`food_id`) REFERENCES `food` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `orderdetailet_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for orders
@@ -170,6 +181,7 @@ CREATE TABLE `orders`  (
   `business_id` bigint(20) NOT NULL,
   `customer_id` bigint(20) NOT NULL,
   `address_id` bigint(20) NOT NULL,
+  `delivery_price` decimal(10, 2) NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `business_id`(`business_id`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE,
@@ -177,7 +189,7 @@ CREATE TABLE `orders`  (
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`address_id`) REFERENCES `delivery_address` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for permission_application
