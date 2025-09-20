@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class BusinessDTO {
     @Schema(description = "店铺ID")
-    @NotNull(message = "店铺ID不能为空")
     private Integer id;
 
     @Schema(description = "创建时间")
@@ -31,7 +30,7 @@ public class BusinessDTO {
     @Schema(description = "删除状态")
     private Boolean deleted;
 
-    @Schema(description = "用户名")
+    @Schema(description = "店铺名")
     private String businessName;
 
     @Valid

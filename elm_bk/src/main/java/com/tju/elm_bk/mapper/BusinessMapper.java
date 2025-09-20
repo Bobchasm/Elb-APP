@@ -1,9 +1,11 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
+import java.util.Map;
 
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Authority;
+import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessVO;
@@ -37,4 +39,8 @@ public interface BusinessMapper {
 
     @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
     Business selectBusinessById(Long businessId);
+
+//    下面两个用于搜索+筛选
+    List<BusinessSearchVO> searchBusinesses(@Param("keyword") String keyword);
+    Map<String, Object> getInteractionCounts(@Param("businessId") Long businessId);
 }
