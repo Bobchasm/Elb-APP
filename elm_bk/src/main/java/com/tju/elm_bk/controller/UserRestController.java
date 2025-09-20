@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -223,6 +224,7 @@ public class UserRestController {
 
     @PostMapping("/register")
     @Operation(summary = "新增用户(仅允许顾客注册)", description = "创建一个新的用户")
+    @Transactional
     public ResponseEntity<UserVO> addUser(@Valid @RequestBody UserCreateDTO newUser) {
         String username = newUser.getUsername();
         if (username == null || username.trim().isEmpty()) {
@@ -294,6 +296,7 @@ public class UserRestController {
         Person updatedPerson = personService.updatePerson(updateDTO);
         return HttpResult.success(updatedPerson);
     }
+
 
     // 获取当前登录用户
     private User getCurrentUser() {

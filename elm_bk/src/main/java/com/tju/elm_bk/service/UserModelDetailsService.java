@@ -1,19 +1,16 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.entity.Authority;
 import com.tju.elm_bk.entity.User;
 import com.tju.elm_bk.exception.UserNotActivatedException;
 import com.tju.elm_bk.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;

@@ -52,4 +52,6 @@ public class BusinessDTO {
     private Double deliveryPrice;
     @Schema(description = "备注")
     private String remarks;
+    @Schema(description = "商铺状态")
+    private Integer status;
 }

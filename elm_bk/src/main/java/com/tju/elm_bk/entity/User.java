@@ -64,4 +64,17 @@ public class User {
 
     @Schema(description = "用户的购物车列表")
     private List<Cart> carts;
+
+    public User(Long id, String username, String password, Boolean activated, LocalDateTime createTime, Long creator, Boolean isDeleted, LocalDateTime updateTime, Long updater, List<Authority> authorities){
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.activated = activated;
+        this.createTime = createTime;
+        this.creator = creator;
+        this.isDeleted = isDeleted;
+        this.updateTime = updateTime;
+        this.updater = updater;
+        this.authorities = authorities;
+    }
 }

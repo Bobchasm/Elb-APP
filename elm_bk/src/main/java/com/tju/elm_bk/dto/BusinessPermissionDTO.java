@@ -1,4 +1,4 @@
-package com.tju.elm_bk.entity;
+package com.tju.elm_bk.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,12 +8,11 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class Business {
+@NoArgsConstructor
+public class BusinessPermissionDTO {
     @Schema(description = "商铺ID")
     private Long id;
 
@@ -49,7 +48,7 @@ public class Business {
 
     @Schema(description = "是否删除")
     @JsonProperty("deleted")
-    private Boolean deleted;
+    private Boolean isDeleted;
 
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
@@ -62,18 +61,4 @@ public class Business {
 
     @Schema(description = "商铺的状态")
     private Integer status;
-
-    // 关联字段
-    @Schema(description = "所属用户")
-    private User user;
-
-    @Schema(description = "商铺的商品列表")
-    private List<Food> foods;
-
-    @Schema(description = "商铺的订单列表")
-    private List<Order> orders;
-
-    @Schema(description = "商铺的购物车列表")
-    private List<Cart> carts;
-
 }

@@ -57,5 +57,6 @@ public interface OrdersMapper {
     @Select("select * from orders where id = #{orderId}")
     Order getOrderById(Long orderId);
 
-
+    @Select("select sum(order_total) from orders where order_state = 3 and is_deleted = 0")
+    Double countPrice();
 }
