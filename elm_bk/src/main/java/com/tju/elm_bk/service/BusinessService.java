@@ -17,6 +17,6 @@ public interface BusinessService {
     BusinessVO patchBusiness(Integer id, BusinessUpdateDTO updateDto);
     List<BusinessVO> getBusinesses();
     BusinessVO addBusiness(BusinessDTO businessDto);
-    List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore);
+    List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore,boolean isSales);
     Integer applyForAddBusiness(Business  business);
 }

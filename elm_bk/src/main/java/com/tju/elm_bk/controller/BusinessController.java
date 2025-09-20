@@ -20,6 +20,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+//import static com.sun.beans.introspect.PropertyInfo.Name.required;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/businesses")
@@ -118,11 +120,12 @@ public class BusinessController {
 
 
     @GetMapping("/search")
-    @Operation(summary = "搜索店铺")
+    @Operation(summary = "搜索店铺,可传入字符串keyword，isScore为0/1表示是否按照评分排序，isSales为0/1表示是否按照销售量排序")
     public HttpResult<List<BusinessSearchVO>> searchBusiness(
             @RequestParam(required = false)String  keyword,
-            @RequestParam(required = false)boolean isScore){
-        return HttpResult.success(businessService.getBusinessesBySearch(keyword,isScore));
+            @RequestParam(required = false)boolean isScore,
+            @RequestParam(required = false)boolean isSales){
+        return HttpResult.success(businessService.getBusinessesBySearch(keyword,isScore,isSales));
 
     }
 
@@ -131,6 +134,9 @@ public class BusinessController {
     public HttpResult<Integer> applyForAddBusiness(@RequestBody Business business) {
         return HttpResult.success(businessService.applyForAddBusiness(business));
     }
+
+//    改权限判断
+// search接口需要加上销售量
 
 
 

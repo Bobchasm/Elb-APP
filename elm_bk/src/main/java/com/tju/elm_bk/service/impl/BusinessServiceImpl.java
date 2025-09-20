@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -105,13 +106,13 @@ public class BusinessServiceImpl implements BusinessService {
 
     //搜索与筛选商铺信息
     @Override
-    public List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore) {
+    public List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore ,boolean isSales) {
         List<BusinessSearchVO> businesses = businessMapper.searchBusinesses(keyword);
 
-        // 为每个店铺计算评分
+        // 为每个店铺计算评分与销量
         for (BusinessSearchVO business : businesses) {
             Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
-
+            int salesCount = businessMapper.getSalesCount(business.getId());
             int likeCount = 0;
             int collectCount = 0;
 
@@ -139,11 +140,26 @@ public class BusinessServiceImpl implements BusinessService {
             double normalizedRating = 1 + 4 * (0.6 * likeCount / (likeCount + 10.0) + 0.4 * collectCount / (collectCount + 10.0));
             BigDecimal rating = BigDecimal.valueOf(normalizedRating).setScale(2, RoundingMode.HALF_UP);
             business.setScore(rating);
+            business.setSalesCount(salesCount);
         }
 
-        if (isScore) {
-            // 按评分降序排序
-            businesses.sort((b1, b2) -> b2.getScore().compareTo(b1.getScore()));
+        // 使用 Comparator 进行排序
+        Comparator<BusinessSearchVO> comparator = null;
+
+        if (isScore && isSales) {
+            // 先按评分降序，再按销量降序
+            comparator = Comparator.comparing(BusinessSearchVO::getScore, Comparator.reverseOrder())
+                    .thenComparing(BusinessSearchVO::getSalesCount, Comparator.reverseOrder());
+        } else if (isScore) {
+            // 按评分降序
+            comparator = Comparator.comparing(BusinessSearchVO::getScore, Comparator.reverseOrder());
+        } else if (isSales) {
+            // 按销量降序
+            comparator = Comparator.comparing(BusinessSearchVO::getSalesCount, Comparator.reverseOrder());
+        }
+
+        if (comparator != null) {
+            businesses.sort(comparator);
         }
 
         return businesses;
@@ -157,21 +173,43 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public Integer applyForAddBusiness(Business business) {
-        User currentUser = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
 
         // 添加 null 检查
         if (currentUser == null) {
             throw new RuntimeException("无法获取当前用户信息");
         }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new RuntimeException("权限不足，需要 BUSINESS 或 ADMIN 权限");
+        }
+
         // 设置基础信息
         business.setCreator(currentUser.getId());
         business.setCreateTime(LocalDateTime.now());
-        // 权限判断
-        boolean isAdmin = currentUser.getAuthorities().stream()
-                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
-        business.setStatus(isAdmin ? 1 : 0);
-        business.setUserId(isAdmin ?business.getUserId(): currentUser.getId()); //管理员创建则必须传入userID
 
+        // 状态设置：管理员直接通过，普通商家需要审核
+        business.setStatus(isAdmin ? 1 : 0);
+
+        // 用户ID设置：管理员创建则必须传入userID，普通商家使用当前用户ID
+        if (isAdmin) {
+            // 管理员操作，必须传入userId
+            if (business.getUserId() == null) {
+                throw new RuntimeException("管理员创建商铺时必须指定userId");
+            }
+        } else {
+            // 普通商家操作，使用当前用户ID
+            business.setUserId(currentUser.getId());
+        }
         // 设置默认值
         if (business.getIs_deleted() == null) {
             business.setIs_deleted(false);

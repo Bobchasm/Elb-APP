@@ -25,4 +25,6 @@ public class BusinessSearchVO {
     private BigDecimal deliveryPrice;
     @Schema(description = "评分")
     private BigDecimal  score;
+    @Schema(description = "销量")
+    private Integer salesCount;
 }
