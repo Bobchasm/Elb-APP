@@ -2,18 +2,25 @@ package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.entity.Business;
+import com.tju.elm_bk.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.BusinessMapper;
+import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.BusinessService;
+import com.tju.elm_bk.service.UserService;
+import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +28,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 public class BusinessServiceImpl implements BusinessService {
+
+
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
     private final BusinessMapper businessMapper;
 //    private final BusinessVoMapper businessVoMapper; // 注入MapStruct Mapper
 
@@ -133,6 +147,43 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         return businesses;
+    }
+
+    private User getCurrentUser() {
+        String username = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        return userService.getUserWithAuthorities(username);
+    }
+
+    @Override
+    public Integer applyForAddBusiness(Business business) {
+        User currentUser = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new RuntimeException("无法获取当前用户信息");
+        }
+        // 设置基础信息
+        business.setCreator(currentUser.getId());
+        business.setCreateTime(LocalDateTime.now());
+        // 权限判断
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+        business.setStatus(isAdmin ? 1 : 0);
+        business.setUserId(isAdmin ?business.getUserId(): currentUser.getId()); //管理员创建则必须传入userID
+
+        // 设置默认值
+        if (business.getIs_deleted() == null) {
+            business.setIs_deleted(false);
+        }
+        if (business.getDeliveryPrice() == null) {
+            business.setDeliveryPrice(BigDecimal.ZERO);
+        }
+        if (business.getStartPrice() == null) {
+            business.setStartPrice(BigDecimal.ZERO);
+        }
+
+        return businessMapper.applyForAddBusiness(business);
     }
 
 

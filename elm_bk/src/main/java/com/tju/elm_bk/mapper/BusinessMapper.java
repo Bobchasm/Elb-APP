@@ -9,6 +9,7 @@ import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessVO;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.apache.ibatis.annotations.*;
 
 
@@ -43,4 +44,6 @@ public interface BusinessMapper {
 //    下面两个用于搜索+筛选
     List<BusinessSearchVO> searchBusinesses(@Param("keyword") String keyword);
     Map<String, Object> getInteractionCounts(@Param("businessId") Long businessId);
+
+    Integer applyForAddBusiness(Business  business);
 }

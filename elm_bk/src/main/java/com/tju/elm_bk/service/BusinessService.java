@@ -4,6 +4,7 @@ package com.tju.elm_bk.service;
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 
+import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
 
@@ -17,4 +18,5 @@ public interface BusinessService {
     List<BusinessVO> getBusinesses();
     BusinessVO addBusiness(BusinessDTO businessDto);
     List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore);
+    Integer applyForAddBusiness(Business  business);
 }

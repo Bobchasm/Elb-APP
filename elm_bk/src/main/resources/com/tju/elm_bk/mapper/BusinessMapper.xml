@@ -214,4 +214,42 @@
         WHERE merchant_id = #{businessId}
     </select>
 
+    <insert id="applyForAddBusiness" parameterType="com.tju.elm_bk.entity.Business"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO business (
+            business_name,
+            business_address,
+            business_explain,
+            business_img,
+            delivery_price,
+            start_price,
+            order_type_id,
+            remarks,
+            create_time,
+            creator,
+            is_deleted,
+            update_time,
+            updater,
+            user_id,
+            status
+        ) VALUES (
+                     #{businessName},
+                     #{businessAddress},
+                     #{businessExplain},
+                     #{businessImg},
+                     #{deliveryPrice},
+                     #{startPrice},
+                     #{orderTypeId},
+                     #{remarks},
+                     #{createTime},
+                     #{creator},
+                     #{is_deleted},
+                     #{updateTime},
+                     #{updater},
+                     #{userId},
+                     #{status}
+                 )
+    </insert>
+
+
 </mapper>

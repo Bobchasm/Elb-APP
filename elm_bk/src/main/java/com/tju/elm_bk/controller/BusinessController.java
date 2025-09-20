@@ -3,6 +3,7 @@ package com.tju.elm_bk.controller;
 
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.result.ResultCodeEnum;
@@ -11,8 +12,10 @@ import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -25,7 +28,9 @@ import java.util.List;
 @Tag(name="店铺管理", description = "提供店铺管理相关的接口")
 public class BusinessController {
 
+    @Autowired
     private final BusinessService businessService;
+
 
     /**
      * 根据ID获取店铺详情
@@ -110,11 +115,7 @@ public class BusinessController {
         return HttpResult.success(businessVo);
     }
 
-//    @PostMapping
-//    @Operation(summary = "申请添加新店铺——商家新添加店铺时调用")
-//    public HttpResult<> applyForAddBusiness() {
-//
-//    }
+
 
     @GetMapping("/search")
     @Operation(summary = "搜索店铺")
@@ -123,6 +124,12 @@ public class BusinessController {
             @RequestParam(required = false)boolean isScore){
         return HttpResult.success(businessService.getBusinessesBySearch(keyword,isScore));
 
+    }
+
+    @PostMapping("/apply")
+    @Operation(summary = "商家新添加店铺--带状态")
+    public HttpResult<Integer> applyForAddBusiness(@RequestBody Business business) {
+        return HttpResult.success(businessService.applyForAddBusiness(business));
     }
 
 
