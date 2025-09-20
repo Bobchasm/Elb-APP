@@ -35,7 +35,7 @@ public class AuthenticationRestController {
 
     @PostMapping("/auth")
     @Operation(description = "身份认证成功后获取令牌")
-    public HttpResult<JWTToken> authorize(@Valid @RequestBody LoginDTO loginDto) {
+    public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginDTO loginDto) {
         try{
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
@@ -49,8 +49,7 @@ public class AuthenticationRestController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + jwt);
 
-        //return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
-            return HttpResult.success(new JWTToken(jwt));
+        return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
     } catch (BadCredentialsException e) {
         // 捕获密码错误异常，返回自定义消息
        throw new APIException("用户名或者密码错误");
