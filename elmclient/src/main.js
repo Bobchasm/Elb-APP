@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import { toast } from './utils/toast';
+import { getAuthToken} from './utils/auth';
 
 import 'font-awesome/css/font-awesome.min.css';
 import axios from 'axios';
@@ -18,7 +19,7 @@ import {
 
 // 设置 axios 的基础配置
 // axios.defaults.baseURL = process.env.VITE_API_BASE_URL;
-axios.defaults.baseURL = 'http://localhost:8081';
+axios.defaults.baseURL = 'http://localhost:8080';
 axios.defaults.timeout = 10000; // 设置超时时间为 10 秒
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 axios.defaults.headers.common['Accept'] = 'application/json';
@@ -48,12 +49,42 @@ axios.interceptors.response.use(
     // 对响应数据做点什么
     return response;
   },
-  error => {
+  async error => {
     // 对响应错误做点什么
     console.error('响应错误:', error);
 
     // ✅ 添加模拟接口的代码 - 就在这里添加
     const url = error.config?.url || '';
+
+    // 如果是 401 错误且尚未重试过
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true; // 标记此请求已经重试，防止无限循环
+
+      try {
+        // 尝试调用刷新 Token 的接口
+        const refreshToken = localStorage.getItem('refresh_token');
+        const response = await axios.post('/api/auth/refresh', { refreshToken });
+        const newToken = response.data.token;
+
+        // 存储新的 Token
+        storeAuthToken(newToken);
+
+        // 用新的 Token 重试原始的请求
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+        return api(originalRequest);
+
+      } catch (refreshError) {
+        // 刷新 Token 也失败了，说明 refreshToken 也过期了，需要重新登录
+        console.error('刷新令牌失败，需要重新登录', refreshError);
+        removeAuthToken();
+        // 跳转到登录页
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    
     
     // 模拟修改昵称接口
     //Tips:当响应错误发生时，才会进入这个拦截器的错误处理部分
@@ -89,6 +120,7 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 // 创建 Vue 应用实例
 const app = createApp(App);

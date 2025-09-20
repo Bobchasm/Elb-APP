@@ -32,13 +32,6 @@
     <div class="menu-section">
       <div class="section-title">常用功能</div>
       <div class="menu-list">
-        <div class="menu-item" @click="navigateTo('orders')">
-          <div class="menu-icon">
-            <i class="fas fa-file-invoice"></i>
-          </div>
-          <span class="menu-text">我的订单</span>
-          <i class="fas fa-chevron-right menu-arrow"></i>
-        </div>
         <div class="menu-item" @click="showAddressSection = !showAddressSection">
           <div class="menu-icon">
             <i class="fas fa-map-marker-alt"></i>
@@ -53,16 +46,17 @@
           <span class="menu-text">我的收藏</span>
           <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
-        <div class="menu-item" @click="navigateTo('notifications')">
+        <div class="menu-item message-item" @click="navigateTo('notifications')">
           <div class="menu-icon">
             <i class="fas fa-bell"></i>
           </div>
           <span class="menu-text">消息与通知</span>
+          <div class="notification-dot" v-if="hasNewMessages"></div>
           <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
       </div>
     </div>
-    
+
     <AddressManager v-if="showAddressSection" :userId="user?.userId" />
     
     <div class="button-section">
@@ -109,13 +103,27 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showMerchantApplyModal" class="modal-overlay">
+      <div class="modal-content merchant-apply-modal">
+        <div class="modal-icon">
+          <i class="fas fa-store"></i>
+        </div>
+        <h3>申请成为商家</h3>
+        <p class="modal-message">当前无商家权限，是否申请成为商家？</p>
+        <div class="modal-buttons">
+          <button class="apply-btn" @click="applyForMerchant">申请</button>
+          <button class="cancel-btn" @click="closeMerchantApplyModal">否</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
-import AddressManager from '../components/AddressManager.vue'; // 引入新的组件
+import AddressManager from '../components/AddressManager.vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast';
@@ -124,33 +132,33 @@ export default {
   name: 'MyApplication',
   components: {
     Footer,
-    AddressManager // 注册组件
+    AddressManager
   },
   setup() {
     const router = useRouter();
     const user = ref({});
     const loading = ref(false);
     const errorMessage = ref('');
-    
     const showEditModal = ref(false);
+    const showMerchantApplyModal = ref(false);
     const editFormData = ref({
       firstName: '',
       lastName: '',
       userId: '',
       email: ''
     });
+    const showAddressSection = ref(false);
+    const hasNewMessages = ref(true);
 
     const formattedPhone = computed(() => {
       if (!user.value.userId) return '未绑定手机';
       return user.value.userId.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
     });
 
-    // 只保留一个状态变量来控制地址部分的显示/隐藏
-    const showAddressSection = ref(false);
-
     onMounted(async () => {
       await loadUserData();
-      // 不再需要在这里加载地址列表
+      // 在这里调用获取未读消息数量的API
+      await checkNewMessages();
     });
 
     const loadUserData = async () => {
@@ -186,9 +194,28 @@ export default {
       }
     };
 
+    const checkNewMessages = async () => {
+      try {
+        // 模拟一个API调用来获取未读消息状态
+        // 实际项目中，你需要替换为真实的API请求
+        // const response = await axios.get('MessagesController/getUnreadCount', { params: { userId: user.value.userId } });
+        // hasNewMessages.value = response.data.unreadCount > 0;
+
+        // 临时模拟数据，假定有未读消息
+        hasNewMessages.value = true;
+      } catch (error) {
+        console.error('检查未读消息失败:', error);
+        hasNewMessages.value = false;
+      }
+    };
+
     const logout = () => {
       sessionStorage.removeItem('user');
       router.push({ path: '/index' });
+    };
+
+    const switchToMerchant = () => {
+      showMerchantApplyModal.value = true;
     };
 
     const openEditModal = () => {
@@ -203,6 +230,24 @@ export default {
 
     const closeEditModal = () => {
       showEditModal.value = false;
+    };
+
+    const closeMerchantApplyModal = () => {
+      showMerchantApplyModal.value = false;
+    };
+
+    const applyForMerchant = async () => {
+      try {
+        console.log('用户申请开店:', user.value.userId);
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        toast.success('申请开店成功！管理员将在1-3个工作日内审核您的申请。');
+        closeMerchantApplyModal();
+      } catch (error) {
+        console.error('申请开店失败:', error);
+        toast.error('申请开店失败，请重试！');
+      }
     };
 
     const submitEdits = async () => {
@@ -245,7 +290,6 @@ export default {
 
     const navigateTo = (page) => {
       const pageRoutes = {
-        'orders': '/orders',
         'notifications': '/notifications'
       };
       if (pageRoutes[page]) {
@@ -253,10 +297,10 @@ export default {
       } else {
         toast.warning('功能待开发');
       }
-    };
-
-    const switchToMerchant = () => {
-      toast.info('切换商家模式功能待开发');
+      // 如果进入了消息通知页面，则清除红点标记
+      if (page === 'notifications') {
+          hasNewMessages.value = false;
+      }
     };
     
     return {
@@ -265,22 +309,25 @@ export default {
       loading,
       errorMessage,
       showEditModal,
+      showMerchantApplyModal,
       editFormData,
       logout,
       openEditModal,
       closeEditModal,
+      closeMerchantApplyModal,
+      applyForMerchant,
       submitEdits,
       myfavorite,
       navigateTo,
       switchToMerchant,
       showAddressSection,
+      hasNewMessages
     };
   },
 };
 </script>
 
 <style scoped>
-/* 保持所有通用样式和个人信息编辑模态框的样式不变 */
 .container {
   max-width: 600px;
   margin: 0 auto;
@@ -505,7 +552,7 @@ export default {
   transition: all 0.3s ease;
 }
 .logout-btn:hover {
-  background: #ffeaea;
+  background: linear-gradient(135deg, #7b2cce, #3a00b0);
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
@@ -601,6 +648,79 @@ export default {
 }
 .modal-buttons button:last-child:hover {
   background: #c7c7c7;
+}
+
+/* 申请开店弹窗样式 */
+.merchant-apply-modal {
+  text-align: center;
+  max-width: 350px;
+}
+
+.modal-icon {
+  font-size: 3rem;
+  color: #ff6b6b;
+  margin-bottom: 15px;
+}
+
+.modal-icon i {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.modal-message {
+  color: #666;
+  font-size: 1rem;
+  margin: 15px 0 25px 0;
+  line-height: 1.5;
+}
+
+.apply-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e) !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 12px 24px !important;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+.apply-btn:hover {
+  background: linear-gradient(135deg, #ff5252, #ff7979) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.cancel-btn {
+  background: #e0e0e0 !important;
+  color: #666 !important;
+  font-weight: 500;
+  padding: 12px 24px !important;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background: #d0d0d0 !important;
+  transform: translateY(-2px);
+}
+
+/* 新增：消息红点的样式 */
+.menu-item.message-item {
+  position: relative;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 15px;
+  right: 40px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4d4f;
+  border-radius: 50%;
+  border: 1px solid white;
 }
 
 @media (max-width: 480px) {

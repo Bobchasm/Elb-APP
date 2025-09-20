@@ -12,6 +12,8 @@ import EditUserAddress from '../views/EditUserAddress.vue'
 import Register from '../views/Register.vue'
 import SuccessfulPayment from '../views/SuccessfulPayment.vue'
 import MyInformation from '@/views/MyInformation.vue'
+import Favorites from '@/views/Favorites.vue'
+import Notifications from '@/views/Notifications.vue'
 
 import Search from '@/views/Search.vue'
 import Cart from '@/views/Cart.vue'
@@ -24,6 +26,16 @@ import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
+//商家端路由配置
+import MerchantProfile from '../views/MerchantProfile.vue';
+import MerchantBusiness from '../views/MerchantBusiness.vue'
+import MerchantBusinessInfo from '@/views/MerchantBusinessInfo.vue' 
+import MerchantOrders from '../views/MerchantOrders.vue'
+
+//管理端路由配置
+import AdminHome from '../views/AdminHome.vue';
+import AdminUsers from '../views/AdminUsers.vue';
+import AdminBusiness from '@/views/AdminBusiness.vue'
 
 // 定义路由
 const routes = [
@@ -97,6 +109,16 @@ const routes = [
     name: 'MyInformation',
     component: MyInformation
   },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: Favorites,
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: Notifications,
+  },
  //
   {
     path: '/search',
@@ -119,6 +141,7 @@ const routes = [
     name: 'RChoose',
     component: RChoose
   },
+//商家端
   {
     path:'/businessLogin',
     name:'BusinessLogin',
@@ -145,12 +168,48 @@ const routes = [
     component:BusinessOrderManage
   },
   {
+    path: '/merchant/profile',
+    name: 'MerchantProfile',
+    component: MerchantProfile,
+    meta: { title: '商家信息' }
+  },
+  {
+    path: '/merchant/business',
+    name: 'MerchantBusiness',
+    component: MerchantBusiness
+  },
+  {
+    path: '/merchant/businessInfo',
+    name: 'MerchantBusinessInfo',
+    component: MerchantBusinessInfo
+  },
+  {
+    path: '/merchant/orders',
+    name: 'MerchantOrders',
+    component: MerchantOrders
+  },
+  {
     path:'/submitItems',
     name:'SubmitItems',
     component:SubmitItems
   },
  //
-//
+//管理端
+  {
+    path:'/admin/home',
+    name:'AdminHome',
+    component:AdminHome
+  },
+  {
+    path:'/admin/users',
+    name:'AdminUsers',
+    component:AdminUsers
+  },
+  {
+    path:'/admin/business',
+    name:'AdminBusiness',
+    component:AdminBusiness
+  },
   //
  //
 
