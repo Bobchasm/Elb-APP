@@ -30,7 +30,7 @@ public interface FoodMapper {
     @Update("update food set shelve_status = #{shelveStatus} where id = #{foodId}")
     void updateFoodStatus(Long foodId,Integer shelveStatus);
 
-    @Update("update food set update_time = #{updateTime}, updater = #{updater}, food_explain = #{foodExplain}, food_img = #{foodImg}, food_name = #{foodName}, food_price = #{foodPrice}, remarks = #{remarks}, business_id = #{business_id} where id = #{id}")
+    @Update("update food set update_time = #{updateTime}, updater = #{updater}, food_explain = #{foodExplain}, food_img = #{foodImg}, food_name = #{foodName}, food_price = #{foodPrice}, remarks = #{remarks} where id = #{id}")
     void updateFoodMessage(Food food);
 
     @Update("update food set is_deleted = 1 where id = #{foodId}")

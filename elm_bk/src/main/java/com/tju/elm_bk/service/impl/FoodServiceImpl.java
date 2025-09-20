@@ -54,7 +54,7 @@ public class FoodServiceImpl implements FoodService {
         Food food = new Food();
         BeanUtils.copyProperties(foodDTO, food);
         food.setBusinessId(foodDTO.getBusiness().getId());
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         food.setCreator(user.getId());
         food.setCreateTime(LocalDateTime.now());
         food.setCreator(user.getId());
@@ -69,7 +69,7 @@ public class FoodServiceImpl implements FoodService {
 
     @Override
     public List<FoodItemVO> getFoodItemList(Long businessId, Integer shelveStatus) {
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         List<Authority> authorities = user.getAuthorities();
 
         // 普通用户只能看到已上架的商品
@@ -91,7 +91,7 @@ public class FoodServiceImpl implements FoodService {
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
 
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         List<Authority> authorities = user.getAuthorities();
 
         // 非管理员只能添加自己商铺的商品
@@ -106,7 +106,7 @@ public class FoodServiceImpl implements FoodService {
         food.setBusinessId(food.getBusinessId());
         food.setCreator(user.getId());
         food.setCreateTime(LocalDateTime.now());
-        food.setCreator(user.getId());
+        food.setUpdater(user.getId());
         food.setUpdateTime(LocalDateTime.now());
         food.setIsDeleted(false);
         foodMapper.insertFood(food);
@@ -122,7 +122,7 @@ public class FoodServiceImpl implements FoodService {
         }
         Business business = businessMapper.selectBusinessById(food.getBusinessId());
 
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         List<Authority> authorities = user.getAuthorities();
         if (authorities.stream()
                 .noneMatch(authority -> Objects.equals(authority.getName(), "ADMIN"))
@@ -151,7 +151,7 @@ public class FoodServiceImpl implements FoodService {
         }
 
         Business business = businessMapper.selectBusinessById(food.getBusinessId());
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         List<Authority> authorities = user.getAuthorities();
         if (authorities.stream()
                 .noneMatch(authority -> Objects.equals(authority.getName(), "ADMIN"))
@@ -160,6 +160,8 @@ public class FoodServiceImpl implements FoodService {
         }
 
         ObjectCopyUtil.copyPropertiesIgnoreNull(foodUpdateDTO,food);
+        food.setUpdater(user.getId());
+        food.setUpdateTime(LocalDateTime.now());
         foodMapper.updateFoodMessage(food);
         return food.getId();
     }
@@ -171,7 +173,7 @@ public class FoodServiceImpl implements FoodService {
             throw new APIException(ResultCodeEnum.FOOD_MISSED);
         }
         Business business = businessMapper.selectBusinessById(food.getBusinessId());
-        User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         List<Authority> authorities = user.getAuthorities();
         if (authorities.stream()
                 .noneMatch(authority -> Objects.equals(authority.getName(), "ADMIN"))
