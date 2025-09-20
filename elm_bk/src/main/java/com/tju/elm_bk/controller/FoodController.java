@@ -10,6 +10,7 @@ import com.tju.elm_bk.vo.FoodVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,24 +53,28 @@ public class FoodController {
 
     @PostMapping("/addItem")
     @Operation(summary = "(前端用这个)商铺新增商品",description = "管理员可以随便添，商家只能为自己的商铺添")
+    @PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> addFoodItem(@RequestBody FoodCreateDTO foodCreateDTO) {
         return HttpResult.success(foodService.addFoodItem(foodCreateDTO));
     }
 
     @GetMapping("/status")
     @Operation(summary = "上架/下架商品",description = "shelveStatus 0-下架 1-上架")
+    @PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> setFoodShelveStatus(@RequestParam Long foodId,@RequestParam Integer shelveStatus) {
         return HttpResult.success(foodService.setFoodStatus(foodId,shelveStatus));
     }
 
     @PostMapping("/modifyItem")
     @Operation(summary = "(前端用这个)商铺修改商品",description = "管理员可以随便改，商家只能为自己的商铺改")
+    @PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> modifyFoodItem(@RequestBody FoodUpdateDTO foodUpdateDTO) {
         return HttpResult.success(foodService.modifyFoodMessage(foodUpdateDTO));
     }
 
     @GetMapping("/delete")
     @Operation(summary = "商家删除商品")
+    @PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> setFoodShelveStatus(@RequestParam Long foodId) {
         return HttpResult.success(foodService.deleteFood(foodId));
     }
