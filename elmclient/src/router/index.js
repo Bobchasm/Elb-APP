@@ -25,10 +25,9 @@ import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 //商家端订单
-import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
+//import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
-import ManageBusiness from '@/views/ManageBusiness.vue'
-import ManageShop from '@/views/ManageShop.vue'
+
 //商家端路由配置
 import MerchantProfile from '../views/MerchantProfile.vue';
 import MerchantBusiness from '../views/MerchantBusiness.vue'
@@ -39,7 +38,8 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 import AdminHome from '../views/AdminHome.vue';
 import AdminUsers from '../views/AdminUsers.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
-import AdminUser from '@/views/AdminUser.vue'
+import AdminShop from '@/views/AdminShop.vue'
+//import { pa } from 'element-plus/es/locale'
 
 // 定义路由
 const routes = [
@@ -165,20 +165,20 @@ const routes = [
     name:'BusinessView',
     component:BusinessView
   },
+  // {
+  //   path:'/businessOrderManage',
+  //   name:'BusinessOrderManage',
+  //   component:BusinessOrderManage
+  // },
   {
-    path:'/businessOrderManage',
-    name:'BusinessOrderManage',
-    component:BusinessOrderManage
+    path:'/admin/business',
+    name:'AdminBusiness',
+    component:AdminBusiness
   },
   {
-    path:'/manageBusiness',
-    name:'ManageBusiness',
-    component:ManageBusiness
-  },
-  {
-    path:'/manageShop',
-    name:'ManageShop',
-    component:ManageShop
+    component:AdminShop,
+    path:'/admin/shop',
+    name:'AdminShop'
   },
   {
     path: '/merchant/profile',
@@ -219,19 +219,23 @@ const routes = [
     component:AdminUsers
   },
   {
-    path:'/admin/manage-user',
-    name:'AdminUser',
-    component:AdminUser
-  },
-  {
     path:'/admin/business',
     name:'AdminBusiness',
     component:AdminBusiness
   },
+  {
+    path:'/admin/shop',
+    name:'AdminShop',
+    component:AdminShop
+  }
+  //
+
+]
+  
   //
  //
 
-]
+
 
 // 解决重复路由报异常问题
 const originalPush = createRouter.prototype.push;
