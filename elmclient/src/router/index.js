@@ -40,6 +40,7 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 import AdminHome from '../views/AdminHome.vue';
 import AdminUsers from '../views/AdminUsers.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
+import AdminUser from '@/views/AdminUser.vue'
 
 // 定义路由
 const routes = [
@@ -223,6 +224,11 @@ const routes = [
     path:'/admin/users',
     name:'AdminUsers',
     component:AdminUsers
+  },
+  {
+    path:'/admin/manage-user',
+    name:'AdminUser',
+    component:AdminUser
   },
   {
     path:'/admin/business',
