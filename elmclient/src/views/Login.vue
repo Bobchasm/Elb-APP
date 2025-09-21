@@ -62,9 +62,6 @@
       return localStorage.getItem('savedUserName') || '';
     });
 
-	  const setSessionStorage = (key, value) => {
-      window.sessionStorage.setItem(key, JSON.stringify(value)); // 自定义会话存储函数
-    };
     const login = async () => {
       // 1. 表单校验
       if (!userName.value.trim()) {
@@ -98,9 +95,23 @@
           return;
         }
 
+
         // 5. 根据“记住我”状态存储 token
         const storage = rememberMe.value ? localStorage : sessionStorage;
         storage.setItem('token', idToken); // 存储 token（key 为 token）
+		console.log(storage.getItem('token'));
+
+		// 获取用户信息
+        try {
+          const userRes = await request.get('/api/user');
+          if (userRes) {
+            storage.setItem('userInfo', JSON.stringify(userRes));
+          }
+        } catch (error) {
+          console.error('获取用户信息失败:', error);
+        }
+		console.log(storage.getItem('userInfo'));
+
 
         // 6. 记住用户名（仅勾选时存localStorage）
         if (rememberMe.value) {
@@ -108,7 +119,7 @@
         } else {
           localStorage.removeItem('savedUserName'); // 未勾选则清除
         }
-
+		
         // 7. 跳转首页（首页会通过 /api/user 拉取用户信息）
         router.push({ path: '/index' });
       } catch (error) {

@@ -54,8 +54,7 @@
   <script>
   import { ref, onMounted } from 'vue';
   import Footer from '../components/Footer.vue';
-  import axios from 'axios';
-  import qs from 'qs';
+  import request from '../utils/request';
   import { useRoute,useRouter } from 'vue-router';
 
   export default {
@@ -65,7 +64,7 @@
 	},
 	setup() {
 	  const businessId = ref(null);
-	  const daId = ref(null);
+	  const id = ref(null);
 	  const user = ref({});
 	  const deliveryAddress = ref({});
 	  const route = useRoute();
@@ -73,15 +72,15 @@
 	  const reg = /^1[3456789]\d{9}$/;
 		onMounted(async () => {
 			businessId.value = route.query.businessId;
-			daId.value = route.query.daId;
-			user.value = sessionStorage.getItem('user')
-				? JSON.parse(sessionStorage.getItem('user'))
-				: {};
+			id.value = route.query.id;
+			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
+			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
+			user.value = userFromLocal || userFromSession;
 
 			try {
 				// 修改为POST请求，参数放在请求体中
-				const response = await axios.post('DeliveryAddressController/getDeliveryAddressById', {
-					daId: daId.value
+				const response = await request.post('/api/addresses/getDeliveryAddressById', {
+					id: id.value
 				});
 				deliveryAddress.value = response.data;
 			} catch (error) {
@@ -103,9 +102,9 @@
 				return;
 			}
   
-		axios.post('DeliveryAddressController/updateDeliveryAddress',deliveryAddress.value)
+		request.post('/api/addresses/updateDeliveryAddress',deliveryAddress.value)
 		  .then(response => {
-			if (response.data > 0) {
+			if (response.success) {
 			  router.push({
 				path: '/userAddress',
 				query: {

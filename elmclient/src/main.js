@@ -44,6 +44,7 @@ router.beforeEach((to, from, next) => {
   const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
   const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
   const user = userFromLocal || userFromSession;
+  console.log(user);
 
   
   // 商家专属页面的路径
@@ -62,11 +63,13 @@ router.beforeEach((to, from, next) => {
       to.path === '/businessInfo' || to.path === '/login' || to.path === '/register' || 
       to.path === '/lChoose' || to.path === '/rChoose' || to.path === '/businessLogin' || 
       to.path === '/businessRegister')) {
+        console.log(user);
     if (user === null && !businessUser) {
+      console.log('haha');
       return next('/login');
     }
   }
-  
+  console.log('lala');
   next();
 });
 

@@ -446,25 +446,71 @@ const getDisplayText = (location) => {
 
 
         const fetchUserInfo = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      if (!token) return;
+    //   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    //   if (!token) return;
 
-      try {
-        const res = await request.get('/api/user');
-        if (res) {
-          userInfo.value = res;
-          console.log(userInfo.value);
-          // 保存用户信息到存储
-          const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
-          storage.setItem('userInfo', JSON.stringify(res));
-        } else {
-          console.error('获取用户信息失败');
-          userInfo.value = null;
+    //   try {
+    //     const res = await request.get('/api/user');
+    //     if (res) {
+    //       userInfo.value = res;
+    //       console.log(userInfo.value);
+    //       // 保存用户信息到存储
+    //       const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
+    //       storage.setItem('userInfo', JSON.stringify(res));
+    //     } else {
+    //       console.error('获取用户信息失败');
+    //       userInfo.value = null;
+    //     }
+    //   } catch (error) {
+    //     console.error('获取用户信息异常:', error);
+    //     userInfo.value = null;
+    //   }
+    const tokenFromLocal = localStorage.getItem('token');
+  const tokenFromSession = sessionStorage.getItem('token');
+  const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+
+        if (storage) {
+            const savedUserInfo = storage.getItem('userInfo');
+            if (savedUserInfo) {
+            try {
+                const parsedUserInfo = JSON.parse(savedUserInfo);
+                // 校验用户信息是否完整（避免存储的是无效数据）
+                if (parsedUserInfo.id && parsedUserInfo.username) { // 假设用户信息必须包含id和username
+                userInfo.value = parsedUserInfo;
+                console.log('从本地存储加载用户信息成功:', userInfo.value);
+                return; // 读取到有效信息，直接返回，不发请求
+                }
+            } catch (e) {
+                console.error('解析本地用户信息失败:', e);
+                storage.removeItem('userInfo'); // 删除损坏的存储数据
+            }
+            }
         }
-      } catch (error) {
-        console.error('获取用户信息异常:', error);
-        userInfo.value = null;
-      }
+
+        const token = tokenFromLocal || tokenFromSession;
+        if (!token) return;
+
+        try {
+            const res = await request.get('/api/user');
+            if (res && res.id && res.username) { // 校验接口返回的用户信息完整性
+            userInfo.value = res;
+            console.log('从接口加载用户信息成功:', userInfo.value);
+            // 同步到本地存储（和token位置一致）
+            storage?.setItem('userInfo', JSON.stringify(res));
+            } else {
+            console.error('获取用户信息失败：接口返回数据不完整');
+            userInfo.value = null;
+            }
+        } catch (error) {
+            console.error('获取用户信息异常:', error);
+            userInfo.value = null;
+            if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            sessionStorage.removeItem('userInfo');
+            }
+        }
     };
 
         const loadReactions = () => {

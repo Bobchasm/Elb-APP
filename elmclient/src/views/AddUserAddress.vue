@@ -54,10 +54,9 @@
 <script>
 import { ref, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
-import axios from 'axios';
-import qs from 'qs';
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast';
+import request from '../utils/request';
 
 export default {
 	name: 'AddUserAddress',
@@ -69,16 +68,26 @@ export default {
 			contactName: '',
 			contactSex: 1,
 			contactTel: '',
-			address: ''
+			address: '',
+			customer: {
+				id: 0,
+				username: ''
+			}
 		});
 
-		const businessId = ref(null);
+		//const businessId = ref(null);
 		const user = ref(null);
 		const router = useRouter();
 		const reg = /^1[3456789]\d{9}$/;
 		onMounted(() => {
-			user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
-			businessId.value = user.value.businessId;
+			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
+			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
+			user.value = userFromLocal || userFromSession;
+			if (user.value) {
+			deliveryAddress.value.customer.id = user.value.id; 
+			deliveryAddress.value.customer.username = user.value.username; 
+          }
+			//businessId.value = user.value.businessId;
 		});
 		
 		const addUserAddress = () => {
@@ -95,15 +104,20 @@ export default {
 				return;
 			}
 			
-			deliveryAddress.value.userId = user.value.userId;
-			axios.post('DeliveryAddressController/saveDeliveryAddress', deliveryAddress.value)
+			request.post('/api/addresses', deliveryAddress.value)
 				.then(response => {
-					if (response.data > 0) {
-						toast.success('添加地址成功！');
-						router.push({ path: '/userAddress', query: { businessId: businessId.value } });
-					} else {
-						toast.error('新增地址失败！');
-					}
+					// if (response.data > 0) {
+					// 	toast.success('添加地址成功！');
+					// 	router.push({ path: '/userAddress', query: { businessId: businessId.value } });
+					// } else {
+					// 	toast.error('新增地址失败！');
+					// }
+					if (response.success) {
+							toast.success('添加地址成功！');
+							router.push({ path: '/userAddress' });
+						} else {
+							toast.error('新增地址失败！原因：' + response.message);
+						}
 				})
 				.catch(error => {
 					console.error(error);
@@ -113,7 +127,7 @@ export default {
 
 		return {
 			deliveryAddress,
-			businessId,
+			//businessId,
 			user,
 			addUserAddress
 		};

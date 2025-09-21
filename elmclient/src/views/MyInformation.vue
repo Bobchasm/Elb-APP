@@ -166,9 +166,15 @@ export default {
       errorMessage.value = '';
       
       try {
-        const storedUser = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
+        const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
+        const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
+        const storedUser = userFromLocal || userFromSession;
+        console.log('aaaa');
+        console.log(storedUser);
         
-        if (!storedUser) {
+        // 2. 检查用户信息是否存在
+        if (!storedUser || !storedUser.id) {
+          console.log('wuwuwu')
           toast.warning('用户未登录，请先登录！');
           router.push({ path: '/login' });
           return;

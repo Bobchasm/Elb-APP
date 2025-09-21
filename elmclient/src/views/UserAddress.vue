@@ -7,14 +7,14 @@
   
 	  <!-- 地址列表部分 -->
 	  <ul class="addresslist">
-		<li v-for="item in deliveryAddressArr" :key="item.daId">
+		<li v-for="item in deliveryAddressArr" :key="item.id">
 		  <div class="addresslist-left" @click="setDeliveryAddress(item)">
 			<h3>{{ item.contactName }}{{ sexFilter(item.contactSex) }} {{ item.contactTel }}</h3>
 			<p>{{ item.address }}</p>
 		  </div>
 		  <div class="addresslist-right">
-			<i class="fa fa-edit" @click="editUserAddress(item.daId)"></i>
-			<i class="fa fa-remove" @click="removeUserAddress(item.daId)"></i>
+			<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
+			<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
 		  </div>
 		</li>
 	  </ul>
@@ -34,8 +34,7 @@
   import { ref, reactive, onMounted } from 'vue';
   import Footer from '../components/Footer.vue';
   import { useRoute, useRouter } from 'vue-router';
-  import axios from 'axios';
-  import qs from 'qs';
+  import request from '../utils/request';
   export default {
 	name: 'UserAddress',
 	setup() {
@@ -44,16 +43,18 @@
 	  const deliveryAddressArr = ref([]);
 	  const route = useRoute();
 	  const router = useRouter();
-	  const businessId = ref(route.query.businessId);
+	  //const businessId = ref(route.query.businessId);
 	  onMounted(() => {
-		user.value =JSON.parse(sessionStorage.getItem('user'));
+		const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
+		const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
+		user.value = userFromLocal || userFromSession;
 		listDeliveryAddressByUserId();
 	  });
   
 	  const listDeliveryAddressByUserId = () => {
     // 查询送货地址
-    axios.post('DeliveryAddressController/listDeliveryAddressByUserId', {
-            userId: user.value.userId
+    request.post('/api/addresses/listDeliveryAddressByUserId', {
+            userId: user.value.id
     }).then(response => {
         deliveryAddressArr.value = response.data;
     }).catch(error => {
@@ -65,7 +66,7 @@
   
 	  const setDeliveryAddress = (deliveryAddress) => {
 		// 把用户选择的默认送货地址存储到localStorage中
-		localStorage.setItem(user.value.userId, JSON.stringify(deliveryAddress));
+		localStorage.setItem(user.value.id, JSON.stringify(deliveryAddress));
 		router.push({ path: '/orders', query: { businessId: businessId.value } });
 	  };
   
@@ -73,23 +74,23 @@
 		router.push({ path: '/addUserAddress', query: { businessId: businessId.value } });
 	  };
   
-	  const editUserAddress = (daId) => {
-		router.push({ path: '/editUserAddress', query: { businessId: businessId.value, daId } });
+	  const editUserAddress = (id) => {
+		router.push({ path: '/editUserAddress', query: { businessId: businessId.value, id } });
 	  };
   
-	  const removeUserAddress = (daId) => {
+	  const removeUserAddress = (id) => {
 		if (!confirm('确认要删除此送货地址吗？')) {
 		  return;
 		}
   
-		axios.post('DeliveryAddressController/removeDeliveryAddress', {
-        daId: daId
+		request.post('/api/addresses/removeDeliveryAddress', {
+        id: id
       }).then(response => {
 		console.log(response.data);
-        if (response.data > 0) {
-          let deliveryAddress = JSON.parse(localStorage.getItem(user.value.userId.toString()));
-          if (deliveryAddress && deliveryAddress.daId === daId) {
-            localStorage.removeItem(user.value.userId.toString());
+        if (response.success) {
+          let deliveryAddress = JSON.parse(localStorage.getItem(user.value.id.toString()));
+          if (deliveryAddress && deliveryAddress.id ===id ) {
+            localStorage.removeItem(user.value.id.toString());
           }
           listDeliveryAddressByUserId();
         } else {
