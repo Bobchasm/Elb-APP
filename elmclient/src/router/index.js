@@ -25,7 +25,7 @@ import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 //商家端订单
-import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
+//import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
 
 //商家端路由配置
@@ -165,11 +165,11 @@ const routes = [
     name:'BusinessView',
     component:BusinessView
   },
-  {
-    path:'/businessOrderManage',
-    name:'BusinessOrderManage',
-    component:BusinessOrderManage
-  },
+  // {
+  //   path:'/businessOrderManage',
+  //   name:'BusinessOrderManage',
+  //   component:BusinessOrderManage
+  // },
   {
     path:'/admin/business',
     name:'AdminBusiness',
@@ -217,11 +217,6 @@ const routes = [
     path:'/admin/users',
     name:'AdminUsers',
     component:AdminUsers
-  },
-  {
-    path:'/admin/manage-user',
-    name:'AdminUser',
-    component:AdminUser
   },
   {
     path:'/admin/business',
