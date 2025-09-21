@@ -6,31 +6,38 @@
 	  </header>
   
 	  <!-- 表单部分 -->
-	  <ul class="form-box">
-		<li>
-		  <div class="title">
-			手机号码：
-		  </div>
-		  <div class="content">
-			<input type="text" v-model="phoneNumber" placeholder="手机号码">
-		  </div>
-		</li>
-		<li>
-		  <div class="title">
-			密码：
-		  </div>
-		  <div class="content">
-			<input type="password" v-model="password" placeholder="密码">
-		  </div>
-		</li>
-	  </ul>
-  
-	  <div class="button-login">
-		<button @click="login">登陆</button>
-	  </div>
-	  <div class="button-register">
-		<button @click="register">去注册</button>
-	  </div>
+      <ul class="form-box">
+      <li>
+        <div class="title">
+          用户名：
+        </div>
+        <div class="content">
+          <input type="text" v-model="userName" placeholder="用户名">
+        </div>
+      </li>
+      <li>
+        <div class="title">
+          密码：
+        </div>
+        <div class="content">
+          <input type="password" v-model="password" placeholder="密码">
+        </div>
+      </li>
+	  <li style="justify-content: flex-end; padding-top: 2vw;">
+        <label style="display: flex; align-items: center; font-size: 3vw; color: #666;">
+          <input
+            type="checkbox"
+            v-model="rememberMe"
+            style="width: 3vw; height: 3vw; margin-right: 1vw;"
+          >
+          记住我
+        </label>
+      </li>
+    </ul>
+
+    <div class="button-login">
+      <button @click="login">用户登录</button>
+    </div>
   
 	  <!-- 底部菜单部分 -->
 
@@ -38,86 +45,87 @@
   </template>
   
   <script>
-  import { ref } from 'vue';
+  import { ref ,computed} from 'vue';
   import { useRouter } from 'vue-router';
-  import axios from 'axios'; // 假设axios是从这里导入的
-  import qs from 'qs'; // 假设qs是从这里导入的
   import Footer from '../components/Footer.vue';
-  
+  import request from '../utils/request';
+
   export default {
 	name: 'Login',
 	setup() {
-	  const phoneNumber = ref('');
+		const userName = ref('');
 	  const password = ref('');
 	  const router = useRouter();
-
+	  const rememberMe=ref(false);
+	  // 回显记住的用户名（从localStorage获取）
+	  const savedUserName = computed(() => {
+      return localStorage.getItem('savedUserName') || '';
+    });
 
 	  const setSessionStorage = (key, value) => {
       window.sessionStorage.setItem(key, JSON.stringify(value)); // 自定义会话存储函数
     };
-	  const login = () => {
-		if (phoneNumber.value === '') {
-		  alert('手机号码不能为空！');
-		  return;
-		}
-		if (password.value === '') {
-		  alert('密码不能为空！');
-		  return;
-		}
-  
-		// 登录请求
-		const loginData = {
-		  phoneNumber: phoneNumber.value,
-		  password: password.value
-		};
- 
-		axios.post('/auth/login', {
-			phoneNumber: phoneNumber.value,
-			password: password.value
-        },{
-			headers:{
-				'userType':'customer'
-			}
-		}).then(response => {
-		  const user = response.data;
-		  if (!user) {
-			alert('用户名或密码不正确！');
-		  } else {
-			setSessionStorage('user', user);
-			router.push({ path: '/index' });
-		  }
-		}).catch(error => {
-		  console.error('登录错误:', error);
-		  if (error.response) {
-			// 服务器返回错误状态码
-			if (error.response.status === 404) {
-			  alert('接口不存在，请检查API路径！');
-			} else if (error.response.status === 500) {
-			  alert('服务器内部错误，请稍后重试！');
-			} else if (error.response.status === 415) {
-			  alert('请求格式错误，请检查数据格式！');
-			} else {
-			  alert('登录失败：' + (error.response.data?.message || '未知错误'));
-			}
-		  } else if (error.request) {
-			// 请求发出但没有收到响应
-			alert('无法连接到服务器，请检查网络连接！');
-		  } else {
-			// 请求配置出错
-			alert('请求配置错误，请稍后重试！');
-		  }
-		});
-	  };
-  
-	  const register = () => {
-		router.push({ path: 'register' });
-	  };
+    const login = async () => {
+      // 1. 表单校验
+      if (!userName.value.trim()) {
+        alert('用户名不能为空！');
+        return;
+      }
+      if (!password.value.trim()) {
+        alert('密码不能为空！');
+        return;
+      }
+
+      try {
+        // 2. 调用登录接口：传 userName/password/rememberMe
+        const res = await request.post('/api/auth', {
+          username: userName.value.trim(),
+          password: password.value.trim(),
+          rememberMe: rememberMe.value
+        });
+
+        // 3. 解析后端返回
+        if (!res) {
+          alert('登录失败');
+          return;
+        }
+
+        // 4. 获取 id_token
+        const idToken = res?.id_token;
+		console.log(idToken);
+        if (!idToken) {
+          alert('登录失败，未获取到token！');
+          return;
+        }
+
+        // 5. 根据“记住我”状态存储 token
+        const storage = rememberMe.value ? localStorage : sessionStorage;
+        storage.setItem('token', idToken); // 存储 token（key 为 token）
+
+        // 6. 记住用户名（仅勾选时存localStorage）
+        if (rememberMe.value) {
+          localStorage.setItem('savedUserName', userName.value.trim());
+        } else {
+          localStorage.removeItem('savedUserName'); // 未勾选则清除
+        }
+
+        // 7. 跳转首页（首页会通过 /api/user 拉取用户信息）
+        router.push({ path: '/index' });
+      } catch (error) {
+        // 捕获网络错误或后端500等异常
+        const errorMsg = error.response?.data?.message || '网络异常，登录失败！';
+        alert(errorMsg);
+        console.error('登录错误:', error);
+      }
+    };
+
   
 	  return {
-		phoneNumber,
+        userName,
 		password,
 		login,
-		register
+		rememberMe,
+		savedUserName
 	  };
 	},
 	components: {
