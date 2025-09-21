@@ -6,7 +6,77 @@
             <div class="icon-location-box">
                 <i class="fas fa-map-marker-alt"></i>
             </div>
-            <div class="location-text">天津大学北洋园校区<i class="fa fa-caret-down"></i></div>
+            <!-- <div class="location-text">天津大学北洋园校区<i class="fa fa-caret-down"></i></div> -->
+            <div class="location-text" @click="showLocationPicker">
+                <span class="location-display">{{ displayLocation }}</span>
+                <i class="fa fa-caret-down"></i>
+            </div>
+
+            <!-- 漂亮的位置选择弹窗 -->
+            <transition name="fade">
+                <div v-if="showPicker" class="location-modal" @click.self="hideLocationPicker">
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <h3>选择位置</h3>
+                            <button class="close-btn" @click="hideLocationPicker">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="modal-content">
+                            <!-- 位置层级导航 -->
+                            <div class="location-nav">
+                                <div 
+                                    v-for="(level, index) in locationLevels" 
+                                    :key="index"
+                                    :class="['nav-item', { active: currentLevel === index, disabled: index > currentLevel }]"
+                                    @click="switchLevel(index)"
+                                >
+                                    {{ level }}
+                                </div>
+                            </div>
+
+                            <!-- 位置列表 -->
+                            <div class="location-list-container">
+                                <div v-if="loading" class="loading-state">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <span>加载中...</span>
+                                </div>
+                                
+                                <div v-else-if="locationData.length === 0" class="empty-state">
+                                    <i class="fa fa-map-marker"></i>
+                                    <span>暂无数据</span>
+                                </div>
+                                
+                                <div v-else class="location-items">
+                                    <div 
+                                        v-for="item in locationData" 
+                                        :key="item.id"
+                                        :class="['location-item', { selected: isSelected(item) }]"
+                                        @click="selectLocation(item)"
+                                    >
+                                        <span class="item-name">{{ item.name }}</span>
+                                        <i v-if="isSelected(item)" class="fa fa-check selected-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 当前选择显示 -->
+                            <div v-if="selectedLocation.province" class="current-selection">
+                                  <span>已选择：</span>
+                                  <span class="selection-text">
+                                     {{ getDisplayText(selectedLocation) }}
+                                  </span>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="btn-cancel" @click="hideLocationPicker">取消</button>
+                            <button class="btn-confirm" @click="confirmLocation">确认</button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
 
             <div class="login-register">
                 <template v-if="!isuser">
@@ -115,7 +185,7 @@
                     <div class="business-info-detail">
                         <h3>{{ business.businessName }}</h3>
                         <div class="business-info-rating">
-
+                            <span class="rating-number">评分：{{ getBusinessRating(business.businessId) }}</span>
                         </div>
                         <div class="business-info-delivery">
                             <span>起送 ¥{{ business.starPrice }}</span>
@@ -136,10 +206,13 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount,computed } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import AMapLoader from '@amap/amap-jsapi-loader';
+// 高德地图API key（请替换为你的实际key）
+const AMAP_KEY = '24cce1eb31aec79422f44af47428fc8a';
 
 export default {
     name: 'Index',
@@ -149,6 +222,301 @@ export default {
         const user = ref({});
         const isuser = ref(false);
         const businessList = ref([]);
+        const ratingMap = ref({});
+        const currentLocation = ref('定位中...');
+        const showPicker = ref(false);
+        const loading = ref(false);
+        const locationData = ref([]);
+        const currentLevel = ref(0);
+        const selectedLocation = ref({
+            province: '',
+            city: '',
+            district: ''
+        });
+        const locationLevels = ref(['请选择省份', '请选择城市', '请选择区域']);
+        // 新增：临时存储选择过程中的地址，不直接影响显示
+        const tempSelectedLocation = ref({
+            province: '',
+            city: '',
+            district: ''
+        });
+        
+        // 计算显示的位置文本
+        const displayLocation = computed(() => {
+    const { province, city, district } = selectedLocation.value;
+    
+    // 如果有区级信息，显示完整省市区
+    if (district && province && city) {
+        // 如果是直辖市，省和市名相同，只显示一次省/市名
+        if (province === city) {
+            return `${province} ${district}`;
+        }
+        return `${province} ${city} ${district}`;
+    }
+    
+    // 只有省市信息
+    if (province && city) {
+        return `${province} ${city}`;
+    }
+    
+    // 只有省信息
+    if (province) {
+        return province;
+    }
+    
+    // 默认情况
+    return currentLocation.value;
+        });
+
+        // 获取当前位置
+        const getCurrentLocation = async () => {
+            try {
+                // 使用高德地图IP定位API
+                const response = await axios.get(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
+                if (response.data.status === '1' && response.data.city) {
+                    currentLocation.value = response.data.city;
+                    // 初始化选择位置
+                    selectedLocation.value = {
+                        province: response.data.province,
+                        city: response.data.city,
+                        district: ''
+                    };
+                } else {
+                    currentLocation.value = '天津大学北洋园校区';
+                }
+            } catch (error) {
+                console.error('获取位置失败:', error);
+                currentLocation.value = '天津大学北洋园校区';
+            }
+        };
+
+        // 显示位置选择器
+        const showLocationPicker = () => {
+            showPicker.value = true;
+            loadProvinces();
+        };
+
+        // 隐藏位置选择器
+        const hideLocationPicker = () => {
+            showPicker.value = false;
+    // 重置临时变量：恢复为当前已确认的最终地址
+    tempSelectedLocation.value = { ...selectedLocation.value };
+        };
+
+        // 加载省份数据
+        const loadProvinces = async () => {
+            loading.value = true;
+            try {
+                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=中国&subdistrict=1`);
+                if (response.data.status === '1') {
+                    locationData.value = response.data.districts[0].districts;
+                    currentLevel.value = 0;
+                }
+            } catch (error) {
+                console.error('加载省份数据失败:', error);
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        // 加载城市数据
+        const loadCities = async (provinceCode, provinceName) => {
+            loading.value = true;
+            try {
+                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${provinceCode}&subdistrict=1`);
+                if (response.data.status === '1' && response.data.districts[0].districts) {
+                    locationData.value = response.data.districts[0].districts;
+                    currentLevel.value = 1;
+                    tempSelectedLocation.value.province = provinceName;
+                    // 重置临时变量的城市/区域（避免之前的残留值）
+                    tempSelectedLocation.value.city = '';
+                    tempSelectedLocation.value.district = '';
+                }
+            } catch (error) {
+                console.error('加载城市数据失败:', error);
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        // 加载区域数据
+        const loadDistricts = async (cityCode, cityName) => {
+            loading.value = true;
+            try {
+                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${cityCode}&subdistrict=1`);
+                if (response.data.status === '1' && response.data.districts[0].districts) {
+                    locationData.value = response.data.districts[0].districts;
+                    currentLevel.value = 2;
+                    tempSelectedLocation.value.city = cityName;
+                    // 重置临时变量的区域
+                    tempSelectedLocation.value.district = '';
+                }
+            } catch (error) {
+                console.error('加载区域数据失败:', error);
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        // 切换级别
+        const switchLevel = (level) => {
+            if (level < currentLevel.value) {
+                currentLevel.value = level;
+                if (level === 0) {
+                    // 切换回省份级：重置临时变量的城市/区域
+                tempSelectedLocation.value.city = '';
+                tempSelectedLocation.value.district = '';
+                    loadProvinces();
+                } else if (level === 1) {
+                    loadCities(tempSelectedLocation.value.province, tempSelectedLocation.value.province);
+                    // 切换回城市级：重置临时变量的区域
+                    tempSelectedLocation.value.district = '';
+                }
+            }
+        };
+
+        // 选择位置
+        const selectLocation = (item) => {
+            if (currentLevel.value === 0) {
+                loadCities(item.adcode, item.name);
+            } else if (currentLevel.value === 1) {
+                loadDistricts(item.adcode, item.name);
+            } else if (currentLevel.value === 2) {
+                tempSelectedLocation.value.district = item.name;
+            }
+        };
+
+        // 确认选择
+        const confirmLocation = () => {
+            const { province, city, district } = tempSelectedLocation.value; // 校验临时变量
+            // 1. 严格校验：必须完整选择省、市、区
+            if (!province) {
+                alert('请先选择省份');
+                return;
+            }
+            if (!city) {
+                alert('请先选择城市');
+                return;
+            }
+            if (!district) {
+                alert('请先选择区域');
+                return;
+            }
+
+            // 2. 校验通过：同步临时变量到最终变量
+            selectedLocation.value = { ...tempSelectedLocation.value };
+            // 3. 保存到本地存储
+            localStorage.setItem('userLocation', JSON.stringify(selectedLocation.value));
+            const displayText = getDisplayText(selectedLocation.value);
+            localStorage.setItem('userLocationDisplay', displayText);
+            
+            // 4. 关闭弹窗
+            hideLocationPicker();
+        };
+        // 新增一个方法来生成显示文本
+const getDisplayText = (location) => {
+    const { province, city, district } = location;
+    if (district && province && city) {
+        if (province === city) {
+            return `${province} ${district}`;
+        }
+        return `${province} ${city} ${district}`;
+    }
+    if (province && city) {
+        return `${province} ${city}`;
+    }
+    if (province) {
+        return province;
+    }
+    return '未知位置';
+};
+
+        // 检查是否选中
+        const isSelected = (item) => {
+            const { province, city, district } = tempSelectedLocation.value; // 关键：用临时变量
+            if (currentLevel.value === 0) {
+                return province === item.name;
+            } else if (currentLevel.value === 1) {
+                return city === item.name;
+            } else if (currentLevel.value === 2) {
+                return district === item.name;
+            }
+            return false;
+        };
+
+
+        const getUserKey = () => {
+            try {
+                const stored = sessionStorage.getItem('user');
+                if (stored) {
+                    const u = JSON.parse(stored);
+                    if (u && u.userId) return `u_${u.userId}`;
+                }
+            } catch (e) {}
+            let anon = localStorage.getItem('anonId');
+            if (!anon) {
+                anon = `a_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+                localStorage.setItem('anonId', anon);
+            }
+            return anon;
+        };
+
+        const loadReactions = () => {
+            try {
+                return JSON.parse(localStorage.getItem('reactions')) || { likes: {}, favorites: {} };
+            } catch (e) {
+                return { likes: {}, favorites: {} };
+            }
+        };
+        
+        const getReactionCount = (businessId) => {
+            const reactions = loadReactions();
+            const likesMap = reactions.likes[String(businessId)] || {};
+            const favsMap = reactions.favorites[String(businessId)] || {};
+            const likes = Object.keys(likesMap).length;
+            const favs = Object.keys(favsMap).length;
+            return likes + favs;
+        };
+
+        const guessCommentCount = (biz) => {
+            // 兼容不同后端字段命名，若不存在则为0
+            return (
+                biz.commentCount ??
+                biz.comments ??
+                biz.remarkNum ??
+                biz.reviewCount ??
+                0
+            ) || 0;
+        };
+
+        const computeRatings = () => {
+            const entries = businessList.value || [];
+            if (!entries.length) { ratingMap.value = {}; return; }
+            const reactionCounts = entries.map(b => getReactionCount(b.businessId));
+            const commentCounts = entries.map(b => guessCommentCount(b));
+            const rMin = Math.min(...reactionCounts);
+            const rMax = Math.max(...reactionCounts);
+            const cMin = Math.min(...commentCounts);
+            const cMax = Math.max(...commentCounts);
+            const weights = { comments: 0.6, reactions: 0.4 };
+            const map = {};
+            entries.forEach((b, idx) => {
+                const r = reactionCounts[idx];
+                const c = commentCounts[idx];
+                const rNorm = rMax > rMin ? (r - rMin) / (rMax - rMin) : (r > 0 ? 1 : 0);
+                const cNorm = cMax > cMin ? (c - cMin) / (cMax - cMin) : (c > 0 ? 1 : 0);
+                const combined = weights.comments * cNorm + weights.reactions * rNorm;
+                let rating = 1 + combined * 4; // map to [1,5]
+                if (rating < 1) rating = 1;
+                if (rating > 5) rating = 5;
+                map[b.businessId] = rating.toFixed(1);
+            });
+            ratingMap.value = map;
+        };
+
+        const getBusinessRating = (businessId) => {
+            return ratingMap.value[businessId] || '1.0';
+        };
 
         const navigateToOrders = () => {
             router.push({ path: '/orders' });
@@ -167,7 +535,26 @@ export default {
             }
         };
         onMounted(() => {
-            user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
+            // 先从localStorage获取保存的位置
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
+        try {
+            const location = JSON.parse(savedLocation);
+            selectedLocation.value = location;
+            tempSelectedLocation.value = { ...location };
+            
+            // 如果有保存的显示文本，直接使用
+            const savedDisplay = localStorage.getItem('userLocationDisplay');
+            if (savedDisplay) {
+                currentLocation.value = savedDisplay;
+            }
+        } catch (e) {
+            getCurrentLocation();
+        }
+    } else {
+        getCurrentLocation();
+    }
+    user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
 
             if (user.value) {
                 isuser.value = true;
@@ -206,6 +593,7 @@ export default {
             axios.get('BusinessController/listBusinessByOrderTypeId?orderTypeId=1')
                 .then(response => {
                     businessList.value = response.data;
+                    computeRatings();
                 })
                 .catch(error => {
                     console.error('获取商家列表失败:', error);
@@ -236,7 +624,22 @@ export default {
             navigateToSearch,
             businessList,
             toBusinessInfo,
-            handleImageError
+            handleImageError,
+            getBusinessRating,
+            displayLocation,
+            showPicker,
+            loading,
+            locationData,
+            currentLevel,
+            locationLevels,
+            selectedLocation,
+            showLocationPicker,
+            hideLocationPicker,
+            switchLevel,
+            selectLocation,
+            isSelected,
+            confirmLocation,
+            getDisplayText
         };
     },
     components: {
@@ -556,6 +959,7 @@ export default {
     display: flex;
     align-items: center;
     margin-bottom: 2vw;
+    justify-content: flex-end;
 }
 
 .wrapper .business-list li .business-info .business-info-rating .rating {
@@ -569,6 +973,11 @@ export default {
 
 .wrapper .business-list li .business-info .business-info-rating .rating .fa-star.active {
     color: #ffd700;
+}
+
+.wrapper .business-list li .business-info .business-info-rating .rating-number {
+    font-size: 2.8vw;
+    color: #999;
 }
 
 .wrapper .business-list li .business-info .business-info-rating .sales {
@@ -608,5 +1017,240 @@ export default {
     color: #666;
     font-size: 3vw;
     margin: 0;
+}
+/* 位置显示样式 */
+.location-text {
+    cursor: pointer;
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.location-text:hover {
+    color: #e0e0e0;
+}
+
+.location-display {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 模态框样式 */
+.location-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, #0097ff, #0066cc);
+    color: white;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* 位置导航样式 */
+.location-nav {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.nav-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+    font-weight: 500;
+    color: #666;
+}
+
+.nav-item.active {
+    color: #0097ff;
+    border-bottom-color: #0097ff;
+}
+
+.nav-item.disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.nav-item:not(.disabled):hover {
+    color: #0097ff;
+}
+
+/* 位置列表样式 */
+.location-list-container {
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.loading-state, .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    color: #999;
+}
+
+.loading-state i, .empty-state i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.location-items {
+    display: grid;
+    gap: 8px;
+}
+
+.location-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.location-item:hover {
+    border-color: #0097ff;
+    background-color: #f8f9ff;
+}
+
+.location-item.selected {
+    border-color: #0097ff;
+    background-color: #e6f3ff;
+}
+
+.item-name {
+    font-weight: 500;
+}
+
+.selected-icon {
+    color: #0097ff;
+    font-size: 14px;
+}
+
+/* 当前选择显示 */
+.current-selection {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.selection-text {
+    font-weight: 600;
+    color: #0097ff;
+    display: inline-block;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 模态框底部 */
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #f0f0f0;
+    background-color: #fafafa;
+}
+
+.btn-cancel, .btn-confirm {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-cancel {
+    background-color: #f8f9fa;
+    color: #666;
+}
+
+.btn-cancel:hover {
+    background-color: #e9ecef;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #0097ff, #0066cc);
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: linear-gradient(135deg, #0080e0, #0055aa);
+    transform: translateY(-1px);
+}
+
+/* 动画效果 */
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s;
+}
+
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
 }
 </style>

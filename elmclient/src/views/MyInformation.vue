@@ -320,6 +320,7 @@ export default {
       myfavorite,
       navigateTo,
       switchToMerchant,
+      goManageBusiness,
       showAddressSection,
       hasNewMessages
     };
