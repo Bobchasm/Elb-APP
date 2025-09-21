@@ -25,9 +25,9 @@
       </li>
 	  <li style="justify-content: flex-end; padding-top: 2vw;">
         <label style="display: flex; align-items: center; font-size: 3vw; color: #666;">
-          <input 
-            type="checkbox" 
-            v-model="rememberMe" 
+          <input
+            type="checkbox"
+            v-model="rememberMe"
             style="width: 3vw; height: 3vw; margin-right: 1vw;"
           >
           记住我
@@ -49,7 +49,7 @@
   import { useRouter } from 'vue-router';
   import Footer from '../components/Footer.vue';
   import request from '../utils/request';
-  
+
   export default {
 	name: 'Login',
 	setup() {
@@ -81,7 +81,7 @@
         const res = await request.post('/api/auth', {
           username: userName.value.trim(),
           password: password.value.trim(),
-          rememberMe: rememberMe.value 
+          rememberMe: rememberMe.value
         });
 
         // 3. 解析后端返回

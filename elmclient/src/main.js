@@ -7,7 +7,7 @@ import { toast } from './utils/toast';
 import 'font-awesome/css/font-awesome.min.css';
 import axios from 'axios';
 import qs from 'qs';
-import request from './utils/request'; 
+import request from './utils/request';
 import {
   getCurDate,
   setSessionStorage,
@@ -43,8 +43,8 @@ router.beforeEach((to, from, next) => {
   const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
   const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
   const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
-  const user = userFromLocal || userFromSession; 
-  
+  const user = userFromLocal || userFromSession;
+
   
   // 商家专属页面的路径
   const businessPaths = ['/businessView', '/businessInformation', '/submitItems'];

@@ -1,27 +1,39 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
 
+import com.tju.elm_bk.dto.FoodCreateDTO;
 import com.tju.elm_bk.entity.Food;
-import org.apache.ibatis.annotations.Insert;
+import com.tju.elm_bk.vo.FoodItemVO;
+import com.tju.elm_bk.vo.FoodVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface FoodMapper {
-    @Select("""
-    select 
-    foodId,foodName,foodExplain,foodImg,foodPrice,businessId,remarks 
-    from elm.food where businessId=#{businessId}
-    """)
-    List<Food> listFoodByBusinessId(Integer businessId);
 
-    @Select("""
-    select
-    foodId,foodName,foodExplain,foodImg,foodPrice,businessId,remarks
-    from elm.food where foodId=#{foodId}
-            """)
-    Food getFoodById(Integer foodId);
 
-    @Insert("INSERT INTO food (foodName,foodExplain,foodImg,foodPrice,businessId) VALUES (#{foodName},#{foodExplain},#{foodImg},#{foodPrice},#{businessId})")
-    public int insertFood(Food food);
+    List<FoodVO> selectFoodVOList(Integer businessId,Integer orderId);
+
+    FoodVO selectFoodVOById(Long id);
+
+
+    void insertFood(Food food);
+
+    @Select("SELECT * FROM food WHERE is_deleted = 0 AND id = #{id}")
+    Food selectFoodById(Long id);
+
+
+
+    List<FoodItemVO> selectFoodItemVOList(Long businessId,Integer shelveStatus);
+
+    @Update("update food set shelve_status = #{shelveStatus} where id = #{foodId}")
+    void updateFoodStatus(Long foodId,Integer shelveStatus);
+
+    @Update("update food set update_time = #{updateTime}, updater = #{updater}, food_explain = #{foodExplain}, food_img = #{foodImg}, food_name = #{foodName}, food_price = #{foodPrice}, remarks = #{remarks} where id = #{id}")
+    void updateFoodMessage(Food food);
+
+    @Update("update food set is_deleted = 1 where id = #{foodId}")
+    void deleteFood(Long foodId);
+
 }

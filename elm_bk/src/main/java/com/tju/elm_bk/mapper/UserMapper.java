@@ -1,20 +1,31 @@
-// UserMapper.java
+// UserMapper.xml.java
 package com.tju.elm_bk.mapper;
 
 import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.vo.UserVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
 
 @Mapper
 public interface UserMapper {
-    @Select("SELECT * FROM elm.user WHERE userId = #{userId} AND password = #{password}")
-    User getUserByIdByPass(String userId, String password);
+    @Select("SELECT * FROM users WHERE id = #{id} AND is_deleted = 0")
+    User findById(Long id);
+    @Select("SELECT * FROM users WHERE username = #{username} AND is_deleted = 0")
+    User findByUsername(String username);
+    User findByUsernameWithAuthorities(String username);
+    User findByUserIdWithAuthorities(Long userId);
+    void insert(User user);
+    void update(User user);
+    @Select("SELECT COUNT(*) FROM users WHERE is_deleted = 0")
+    int count();
+    @Insert("INSERT INTO user_authority (user_id, authority_name) VALUES (#{userId}, #{authorityName})")
+    void insertUserAuthority(@Param("userId") Long userId, @Param("authorityName") String authorityName);
 
-    @Select("SELECT COUNT(3) FROM elm.user WHERE userId = #{userId}")
-    int checkUserIdExists(String userId);
+    @Select("select id from users where username = #{username}")
+    Long getUserIdByUsername(String username);
 
-    @Insert("INSERT INTO elm.user(userId, password, userName, userSex) " +
-            "VALUES(#{userId}, #{password}, #{userName}, #{userSex})")
-    int saveUser(User user);
+    @Select("SELECT * FROM users WHERE id = #{userId} AND is_deleted = 0")
+    Integer countUserById(@Param("userId") Long userId);
+
 }

@@ -1,32 +1,68 @@
+
 // OrdersMapper.java
 package com.tju.elm_bk.mapper;
-import com.tju.elm_bk.entity.Orders;
+import com.tju.elm_bk.dto.OrderDTO;
+import com.tju.elm_bk.entity.Order;
 
+import com.tju.elm_bk.vo.OrderItemDetailVO;
+import com.tju.elm_bk.vo.OrderItemVO;
+import com.tju.elm_bk.vo.OrderVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
 public interface OrdersMapper {
-//     @Insert("insert into orders(userId, businessId, orderDate, orderTotal, daId, orderState) " +
-//             "values(#{userId}, #{businessId}, #{orderDate}, #{orderTotal}, #{daId}, 0)")
-        @Insert("insert into orders (userId,businessId,orderDate,orderTotal,daId,orderState,deliveryPrice) values(#{userId},#{businessId},#{orderDate},#{orderTotal},#{daId},0,#{deliveryPrice})")
-        @Options(useGeneratedKeys=true,keyProperty="orderId",keyColumn="orderId")    
-        int saveOrders(Orders orders);
+    List<OrderVO> selectOrders(Long userId);
 
-    @Select("select o.*, b.businessId as bbusinessId, b.businessName as bbusinessName, " +
-            "b.deliveryPrice as bdeliveryPrice from elm.orders o " +
-            "left join elm.business b on o.businessId = b.businessId where o.orderId = #{orderId}")
-    Orders getOrdersById(Integer orderId);
+    OrderVO selectOrderById(Long orderId);
 
-    @Select("select o.*, b.businessId as bbusinessId, b.businessName as bbusinessName, " +
-            "o.deliveryPrice as bdeliveryPrice from elm.orders o " +
-            "left join elm.business b on o.businessId = b.businessId where o.userId = #{userId}")
-    List<Orders> listOrdersByUserId(String userId);
+    void insertOrder(Order order);
 
-        @Update("update orders set orderState = 1 where orderId = #{orderId}")
-        int completeOrder(Integer orderId);
 
-        @Select("select odId from orderdetailet where orderId=#{orderId}")
-        public List<Integer> listOdIdByOrderId(Integer orderId);
+
+    void insertOrderPlus(Order order);
+
+    @Select("""
+        <script>
+            select o.id,o.order_total,o.order_state,o.order_date,o.business_id,o.delivery_price,b.business_name
+            from orders o
+            left join business b on b.id = o.business_id
+            <where>
+                o.is_deleted = 0
+                <if test="null != businessId">
+                    and o.business_id = #{businessId}
+                </if>
+                <if test="null != orderState">
+                    and o.order_state = #{orderState}
+                </if>
+                <if test="null != userId">
+                    and o.customer_id = #{userId}
+                </if>
+            </where>
+              order by o.order_date desc
+        </script>
+    """)
+    List<OrderItemVO> selectOrderItemsList(Long businessId, Integer orderState,Long userId);
+
+    @Select("""
+        <script>
+            select o.*, uc.username as customerName, b.business_name, da.address,da.contact_name,da.contact_sex,da.contact_tel
+            from orders o
+            left join users uc on uc.id = o.customer_id
+            left join business b on b.id = o.business_id
+            left join delivery_address da on da.id = o.address_id
+            where o.is_deleted = 0 and o.id = #{orderItemId}
+        </script>
+    """)
+    OrderItemDetailVO selectOrderItemById(Long orderItemId);
+
+    @Update("update orders set order_state = #{orderState} where id = #{orderId}")
+    Integer setOrderState(Long orderId, Integer orderState);
+
+    @Select("select * from orders where id = #{orderId}")
+    Order getOrderById(Long orderId);
+
+    @Select("select sum(order_total) from orders where order_state = 3 and is_deleted = 0")
+    Double countPrice();
 }

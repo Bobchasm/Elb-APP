@@ -1,40 +1,43 @@
 package com.tju.elm_bk.mapper;
 
 import com.tju.elm_bk.entity.Cart;
-import com.tju.elm_bk.entity.Food;
+import com.tju.elm_bk.vo.CartItemVO;
+import com.tju.elm_bk.vo.CartVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
 public interface CartMapper {
-    @Select("SELECT * FROM elm.food WHERE foodId=#{foodId}")
-    public Food selectByFoodId(Integer foodId);
 
-    @Select("SELECT * FROM elm.cart WHERE userId=#{userId}")
-    public List<Cart> listCartByUserId(String userId);
+    void insertCart(Cart cart);
 
-    @Select("SELECT * FROM elm.cart WHERE userId=#{userId} AND businessId=#{businessId}")
-    public List<Cart> listCartByUserIdAndBusinessId(String userId, int businessId);
+    @Select("SELECT * FROM cart C WHERE C.id = #{cartId} AND C.is_deleted = 0")
+    CartVO selectCart(Long cartId);
 
-    @Insert("INSERT INTO elm.cart (userId,businessId,foodId,quantity) VALUES (#{userId},#{businessId},#{foodId},1)")
-    public int insertCart(String userId,int businessId,int foodId);
 
-    @Update("UPDATE elm.cart set quantity=#{quantity} WHERE userId=#{userId} AND businessId=#{businessId} AND foodId=#{foodId}")
-    public int updateCart(String userId,int businessId,int foodId,int quantity);
 
-    @Delete("DELETE FROM elm.cart WHERE userId=#{userId} AND businessId=#{businessId} AND foodId=#{foodId}")
-    public int deleteCartByFood(String userId,Integer businessId,Integer foodId);
+    @Select("""
+        select c.id,c.business_id,c.quantity,c.food_id,
+           f.food_name,f.food_price,b.business_name
+        from cart c
+        left join food f on f.id = c.food_id and f.is_deleted = 0
+        left join business b on c.business_id = b.id and b.is_deleted = 0
+        where c.customer_id = #{userId} and c.is_deleted = 0 and c.business_id = #{businessId};
+    """)
+    List<CartItemVO> selectCartItems(Long userId,Long businessId);
 
-    @Delete("DELETE FROM cart WHERE userId=#{userId} AND businessId=#{businessId}")
-    public int deleteCartByBusinessId(String userId,Integer businessId);
+    @Select("select * from cart where id = #{cartId} and is_deleted = 0")
+    Cart selectCartById(Long cartId);
 
-    //下面两个供Orders接口使用
-    @Select("SELECT * FROM elm.cart WHERE userId = #{userId} AND businessId = #{businessId}")
-    List<Cart> listCart(@Param("userId") String userId,
-                        @Param("businessId") Integer businessId);
+    @Update("update cart set quantity = #{quantity} where id = #{cartId}")
+    void updateCartItem(Long cartId,Integer quantity);
 
-    @Delete("DELETE FROM elm.cart WHERE userId = #{userId} AND businessId = #{businessId}")
-    int removeCart(@Param("userId") String userId,
-                   @Param("businessId") Integer businessId);
+    @Update("update cart set is_deleted = 1 where customer_id = #{userId} and business_id = #{businessId}")
+    void clearCart(Long userId,Long businessId);
+
+    @Update("update cart set is_deleted = 1 where id = #{cartId}")
+    void removeCartItem(Long cartId);
+
+
 }

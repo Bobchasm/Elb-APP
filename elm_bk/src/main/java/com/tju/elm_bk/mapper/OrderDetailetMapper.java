@@ -3,24 +3,29 @@ package com.tju.elm_bk.mapper;
 
 import com.tju.elm_bk.entity.OrderDetailet;
 
+import com.tju.elm_bk.vo.OrderFoodVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
 public interface OrderDetailetMapper {
-    @Insert("<script>" +
-            "insert into elm.orderdetailet (orderId, foodId, quantity, foodName, foodPrice) values " +
-            "<foreach collection='list' item='item' separator=','>" +
-            "(#{item.orderId}, #{item.foodId}, #{item.quantity}, #{item.foodName}, #{item.foodPrice})" +
-            "</foreach>" +
-            "</script>")
-    int saveOrderDetailetBatch(@Param("list") List<OrderDetailet> list);
 
-    //通过orderId查询订单详情
-    @Select("select * from elm.orderdetailet where orderId = #{orderId}")
-    List<OrderDetailet> listOrderDetailetByOrderId(Integer orderId);
+    Integer saveOrderDetail(OrderDetailet orderDetailet);
 
-//    @Select("select * from elm.orderdetailet where orderId=#{orderId}")
-//        List<OrderDetailet> listorderDetailetByOrderId(Orders orders);
+
+
+
+    Integer saveOrderDetailPlus(OrderDetailet orderDetailet);
+
+    @Select("""
+        select od.id,od.quantity,od.food_id,
+           f.food_name,f.food_price,
+           o.id as order_id
+        from orderdetailet od
+        left join food f on f.id = od.food_id
+        left join orders o on o.id = od.order_id
+        where od.order_id = #{orderId}
+    """)
+    List<OrderFoodVO> selectOrderDetailList(Long orderId);
 }

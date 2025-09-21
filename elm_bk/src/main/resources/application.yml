@@ -1,17 +1,43 @@
 server:
-  port: 8081
+  port: 8080
 
 spring:
   application:
     name: elm
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/elm
-    username: root
-    password: 123456
+    url: jdbc:mysql://REDACTED_IP:3306/elm_v2
+    username: elm_v2
+    password: zhijiage123
+
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/elm_v2
+#    username: root
+#    password: GCzzbdzj126
+
+
+#  data:
+#    redis:
+#      host: REDACTED_IP
+#      port: 6379
+#      password: 123456
 logging:
   level:
     org.springframework.jdbc.support.JdbcTransactionManager: debug
+
+mybatis:
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+  # 指定XML映射文件位置
+  mapper-locations: classpath:com/tju/elm_bk/mapper/*.xml
+
+
+jwt:
+  secret: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz123456
+  token-validity-in-seconds: 86400
+  token-validity-in-seconds-for-remember-me: 108000
 
 # swagger
 springdoc:

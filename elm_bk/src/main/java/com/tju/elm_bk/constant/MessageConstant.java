@@ -1,5 +1,6 @@
 package com.tju.elm_bk.constant;
 
+@Deprecated
 public class MessageConstant {
     public static final String CLIENT_ABORT = "异常中止";
     public static final String PARAM_NOT_MATCHED_GET = "GET参数有误";

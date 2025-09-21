@@ -1,7 +1,10 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.service.impl.CartServiceImpl;
-import com.tju.elm_bk.entity.Cart;
+import com.tju.elm_bk.dto.CartItemCreateDTO;
+import com.tju.elm_bk.result.HttpResult;
+import com.tju.elm_bk.service.CartService;
+import com.tju.elm_bk.vo.CartItemVO;
+import com.tju.elm_bk.vo.CartVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,47 +12,51 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "购物车接口")
 @RestController
-@RequestMapping("/CartController")
+@RequestMapping("/api/carts")
+@Tag(name="管理购物车")
 public class CartController {
     @Autowired
-    CartServiceImpl cartService;
+    private CartService cartService;
 
-    @Operation(summary="获取用户购物车")
-    @PostMapping("/listCart")
-    public List<Cart> listCart(@RequestBody Cart cart)
-    {
-        return cartService.listCart(cart);
+    @PostMapping
+    @Operation(summary = "向购物车添加商品")
+    public HttpResult<CartVO> addCartItem(@RequestBody CartItemCreateDTO cartItemCreateDTO) {
+        return HttpResult.success(cartService.addCart(cartItemCreateDTO));
     }
 
-    @Operation(summary = "将指定商品加入购物车")
-    @PostMapping ("/saveCart")
-    public int saveCart(@RequestBody Cart cart)
-    {
-        if (null==cart) {
-            return -1; // Return error code for invalid parameters
-        }
-        return cartService.saveCart(cart);
+
+
+
+    @GetMapping("/list")
+    @Operation(summary = "获取用户在指定商家的购物车商品列表")
+    public HttpResult<List<CartItemVO>> addCartItem(@RequestParam Long businessId) {
+        return HttpResult.success(cartService.getCartItemList(businessId));
     }
 
-    @Operation(summary = "更新购物车")
-    @PostMapping("/updateCart")
-    public int updateCart(@RequestBody Cart cart)
-    {
-        if (null==cart) {
-            return -1; // Return error code for invalid parameters
-        }
-        return cartService.updateCart(cart);
+    @GetMapping("/add")
+    @Operation(summary = "(前端用这个)向购物车添加商品")
+    public HttpResult<Long> addCartItem(@RequestParam Long foodId, @RequestParam Integer quantity) {
+        return HttpResult.success(cartService.addItem(foodId, quantity));
     }
 
-    @Operation(summary = "移除购物车中指定商品")
-    @PostMapping("/removeCart")
-    public int removeCart(@RequestBody Cart cart)
-    {
-        if (null==cart) {
-            return -1;
-        }
-        return cartService.removeCart(cart);
+    @PutMapping("/quantity")
+    @Operation(summary = "修改购物车指定商品数量",description = "quantity传0时移除该条记录")
+    public HttpResult<Long> updateItemQuantity(@RequestParam Long cartId, @RequestParam Integer quantity) {
+        return HttpResult.success(cartService.updateItem(cartId,quantity));
     }
+
+    @GetMapping("/clear")
+    @Operation(summary = "清空用户在指定商家的购物车")
+    public HttpResult<Long> updateItemQuantity(@RequestParam Long businessId) {
+        return HttpResult.success(cartService.clearCart(businessId));
+    }
+
+    @GetMapping("/remove")
+    @Operation(summary = "移除指定购物车商品")
+    public HttpResult<Long> removeItem(@RequestParam Long cartId) {
+        return HttpResult.success(cartService.removeItem(cartId));
+    }
+
+
 }
