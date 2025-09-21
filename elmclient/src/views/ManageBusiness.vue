@@ -14,7 +14,7 @@
                         </div>
 					</div>
 					<div class="actions">
-						<button class="toggle" @click.stop="toggleEnable(b)">{{ b.disabled ? '启用' : '禁用' }}</button>
+						<!-- 启用/禁用功能已移除 -->
 					</div>
 				</li>
 			</ul>
@@ -103,15 +103,7 @@ export default {
 			}
 		};
 
-		const toggleEnable = async (biz) => {
-			const next = !biz.disabled;
-			try {
-				await axios.post('BusinessController/toggleEnable', { businessId: biz.businessId, disabled: next });
-				biz.disabled = next;
-			} catch (e) {
-				biz.disabled = next; // 前端演示
-			}
-		};
+		// toggleEnable 功能已移除
 
 		const startEdit = (store) => {
 			editor.mode = 'edit';
@@ -170,7 +162,6 @@ export default {
 			defaultImg,
 			onImgError,
 			enterBusiness,
-			toggleEnable,
 			editor
 		};
 	}
@@ -194,7 +185,7 @@ export default {
 .store-item .actions { display: flex; flex-direction: row; align-items: center; gap: 2vw; white-space: nowrap; }
 .business-item .actions { display: flex; flex-direction: row; align-items: center; gap: 2vw; white-space: nowrap; }
 .actions button { margin-left: 0; }
-.toggle { background: #fff; color: #e15656; border: 1px solid #f3caca; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
+/* .toggle 样式已移除 */
 .edit { background: #1e80ff; color: #fff; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
 .del { background: #fff; color: #e15656; border: 1px solid #f3caca; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
 
