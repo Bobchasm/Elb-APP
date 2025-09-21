@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class PermissionApplication {
     @Schema(description = "申请ID")
-    private Integer id;
+    private Long id;
 
     @Schema(description = "申请人用户ID（关联users表）")
     private Long userId;

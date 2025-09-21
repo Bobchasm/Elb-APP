@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MerchantApplicationsVO {
     @Schema(description = "申请ID")
-    private Integer id;
+    private Long id;
     @Schema(description = "用户ID")
     private Long userId;
     @Schema(description = "用户名")

@@ -29,7 +29,7 @@ public class BusinessController {
      * @return 店铺详细信息
      */
     @GetMapping("/{id}")
-    public HttpResult<BusinessVO> getBusiness(@PathVariable("id") Integer id) {
+    public HttpResult<BusinessVO> getBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("获取店铺详情请求参数错误: id={}", id);
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
@@ -51,7 +51,7 @@ public class BusinessController {
      * @return 更新后的店铺信息
      */
     @PutMapping("/{id}")
-    public HttpResult<BusinessVO> updateBusiness(@PathVariable("id") Integer id,@RequestBody BusinessUpdateDTO updateDto){
+    public HttpResult<BusinessVO> updateBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto){
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
@@ -62,7 +62,7 @@ public class BusinessController {
     }
 
      @DeleteMapping("/{id}")
-    public HttpResult<BusinessVO> deleteBusiness(@PathVariable("id") Integer id) {
+    public HttpResult<BusinessVO> deleteBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("删除店铺信息请求参数错误: id={}", id);
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
@@ -71,7 +71,7 @@ public class BusinessController {
         return HttpResult.success(businessVo);
     }
      @PatchMapping("/{id}")
-    public HttpResult<BusinessVO> patchBusiness(@PathVariable("id") Integer id,@RequestBody BusinessUpdateDTO updateDto) {
+    public HttpResult<BusinessVO> patchBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
