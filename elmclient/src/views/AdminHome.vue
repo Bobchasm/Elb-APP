@@ -88,7 +88,7 @@
           <i class="fas fa-home"></i>
           <span>首页</span>
         </router-link>
-        <router-link to="/admin/users" class="nav-item" :class="{ active: activeNav === 'users' }" @click.native="setActiveNav('users')">
+        <router-link to="/admin/manage-user" class="nav-item" :class="{ active: activeNav === 'users' }" @click.native="setActiveNav('users')">
           <i class="fas fa-user-friends"></i>
           <span>用户管理</span>
         </router-link>

@@ -19,7 +19,6 @@ import Notifications from '@/views/Notifications.vue'
 import Search from '@/views/Search.vue'
 import Cart from '@/views/Cart.vue'
 //import Discover from '@/views/Discover.vue'
-import LChoose from '@/views/LChoose.vue'
 import RChoose from '@/views/RChoose.vue'
 import BusinessLogin from '@/views/BusinessLogin.vue'
 import BusinessRegister from '@/views/BusinessRegister.vue'
@@ -140,12 +139,6 @@ const routes = [
     name: 'Cart',
     component: Cart
   },
- //
-  {
-    path: '/lChoose',
-    name: 'LChoose',
-    component: LChoose
-  },
   {
     path: '/rChoose',
     name: 'RChoose',
@@ -224,6 +217,11 @@ const routes = [
     path:'/admin/users',
     name:'AdminUsers',
     component:AdminUsers
+  },
+  {
+    path:'/admin/manage-user',
+    name:'AdminUser',
+    component:AdminUser
   },
   {
     path:'/admin/business',
