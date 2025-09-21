@@ -159,7 +159,7 @@
     <select id="selectFoodItemVOList" resultType="com.tju.elm_bk.vo.FoodItemVO">
         select f.*, b.business_name
         from food f
-        left join business b on b.id = f.businessId and b.is_deleted = 0
+        left join business b on b.id = f.business_id and b.is_deleted = 0
         <where>
             f.is_deleted = 0 and b.id = #{businessId}
             <if test="shelveStatus != null">
