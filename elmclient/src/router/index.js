@@ -17,6 +17,7 @@ import Favorites from '@/views/Favorites.vue'
 import Notifications from '@/views/Notifications.vue'
 
 import Search from '@/views/Search.vue'
+import SearchTest from '@/views/SearchTest.vue'
 import Cart from '@/views/Cart.vue'
 //import Discover from '@/views/Discover.vue'
 import RChoose from '@/views/RChoose.vue'
@@ -36,7 +37,7 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 
 //管理端路由配置
 import AdminHome from '../views/AdminHome.vue';
-import AdminUsers from '../views/AdminUsers.vue';
+import AdminUser from '../views/AdminUser.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
 import AdminShop from '@/views/AdminShop.vue'
 //import { pa } from 'element-plus/es/locale'
@@ -135,6 +136,11 @@ const routes = [
     component: Search
   },
   {
+    path: '/search-test',
+    name: 'SearchTest',
+    component: SearchTest
+  },
+  {
     path: '/cart',
     name: 'Cart',
     component: Cart
@@ -214,9 +220,9 @@ const routes = [
     component:AdminHome
   },
   {
-    path:'/admin/users',
-    name:'AdminUsers',
-    component:AdminUsers
+    path:'/admin/user',
+    name:'AdminUser',
+    component:AdminUser
   },
   {
     path:'/admin/business',

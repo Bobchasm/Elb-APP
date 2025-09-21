@@ -12,13 +12,15 @@ const request = axios.create({
 // 2. 请求拦截器：给非登录/注册请求加 Authorization 头
 request.interceptors.request.use(
   (config) => {
-    // 排除登录和注册接口（根据你的实际接口路径调整）
-    const excludePaths = ['/api/auth', '/api/register'];
+    // 排除登录和注册接口，以及外部API（根据你的实际接口路径调整）
+    const excludePaths = ['/api/auth', '/api/register', 'restapi.amap.com'];
     if (!excludePaths.some(path => config.url.includes(path))) {
       // 从 localStorage/sessionStorage 获取 token
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`; // 拼接 Bearer 格式
+        // 临时注释掉token头，避免CORS问题
+        // config.headers.token = token; // 添加 token 头
       }
     }
     // 处理 POST 请求（从 main.js 迁移）
