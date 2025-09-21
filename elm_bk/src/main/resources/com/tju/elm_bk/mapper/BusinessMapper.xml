@@ -227,4 +227,67 @@
         )
     </insert>
 
+    <select id="searchBusinesses" resultType="com.tju.elm_bk.vo.BusinessSearchVO">
+        SELECT
+        id,
+        business_name as businessName,
+        business_img as businessImg,
+        start_price as startPrice,
+        delivery_price as deliveryPrice
+        FROM business
+        WHERE is_deleted = 0 AND status = 1
+        <if test="keyword != null and keyword != ''">
+            AND (business_name LIKE CONCAT('%', #{keyword}, '%')
+            OR business_explain LIKE CONCAT('%', #{keyword}, '%')
+            OR business_address LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+
+    <select id="getInteractionCounts" resultType="java.util.Map">
+        SELECT
+            COALESCE(SUM(CASE WHEN liked = 1 THEN 1 ELSE 0 END), 0) as likeCount,
+            COALESCE(SUM(CASE WHEN collected = 1 THEN 1 ELSE 0 END), 0) as collectCount
+        FROM merchant_interaction
+        WHERE merchant_id = #{businessId}
+    </select>
+
+    <insert id="applyForAddBusiness" parameterType="com.tju.elm_bk.entity.Business"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO business (
+            business_name,
+            business_address,
+            business_explain,
+            business_img,
+            delivery_price,
+            start_price,
+            order_type_id,
+            remarks,
+            create_time,
+            creator,
+            is_deleted,
+            update_time,
+            updater,
+            user_id,
+            status
+        ) VALUES (
+                     #{businessName},
+                     #{businessAddress},
+                     #{businessExplain},
+                     #{businessImg},
+                     #{deliveryPrice},
+                     #{startPrice},
+                     #{orderTypeId},
+                     #{remarks},
+                     #{createTime},
+                     #{creator},
+                     #{is_deleted},
+                     #{updateTime},
+                     #{updater},
+                     #{userId},
+                     #{status}
+                 )
+    </insert>
+
+
 </mapper>

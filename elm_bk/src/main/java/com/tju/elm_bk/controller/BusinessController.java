@@ -1,26 +1,36 @@
 package com.tju.elm_bk.controller;
 
+
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.BusinessService;
+import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+
+//import static com.sun.beans.introspect.PropertyInfo.Name.required;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/businesses")
 @RequiredArgsConstructor
 @Validated
+@Tag(name="店铺管理", description = "提供店铺管理相关的接口")
 public class BusinessController {
 
+    @Autowired
     private final BusinessService businessService;
 
     /**
@@ -29,6 +39,7 @@ public class BusinessController {
      * @return 店铺详细信息
      */
     @GetMapping("/{id}")
+    @Operation(summary = "根据id获取某店铺详情", description = "根据id获取某店铺详情")
     public HttpResult<BusinessVO> getBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("获取店铺详情请求参数错误: id={}", id);
@@ -51,6 +62,7 @@ public class BusinessController {
      * @return 更新后的店铺信息
      */
     @PutMapping("/{id}")
+    @Operation(summary = "更新某店铺信息", description = "更新某店铺信息")
     public HttpResult<BusinessVO> updateBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto){
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -62,6 +74,7 @@ public class BusinessController {
     }
 
      @DeleteMapping("/{id}")
+     @Operation(summary = "删除某店铺")
     public HttpResult<BusinessVO> deleteBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("删除店铺信息请求参数错误: id={}", id);
@@ -71,6 +84,7 @@ public class BusinessController {
         return HttpResult.success(businessVo);
     }
      @PatchMapping("/{id}")
+     @Operation(summary = "部分更新某店铺信息")
     public HttpResult<BusinessVO> patchBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -86,6 +100,7 @@ public class BusinessController {
      */
     //  【【----------------------- 后续加上分页查询，别忘了-------------------------】】
     @GetMapping
+    @Operation(summary = "获取所有店铺信息--牙膏版本")
     public HttpResult<List<BusinessVO>> getBusinesses() {
         List<BusinessVO> businessVos = businessService.getBusinesses();
         return HttpResult.success(businessVos);
@@ -93,10 +108,31 @@ public class BusinessController {
 
 
      @PostMapping
+     @Operation(summary = "添加新店铺——牙膏版本")
     public HttpResult<BusinessVO> addBusiness(@RequestBody BusinessDTO businessDTO) {
         BusinessVO businessVo = businessService.addBusiness(businessDTO);
         return HttpResult.success(businessVo);
     }
+
+
+
+    @GetMapping("/search")
+    @Operation(summary = "搜索店铺,可传入字符串keyword，isScore为0/1表示是否按照评分排序，isSales为0/1表示是否按照销售量排序")
+    public HttpResult<List<BusinessSearchVO>> searchBusiness(
+            @RequestParam(required = false)String  keyword,
+            @RequestParam(required = false)boolean isScore,
+            @RequestParam(required = false)boolean isSales){
+        return HttpResult.success(businessService.getBusinessesBySearch(keyword,isScore,isSales));
+
+    }
+
+    @PostMapping("/apply")
+    @Operation(summary = "商家新添加店铺--带状态")
+    public HttpResult<Integer> applyForAddBusiness(@RequestBody Business business) {
+        return HttpResult.success(businessService.applyForAddBusiness(business));
+    }
+
+
 
 
 

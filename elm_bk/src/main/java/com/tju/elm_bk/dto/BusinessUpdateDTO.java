@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class BusinessUpdateDTO {
     @Schema(description = "店铺ID")
     @NotNull(message = "店铺ID不能为空")
-    private Integer id;
+    private Long id;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

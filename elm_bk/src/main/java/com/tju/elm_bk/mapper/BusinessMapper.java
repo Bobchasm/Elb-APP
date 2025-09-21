@@ -1,14 +1,17 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
+import java.util.Map;
 
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessPermissionDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Authority;
 import com.tju.elm_bk.vo.BusinessPermissionVO;
+import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessVO;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.apache.ibatis.annotations.*;
 
 
@@ -53,4 +56,22 @@ public interface BusinessMapper {
 
     @Select("SELECT * FROM business WHERE status = 0 AND is_deleted = 0")
     List<BusinessPermissionVO> listNotAudited();
+
+//    下面两个用于搜索+筛选
+    List<BusinessSearchVO> searchBusinesses(@Param("keyword") String keyword);
+    Map<String, Object> getInteractionCounts(@Param("businessId") Long businessId);
+
+    Integer applyForAddBusiness(Business  business);
+
+    // 统计已完成的订单数量（ order_state=3 ）
+    @Select("SELECT COUNT(*) FROM `orders` WHERE business_id = #{businessId} AND order_state = 3 AND is_deleted = 0")
+    Integer getSalesCount(@Param("businessId") Long businessId);
+
+    /**
+     * 根据用户ID查询对应的所有商家ID
+     * @param userId 用户ID
+     * @return 商家ID列表
+     */
+    @Select("SELECT id FROM business WHERE user_id = #{userId}")
+    List<Long> getBusinessIdsByUserId(Long userId);
 }
