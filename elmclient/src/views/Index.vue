@@ -180,12 +180,7 @@
             >
                 综合排序<i class="fa fa-caret-down"></i>
             </li>
-            <li 
-                :class="{ active: sortBy === 'distance' }" 
-                @click="setSortBy('distance')"
-            >
-                距离最近
-            </li>
+           
             <li 
                 :class="{ active: sortBy === 'sales' }" 
                 @click="setSortBy('sales')"
@@ -716,11 +711,6 @@ const getDisplayText = (location) => {
                     } else if (sortBy.value === 'sales') {
                         params.isScore = 0;
                         params.isSales = 1;
-                    } else if (sortBy.value === 'distance') {
-                        params.isScore = 0;
-                        params.isSales = 0;
-                        // 距离排序可能需要后端支持，这里先按评分排序
-                        params.isScore = 1;
                     } else {
                         params.isScore = 0;
                         params.isSales = 0;
