@@ -79,13 +79,13 @@
             </transition>
 
             <div class="login-register">
-                <template v-if="!isuser">
+                <template v-if="!userInfo">
                     <button @click="goToLChoose">登录</button>
                     <button @click="goToRChoose">注册</button>
                 </template>
                 <template v-else>
                     <div class="user-info">
-                        <p>{{ user.userName }} ，您好！</p>
+                        <p>{{ userInfo.username }} ，您好！</p>
                     </div>
                 </template>
             </div>
@@ -210,6 +210,7 @@ import { ref, onMounted, onBeforeUnmount,computed } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import request from '../utils/request';
 import AMapLoader from '@amap/amap-jsapi-loader';
 // 高德地图API key（请替换为你的实际key）
 const AMAP_KEY = '24cce1eb31aec79422f44af47428fc8a';
@@ -219,8 +220,7 @@ export default {
     setup() {
         const fixedBox = ref(null);
         const router = useRouter();
-        const user = ref({});
-        const isuser = ref(false);
+        const userInfo = ref(null);
         const businessList = ref([]);
         const ratingMap = ref({});
         const currentLocation = ref('定位中...');
@@ -445,21 +445,27 @@ const getDisplayText = (location) => {
         };
 
 
-        const getUserKey = () => {
-            try {
-                const stored = sessionStorage.getItem('user');
-                if (stored) {
-                    const u = JSON.parse(stored);
-                    if (u && u.userId) return `u_${u.userId}`;
-                }
-            } catch (e) {}
-            let anon = localStorage.getItem('anonId');
-            if (!anon) {
-                anon = `a_${Math.random().toString(36).slice(2)}_${Date.now()}`;
-                localStorage.setItem('anonId', anon);
-            }
-            return anon;
-        };
+        const fetchUserInfo = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await request.get('/api/user');
+        if (res) {
+          userInfo.value = res;
+          console.log(userInfo.value);
+          // 保存用户信息到存储
+          const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
+          storage.setItem('userInfo', JSON.stringify(res));
+        } else {
+          console.error('获取用户信息失败');
+          userInfo.value = null;
+        }
+      } catch (error) {
+        console.error('获取用户信息异常:', error);
+        userInfo.value = null;
+      }
+    };
 
         const loadReactions = () => {
             try {
@@ -554,15 +560,9 @@ const getDisplayText = (location) => {
     } else {
         getCurrentLocation();
     }
-    user.value = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
-
-            if (user.value) {
-                isuser.value = true;
-            }
-            else {
-                isuser.value = false;
-            }
-
+            // 加载用户信息
+            fetchUserInfo();
+    
             window.addEventListener('scroll', handleScroll);
 
             getBusinessList();
@@ -577,7 +577,7 @@ const getDisplayText = (location) => {
         };
         const goToLChoose = () => {
             // 跳转到登录页面
-            router.push({name:'LChoose'});
+            router.push({path: '/login'});
         };
         const goToRChoose = () => {
             // 跳转到注册页面
@@ -604,7 +604,7 @@ const getDisplayText = (location) => {
         const handleImageError = (e) => {
             e.target.src = '../assets/default-business.png';
         };
-
+        
         // 跳转到商家详情页
         const toBusinessInfo = (businessId) => {
             router.push({
@@ -619,8 +619,8 @@ const getDisplayText = (location) => {
             navigateToOrders,
             goToLChoose,
             goToRChoose,
-            user,
-            isuser,
+            userInfo,
+            isuser: computed(() => !!userInfo.value),
             navigateToSearch,
             businessList,
             toBusinessInfo,

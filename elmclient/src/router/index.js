@@ -17,7 +17,6 @@ import MyInformation from '@/views/MyInformation.vue'
 import Search from '@/views/Search.vue'
 import Cart from '@/views/Cart.vue'
 //import Discover from '@/views/Discover.vue'
-import LChoose from '@/views/LChoose.vue'
 import RChoose from '@/views/RChoose.vue'
 import BusinessLogin from '@/views/BusinessLogin.vue'
 import BusinessRegister from '@/views/BusinessRegister.vue'
@@ -116,12 +115,6 @@ const routes = [
     name: 'Cart',
     component: Cart
   },
- //
-  {
-    path: '/lChoose',
-    name: 'LChoose',
-    component: LChoose
-  },
   {
     path: '/rChoose',
     name: 'RChoose',
@@ -167,10 +160,6 @@ const routes = [
     name:'SubmitItems',
     component:SubmitItems
   },
- //
-//
-  //
- //
 
 ]
 
