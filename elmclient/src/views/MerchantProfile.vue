@@ -66,59 +66,58 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast'; // 假设有toast工具函数
 //import defaultAvatar from '@/assets/default-merchant-avatar.png'; // 默认头像
+import request from '../utils/request';
 
 export default {
   name: 'MerchantProfile',
   setup() {
     const router = useRouter();
 
-    // 商家数据（替换死数据）
-    const merchant = ref({
-      id: '12345',
-      name: '美味小厨老板',
-      phone: '13800135678',
-      avatar: 'https://ts2.tc.mm.bing.net/th/id/OIP-C.d9wuz272AIKxwaQCaNOE4gHaHA?rs=1&pid=ImgDetMain&o=7&rm=3'
-    });
-
-    // 商家统计数据
+    const merchant = ref(null);
     const merchantData = ref({
-      likes: 999,
-      favorites: 1234,
-      rating: 4.8
+      likes: null,
+      favorites: null,
+      rating: null,
     });
-
+    
     const loading = ref(false);
 
     // 格式化手机号显示
     const formattedPhone = computed(() => {
-      if (!merchant.value.phone) return '未绑定手机';
+      if (!merchant.value?.phone) return '未绑定手机';
       return merchant.value.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
     });
 
     onMounted(async () => {
       await loadMerchantData();
     });
+const loadMerchantData = async () => {
+  loading.value = true;
+  try {
+    const response = await request.get('/api/person');
+    
+    // 检查 response 对象本身是否有效，并且包含 id 字段
+    if (response && response.id) {
+      // 直接使用 response 作为数据源
+      const data = response;
 
-    // 加载商家数据
-    const loadMerchantData = async () => {
-      loading.value = true;
-      try {
-        // 这里应该是API调用，获取商家数据
-        // const response = await axios.get('/api/merchant/profile');
-        // merchant.value = response.data;
-
-        // 模拟从sessionStorage获取数据
-        const storedMerchant = sessionStorage.getItem('merchant');
-        if (storedMerchant) {
-          merchant.value = JSON.parse(storedMerchant);
-        }
-      } catch (error) {
-        console.error('获取商家信息失败:', error);
-        toast.error('获取商家信息失败，请重试！');
-      } finally {
-        loading.value = false;
-      }
-    };
+      merchant.value = {
+        id: data.id,
+        name: data.username,
+        phone: data.phone,
+        avatar: data.photo,
+      };
+    } else {
+      // 这里的 else 分支用于处理 response 本身为 null/undefined 或缺少关键字段的情况
+      toast.error('获取商家信息失败：服务器返回数据为空或格式不正确！');
+    }
+  } catch (error) {
+    console.error('获取商家信息失败:', error);
+    toast.error('获取商家信息失败，请重试！');
+  } finally {
+    loading.value = false;
+  }
+};
 
     const logout = () => {
       sessionStorage.removeItem('merchant');

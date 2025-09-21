@@ -21,8 +21,8 @@ import SearchTest from '@/views/SearchTest.vue'
 import Cart from '@/views/Cart.vue'
 //import Discover from '@/views/Discover.vue'
 import RChoose from '@/views/RChoose.vue'
-import BusinessLogin from '@/views/BusinessLogin.vue'
-import BusinessRegister from '@/views/BusinessRegister.vue'
+//import BusinessLogin from '@/views/BusinessLogin.vue'
+//import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 //商家端订单
@@ -151,16 +151,6 @@ const routes = [
     component: RChoose
   },
 //商家端
-  {
-    path:'/businessLogin',
-    name:'BusinessLogin',
-    component:BusinessLogin
-  },
-  {
-    path:'/businessRegister',
-    name:'BusinessRegister',
-    component:BusinessRegister
-  },
   {
     path:'/businessInformation',
     name:'BusinessInformation',

@@ -10,7 +10,7 @@
       <span>用户管理</span>
     </router-link>
 
-    <router-link to="/admin/merchants" class="nav-item">
+    <router-link to="/admin/business" class="nav-item">
       <i class="fas fa-store-alt"></i>
       <span>商铺管理</span>
     </router-link>

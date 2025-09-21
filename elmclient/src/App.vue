@@ -1,18 +1,22 @@
 <template>
   <div class="app-container">
-    <BackButton />
+    <BackButton v-if="showBackButton" />
     <div class="content">
       <keep-alive include="Discover">
         <router-view />
       </keep-alive>
     </div>
     <Footer v-if="showFooter" />
+    <BusinessFooter v-if="showBusinessFooter" />
+    <AdminFooter v-if="showAdminFooter" />
   </div>
 </template>
 
 <script>
 import BackButton from './components/BackButton.vue';
 import Footer from './components/Footer.vue';
+import BusinessFooter from './components/BusinessFooter.vue';
+import AdminFooter from './components/AdminFooter.vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -20,25 +24,35 @@ export default {
   components: {
     BackButton,
     Footer,
+    BusinessFooter,
+    AdminFooter,
   },
   setup() {
     const route = useRoute();
 
-    // 核心逻辑：根据路由路径判断是否为商家页面
+    const showBackButton = computed(() => {
+      if (route.path.startsWith('/merchant') || route.path.startsWith('/admin')) {
+        return false;
+      }
+         });
+
+
     const showFooter = computed(() => {
-      // 如果当前路由路径以 /merchant 开头，则隐藏普通导航栏
-      if (route.path.startsWith('/merchant')) {
+      if (route.path.startsWith('/merchant') || route.path.startsWith('/admin')) {
         return false;
       }
-	  if (route.path.startsWith('/admin')) {
-        return false;
-      }
-      
-      // 对于普通用户，在特定页面不显示 footer
       return !['BusinessInfo', 'Payment', 'SuccessfulPayment', 'Orders', 'Cart'].includes(route.name);
     });
-    
-    return { showFooter };
+
+    const showBusinessFooter = computed(() => {
+      return route.path.startsWith('/merchant');
+    });
+
+    const showAdminFooter = computed(() => {
+      return route.path.startsWith('/admin');
+    });
+
+    return { showFooter, showBusinessFooter, showAdminFooter };
   },
 };
 </script>
