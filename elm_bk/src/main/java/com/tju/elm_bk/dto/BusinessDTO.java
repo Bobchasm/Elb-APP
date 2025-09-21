@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class BusinessDTO {
     @Schema(description = "店铺ID")
     @NotNull(message = "店铺ID不能为空")
-    private Integer id;
+    private Long id;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -52,4 +52,6 @@ public class BusinessDTO {
     private Double deliveryPrice;
     @Schema(description = "备注")
     private String remarks;
+    @Schema(description = "商铺状态")
+    private Integer status;
 }

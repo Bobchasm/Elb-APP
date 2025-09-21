@@ -21,13 +21,13 @@ public class BusinessServiceImpl implements BusinessService {
 //    private final BusinessVoMapper businessVoMapper; // 注入MapStruct Mapper
 
     @Override
-    public BusinessVO getBusinessById(Integer id) {
+    public BusinessVO getBusinessById(Long id) {
         System.out.println("查询商家ID: " + id);
         return businessMapper.getBusinessById(id);
     }
 
     @Override
-    public BusinessVO updateBusiness(Integer id, BusinessUpdateDTO updateDto) {
+    public BusinessVO updateBusiness(Long id, BusinessUpdateDTO updateDto) {
         System.out.println("前端--更新商家信息为: " + updateDto);
         // 1. 更新商户基本信息
         int result = businessMapper.updateBusiness(id, updateDto);
@@ -38,7 +38,7 @@ public class BusinessServiceImpl implements BusinessService {
         return businessMapper.getBusinessById(id);
     }
     @Override
-    public BusinessVO deleteBusiness(Integer id) {
+    public BusinessVO deleteBusiness(Long id) {
         BusinessVO businessVo =businessMapper.getBusinessById(id);
         int result =businessMapper.deleteBusiness(id);
         if (result == 0) {
@@ -48,7 +48,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     }
     @Override
-    public BusinessVO patchBusiness(Integer id, BusinessUpdateDTO updateDto) {
+    public BusinessVO patchBusiness(Long id, BusinessUpdateDTO updateDto) {
 
         int result = businessMapper.updateBusiness(id, updateDto);
         if (result == 0) {

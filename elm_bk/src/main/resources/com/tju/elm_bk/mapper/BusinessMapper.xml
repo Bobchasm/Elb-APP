@@ -170,7 +170,8 @@
             updater,
             create_time,
             update_time,
-            is_deleted
+            is_deleted,
+            status
         ) VALUES (
                      #{businessDto.businessName},
                      #{businessDto.businessAddress},
@@ -185,8 +186,45 @@
                      #{businessDto.updater},
                      NOW(),
                      NOW(),
-                     0
+                     0,
+                     #{businessDto.status}
                  )
+    </insert>
+    <insert id="insertBusinessPermission" parameterType="com.tju.elm_bk.dto.BusinessPermissionDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO business
+        (
+        business_name,
+        business_address,
+        business_explain,
+        business_img,
+        order_type_id,
+        start_price,
+        delivery_price,
+        remarks,
+        user_id,
+        creator,
+        updater,
+        create_time,
+        update_time,
+        is_deleted,
+        status
+        ) VALUES (
+        #{businessName},
+        #{businessAddress},
+        #{businessExplain},
+        #{businessImg},
+        #{orderTypeId},
+        #{startPrice},
+        #{deliveryPrice},
+        #{remarks},
+        #{userId},
+        #{creator},
+        #{updater},
+        #{createTime},
+        #{updateTime},
+        0,
+        #{status}
+        )
     </insert>
 
 </mapper>

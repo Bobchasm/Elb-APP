@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -51,8 +52,7 @@ public class UserRestController {
     private UserService userService;
 
     @PostMapping("/users")
-    @Operation(summary = "新增用户(仅管理员)", description = "创建一个新的用户")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @Operation(summary = "新增用户(仅登录账号)", description = "创建一个新的用户")
     public ResponseEntity<UserVO> createUser(@Valid @RequestBody UserCreateDTO newUser) {
         String username = newUser.getUsername();
         if (username == null || username.trim().isEmpty()) {
@@ -130,7 +130,7 @@ public class UserRestController {
 
         User targetUser = userService.getUserWithAuthorities(loginDto.getUsername());
         if (targetUser == null) {
-            return ResponseEntity.badRequest().body("用户不存在");
+            throw new APIException("用户不存在");
         }
 
         // 检查权限：只能修改自己的密码，或者管理员可以修改任何人的密码
@@ -142,17 +142,15 @@ public class UserRestController {
 
             // 清除用户缓存
             userModelDetailsService.clearUserCache(targetUser.getUsername());
-            return ResponseEntity.ok("密码更新成功");
+            return ResponseEntity.ok().body("密码更新成功");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("没有权限修改此用户的密码");
+            return ResponseEntity.unprocessableEntity().body("权限不足");
         }
     }
 
     @PostMapping("/persons")
     @Operation(summary = "新增自然人用户", description = "创建一个新的自然人用户")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<PersonVO> addPerson(@Valid @RequestBody PersonCreateDTO createDTO) {
+    public PersonVO addPerson(@Valid @RequestBody PersonCreateDTO createDTO) {
         String username = createDTO.getUsername();
         if (username == null || username.trim().isEmpty()) {
             throw new APIException("用户名不能为空");
@@ -218,12 +216,13 @@ public class UserRestController {
         PersonVO responseVO = convertToResponseVO(person, userWithAuthorities);
 
         // 7. 返回响应（200 OK + 响应体）
-        return ResponseEntity.ok(responseVO);
+        return responseVO;
     }
 
     @PostMapping("/register")
     @Operation(summary = "新增用户(仅允许顾客注册)", description = "创建一个新的用户")
-    public ResponseEntity<UserVO> addUser(@Valid @RequestBody UserCreateDTO newUser) {
+    @Transactional
+    public HttpResult<UserVO> addUser(@Valid @RequestBody UserCreateDTO newUser) {
         String username = newUser.getUsername();
         if (username == null || username.trim().isEmpty()) {
             throw new APIException("用户名不能为空");
@@ -269,7 +268,7 @@ public class UserRestController {
         UserVO userVO=new UserVO();
         BeanUtils.copyProperties(user1, userVO);
         // 返回包含权限信息的用户对象
-        return ResponseEntity.ok(userVO);
+        return HttpResult.success(userVO);
     }
 
     @PatchMapping("/{username}/status")
@@ -294,6 +293,7 @@ public class UserRestController {
         Person updatedPerson = personService.updatePerson(updateDTO);
         return HttpResult.success(updatedPerson);
     }
+
 
     // 获取当前登录用户
     private User getCurrentUser() {
