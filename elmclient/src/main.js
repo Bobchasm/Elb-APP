@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import { toast } from './utils/toast';
+//import { getToken,removeToken} from './utils/auth';
 
 import 'font-awesome/css/font-awesome.min.css';
 import axios from 'axios';
@@ -24,6 +25,7 @@ const app = createApp(App);
 // 将 axios 挂载到 Vue 实例上
 app.config.globalProperties.$axios = request;
 app.config.globalProperties.$qs = qs;
+//app.config.globalProperties.$api = api
 
 app.config.globalProperties.$getCurDate = getCurDate;
 app.config.globalProperties.$setSessionStorage = setSessionStorage;

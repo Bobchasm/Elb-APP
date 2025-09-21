@@ -1,5 +1,3 @@
-<!-- 商家我的页面标签页还没写、我登不上商家、这个.vue文件没有预览过-->
-
 <template>
   <div class="container">
     <div class="top-background">
@@ -14,7 +12,6 @@
         <div class="user-name">
           <i class="fas fa-user-circle user-icon"></i>
           <span>{{ merchant?.name || '未设置商家名称' }}</span>
-          <i class="fas fa-pencil-alt edit-icon" @click="openEditModal"></i>
         </div>
         <div class="user-phone">
           <i class="fas fa-phone phone-icon"></i>
@@ -23,7 +20,6 @@
       </div>
     </div>
 
-    <!-- 店铺数据栏 -->
     <div class="store-data-bar">
       <div class="data-item">
         <div class="data-value">{{ merchantData.likes }}</div>
@@ -48,9 +44,8 @@
       </button>
     </div>
 
-    <!-- 底部导航栏 -->
     <div class="bottom-nav">
-      <router-link to="/merchant/store" class="nav-item">
+      <router-link to="/merchant/business" class="nav-item">
         <i class="fas fa-store"></i>
         <span>商铺</span>
       </router-link>
@@ -63,25 +58,6 @@
         <span>我的</span>
       </router-link>
     </div>
-
-    <!-- 编辑模态框 -->
-    <div v-if="showEditModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3>编辑商家信息</h3>
-        <div class="modal-item">
-          <label>商家名称</label>
-          <input v-model="editFormData.name" placeholder="输入商家名称" />
-        </div>
-        <div class="modal-item">
-          <label>手机号</label>
-          <input v-model="editFormData.phone" placeholder="输入手机号" />
-        </div>
-        <div class="modal-buttons">
-          <button @click="submitEdits">提交</button>
-          <button @click="closeEditModal">取消</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -89,13 +65,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast'; // 假设有toast工具函数
-import defaultAvatar from '@/assets/default-merchant-avatar.png'; // 默认头像
+//import defaultAvatar from '@/assets/default-merchant-avatar.png'; // 默认头像
 
 export default {
   name: 'MerchantProfile',
   setup() {
     const router = useRouter();
-    
+
     // 商家数据（替换死数据）
     const merchant = ref({
       id: '12345',
@@ -103,20 +79,15 @@ export default {
       phone: '13800135678',
       avatar: 'https://ts2.tc.mm.bing.net/th/id/OIP-C.d9wuz272AIKxwaQCaNOE4gHaHA?rs=1&pid=ImgDetMain&o=7&rm=3'
     });
-    
+
     // 商家统计数据
     const merchantData = ref({
       likes: 999,
       favorites: 1234,
       rating: 4.8
     });
-    
+
     const loading = ref(false);
-    const showEditModal = ref(false);
-    const editFormData = ref({
-      name: '',
-      phone: ''
-    });
 
     // 格式化手机号显示
     const formattedPhone = computed(() => {
@@ -135,7 +106,7 @@ export default {
         // 这里应该是API调用，获取商家数据
         // const response = await axios.get('/api/merchant/profile');
         // merchant.value = response.data;
-        
+
         // 模拟从sessionStorage获取数据
         const storedMerchant = sessionStorage.getItem('merchant');
         if (storedMerchant) {
@@ -155,57 +126,17 @@ export default {
       router.push({ path: '/login' });
     };
 
-    const openEditModal = () => {
-      editFormData.value.name = merchant.value.name || '';
-      editFormData.value.phone = merchant.value.phone || '';
-      showEditModal.value = true;
-    };
-
-    const closeEditModal = () => {
-      showEditModal.value = false;
-    };
-
-    const submitEdits = async () => {
-      if (!editFormData.value.phone) {
-        toast.warning('手机号不能为空！');
-        return;
-      }
-
-      try {
-        // 模拟API调用更新商家信息
-        // const response = await axios.post('/api/merchant/update', editFormData.value);
-        
-        // 更新本地数据
-        merchant.value.name = editFormData.value.name;
-        merchant.value.phone = editFormData.value.phone;
-        
-        // 更新sessionStorage
-        sessionStorage.setItem('merchant', JSON.stringify(merchant.value));
-        
-        toast.success('商家信息修改成功！');
-        closeEditModal();
-      } catch (error) {
-        console.error(error);
-        toast.error('商家信息修改失败！');
-      }
-    };
-
     const switchToCustomer = () => {
-      router.push({ path: '/profile' });
+      router.push({ path: '/myinformation' });
     };
-    
+
     return {
       merchant,
       merchantData,
       formattedPhone,
       loading,
-      showEditModal,
-      editFormData,
-      defaultAvatar,
+      // defaultAvatar,
       logout,
-      openEditModal,
-      closeEditModal,
-      submitEdits,
       switchToCustomer
     };
   }
@@ -329,12 +260,13 @@ export default {
   margin-right: 8px;
   color: #3498db;
 }
-.edit-icon {
+/* 删除了 .edit-icon 样式 */
+/* .edit-icon {
   margin-left: auto;
   color: #3498db;
   font-size: 16px;
   cursor: pointer;
-}
+} */
 /* 店铺数据栏样式 */
 .store-data-bar {
   display: flex;
@@ -456,80 +388,8 @@ export default {
   margin-bottom: 4px;
 }
 
-/* 模态框样式 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 80%;
-  box-sizing: border-box;
-  text-align: center;
-}
-.modal-content h3 {
-  margin-top: 0;
-  color: #2c3e50;
-  margin-bottom: 20px;
-}
-.modal-item {
-  margin-bottom: 15px;
-  text-align: left;
-}
-.modal-item label {
-  display: block;
-  font-weight: 500;
-  color: #555;
-  margin-bottom: 5px;
-}
-.modal-content input, .modal-content textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-.modal-buttons button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-.modal-buttons button:first-child {
-  background: #3498db;
-  color: white;
-  transition: background-color 0.3s;
-}
-.modal-buttons button:first-child:hover {
-  background: #2980b9;
-}
-.modal-buttons button:last-child {
-  background: #e0e0e0;
-  color: #333;
-  transition: background-color 0.3s;
-}
-.modal-buttons button:last-child:hover {
-  background: #c7c7c7;
-}
+/* 删除了模态框相关的 CSS */
+/* .modal-overlay, .modal-content, .modal-item, .modal-buttons, .modal-content input, .modal-content textarea, .modal-buttons button { ... } */
 
 @media (max-width: 480px) {
   .container, .user-card, .button-section {
@@ -538,7 +398,7 @@ export default {
     border-radius: 0;
     padding: 0;
   }
-  
+
   .top-background {
     height: 90px;
     margin-bottom: 50px;
@@ -553,13 +413,13 @@ export default {
     transform: translateY(-50px);
     width: 90%;
   }
-  
+
   .avatar {
     width: 80px;
     height: 80px;
     margin-left: 0;
   }
-  
+
   .user-details {
     width: 85%;
     padding: 10px;
