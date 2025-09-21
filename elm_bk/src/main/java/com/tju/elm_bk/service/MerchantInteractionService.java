@@ -1,6 +1,7 @@
 package com.tju.elm_bk.service;
 
 import com.tju.elm_bk.dto.MerchantInteractionDTO;
+import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.MerchantInteractionVO;
 import com.tju.elm_bk.vo.MerchantStatsVO;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public interface MerchantInteractionService {
      * @param userId 用户ID
      * @return 收藏列表
      */
-    List<MerchantInteractionVO> getUserCollections(Long userId);
+    List<BusinessSearchVO> getUserCollections(Long userId);
 
     /**
      * 获取商家的统计信息

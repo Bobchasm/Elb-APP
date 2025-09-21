@@ -193,7 +193,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore ,boolean isSales) {
         List<BusinessSearchVO> businesses = businessMapper.searchBusinesses(keyword);
-
+        System.out.println(businesses);
         // 为每个店铺计算评分与销量
         for (BusinessSearchVO business : businesses) {
             Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
@@ -246,7 +246,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (comparator != null) {
             businesses.sort(comparator);
         }
-
+        System.out.println(businesses);
         return businesses;
     }
 

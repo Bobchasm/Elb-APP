@@ -1,6 +1,7 @@
 package com.tju.elm_bk.mapper;
 
 import com.tju.elm_bk.entity.MerchantInteraction;
+import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.MerchantInteractionVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,8 +21,11 @@ public interface MerchantInteractionMapper {
     MerchantInteraction selectByUserAndMerchant(@Param("userId") Long userId, @Param("merchantId") Long merchantId);
 
     // 获取用户收藏列表
-    List<MerchantInteractionVO> selectUserCollections(@Param("userId") Long userId);
+    List<BusinessSearchVO> selectUserCollections(@Param("userId") Long userId);
 
+    // 获取某用户收藏的商家id列表
+    @Select("SELECT merchant_id FROM merchant_interaction WHERE user_id = #{userId} AND collected = 1")
+    List<Long> selectUserCollectionIds(@Param("userId") Long userId);
     // 统计商家的点赞数
     Integer countLikesByMerchantId(@Param("merchantId") Long merchantId);
 
