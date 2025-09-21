@@ -20,8 +20,8 @@ import Search from '@/views/Search.vue'
 import Cart from '@/views/Cart.vue'
 //import Discover from '@/views/Discover.vue'
 import RChoose from '@/views/RChoose.vue'
-import BusinessLogin from '@/views/BusinessLogin.vue'
-import BusinessRegister from '@/views/BusinessRegister.vue'
+//import BusinessLogin from '@/views/BusinessLogin.vue'
+//import BusinessRegister from '@/views/BusinessRegister.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 //商家端订单
@@ -36,7 +36,7 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 
 //管理端路由配置
 import AdminHome from '../views/AdminHome.vue';
-import AdminUsers from '../views/AdminUsers.vue';
+import AdminUser from '../views/AdminUser.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
 import AdminShop from '@/views/AdminShop.vue'
 //import { pa } from 'element-plus/es/locale'
@@ -146,16 +146,6 @@ const routes = [
   },
 //商家端
   {
-    path:'/businessLogin',
-    name:'BusinessLogin',
-    component:BusinessLogin
-  },
-  {
-    path:'/businessRegister',
-    name:'BusinessRegister',
-    component:BusinessRegister
-  },
-  {
     path:'/businessInformation',
     name:'BusinessInformation',
     component:BusinessInformation
@@ -214,9 +204,9 @@ const routes = [
     component:AdminHome
   },
   {
-    path:'/admin/users',
-    name:'AdminUsers',
-    component:AdminUsers
+    path:'/admin/user',
+    name:'AdminUser',
+    component:AdminUser
   },
   {
     path:'/admin/business',
