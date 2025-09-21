@@ -9,8 +9,8 @@
 		<img :src="business.businessImg" />
 	  </div>
   
-	  <!-- 商家信息部分 -->
-	  <div class="business-info">
+  <!-- 商家信息部分 -->
+  <div class="business-info">
 		<h1>{{ business.businessName }}</h1>
 		<p>
 		  &#165;{{ business.starPrice }}起送 &#165;{{
@@ -18,6 +18,14 @@
 		  }}配送
 		</p>
 		<p>{{ business.businessExplain }}</p>
+		<div class="reactions">
+			<div class="reaction" @click.stop="toggleLike">
+				<i class="fa fa-thumbs-up" :style="isLiked ? 'color:#e74c3c' : 'color:#bbb'"></i>
+			</div>
+			<div class="reaction" @click.stop="toggleFavorite">
+				<i class="fa fa-star" :style="isFavorited ? 'color:#e74c3c' : 'color:#bbb'"></i>
+			</div>
+		</div>
 	  </div>
   
 	  <!-- 食品列表部分 -->
@@ -109,6 +117,78 @@
 	  const user = ref(null);
 	  const route = useRoute(); // 定义 route
 	  const router = useRouter(); // 定义 router
+	  const likeCount = ref(0);
+	  const favoriteCount = ref(0);
+	  const isLiked = ref(false);
+	  const isFavorited = ref(false);
+
+	  const getUserKey = () => {
+		try {
+		  const stored = sessionStorage.getItem('user');
+		  if (stored) {
+			const u = JSON.parse(stored);
+			if (u && u.userId) return `u_${u.userId}`;
+		  }
+		} catch (e) {}
+		let anon = localStorage.getItem('anonId');
+		if (!anon) {
+		  anon = `a_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+		  localStorage.setItem('anonId', anon);
+		}
+		return anon;
+	  };
+
+	  const loadReactions = () => {
+		try {
+		  return JSON.parse(localStorage.getItem('reactions')) || { likes: {}, favorites: {} };
+		} catch (e) {
+		  return { likes: {}, favorites: {} };
+		}
+	  };
+
+	  const saveReactions = (data) => {
+		localStorage.setItem('reactions', JSON.stringify(data));
+	  };
+
+	  const refreshReactionState = () => {
+		const id = String(businessId.value);
+		const userKey = getUserKey();
+		const reactions = loadReactions();
+		const likesMap = reactions.likes[id] || {};
+		const favsMap = reactions.favorites[id] || {};
+		likeCount.value = Object.keys(likesMap).length;
+		favoriteCount.value = Object.keys(favsMap).length;
+		isLiked.value = !!likesMap[userKey];
+		isFavorited.value = !!favsMap[userKey];
+	  };
+
+	  const toggleLike = () => {
+		const id = String(businessId.value);
+		const userKey = getUserKey();
+		const reactions = loadReactions();
+		reactions.likes[id] = reactions.likes[id] || {};
+		if (reactions.likes[id][userKey]) {
+		  delete reactions.likes[id][userKey];
+		} else {
+		  reactions.likes[id][userKey] = true;
+		}
+		saveReactions(reactions);
+		refreshReactionState();
+	  };
+
+	  const toggleFavorite = () => {
+		const id = String(businessId.value);
+		const userKey = getUserKey();
+		const reactions = loadReactions();
+		reactions.favorites[id] = reactions.favorites[id] || {};
+		if (reactions.favorites[id][userKey]) {
+		  delete reactions.favorites[id][userKey];
+		} else {
+		  reactions.favorites[id][userKey] = true;
+		}
+		saveReactions(reactions);
+		refreshReactionState();
+	  };
   
 	  onMounted(() => {
 		// 确保businessId是数字类型
@@ -117,6 +197,8 @@
 		user.value = sessionStorage.getItem("user")
 		  ? JSON.parse(sessionStorage.getItem("user"))
 		  : null;
+
+		refreshReactionState();
   
 		//根据businessId查询商家信息;
 		axios
@@ -313,6 +395,12 @@
 		totalSettle,
 		goToCart,
 		businessId,
+		likeCount,
+		favoriteCount,
+		isLiked,
+		isFavorited,
+		toggleLike,
+		toggleFavorite,
 	  };
 	},
   };
@@ -366,10 +454,32 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+    position: relative;
   }
   
   .wrapper .business-info h1 {
 	font-size: 5vw;
+  }
+
+  .wrapper .business-info .reactions {
+    position: absolute;
+    right: 3vw;
+    bottom: -2vw;
+    display: flex;
+    gap: 4vw;
+  }
+
+  .wrapper .business-info .reactions .reaction {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .wrapper .business-info .reactions .reaction i {
+    font-size: 5vw;
+    color: #bbb;
   }
   
   .wrapper .business-info p {

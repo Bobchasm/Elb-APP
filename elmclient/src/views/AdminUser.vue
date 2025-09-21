@@ -1,0 +1,694 @@
+<template>
+  <div class="manage-user-container">
+    <div class="container">
+      <div class="top-background">
+        <h1>用户管理</h1>
+        <button class="top-back-btn" @click="goBack">
+          <i class="fas fa-arrow-left"></i> 返回
+        </button>
+      </div>
+
+      <div class="search-section">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input 
+            v-model="searchKeyword" 
+            type="text" 
+            placeholder="搜索用户名、手机号或邮箱"
+            @input="handleSearch"
+          />
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-tabs">
+          <div 
+            class="filter-tab" 
+            :class="{ active: activeFilter === 'all' }"
+            @click="setFilter('all')"
+          >
+            全部用户
+          </div>
+          <div 
+            class="filter-tab" 
+            :class="{ active: activeFilter === 'enabled' }"
+            @click="setFilter('enabled')"
+          >
+            已启用
+          </div>
+          <div 
+            class="filter-tab" 
+            :class="{ active: activeFilter === 'disabled' }"
+            @click="setFilter('disabled')"
+          >
+            已禁用
+          </div>
+        </div>
+      </div>
+
+      <div class="user-list">
+        <div v-for="user in filteredUsers" :key="user.userId" class="user-item">
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ user.username }}</div>
+            <div class="user-details">
+              <span class="user-phone">{{ user.phone }}</span>
+              <span class="user-email">{{ user.email }}</span>
+            </div>
+            <div class="user-status">
+              <span class="status-badge" :class="{ 
+                'status-enabled': !user.disabled, 
+                'status-disabled': user.disabled 
+              }">
+                {{ user.disabled ? '已禁用' : '已启用' }}
+              </span>
+              <span class="register-date">注册时间：{{ user.registerDate }}</span>
+            </div>
+          </div>
+          <div class="user-actions">
+            <button 
+              class="action-btn" 
+              :class="{ 
+                'enable-btn': user.disabled, 
+                'disable-btn': !user.disabled 
+              }"
+              @click="toggleUserStatus(user)"
+            >
+              {{ user.disabled ? '启用' : '禁用' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="filteredUsers.length === 0" class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>暂无用户数据</p>
+      </div>
+
+      <!-- 确认对话框 -->
+      <div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>确认操作</h3>
+            <span class="close-btn" @click="showConfirmModal = false">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>确定要{{ selectedUser?.disabled ? '启用' : '禁用' }}用户 "{{ selectedUser?.username }}" 吗？</p>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
+            <button class="modal-btn confirm-btn" @click="confirmToggle">确认</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'AdminUser',
+  data() {
+    return {
+      searchKeyword: '',
+      activeFilter: 'all',
+      showConfirmModal: false,
+      selectedUser: null,
+      users: [
+        {
+          userId: 1001,
+          username: '张三',
+          phone: '13812345678',
+          email: 'zhangsan@example.com',
+          disabled: false,
+          registerDate: '2023-01-15'
+        },
+        {
+          userId: 1002,
+          username: '李四',
+          phone: '13987654321',
+          email: 'lisi@example.com',
+          disabled: true,
+          registerDate: '2023-02-20'
+        },
+        {
+          userId: 1003,
+          username: '王五',
+          phone: '13555556666',
+          email: 'wangwu@example.com',
+          disabled: false,
+          registerDate: '2023-03-10'
+        },
+        {
+          userId: 1004,
+          username: '赵六',
+          phone: '13666667777',
+          email: 'zhaoliu@example.com',
+          disabled: false,
+          registerDate: '2023-04-05'
+        },
+        {
+          userId: 1005,
+          username: '钱七',
+          phone: '13777778888',
+          email: 'qianqi@example.com',
+          disabled: true,
+          registerDate: '2023-05-12'
+        },
+        {
+          userId: 1006,
+          username: '孙八',
+          phone: '13888889999',
+          email: 'sunba@example.com',
+          disabled: false,
+          registerDate: '2023-06-18'
+        },
+        {
+          userId: 1007,
+          username: '周九',
+          phone: '13999990000',
+          email: 'zhoujiu@example.com',
+          disabled: true,
+          registerDate: '2023-07-25'
+        },
+        {
+          userId: 1008,
+          username: '吴十',
+          phone: '13000001111',
+          email: 'wushi@example.com',
+          disabled: false,
+          registerDate: '2023-08-30'
+        },
+        {
+          userId: 1009,
+          username: '郑十一',
+          phone: '13111112222',
+          email: 'zhengshiyi@example.com',
+          disabled: false,
+          registerDate: '2023-09-14'
+        },
+        {
+          userId: 1010,
+          username: '王十二',
+          phone: '13222223333',
+          email: 'wangshier@example.com',
+          disabled: true,
+          registerDate: '2023-10-08'
+        },
+        {
+          userId: 1011,
+          username: '刘十三',
+          phone: '13333334444',
+          email: 'liushisan@example.com',
+          disabled: false,
+          registerDate: '2023-11-22'
+        },
+        {
+          userId: 1012,
+          username: '陈十四',
+          phone: '13444445555',
+          email: 'chenshisi@example.com',
+          disabled: true,
+          registerDate: '2023-12-05'
+        }
+      ]
+    }
+  },
+  computed: {
+    filteredUsers() {
+      let filtered = this.users;
+      
+      // 按状态过滤
+      if (this.activeFilter === 'enabled') {
+        filtered = filtered.filter(user => !user.disabled);
+      } else if (this.activeFilter === 'disabled') {
+        filtered = filtered.filter(user => user.disabled);
+      }
+      
+      // 按关键词搜索
+      if (this.searchKeyword) {
+        const keyword = this.searchKeyword.toLowerCase();
+        filtered = filtered.filter(user => 
+          user.username.toLowerCase().includes(keyword) ||
+          user.phone.includes(keyword) ||
+          user.email.toLowerCase().includes(keyword)
+        );
+      }
+      
+      return filtered;
+    }
+  },
+  methods: {
+    goBack() {
+      this.$router.go(-1);
+    },
+    handleSearch() {
+      // 搜索逻辑已在computed中处理
+    },
+    setFilter(filter) {
+      this.activeFilter = filter;
+    },
+    toggleUserStatus(user) {
+      this.selectedUser = user;
+      this.showConfirmModal = true;
+    },
+    confirmToggle() {
+      if (this.selectedUser) {
+        this.selectedUser.disabled = !this.selectedUser.disabled;
+        this.showConfirmModal = false;
+        this.$toast?.show(`用户已${this.selectedUser.disabled ? '禁用' : '启用'}`);
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.manage-user-container {
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+  padding: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-bottom: 70px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding-bottom: 8vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.top-background {
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 50px;
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
+  margin: 0;
+  z-index: 1;
+}
+
+.top-back-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 10;
+}
+
+.top-back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.search-section {
+  width: 92%;
+  max-width: 500px;
+  margin-bottom: 25px;
+  transform: translateY(-40px);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 25px;
+  padding: 12px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-box i {
+  color: #999;
+  margin-right: 10px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  font-size: 1rem;
+  color: #333;
+}
+
+.search-box input::placeholder {
+  color: #999;
+}
+
+.filter-section {
+  width: 92%;
+  max-width: 500px;
+  margin-bottom: 25px;
+  transform: translateY(-40px);
+}
+
+.filter-tabs {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.filter-tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #666;
+  border-radius: 8px;
+}
+
+.filter-tab.active {
+  color: #0097ff;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-list {
+  width: 92%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transform: translateY(-40px);
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.user-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.user-avatar i {
+  font-size: 1.5rem;
+  color: #666;
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.user-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.user-phone, .user-email {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-enabled {
+  background: #e8f5e8;
+  color: #4caf50;
+}
+
+.status-disabled {
+  background: #ffeaea;
+  color: #f44336;
+}
+
+.register-date {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.enable-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.enable-btn:hover {
+  background: #45a049;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.disable-btn {
+  background: #e15656;
+  color: white;
+  border: 1px solid #f3caca;
+}
+
+.disable-btn:hover {
+  background: #d32f2f;
+  box-shadow: 0 4px 12px rgba(225, 86, 86, 0.3);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  color: #ddd;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 100vw;
+    width: 100vw;
+    border-radius: 0;
+  }
+  
+  .top-background {
+    height: 90px;
+    border-radius: 0;
+  }
+  
+  .user-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .user-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .user-details {
+    flex-direction: column;
+  }
+}
+</style>

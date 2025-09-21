@@ -6,8 +6,8 @@
   
     <!-- Middle section with buttons -->
     <div class="container">
-      <button class="btn" @click="handleMerchantRegister">商家注册</button>
-      <button class="btn" @click="handlePersonalRegister">个人注册</button>
+      <!-- <button class="btn" @click="handleMerchantRegister">商家注册</button> -->
+      <button class="btn" @click="handlePersonalRegister">用户注册</button>
     </div>
   </template>
   
@@ -19,10 +19,10 @@
     setup() {
       const router = useRouter();
   
-      const handleMerchantRegister = () => {
-        // Handle merchant registration logic
-        router.push('/businessRegister');
-      };
+      // const handleMerchantRegister = () => {
+      //   // Handle merchant registration logic
+      //   router.push('/businessRegister');
+      // };
   
       const handlePersonalRegister = () => {
         // Handle personal registration logic
@@ -30,7 +30,7 @@
       };
   
       return {
-        handleMerchantRegister,
+        // handleMerchantRegister,
         handlePersonalRegister
       };
     }
