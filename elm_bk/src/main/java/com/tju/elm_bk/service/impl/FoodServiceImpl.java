@@ -142,7 +142,7 @@ public class FoodServiceImpl implements FoodService {
     @Override
     @Transactional
     public Long modifyFoodMessage(FoodUpdateDTO foodUpdateDTO) {
-        if (!foodUpdateDTO.verify()) {
+        if (foodUpdateDTO.getFoodId() == null) {
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
         }
         Food food = foodMapper.selectFoodById(foodUpdateDTO.getFoodId());

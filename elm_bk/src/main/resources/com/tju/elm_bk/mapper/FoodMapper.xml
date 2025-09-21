@@ -166,6 +166,7 @@
                 and f.shelve_status = #{shelveStatus}
             </if>
         </where>
+        order by f.shelve_status desc
     </select>
 
 
