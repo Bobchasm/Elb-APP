@@ -16,20 +16,20 @@ import org.apache.ibatis.annotations.*;
 @Mapper
 public interface BusinessMapper {
 
-    BusinessVO getBusinessById(Integer businessId);
+    BusinessVO getBusinessById(Long businessId);
 
     // 更新商户信息
-    int updateBusiness(@Param("id") Integer id, @Param("updateDto") BusinessUpdateDTO updateDto);
+    int updateBusiness(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
 
     // 更新商户所有者信息
-    int updateBusinessOwner(@Param("id") Integer id, @Param("updateDto") BusinessUpdateDTO updateDto);
+    int updateBusinessOwner(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
 
     // 嵌套查询方法
-    List<Authority> selectAuthoritiesByUserId(@Param("userId") Integer userId);
+    List<Authority> selectAuthoritiesByUserId(@Param("userId") Long userId);
 
     // 逻辑删除商户并返回删除前的信息
     @Update("UPDATE business SET is_deleted = 1 WHERE id = #{id} AND is_deleted = 0")
-    int deleteBusiness(@Param("id") Integer id);
+    int deleteBusiness(@Param("id") Long id);
 
     int insertBusiness(@Param("businessDto") BusinessDTO businessDto);
 
@@ -50,4 +50,12 @@ public interface BusinessMapper {
     // 统计已完成的订单数量（ order_state=3 ）
     @Select("SELECT COUNT(*) FROM `orders` WHERE business_id = #{businessId} AND order_state = 3 AND is_deleted = 0")
     Integer getSalesCount(@Param("businessId") Long businessId);
+
+    /**
+     * 根据用户ID查询对应的所有商家ID
+     * @param userId 用户ID
+     * @return 商家ID列表
+     */
+    @Select("SELECT id FROM business WHERE user_id = #{userId}")
+    List<Long> getBusinessIdsByUserId(Long userId);
 }
