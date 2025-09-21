@@ -57,7 +57,7 @@
 	  const password = ref('');
 	  const router = useRouter();
 	  const rememberMe=ref(false);
-	  // 回显记住的用户名（从localStorage获取）
+	 // 回显记住的用户名（从localStorage获取） 
 	  const savedUserName = computed(() => {
       return localStorage.getItem('savedUserName') || '';
     });
@@ -66,7 +66,7 @@
       window.sessionStorage.setItem(key, JSON.stringify(value)); // 自定义会话存储函数
     };
     const login = async () => {
-      // 1. 表单校验
+       // 1. 表单校验 
       if (!userName.value.trim()) {
         alert('用户名不能为空！');
         return;
@@ -77,7 +77,7 @@
       }
 
       try {
-        // 2. 调用登录接口：传 userName/password/rememberMe
+         // 2. 调用登录接口：传 userName/password/rememberMe 
         const res = await request.post('/api/auth', {
           username: userName.value.trim(),
           password: password.value.trim(),

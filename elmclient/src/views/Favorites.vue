@@ -56,8 +56,8 @@ export default {
       loading.value = true;
       errorMessage.value = '';
       try {
-        const user = JSON.parse(sessionStorage.getItem('user'));
-        if (!user || !user.userId) {
+        const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+        if (!userInfo || !userInfo.id) {
           toast.warning('请先登录以查看收藏列表！');
           router.push('/login');
           return;

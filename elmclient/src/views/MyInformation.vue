@@ -5,29 +5,47 @@
     </div>
 
     <div class="user-card">
-      <div class="avatar">
-        <img :src="user?.userImg || require('@/assets/default-avatar.png')" alt="用户头像">
+      <!-- 头像 - 添加点击事件 -->
+      <div class="avatar" @click="triggerFileInput">
+        <img :src="userInfo?.photo || require('@/assets/default-avatar.png')" alt="用户头像">
+        <div class="avatar-overlay">
+          <i class="fas fa-camera"></i>
+          <span>更换头像</span>
+        </div>
       </div>
       <div class="user-details">
+        <!-- 昵称 -->
         <div class="user-name">
-          {{ user?.userName || '未设置昵称' }}
+          {{ userInfo?.username || '未设置昵称' }}
           <i class="fas fa-pencil-alt edit-icon" @click="openEditModal"></i>
         </div>
+        <!-- 姓名（姓氏+名字） -->
         <div class="user-full-name">
           <i class="fas fa-id-card-alt full-name-icon"></i>
-          <span class="first-name">{{ user?.firstName || '未设置姓氏' }}</span>
-          <span class="last-name">{{ user?.lastName || '未设置名字' }}</span>
+          <span class="first-name">{{ userInfo?.firstName || '未设置姓氏' }}</span>
+          <span class="last-name">{{ userInfo?.lastName || '未设置名字' }}</span>
         </div>
+        <!-- 手机号 -->
         <div class="user-phone">
           <i class="fas fa-phone phone-icon"></i>
-          {{ formattedPhone }}
+          <span>{{ userInfo?.phone || '未设置手机号' }}</span>
         </div>
+        <!-- 邮箱 -->
         <div class="user-email">
           <i class="fas fa-envelope-open-text email-icon"></i>
-          <span>{{ user?.email || '未设置邮箱' }}</span>
+          <span>{{ userInfo?.email || '未设置邮箱' }}</span>
         </div>
       </div>
     </div>
+
+    <!-- 隐藏的文件输入框 -->
+    <input 
+      type="file" 
+      ref="fileInput" 
+      style="display: none" 
+      accept="image/*" 
+      @change="handleFileUpload"
+    >
 
     <div class="menu-section">
       <div class="section-title">常用功能</div>
@@ -57,7 +75,12 @@
       </div>
     </div>
 
-    <AddressManager v-if="showAddressSection" :userId="user?.userId" />
+    <!-- 加载状态 -->
+    <div v-if="uploading" class="upload-loading">
+      <i class="fas fa-spinner fa-spin"></i> 上传中...
+    </div>
+
+    <AddressManager v-if="showAddressSection" :id="userInfo?.id" />
     
     <div class="button-section">
       <button class="switch-btn" @click="switchToMerchant">
@@ -91,7 +114,7 @@
         </div>
         <div class="modal-item">
           <label>手机号</label>
-          <input v-model="editFormData.userId" placeholder="输入手机号" />
+          <input v-model="editFormData.phone" placeholder="输入手机号" />
         </div>
         <div class="modal-item">
           <label>邮箱</label>
@@ -124,7 +147,7 @@
 import { ref, computed, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import AddressManager from '../components/AddressManager.vue';
-import axios from 'axios';
+import request from '../utils/request'; // 使用 request 而不是 axios
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast';
 
@@ -136,59 +159,153 @@ export default {
   },
   setup() {
     const router = useRouter();
-    const user = ref({});
+    const userInfo = ref({});
     const loading = ref(false);
     const errorMessage = ref('');
     const showEditModal = ref(false);
     const showMerchantApplyModal = ref(false);
+    const showAddressSection = ref(false);
+    const hasNewMessages = ref(false);
+    const uploading = ref(false); // add：上传状态
+    const fileInput = ref(null); // add：文件输入框引用
+
     const editFormData = ref({
       firstName: '',
       lastName: '',
-      userId: '',
+      phone: '',
       email: ''
     });
-    const showAddressSection = ref(false);
-    const hasNewMessages = ref(true);
+
+    // 获取 token 的函数
+    const getToken = () => {
+      return localStorage.getItem('token') || sessionStorage.getItem('token');
+    };
 
     const formattedPhone = computed(() => {
-      if (!user.value.userId) return '未绑定手机';
-      return user.value.userId.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+      if (!userInfo.value.phone) return '未绑定手机';
+      return userInfo.value.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
     });
 
     onMounted(async () => {
+      // 先检查 token
+      const token = getToken();
+      if (!token) {
+        toast.warning('用户未登录，请先登录！');
+        router.push({ path: '/login' });
+        return;
+      }
+      
       await loadUserData();
-      // 在这里调用获取未读消息数量的API
       await checkNewMessages();
     });
+
+    // 新增：触发文件选择
+    const triggerFileInput = () => {
+      fileInput.value.click();
+    };
+
+    // 新增：处理文件上传
+    const handleFileUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // 检查文件类型和大小
+      if (!file.type.startsWith('image/')) {
+        toast.error('请选择图片文件！');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB限制
+        toast.error('图片大小不能超过5MB！');
+        return;
+      }
+
+      uploading.value = true;
+      
+      try {
+        const token = getToken();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // 第一步：上传图片到 /upload
+        const uploadResponse = await request.post('/upload', formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // 'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        if (uploadResponse && uploadResponse.data) {
+          // 第二步：更新用户信息，设置新的头像URL
+          const updateResponse = await request.put('/api/person/info', {
+            id: userInfo.value.id,
+            photo: uploadResponse.data // 使用上传返回的图片URL
+          }, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (updateResponse &&updateResponse.success) {
+            // 更新本地用户信息
+            userInfo.value.photo = uploadResponse.data;
+            sessionStorage.setItem('userInfo', JSON.stringify(userInfo.value));
+            toast.success('头像更新成功！');
+          } else {
+            toast.error('头像更新失败！');
+          }
+        } else {
+          toast.error('图片上传失败！');
+        }
+      } catch (error) {
+        console.error('头像上传失败:', error);
+        toast.error('头像上传失败，请重试！');
+      } finally {
+        uploading.value = false;
+        // 清空文件输入框，允许重复选择同一文件
+        event.target.value = '';
+      }
+    };
 
     const loadUserData = async () => {
       loading.value = true;
       errorMessage.value = '';
       
       try {
-        const storedUser = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
-        
-        if (!storedUser) {
+        const token = getToken();
+        if (!token) {
           toast.warning('用户未登录，请先登录！');
           router.push({ path: '/login' });
           return;
         }
 
-        const response = await axios.post('UserController/getUserByIdByPass', {
-          userId: storedUser.userId,
-          password: storedUser.password
+        // 使用 request 调用 API
+        const response = await request.get('/api/person', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         
-        if (response.data) {
-          user.value = { ...storedUser, ...response.data };
-          sessionStorage.setItem('user', JSON.stringify(user.value));
-        } else {
-          user.value = storedUser;
+        if (response) {
+          userInfo.value = response;
+          sessionStorage.setItem('userInfo', JSON.stringify(userInfo.value));
+          console.log('用户信息加载成功:', userInfo.value);
         }
       } catch (error) {
         console.error('获取用户信息失败:', error);
-        errorMessage.value = '获取用户信息失败，请重试！';
-        toast.error('获取用户信息失败，请重试！');
+        
+        if (error.response && error.response.status === 401) {
+          // Token 过期或无效
+          toast.error('登录已过期，请重新登录！');
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('userInfo');
+          router.push({ path: '/login' });
+        } else {
+          errorMessage.value = '获取用户信息失败，请重试！';
+          toast.error('获取用户信息失败，请重试！');
+        }
       } finally {
         loading.value = false;
       }
@@ -196,12 +313,8 @@ export default {
 
     const checkNewMessages = async () => {
       try {
-        // 模拟一个API调用来获取未读消息状态
-        // 实际项目中，你需要替换为真实的API请求
-        // const response = await axios.get('MessagesController/getUnreadCount', { params: { userId: user.value.userId } });
-        // hasNewMessages.value = response.data.unreadCount > 0;
-
-        // 临时模拟数据，假定有未读消息
+        // 模拟检查未读消息
+        await new Promise(resolve => setTimeout(resolve, 500));
         hasNewMessages.value = true;
       } catch (error) {
         console.error('检查未读消息失败:', error);
@@ -210,7 +323,9 @@ export default {
     };
 
     const logout = () => {
-      sessionStorage.removeItem('user');
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('userInfo');
       router.push({ path: '/index' });
     };
 
@@ -219,11 +334,11 @@ export default {
     };
 
     const openEditModal = () => {
-      if (user.value) {
-        editFormData.value.firstName = user.value.firstName || '';
-        editFormData.value.lastName = user.value.lastName || '';
-        editFormData.value.userId = user.value.userId || '';
-        editFormData.value.email = user.value.email || '';
+      if (userInfo.value) {
+        editFormData.value.firstName = userInfo.value.firstName || '';
+        editFormData.value.lastName = userInfo.value.lastName || '';
+        editFormData.value.phone = userInfo.value.phone || '';
+        editFormData.value.email = userInfo.value.email || '';
       }
       showEditModal.value = true;
     };
@@ -238,7 +353,7 @@ export default {
 
     const applyForMerchant = async () => {
       try {
-        console.log('用户申请开店:', user.value.userId);
+        console.log('用户申请开店:', userInfo.value.id);
         
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -251,27 +366,33 @@ export default {
     };
 
     const submitEdits = async () => {
-      if (!editFormData.value.userId) {
+      if (!editFormData.value.phone) {
         toast.warning('手机号不能为空！');
         return;
       }
 
       try {
-        const response = await axios.post('UserController/updateUserInfo', {
-          userId: user.value.userId,
-          newUserId: editFormData.value.userId,
+        const token = getToken();
+        const response = await request.put('/api/person/info', {
+          id: userInfo.value.id,
           firstName: editFormData.value.firstName,
           lastName: editFormData.value.lastName,
           email: editFormData.value.email,
+          phone: editFormData.value.phone,
+          photo: userInfo.value.photo
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         
-        if (response.data === 1) {
-          user.value.userId = editFormData.value.userId;
-          user.value.firstName = editFormData.value.firstName;
-          user.value.lastName = editFormData.value.lastName;
-          user.value.email = editFormData.value.email;
+        if (response.success) {
+          userInfo.value.firstName = editFormData.value.firstName;
+          userInfo.value.lastName = editFormData.value.lastName;
+          userInfo.value.email = editFormData.value.email;
+          userInfo.value.phone = editFormData.value.phone;
 
-          sessionStorage.setItem('user', JSON.stringify(user.value));
+          sessionStorage.setItem('userInfo', JSON.stringify(userInfo.value));
           
           toast.success('个人信息修改成功！');
           closeEditModal();
@@ -297,20 +418,21 @@ export default {
       } else {
         toast.warning('功能待开发');
       }
-      // 如果进入了消息通知页面，则清除红点标记
       if (page === 'notifications') {
-          hasNewMessages.value = false;
+        hasNewMessages.value = false;
       }
     };
     
     return {
-      user,
+      userInfo,
       formattedPhone,
       loading,
+      uploading,
       errorMessage,
       showEditModal,
       showMerchantApplyModal,
       editFormData,
+      fileInput,
       logout,
       openEditModal,
       closeEditModal,
@@ -320,9 +442,10 @@ export default {
       myfavorite,
       navigateTo,
       switchToMerchant,
-    //  goManageBusiness,
       showAddressSection,
-      hasNewMessages
+      hasNewMessages,
+      triggerFileInput,
+      handleFileUpload
     };
   },
 };
@@ -764,4 +887,60 @@ export default {
     padding: 14px 16px;
   }
 }
+
+/* 新增头像悬停效果 */
+.avatar {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 50%;
+}
+
+.avatar:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay i {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.avatar-overlay span {
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 上传加载状态 */
+.upload-loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 1000;
+}
+
 </style>
