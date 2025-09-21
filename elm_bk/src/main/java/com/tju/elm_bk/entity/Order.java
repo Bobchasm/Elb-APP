@@ -1,5 +1,6 @@
 package com.tju.elm_bk.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,9 +24,11 @@ public class Order {
     private Integer orderState;
 
     @Schema(description = "下单时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
 
     @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(description = "创建人ID")
@@ -35,6 +38,7 @@ public class Order {
     private Boolean isDeleted;
 
     @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     @Schema(description = "更新人ID")
@@ -48,6 +52,9 @@ public class Order {
 
     @Schema(description = "地址ID")
     private Long addressId;
+
+    @Schema(description = "订单配送费")
+    private BigDecimal deliveryPrice;
 
 //    // 关联字段
 //    @Schema(description = "下单客户")

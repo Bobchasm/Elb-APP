@@ -1,18 +1,19 @@
-package com.tju.elm_bk.dto;
+package com.tju.elm_bk.vo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FoodCreateDTO {
+public class FoodItemVO {
+    @Schema(description = "食品ID")
+    private Long id;
+
     @Schema(description = "食品名称")
     private String foodName;
 
@@ -31,9 +32,9 @@ public class FoodCreateDTO {
     @Schema(description = "所属商家ID")
     private Long businessId;
 
+    @Schema(description = "所属商家名")
+    private String businessName;
 
-    public boolean verify() {
-        return foodName != null && businessId != null && foodPrice != null && foodPrice.compareTo(BigDecimal.ZERO) > 0;
-    }
-
+    @Schema(description = "是否上架 0-已下架 1-已上架")
+    private Integer shelveStatus;
 }

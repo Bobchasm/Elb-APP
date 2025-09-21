@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -50,4 +51,7 @@ public class OrderItemDetailVO {
 
     @Schema(description = "联系方式")
     private String contactTel;
+
+    @Schema(description = "订单商品列表")
+    private List<OrderFoodVO> foodList;
 }

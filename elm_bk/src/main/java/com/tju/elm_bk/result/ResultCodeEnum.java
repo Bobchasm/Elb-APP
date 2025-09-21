@@ -21,10 +21,14 @@ public enum ResultCodeEnum {
     WITHOUT_ERROR_CODE("WITHOUT_ERROR_CODE","无错误码"),
 
     ADDRESS_PERMISSION_DENIED("ADDRESS_PERMISSION_DENIED","权限不足，无法为该用户添加地址"),
+    ADDRESS_MISSED("ADDRESS_MISSED","地址不存在"),
     NOT_ENOUGH_PERMISSION("NOT_ENOUGH_PERMISSION","权限不足"),
     VALUE_MISSED("VALUE_MISSED","值不存在"),
     FOOD_MISSED("FOOD_MISSED","商品不存在"),
-
+    USER_DENIED("USER_DENIED","无法对别的用户进行操作"),
+    CART_MISSED("CART_MISSED","购物车商品不存在"),
+    FOOD_UNSHELVED("CART_MISSED","商品已下架"),
+    FOOD_STATUS_SET_FAILED("FOOD_STATUS_SET_FAILED","商品上下架失败"),
 
     ORDER_MISSED("ORDER_MISSED","订单不存在"),
     ORDER_STATUS_UNMATCHED("ORDER_STATUS_UNMATCHED","订单状态错误"),
@@ -34,6 +38,8 @@ public enum ResultCodeEnum {
     ORDER_CANCEL_FAILED("ORDER_CANCEL_FAILED","订单取消失败"),
 
     QUANTITY_ILLEGAL("QUANTITY_ILLEGAL","数量不合法"),
+
+    BUSINESS_MISSED("BUSINESS_MISSED","商家不存在"),
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 

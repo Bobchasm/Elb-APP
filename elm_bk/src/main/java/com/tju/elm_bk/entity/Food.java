@@ -1,5 +1,6 @@
 package com.tju.elm_bk.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class Food {
     private String remarks;
 
     @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(description = "创建人ID")
@@ -42,6 +44,7 @@ public class Food {
     private Boolean isDeleted;
 
     @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     @Schema(description = "更新人ID")
@@ -50,13 +53,6 @@ public class Food {
     @Schema(description = "所属商家ID")
     private Long businessId;
 
-//    // 关联字段
-//    @Schema(description = "所属商家")
-//    private Business business;
-//
-//    @Schema(description = "关联的订单详情列表")
-//    private List<OrderDetailet> orderDetailets;
-//
-//    @Schema(description = "关联的购物车列表")
-//    private List<Cart> carts;
+    @Schema(description = "是否上架 0-已下架 1-已上架")
+    private Integer shelveStatus;
 }

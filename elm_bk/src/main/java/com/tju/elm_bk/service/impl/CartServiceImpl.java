@@ -1,6 +1,7 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.dto.CartItemCreateDTO;
+import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.entity.Cart;
 import com.tju.elm_bk.entity.Food;
 import com.tju.elm_bk.entity.User;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -43,6 +45,10 @@ public class CartServiceImpl implements CartService {
         Food food = foodMapper.selectFoodById(cartItemCreateDTO.getFood().getId());
         if (food == null) {
             throw new APIException(ResultCodeEnum.FOOD_MISSED);
+        }
+        Business business = businessMapper.selectBusinessById(cartItemCreateDTO.getBusiness().getId());
+        if (business == null) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
 
         Cart cart = new Cart();
@@ -77,31 +83,80 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Integer addItem(Long foodId, Integer quantity) {
+    public Long addItem(Long foodId, Integer quantity) {
+        Food food = foodMapper.selectFoodById(foodId);
+        if (food == null) {
+            throw new APIException(ResultCodeEnum.FOOD_MISSED);
+        }
+        if (food.getShelveStatus() != 1) {
+            throw new APIException(ResultCodeEnum.FOOD_UNSHELVED);
+        }
+        Business business = businessMapper.selectBusinessById(food.getBusinessId());
+        if (business == null) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
+        }
+
+        if (quantity <= 0) {
+            throw new APIException(ResultCodeEnum.QUANTITY_ILLEGAL);
+        }
+
+        Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        Cart cart = new Cart();
+
+        cart.setCustomerId(userId);
+        cart.setFoodId(foodId);
+        cart.setQuantity(quantity);
+        cart.setBusinessId(business.getId());
+
+        cart.setCreator(userId);
+        cart.setUpdater(userId);
+        cart.setCreateTime(LocalDateTime.now());
+        cart.setUpdateTime(LocalDateTime.now());
+        cart.setIsDeleted(false);
+
+        cartMapper.insertCart(cart);
+
+        return cart.getId();
+    }
+
+    @Override
+    public Long updateItem(Long cartId, Integer quantity) {
+        Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+
+        Cart cart = cartMapper.selectCartById(cartId);
+        if (cart == null) {
+            throw new APIException(ResultCodeEnum.CART_MISSED);
+        }
+        if (!Objects.equals(cart.getCustomerId(), userId)) {
+            throw new APIException(ResultCodeEnum.USER_DENIED);
+        }
         if (quantity < 0) {
             throw new APIException(ResultCodeEnum.QUANTITY_ILLEGAL);
         }
         if (quantity == 0) {
-            return 0;
+            cartMapper.removeCartItem(cartId);
+            return cartId;
         }
+
+        cartMapper.updateCartItem(cartId, quantity);
+        return cart.getId();
+    }
+
+    @Override
+    public Long clearCart(Long businessId) {
         Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        cartMapper.insertCartItem(userId,foodId,quantity);
-
-        return null;
+        cartMapper.clearCart(userId, businessId);
+        return businessId;
     }
 
     @Override
-    public Integer updateItem(Long cartId, Integer quantity) {
-        return 0;
-    }
-
-    @Override
-    public Integer clearCart(Long businessId) {
-        return 0;
-    }
-
-    @Override
-    public Integer removeItem(Long cartId) {
-        return 0;
+    public Long removeItem(Long cartId) {
+        Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        Cart cart = cartMapper.selectCartById(cartId);
+        if (!Objects.equals(cart.getCustomerId(), userId)) {
+            throw new APIException(ResultCodeEnum.USER_DENIED);
+        }
+        cartMapper.removeCartItem(cartId);
+        return cartId;
     }
 }

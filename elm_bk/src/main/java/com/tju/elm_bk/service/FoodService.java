@@ -1,6 +1,9 @@
 package com.tju.elm_bk.service;
 
 import com.tju.elm_bk.dto.FoodCreateDTO;
+import com.tju.elm_bk.dto.FoodDTO;
+import com.tju.elm_bk.dto.FoodUpdateDTO;
+import com.tju.elm_bk.vo.FoodItemVO;
 import com.tju.elm_bk.vo.FoodVO;
 
 import java.util.List;
@@ -11,5 +14,19 @@ public interface FoodService {
 
     FoodVO getFoodById(Long id);
 
-    FoodVO addFood(FoodCreateDTO food);
+    FoodVO addFood(FoodDTO food);
+
+
+
+    List<FoodItemVO> getFoodItemList(Long businessId,Integer shelveStatus);
+
+    Long addFoodItem(FoodCreateDTO foodCreateDTO);
+
+    Long setFoodStatus(Long foodId,Integer shelveStatus);
+
+    Long modifyFoodMessage(FoodUpdateDTO foodUpdateDTO);
+
+    Long deleteFood(Long foodId);
+
+
 }

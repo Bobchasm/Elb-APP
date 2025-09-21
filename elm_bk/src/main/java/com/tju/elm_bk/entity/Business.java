@@ -63,9 +63,6 @@ public class Business {
     @Schema(description = "所属用户ID")
     private Long userId;
 
-    @Schema(description = "商铺的状态")
-    private Integer status;
-
     // 关联字段
     @Schema(description = "所属用户")
     private User user;
@@ -80,7 +77,6 @@ public class Business {
     private List<Cart> carts;
 
     @Schema(description = "商铺状态，0待审核，1已通过，2已拒绝")
-//    @TableField("status")
     private Integer status;
 
 }

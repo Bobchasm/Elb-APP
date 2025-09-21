@@ -219,4 +219,14 @@
         INSERT INTO orders (create_time, creator, is_deleted, update_time, updater, order_date, order_state, order_total, business_id, customer_id, address_id)
         VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{orderDate}, #{orderState}, #{orderTotal}, #{businessId}, #{customerId}, #{addressId})
     </insert>
+
+
+
+
+
+
+    <insert id="insertOrderPlus" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (create_time, creator, is_deleted, update_time, updater, order_date, order_state, order_total, business_id, customer_id, address_id,delivery_price)
+        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{orderDate}, #{orderState}, #{orderTotal}, #{businessId}, #{customerId}, #{addressId},#{deliveryPrice})
+    </insert>
 </mapper>

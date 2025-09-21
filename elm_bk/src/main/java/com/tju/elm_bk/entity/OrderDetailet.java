@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -40,10 +41,7 @@ public class OrderDetailet {
     @Schema(description = "商品ID")
     private Long foodId;
 
-//    // 关联字段
-//    @Schema(description = "所属订单")
-//    private Order order;
-//
-//    @Schema(description = "商品信息")
-//    private Food food;
+    @Schema(description = "商品价格")
+    private BigDecimal foodPrice;
+
 }

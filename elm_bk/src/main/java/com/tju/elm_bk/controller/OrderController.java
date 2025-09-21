@@ -1,14 +1,11 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.OrderCreateDTO;
 import com.tju.elm_bk.dto.OrderDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.OrderService;
-import com.tju.elm_bk.vo.OrderItemDetailVO;
 import com.tju.elm_bk.vo.OrderItemVO;
 import com.tju.elm_bk.vo.OrderVO;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -55,16 +52,16 @@ public class OrderController {
         return HttpResult.success(orderService.getOrderItemListByUser(orderState));
     }
 
-    @GetMapping("/status")
+    @PutMapping("/status")
     @Operation(summary = "设置订单状态",description = "订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消)")
     public HttpResult<Long> setOrderStatus(@RequestParam Integer orderState,@RequestParam Long orderId) {
         return HttpResult.success(orderService.setOrderState(orderId,orderState));
     }
 
-    @PostMapping("/submit")
-    @Operation(summary = "下单")
-    public HttpResult<Long> orderSubmit(@RequestBody OrderCreateDTO orderCreateDTO) {
-        return HttpResult.success(orderService.orderSubmit(orderCreateDTO));
+    @GetMapping("/submit")
+    @Operation(summary = "(前端调这个)下单")
+    public HttpResult<Long> orderSubmit(@RequestParam Long businessId,@RequestParam Long addressId) {
+        return HttpResult.success(orderService.orderSubmit(businessId,addressId));
     }
 
 
