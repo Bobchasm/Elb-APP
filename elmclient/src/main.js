@@ -2,7 +2,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import { toast } from './utils/toast';
-import { getAuthToken} from './utils/auth';
+//import { getToken,removeToken} from './utils/auth';
 
 import 'font-awesome/css/font-awesome.min.css';
 import axios from 'axios';
@@ -24,9 +24,20 @@ axios.defaults.timeout = 10000; // 设置超时时间为 10 秒
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 axios.defaults.headers.common['Accept'] = 'application/json';
 
+// 创建 axios 实例 用以模拟接口
+// const api = axios.create({
+//   baseURL: import.meta.env.VITE_API_BASE_URL || '/api', // 使用环境变量配置基础URL
+//   timeout: 10000, // 超时时间
+// })
+
 // 请求拦截器
 axios.interceptors.request.use(
   config => {
+    //api
+    // const token = getToken()
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`
+    // }
     // 在发送请求之前做些什么
     if (config.method === 'post') {
       // 如果是POST请求，确保数据是JSON格式
@@ -54,37 +65,17 @@ axios.interceptors.response.use(
     console.error('响应错误:', error);
 
     // ✅ 添加模拟接口的代码 - 就在这里添加
-    const url = error.config?.url || '';
+    // const url = error.config?.url || '';
+
+    // const { status, data } = error.response || {}
 
     // 如果是 401 错误且尚未重试过
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true; // 标记此请求已经重试，防止无限循环
-
-      try {
-        // 尝试调用刷新 Token 的接口
-        const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post('/api/auth/refresh', { refreshToken });
-        const newToken = response.data.token;
-
-        // 存储新的 Token
-        storeAuthToken(newToken);
-
-        // 用新的 Token 重试原始的请求
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-        return api(originalRequest);
-
-      } catch (refreshError) {
-        // 刷新 Token 也失败了，说明 refreshToken 也过期了，需要重新登录
-        console.error('刷新令牌失败，需要重新登录', refreshError);
-        removeAuthToken();
-        // 跳转到登录页
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
-    
+    // if (status === 401) {
+    //   // Token 过期或无效
+    //   removeToken()
+    //   // 跳转到登录页
+    //   window.location.href = '/login'
+    // }
     
     // 模拟修改昵称接口
     //Tips:当响应错误发生时，才会进入这个拦截器的错误处理部分
@@ -128,6 +119,7 @@ const app = createApp(App);
 // 将 axios 挂载到 Vue 实例上
 app.config.globalProperties.$axios = axios;
 app.config.globalProperties.$qs = qs;
+//app.config.globalProperties.$api = api
 
 app.config.globalProperties.$getCurDate = getCurDate;
 app.config.globalProperties.$setSessionStorage = setSessionStorage;
