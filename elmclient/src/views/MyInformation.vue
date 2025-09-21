@@ -278,7 +278,7 @@ export default {
           toast.warning('用户未登录，请先登录！');
           router.push({ path: '/login' });
           return;
-        }
+        } 
 
         // 使用 request 调用 API
         const response = await request.get('/api/person', {
