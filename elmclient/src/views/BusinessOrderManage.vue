@@ -1,4 +1,5 @@
 <template>
+  <!-- 管理端商家管理 -->
   <div class="wrapper">
     <!-- 顶部蓝色栏，与 OrderList 保持一致 -->
     <header class="topbar">

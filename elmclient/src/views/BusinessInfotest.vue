@@ -1,97 +1,90 @@
 <template>
-    <div class="wrapper">
-        <!-- header部分 -->
-        <!-- 首页点进去后展示的内容 -->
-        <header>
-            <p>商家信息</p>
-        </header>
-        <!-- 商家logo部分 -->
-        <div class="business-logo">
-            <img :src="business.businessImg || require('@/assets/default-business.png')" />
-        </div>
+	<div class="wrapper">
+		<!-- header部分 -->
+		<!-- 首页点进去后展示的内容 -->
+		<header>
+			<p>商家信息</p>
+		</header>
+		<!-- 商家logo部分 -->
+		<div class="business-logo">
+			<img :src="business.businessImg || require('@/assets/default-business.png')" />
+		</div>
 
-        <!-- 商家信息部分 -->
-        <div class="business-info">
-            <h1>{{ business.businessName }}</h1>
-            <p>
-                &#165;{{ business.startPrice }}起送 &#165;{{
-                    business.deliveryPrice
-                }}配送
-            </p>
-            <p>{{ business.businessExplain }}</p>
-            <div class="reactions">
-                <div class="reaction" @click.stop="toggleLike"
-                    :class="{ 'active': isLiked, 'disabled': interactionLoading }" :title="isLiked ? '已点赞' : '点赞'">
-                    <i class="fa fa-thumbs-up"
-                        :style="isLiked ? 'color:#e74c3c' : interactionLoading ? 'color:#ddd' : 'color:#bbb'"></i>
-                    <span v-if="interactionLoading" class="loading-dots">...</span>
-                </div>
-                <div class="reaction" @click.stop="toggleFavorite"
-                    :class="{ 'active': isFavorited, 'disabled': interactionLoading }"
-                    :title="isFavorited ? '已收藏' : '收藏'">
-                    <i class="fa fa-star"
-                        :style="isFavorited ? 'color:#e74c3c' : interactionLoading ? 'color:#ddd' : 'color:#bbb'"></i>
-                    <span v-if="interactionLoading" class="loading-dots">...</span>
-                </div>
-            </div>
-        </div>
+		<!-- 商家信息部分 -->
+		<div class="business-info">
+			<h1>{{ business.businessName }}</h1>
+			<p>
+				&#165;{{ business.startPrice }}起送 &#165;{{
+					business.deliveryPrice
+				}}配送
+			</p>
+			<p>{{ business.businessExplain }}</p>
+			<div class="reactions">
+				<div class="reaction" @click.stop="toggleLike">
+					<i class="fa fa-thumbs-up" :style="isLiked ? 'color:#e74c3c' : 'color:#bbb'"></i>
+				</div>
+				<div class="reaction" @click.stop="toggleFavorite">
+					<i class="fa fa-star" :style="isFavorited ? 'color:#e74c3c' : 'color:#bbb'"></i>
+				</div>
+			</div>
+		</div>
 
-        <!-- 食品列表部分 -->
-        <ul class="food">
-            <li v-for="(item, index) in foodArr" :key="item.foodId">
-                <div class="food-left">
-                    <img :src="item.foodImg || require('@/assets/default-business.png')" />
-                    <div class="food-left-info">
-                        <h3>{{ item.foodName }}</h3>
-                        <p>{{ item.foodExplain }}</p>
-                        <p>&#165;{{ item.foodPrice }}</p>
-                    </div>
-                </div>
-                <div class="food-right">
-                    <div>
-                        <i class="fa fa-minus-circle" @click="minus(index)" v-show="item.quantity != 0"></i>
-                    </div>
-                    <p>
-                        <span v-show="item.quantity != 0">{{ item.quantity }}</span>
-                    </p>
-                    <div>
-                        <i class="fa fa-plus-circle" @click="add(index)"></i>
-                    </div>
-                </div>
-            </li>
-        </ul>
+		<!-- 食品列表部分 -->
+		<ul class="food">
+			<li v-for="(item, index) in foodArr" :key="item.foodId">
+				<div class="food-left">
+					<img :src="item.foodImg|| require('@/assets/default-business.png')" />
+					<div class="food-left-info">
+						<h3>{{ item.foodName }}</h3>
+						<p>{{ item.foodExplain }}</p>
+						<p>&#165;{{ item.foodPrice }}</p>
+					</div>
+				</div>
+				<div class="food-right">
+					<div>
+						<i class="fa fa-minus-circle" @click="minus(index)" v-show="item.quantity != 0"></i>
+					</div>
+					<p>
+						<span v-show="item.quantity != 0">{{ item.quantity }}</span>
+					</p>
+					<div>
+						<i class="fa fa-plus-circle" @click="add(index)"></i>
+					</div>
+				</div>
+			</li>
+		</ul>
 
-        <!-- 购物车部分 -->
-        <div class="cart">
-            <div class="cart-left">
-                <div class="cart-left-icon" :style="totalQuantity == 0
-                    ? 'background-color:#505051;'
-                    : 'background-color:#3190E8;'
-                    " @click="goToCart(businessId.value)">
-                    <i class="fa fa-shopping-cart"></i>
-                    <div class="cart-left-icon-quantity" v-show="totalQuantity != 0">
-                        {{ totalQuantity }}
-                    </div>
-                </div>
-                <div class="cart-left-info">
-                    <p>&#165;{{ totalPrice.toFixed(2) }}</p>
-                    <p>另需配送费{{ business.deliveryPrice }}元</p>
-                </div>
-            </div>
-            <div class="cart-right">
-                <!-- 不够起送费 -->
-                <div class="cart-right-item" v-show="totalSettle - business.deliveryPrice < business.starPrice"
-                    style="background-color: #535356; cursor: default">
-                    &#165;{{ business.starPrice }}起送
-                </div>
-                <!-- 达到起送费 -->
+		<!-- 购物车部分 -->
+		<div class="cart">
+			<div class="cart-left">
+				<div class="cart-left-icon" :style="totalQuantity == 0
+					? 'background-color:#505051;'
+					: 'background-color:#3190E8;'
+					" @click="goToCart(businessId.value)">
+					<i class="fa fa-shopping-cart"></i>
+					<div class="cart-left-icon-quantity" v-show="totalQuantity != 0">
+						{{ totalQuantity }}
+					</div>
+				</div>
+				<div class="cart-left-info">
+					<p>&#165;{{ totalPrice.toFixed(2) }}</p>
+					<p>另需配送费{{ business.deliveryPrice }}元</p>
+				</div>
+			</div>
+			<div class="cart-right">
+				<!-- 不够起送费 -->
+				<div class="cart-right-item" v-show="totalSettle - business.deliveryPrice < business.starPrice"
+					style="background-color: #535356; cursor: default">
+					&#165;{{ business.starPrice }}起送
+				</div>
+				<!-- 达到起送费 -->
 
-                <div class="cart-right-item" @click="toOrder" v-show="totalSettle >= business.starPrice">
-                    去结算
-                </div>
-            </div>
-        </div>
-    </div>
+				<div class="cart-right-item" @click="toOrder" v-show="totalSettle >= business.starPrice">
+					去结算
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 
@@ -186,69 +179,45 @@ export default {
 
         // 加载用户互动状态（使用新的查询接口）
         const loadReactions = async () => {
-    try {
-        // 确保有有效的businessId
-        if (!businessId.value) {
-            console.error("缺少businessId");
-            return;
-        }
+            try {
+                const userId = userInfo.value?.id;
+                if (!userId) return;
 
-        // 等待用户信息加载（最多等待2秒）
-        let retry = 0;
-        while (!userInfo.value?.id && retry < 4) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            retry++;
-        }
+                console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
+                
+                const response = await request.get('/api/merchant/interaction/status', {
+                    params: {
+                        userId: userId,
+                        merchantId: businessId.value
+                    }
+                });
 
-        const userId = userInfo.value?.id;
-        if (!userId) {
-            console.log("用户未登录，不加载互动状态");
-            isLiked.value = false;
-            isFavorited.value = false;
-            return;
-        }
+                console.log("互动状态查询响应:", response);
 
-        console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
-        
-        const response = await request.get('/api/merchant/interaction/status', {
-            params: { userId, merchantId: businessId.value },
-            headers: { 'Cache-Control': 'no-cache' } // 防止缓存
-        });
+                if (response.success) {
+                    isLiked.value = response.data.liked;
+                    isFavorited.value = response.data.collected;
+                    console.log(`互动状态加载成功 - 点赞: ${isLiked.value}, 收藏: ${isFavorited.value}`);
+                } else {
+                    console.error("加载互动状态失败:", response.message);
+                    // 初始化默认状态
+                    isLiked.value = false;
+                    isFavorited.value = false;
+                }
+            } catch (error) {
+                console.error("加载互动状态异常:", error);
+                // 出错时初始化默认状态
+                isLiked.value = false;
+                isFavorited.value = false;
+            }
+        };
 
-        console.log("互动状态API响应:", response);
-
-        // 根据实际API响应结构调整
-        if (response?.success) {
-            isLiked.value = Boolean(response.data?.liked);
-            isFavorited.value = Boolean(response.data?.collected);
-            console.log(`设置互动状态 - 点赞: ${isLiked.value}, 收藏: ${isFavorited.value}`);
-        } else {
-            console.error("API返回失败:", response?.message);
-            isLiked.value = false;
-            isFavorited.value = false;
-        }
-    } catch (error) {
-        console.error("加载互动状态异常:", error);
-        isLiked.value = false;
-        isFavorited.value = false;
-    }
-};
         // 更新互动状态到后端
         const updateInteraction = async (type, newValue) => {
             try {
-                // 如果已经是目标状态，则不再执行
-                if ((type === 'like' && isLiked.value === newValue) ||
-                    (type === 'favorite' && isFavorited.value === newValue)) {
-                    console.log(`已经是目标状态，无需更新: ${type}=${newValue}`);
-                    return;
-                }
-
                 interactionLoading.value = true;
                 const userId = userInfo.value?.id;
-                if (!userId) {
-                    alert('请先登录');
-                    return;
-                }
+                if (!userId) return;
 
                 const dto = {
                     userId,
@@ -258,9 +227,9 @@ export default {
                 };
 
                 console.log(`更新互动状态:`, dto);
-
+                
                 const response = await request.post('/api/merchant/interaction/update', dto);
-
+                
                 if (response.success) {
                     if (type === 'like') {
                         isLiked.value = newValue;
@@ -270,47 +239,35 @@ export default {
                     console.log(`${type}状态更新成功: ${newValue}`);
                 } else {
                     console.error(`${type}状态更新失败:`, response.message);
-                    alert('操作失败，请重试');
                 }
             } catch (error) {
                 console.error(`${type}状态更新异常:`, error);
-                alert('操作异常，请检查网络');
             } finally {
                 interactionLoading.value = false;
             }
         };
 
-
-        // 修改切换函数，增加状态检查
+        // 切换点赞状态
         const toggleLike = async () => {
             if (interactionLoading.value) return;
-            if (!userInfo.value?.id) {
-                alert('请先登录');
-                return;
-            }
             await updateInteraction('like', !isLiked.value);
         };
 
+        // 切换收藏状态
         const toggleFavorite = async () => {
             if (interactionLoading.value) return;
-            if (!userInfo.value?.id) {
-                alert('请先登录');
-                return;
-            }
             await updateInteraction('favorite', !isFavorited.value);
         };
-
-
 
         // 获取商家信息
         const fetchBusinessInfo = async () => {
             loadingBusiness.value = true;
             console.log(`开始获取商家信息，businessId: ${businessId.value}`);
-
+            
             try {
                 const response = await request.get(`/api/businesses/${businessId.value}`);
                 console.log("商家信息API完整响应:", response);
-
+                
                 if (response.success === true) {
                     console.log("API请求成功，开始处理数据");
                     business.value = {
@@ -342,7 +299,7 @@ export default {
         const fetchFoodList = async () => {
             loadingFoods.value = true;
             console.log(`开始获取食品列表，businessId: ${businessId.value}`);
-
+            
             try {
                 const response = await request.get("/api/foods/list", {
                     params: { businessId: businessId.value }
@@ -404,21 +361,21 @@ export default {
         const addToCart = (index) => {
             const food = foodArr.value[index];
             console.log(`添加商品到购物车: ${food.foodName}, 当前数量: ${food.quantity}`);
-
+            
             if (!localCart.value[food.id]) {
                 localCart.value[food.id] = 0;
             }
             localCart.value[food.id]++;
             food.quantity = localCart.value[food.id];
             saveCartToLocal();
-
+            
             console.log(`添加后购物车状态:`, localCart.value);
         };
 
         const removeFromCart = (index) => {
             const food = foodArr.value[index];
             console.log(`从购物车移除商品: ${food.foodName}, 当前数量: ${food.quantity}`);
-
+            
             if (localCart.value[food.id] <= 1) {
                 delete localCart.value[food.id];
                 food.quantity = 0;
@@ -427,7 +384,7 @@ export default {
                 food.quantity = localCart.value[food.id];
             }
             saveCartToLocal();
-
+            
             console.log(`移除后购物车状态:`, localCart.value);
         };
 
@@ -492,29 +449,24 @@ export default {
         });
 
         // 初始化
-    
-// 修改 onMounted 部分
-onMounted(async () => {
-    console.log("组件挂载完成");
-    businessId.value = parseInt(route.query.businessId);
-    
-    if (!businessId.value) {
-        console.error("无效的商家ID:", route.query.businessId);
-        router.push("/");
-        return;
-    }
+        onMounted(() => {
+            console.log("组件挂载完成");
+            businessId.value = parseInt(route.query.businessId);
+            console.log("解析后的businessId:", businessId.value);
+            
+            if (!businessId.value) {
+                console.error("无效的商家ID:", route.query.businessId);
+                router.push("/");
+                return;
+            }
 
-    // 先加载用户信息
-    await fetchUserInfo();
-    
-    // 然后加载其他数据
-    initLocalCart();
-    await fetchBusinessInfo();
-    await fetchFoodList();
-    
-    // 最后加载互动状态（确保有用户ID）
-    await loadReactions();
-});
+            fetchUserInfo();
+            initLocalCart();
+            fetchBusinessInfo();
+            fetchFoodList();
+            loadReactions();
+        });
+
         // 监听businessId变化
         watch(() => route.query.businessId, (newId) => {
             console.log("路由businessId变化:", newId);
@@ -551,8 +503,6 @@ onMounted(async () => {
     }
 };
 </script>
-
-
 
 <style scoped>
 /****************** 总容器 ******************/
@@ -780,5 +730,4 @@ onMounted(async () => {
 	align-items: center;
 }
 </style>
-
 
