@@ -5,16 +5,16 @@
 			<!-- 所有商家列表 -->
 			<h2 class="section-title">商家列表</h2>
 			<ul class="business-list">
-				<li v-for="b in businessList" :key="b.businessId" class="business-item">
-					<div class="info" @click="enterBusiness(b)">
-						<img :src="b.businessImg || defaultImg" alt="logo" class="logo" @error="onImgError">
+				<li v-for="b in businessList" :key="b.userId" class="business-item">
+					<div class="info" >
+						<img :src="b.photo || defaultImg" alt="logo" class="logo" @error="onImgError">
                         <div class="meta">
-                            <p class="name" :class="{ disabled: b.disabled }">{{ b.businessName }}</p>
-                            <p class="addr" :class="{ disabled: b.disabled }">{{ b.businessAddress || '地址未填写' }}</p>
+                            <p class="name">{{ b.username }}集团</p>
+                            <p class="addr">联系方式：{{ b.phone || '手机号未填写' }}</p>
                         </div>
 					</div>
 					<div class="actions">
-						<button class="toggle" @click.stop="toggleEnable(b)">{{ b.disabled ? '启用' : '禁用' }}</button>
+						<button class="toggle" @click.stop="enterBusiness(b)">查看商铺</button>
 					</div>
 				</li>
 			</ul>
@@ -28,11 +28,11 @@
 					<h3>{{ editor.mode === 'create' ? '新增商铺' : '编辑商铺' }}</h3>
 					<div class="form">
 						<label>商铺名称</label>
-						<input v-model="editor.form.businessName" placeholder="请输入商铺名称" />
+						<input v-model="editor.form.username" placeholder="请输入商铺名称" />
 						<label>图片地址</label>
-						<input v-model="editor.form.businessImg" placeholder="http(s)://..." />
-						<label>商铺地址</label>
-						<input v-model="editor.form.businessAddress" placeholder="请输入地址" />
+						<input v-model="editor.form.photo" placeholder="http(s)://..." />
+						<label>手机号</label>
+						<input v-model="editor.form.phone" placeholder="请输入手机号" />
 					</div>
 					<div class="editor-actions">
 						<button class="cancel" @click="closeEditor">取消</button>
@@ -48,136 +48,128 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-
+import request from '../utils/request';	
 export default {
-	name: 'ManageBusiness',
-	setup() {
-    const businessList = ref([]);
-		const storeList = ref([]);
-		const currentBusiness = ref(null);
-		const defaultImg = '/R-C.png';
-    const router = useRouter();
+    name: 'ManageBusiness',
+    setup() {
+        const businessList = ref([]);
+        const defaultImg = '/R-C.png';
+        const router = useRouter();
 
-		const editor = reactive({
-			visible: false,
-			mode: 'edit', // 'create' | 'edit'
-			form: {
-				businessId: null,
-				businessName: '',
-				businessImg: '',
-				businessAddress: ''
-			}
-		});
+        const editor = reactive({
+            visible: false,
+            mode: 'edit', // 'create' | 'edit'
+            form: {
+                userId: null,
+                username: '',
+                photo: '',
+                phone: ''
+            }
+        });
 
-		const onImgError = (e) => { e.target.src = defaultImg; };
+        // 图片加载失败处理
+        const onImgError = (e) => { 
+            e.target.src = defaultImg; 
+        };
 
-		const loadBusinesses = async () => {
-			try {
-				const resp = await axios.get('BusinessController/listAll');
-				businessList.value = Array.isArray(resp.data) ? resp.data : [];
-				if (!businessList.value.length) throw new Error('empty');
-			} catch (e) {
-				// mock fallback
-				businessList.value = [
-					{ businessId: 1001, businessName: '美味小厨集团', businessImg: '', businessAddress: '天津市和平区', disabled: false },
-					{ businessId: 1002, businessName: '街角奶茶集团', businessImg: '', businessAddress: '天津市南开区', disabled: true }
-				];
-			}
-		};
+        // 加载商家列表（从后端接口获取）
+        const loadBusinesses = async () => {
+            try {
+                const response = await request.get('http://localhost:8080/api/businesses/active');
+                businessList.value = response;
+				console.log('response.data:', response.data);
+				console.log('response:', response);
+                console.log('加载商家列表:', businessList.value);
+            } catch (error) {
+                console.error('获取商家列表失败:', error);
+                // 可以在这里添加错误提示
+            }
+        };
 
-    const enterBusiness = async (biz) => {
-        router.push({ path: '/admin/shop', query: { ownerId: biz.businessId, businessName: biz.businessName } });
-    };
+        // 进入商家管理
+        const enterBusiness = (biz) => {
+            console.log('进入商家管理:', biz.username);
+            router.push({ 
+                path: '/admin/shop', 
+                query: { 
+                    ownerId: biz.userId, 
+                    merchantName: biz.username + '集团' 
+                } 
+            });
+        };
 
-		const loadStores = async (ownerId) => {
-			try {
-				const resp = await axios.post('BusinessController/listStoresByOwner', { businessId: ownerId });
-				storeList.value = Array.isArray(resp.data) ? resp.data : [];
-				if (!storeList.value.length) throw new Error('empty');
-			} catch (e) {
-				// mock fallback
-				storeList.value = [
-					{ businessId: `${ownerId}-A`, businessName: '美味小厨（海光寺店）', businessImg: '', businessAddress: '和平区南京路188号' },
-					{ businessId: `${ownerId}-B`, businessName: '美味小厨（天塔店）', businessImg: '', businessAddress: '河西区围堤道88号' }
-				];
-			}
-		};
+        // 编辑器相关方法
+        const startEdit = (business) => {
+            editor.mode = 'edit';
+            editor.form = { 
+                ...business 
+            };
+            editor.visible = true;
+        };
 
-		const toggleEnable = async (biz) => {
-			const next = !biz.disabled;
-			try {
-				await axios.post('BusinessController/toggleEnable', { businessId: biz.businessId, disabled: next });
-				biz.disabled = next;
-			} catch (e) {
-				biz.disabled = next; // 前端演示
-			}
-		};
+        const startCreate = () => {
+            editor.mode = 'create';
+            editor.form = { 
+                userId: null, 
+                username: '', 
+                photo: '', 
+                phone: '' 
+            };
+            editor.visible = true;
+        };
 
-		const startEdit = (store) => {
-			editor.mode = 'edit';
-			editor.form = { businessId: store.businessId, businessName: store.businessName, businessImg: store.businessImg, businessAddress: store.businessAddress };
-			editor.visible = true;
-		};
-		const startCreate = () => {
-			editor.mode = 'create';
-			editor.form = { businessId: null, businessName: '', businessImg: '', businessAddress: '' };
-			editor.visible = true;
-		};
-		const closeEditor = () => { editor.visible = false; };
+        const closeEditor = () => { 
+            editor.visible = false; 
+        };
 
-		const saveStore = async () => {
-			try {
-				if (editor.mode === 'create') {
-					const resp = await axios.post('BusinessController/createStore', { ownerId: currentBusiness.value.businessId, ...editor.form });
-					const saved = resp.data || { ...editor.form, businessId: Date.now() };
-					storeList.value.push(saved);
-				} else {
-					await axios.post('BusinessController/updateStore', editor.form);
-					const idx = storeList.value.findIndex(s => s.businessId === editor.form.businessId);
-					if (idx >= 0) storeList.value[idx] = { ...storeList.value[idx], ...editor.form };
-				}
-				editor.visible = false;
-			} catch (e) {
-				// 前端演示保存
-				if (editor.mode === 'create') {
-					storeList.value.push({ ...editor.form, businessId: Date.now() });
-				} else {
-					const idx = storeList.value.findIndex(s => s.businessId === editor.form.businessId);
-					if (idx >= 0) storeList.value[idx] = { ...storeList.value[idx], ...editor.form };
-				}
-				editor.visible = false;
-			}
-		};
+        // 保存商家信息（需要对接后端接口）
+        const saveStore = async () => {
+            try {
+                if (editor.mode === 'create') {
+                    // 调用新增接口
+                    const response = await request.post('http://localhost:8080/api/businesses', editor.form);
+                    businessList.value.push(response.data);
+                    console.log('新增商家:', response.data);
+                } else {
+                    // 调用更新接口
+                    const response = await request.put(`http://localhost:8080/api/businesses/${editor.form.userId}`, editor.form);
+                    const index = businessList.value.findIndex(
+                        b => b.userId === editor.form.userId
+                    );
+                    if (index >= 0) {
+                        businessList.value[index] = response.data;
+                        console.log('更新商家:', businessList.value[index]);
+                    }
+                }
+                editor.visible = false;
+            } catch (error) {
+                console.error('保存商家信息失败:', error);
+                // 可以在这里添加错误提示
+            }
+        };
 
-		const removeStore = async (store) => {
-			if (!confirm('确认删除该商铺吗？')) return;
-			try {
-				await axios.post('BusinessController/deleteStore', { businessId: store.businessId });
-				storeList.value = storeList.value.filter(s => s.businessId !== store.businessId);
-			} catch (e) {
-				storeList.value = storeList.value.filter(s => s.businessId !== store.businessId);
-			}
-		};
+        // 初始化加载数据
+        onMounted(() => {
+            loadBusinesses();
+        });
 
-		onMounted(() => {
-			loadBusinesses();
-		});
-
-		return {
-			businessList,
-			storeList,
-			currentBusiness,
-			defaultImg,
-			onImgError,
-			enterBusiness,
-			toggleEnable,
-			editor
-		};
-	}
+        return {
+            businessList,
+            defaultImg,
+            editor,
+            onImgError,
+            enterBusiness,
+            startEdit,
+            startCreate,
+            closeEditor,
+            saveStore
+        };
+    }
 };
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .wrapper { width: 100%; min-height: 100vh; background: #fff; }
 .topbar { width: 100%; height: 12vw; background: #409eff; color: #fff; font-size: 4.8vw; position: fixed; left: 0; top: 0; z-index: 1000; display: flex; justify-content: center; align-items: center; }
 .content { margin-top: 12vw; padding: 4vw; }
@@ -190,7 +182,6 @@ export default {
 .meta { display: flex; flex-direction: column; }
 .name { font-size: 4vw; color: #333; }
 .addr { font-size: 3.2vw; color: #777; margin-top: .6vw; }
-.name.disabled, .addr.disabled { color: #bbb; }
 .store-item .actions { display: flex; flex-direction: row; align-items: center; gap: 2vw; white-space: nowrap; }
 .business-item .actions { display: flex; flex-direction: row; align-items: center; gap: 2vw; white-space: nowrap; }
 .actions button { margin-left: 0; }
@@ -210,5 +201,3 @@ export default {
 .editor-actions .cancel { background: #eee; color: #333; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
 .editor-actions .save { background: #1e80ff; color: #fff; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
 </style>
-
-
