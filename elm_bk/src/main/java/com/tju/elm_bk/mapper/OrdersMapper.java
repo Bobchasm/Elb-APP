@@ -47,7 +47,7 @@ public interface OrdersMapper {
 
     @Select("""
         <script>
-            select o.*, uc.username as customerName, b.business_name, da.address,da.contact_name,da.contact_sex,da.contact_tel
+            select o.*, uc.username as customerName, b.business_name,b.business_img, da.address,da.contact_name,da.contact_sex,da.contact_tel
             from orders o
             left join users uc on uc.id = o.customer_id
             left join business b on b.id = o.business_id

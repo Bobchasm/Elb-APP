@@ -3,6 +3,7 @@ package com.tju.elm_bk.controller;
 import com.tju.elm_bk.dto.OrderDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.OrderService;
+import com.tju.elm_bk.vo.OrderItemDetailVO;
 import com.tju.elm_bk.vo.OrderItemVO;
 import com.tju.elm_bk.vo.OrderVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,6 +51,12 @@ public class OrderController {
     @Operation(summary = "获取用户自己的相应状态的订单列表")
     public HttpResult<List<OrderItemVO>> listOrdersByUser(@RequestParam(required = false) Integer orderState) {
         return HttpResult.success(orderService.getOrderItemListByUser(orderState));
+    }
+
+    @GetMapping("/detail")
+    @Operation(summary = "获取订单详情")
+    public HttpResult<OrderItemDetailVO> listOrdersByUser(@RequestParam Long orderId) {
+        return HttpResult.success(orderService.getOrderItemDetail(orderId));
     }
 
     @PutMapping("/status")

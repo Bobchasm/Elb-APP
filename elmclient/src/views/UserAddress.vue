@@ -15,9 +15,11 @@
 		  <div class="addresslist-right">
 			<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 			<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
+			<botton class="fa fa-select" @click="selectUserAddress(item.id)">使用</botton>
 		  </div>
 		</li>
 	  </ul>
+
   
 	  <!-- 新增地址部分 -->
 	  <div class="addbtn" @click="toAddUserAddress">
@@ -43,11 +45,15 @@
 	  const deliveryAddressArr = ref([]);
 	  const route = useRoute();
 	  const router = useRouter();
-	  //const businessId = ref(route.query.businessId);
+	  const businessId = ref(route.query.businessId);
+	  const orderId = ref();
+
 	  onMounted(() => {
 		const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 		const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
 		user.value = userFromLocal || userFromSession;
+		//businessId.value = 1
+		businessId.value = route.query.businessId;
 		listDeliveryAddressByUserId();
 	  });
   
@@ -73,6 +79,21 @@
 	  const toAddUserAddress = () => {
 		router.push({ path: '/addUserAddress', query: { businessId: businessId.value } });
 	  };
+
+
+	  const selectUserAddress = (id) => {
+		request.get("/api/orders/submit?businessId=" + businessId.value + "&addressId=" + id)
+  				.then(response => {
+  					if (response.success) {
+						orderId.value = response.data;
+						router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data} });
+  					} else {
+  						alert('下单失败！');
+  					}
+			}).catch(error => {
+			console.error('下单失败:', error);
+		});
+	  };
   
 	  const editUserAddress = (id) => {
 		router.push({ path: '/editUserAddress', query: { businessId: businessId.value, id } });
@@ -89,7 +110,7 @@
 		console.log(response.data);
         if (response.success) {
           let deliveryAddress = JSON.parse(localStorage.getItem(user.value.id.toString()));
-          if (deliveryAddress && deliveryAddress.id ===id ) {
+          if (deliveryAddress && deliveryAddress.id === id ) {
             localStorage.removeItem(user.value.id.toString());
           }
           listDeliveryAddressByUserId();
@@ -112,7 +133,9 @@
 		toAddUserAddress,
 		editUserAddress,
 		removeUserAddress,
-		sexFilter
+		selectUserAddress,
+		sexFilter,
+		orderId
 	  };
 	},
 	components: {
@@ -162,7 +185,7 @@
 		 }
 	
 		 .wrapper .addresslist li .addresslist-left {
-		 	flex: 5;
+		 	flex: 2.5;
 		 	/*左边这块区域是可以点击的*/
 		 	user-select: none;
 		 	cursor: pointer;
@@ -209,5 +232,17 @@
 		 .wrapper .addbtn p {
 		 	margin-left: 2vw;
 		 }
+
+  		 .wrapper .addresslist .addresslist-right .fa-select {
+            background-color: #0097ef;
+            color: #fff;
+            border: none;
+            padding: 2vw 3.5vw;
+            border-radius: 5px;
+            font-size: 3vw;
+            cursor: pointer;
+            margin-left: 2vw;
+            transition: background-color 0.3s;
+          }
   
 </style>

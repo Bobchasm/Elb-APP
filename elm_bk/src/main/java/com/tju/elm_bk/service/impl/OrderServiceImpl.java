@@ -182,6 +182,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new APIException(ResultCodeEnum.ORDER_CANCEL_FAILED);
             }
         }
+        ordersMapper.setOrderState(orderId, orderState);
         return order.getId();
     }
 

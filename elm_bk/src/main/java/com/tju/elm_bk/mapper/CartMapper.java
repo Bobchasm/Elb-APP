@@ -19,7 +19,7 @@ public interface CartMapper {
 
     @Select("""
         select c.id,c.business_id,c.quantity,c.food_id,
-           f.food_name,f.food_price,b.business_name
+           f.food_name,f.food_price,f.food_img,b.business_name
         from cart c
         left join food f on f.id = c.food_id and f.is_deleted = 0
         left join business b on c.business_id = b.id and b.is_deleted = 0
