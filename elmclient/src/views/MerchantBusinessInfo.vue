@@ -12,7 +12,6 @@
       <div class="business-logo">
         <img :src="business.businessImg" />
       </div>
-
       <div class="info-details">
         <h1>{{ business.businessName }}</h1>
         <p class="price-info">

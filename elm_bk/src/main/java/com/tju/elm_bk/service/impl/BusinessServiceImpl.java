@@ -1,6 +1,7 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.dto.BusinessDTO;
+import com.tju.elm_bk.dto.BusinessInfoDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.entity.User;
@@ -193,7 +194,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore ,boolean isSales) {
         List<BusinessSearchVO> businesses = businessMapper.searchBusinesses(keyword);
-
+        System.out.println(businesses);
         // 为每个店铺计算评分与销量
         for (BusinessSearchVO business : businesses) {
             Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
@@ -246,7 +247,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (comparator != null) {
             businesses.sort(comparator);
         }
-
+        System.out.println(businesses);
         return businesses;
     }
 
@@ -309,5 +310,20 @@ public class BusinessServiceImpl implements BusinessService {
         return businessMapper.applyForAddBusiness(business);
     }
 
+    @Override
+    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+        List<BusinessInfoDTO> businesses = businessMapper.getAllActiveBusinesses();
+        return businesses;
+    }
+
+    @Override
+    public List<Business> getMerchantBusinesses(Long userId, Integer status) {
+        return businessMapper.selectByUserIdAndStatus(userId, status);
+    }
+
+    @Override
+    public List<Business> listBusinessByOrderTypeId(Integer type) {
+        return businessMapper.listBusinessByOrderTypeId(type);
+    }
 
 }

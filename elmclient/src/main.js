@@ -50,7 +50,7 @@ router.beforeEach((to, from, next) => {
   // 商家专属页面的路径
   const businessPaths = ['/businessView', '/businessInformation', '/submitItems'];
   
-  // 如果是访问商家专属页面
+  //如果是访问商家专属页面
   if (businessPaths.includes(to.path)) {
     if (!businessUser || !businessUser.isBusiness) {
       // 如果没有商家登录，重定向到首页
@@ -58,7 +58,7 @@ router.beforeEach((to, from, next) => {
     }
   }
   
-  // 普通用户页面的验证逻辑
+  //普通用户页面的验证逻辑
   if (!(to.path === '/' || to.path === '/index' || to.path === '/businessList' || 
       to.path === '/businessInfo' || to.path === '/login' || to.path === '/register' || 
       to.path === '/lChoose' || to.path === '/rChoose' || to.path === '/businessLogin' || 

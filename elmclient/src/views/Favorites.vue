@@ -19,7 +19,8 @@
     </div>
 
     <div v-else class="business-list">
-      <div v-for="business in favoriteList" :key="business.businessId" class="business-item" @click="goToBusinessInfo(business.businessId)">
+      <div v-for="business in favoriteList" :key="business.businessId" class="business-item"
+        @click="goToBusinessInfo(business.businessId)">
         <img :src="business.businessImg" :alt="business.businessName" class="business-img">
         <div class="business-details">
           <div class="business-name">{{ business.businessName }}</div>
@@ -43,6 +44,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
+import request from '@/utils/request'; // 使用封装好的request
 
 export default {
   name: 'Favorites',
@@ -56,49 +58,27 @@ export default {
       loading.value = true;
       errorMessage.value = '';
       try {
-        const user = JSON.parse(sessionStorage.getItem('user'));
-        if (!user || !user.userId) {
+        const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+        if (!userInfo || !userInfo.id) {
           toast.warning('请先登录以查看收藏列表！');
           router.push('/login');
           return;
         }
 
-        const response = await new Promise(resolve => {
-            setTimeout(() => {
-              const mockData = [
-                {
-                  businessId: 10001,
-                  businessName: '美食天堂',
-                  businessImg: 'https://via.placeholder.com/100/f39c12/ffffff?text=FOOD',
-                  starRating: 4.8,
-                  salesVolume: 2567,
-                  deliveryFee: 5,
-                  startPrice: 20, // 添加起送费
-                },
-                {
-                  businessId: 10002,
-                  businessName: '健康沙拉屋',
-                  businessImg: 'https://via.placeholder.com/100/2ecc71/ffffff?text=SALAD',
-                  starRating: 4.5,
-                  salesVolume: 1890,
-                  deliveryFee: 3,
-                  startPrice: 15, // 添加起送费
-                },
-                {
-                  businessId: 10003,
-                  businessName: '甜品小屋',
-                  businessImg: 'https://via.placeholder.com/100/e74c3c/ffffff?text=DESSERT',
-                  starRating: 5.0,
-                  salesVolume: 3125,
-                  deliveryFee: 6,
-                  startPrice: 25, // 添加起送费
-                }
-              ];
-              resolve({ data: mockData });
-            }, 1000);
-        });
+        // 调用后端API获取收藏列表
+        const response = await request.get(`/api/merchant/interaction/collections/${userInfo.id}`);
 
-        favoriteList.value = response.data;
+        // 将后端返回的数据映射到前端需要的格式
+        favoriteList.value = response.data.map(business => ({
+          businessId: business.id,
+          businessName: business.businessName,
+          businessImg: business.businessImg,
+          starRating: Number(business.score) || 0, // 确保是数字
+          salesVolume: business.salesCount || 0,
+          deliveryFee: Number(business.deliveryPrice) || 0,
+          startPrice: Number(business.startPrice) || 0
+        }));
+
       } catch (error) {
         console.error('获取收藏列表失败:', error);
         errorMessage.value = '获取收藏列表失败，请稍后重试。';
@@ -109,12 +89,12 @@ export default {
     };
 
     const goToBusinessInfo = (businessId) => {
-      router.push({ 
-        path: '/businessInfo', 
-        query: { businessId: businessId } 
+      router.push({
+        path: '/businessInfo',
+        query: { businessId: businessId }
       });
     };
-    
+
     const goBack = () => {
       router.back();
     };
@@ -134,10 +114,12 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .container {
   max-width: 600px;
   margin: 0 auto;
+  padding-bottom: 40px;
   background-color: #f0f2f5;
   min-height: 100vh;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -168,14 +150,16 @@ export default {
 
 .back-icon {
   position: absolute;
-  left: 15px;
+  left: 5px;
   font-size: 1.2rem;
   color: #666;
   cursor: pointer;
   padding: 5px;
 }
 
-.loading-message, .error-message, .empty-message {
+.loading-message,
+.error-message,
+.empty-message {
   text-align: center;
   padding: 50px 20px;
   color: #777;
@@ -204,7 +188,7 @@ export default {
 }
 
 .business-list {
-  padding: 15px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -246,7 +230,8 @@ export default {
   margin-bottom: 8px;
 }
 
-.business-info-row, .business-delivery-row {
+.business-info-row,
+.business-delivery-row {
   display: flex;
   align-items: center;
   font-size: 0.85rem;

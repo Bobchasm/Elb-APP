@@ -38,7 +38,7 @@
           <span class="order-id">订单号: {{ order.id }}</span>
           <span class="status-badge" :class="getStatusClass(order.orderState)">{{ getStatusText(order.orderState) }}</span>
         </div>
-        
+
         <div class="order-content">
           <div class="customer-info">
             <p><span>顾客:</span> {{ order.customerName || '-' }}</p>
@@ -63,19 +63,19 @@
             <span class="order-total">总计: ¥ {{ order.orderTotal.toFixed(2) }}</span>
           </div>
         </div>
-        
+
         <div class="actions">
           <!-- 待接单：拒单 + 接单 -->
           <template v-if="order.orderState === 1">
             <button class="cancel-btn" @click.stop="rejectOrder(order.id)">拒单</button>
             <button class="confirm-btn" @click.stop="acceptOrder(order.id)">接单</button>
           </template>
-          
+
           <!-- 已接单：完成订单 -->
           <template v-else-if="order.orderState === 2">
             <button class="complete-btn" @click.stop="completeOrder(order.id)">完成订单</button>
           </template>
-          
+
           <!-- 已完成/已取消：查看详情 -->
           <!-- <template v-else>
             <button class="detail-btn" @click.stop="goDetail(order)">查看详情</button>
@@ -90,7 +90,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router'; // 添加 useRoute
 import request from '../utils/request';
 import BusinessFooter from '@/components/BusinessFooter.vue';
 
@@ -102,15 +102,15 @@ export default {
     const loading = ref(false);
     const orders = ref([]);
     const businessId = ref();
-    
+    const route = useRoute(); // 添加这行
     // 订单状态标签
     const statusTabs = ref(['全部', '待接单', '已接单', '已完成', '已取消']);
     const activeStatusTab = ref(0);
-    
+
     // 订单状态映射
     const statusMap = {
       0: "待支付",
-      1: "待接单", 
+      1: "待接单",
       2: "已接单",
       3: "已完成",
       4: "已取消"
@@ -123,7 +123,7 @@ export default {
         const response = await request.get("/api/orders/list/business", {
           params: { businessId: businessId.value }
         });
-        
+
         if (response.success) {
           orders.value = response.data || [];
           console.log("获取商家订单成功:", orders.value);
@@ -147,7 +147,7 @@ export default {
     // 计算各状态订单数量
     const orderCounts = computed(() => {
       const counts = [0, 0, 0, 0, 0]; // 全部, 待接单, 已接单, 已完成, 已取消
-      
+
       orders.value.forEach(order => {
         counts[0]++; // 全部
         if (order.orderState === 1) counts[1]++; // 待接单
@@ -155,21 +155,21 @@ export default {
         else if (order.orderState === 3) counts[3]++; // 已完成
         else if (order.orderState === 4) counts[4]++; // 已取消
       });
-      
+
       return counts;
     });
 
     // 过滤订单
     const filteredOrders = computed(() => {
       if (activeStatusTab.value === 0) return orders.value; // 全部
-      
+
       const statusMap = {
         1: 1, // 待接单
         2: 2, // 已接单
         3: 3, // 已完成
         4: 4  // 已取消
       };
-      
+
       const targetStatus = statusMap[activeStatusTab.value];
       return orders.value.filter(order => order.orderState === targetStatus);
     });
@@ -184,7 +184,7 @@ export default {
       const classMap = {
         0: "unpaid",
         1: "pending",
-        2: "accepted", 
+        2: "accepted",
         3: "done",
         4: "canceled"
       };
@@ -205,7 +205,7 @@ export default {
     // 接单
     const acceptOrder = async (id) => {
       if (!confirm("确定要接单吗？")) return;
-      
+
       try {
         const response = await request.put("/api/orders/status?orderState=2&orderId=" + id);
         if (response.success) {
@@ -223,7 +223,7 @@ export default {
     // 拒单
     const rejectOrder = async (id) => {
       if (!confirm("确定要拒单吗？")) return;
-      
+
       try {
         const response = await request.put("/api/orders/status?orderState=4&orderId=" + id);
         if (response.success) {
@@ -241,12 +241,12 @@ export default {
     // 完成订单
     const completeOrder = async (orderId) => {
       if (!confirm("确定要完成订单吗？")) return;
-      
+
       try {
-        const response = await request.post("/api/orders/complete", { 
-          orderId: orderId 
+        const response = await request.post("/api/orders/complete", {
+          orderId: orderId
         });
-        
+
         if (response.data.success) {
           alert("订单已完成");
           fetchOrders(); // 重新加载订单
