@@ -1,7 +1,6 @@
 <template>
 	<div class="wrapper">
 	  <!-- header部分 -->
-	  <!-- 商家订单 -->
 	  <header>
 		<p>商家列表</p>
 	  </header>
@@ -11,305 +10,89 @@
 		<div
 		  class="business-item"
 		  v-for="business in businessArr"
-		  :key="business.businessId"
+		  :key="business.id"
 		>
-		  <div class="business-info" @click="toBusinessInfo(business.businessId)">
-			<img :src="business.businessImg" :alt="business.businessName" />
+		  <div class="business-info" @click="toBusinessInfo(business.id)">
+			<img 
+			  :src="business.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/bbd37656-0eae-41be-995e-e2be0b96aca2.png'" 
+			  :alt="business.businessName" 
+			/>
 			<div class="business-details">
 			  <div class="business-header">
-				<h3>{{ business.businessName }}</h3>
-				<div class="business-rating">
-				</div>
+				<h3>{{ business.businessName || '未知商铺' }}</h3>
 			  </div>
-			  <p class="description">{{ business.businessExplain }}</p>
+			  <p class="description">{{ business.businessExplain || '暂无描述' }}</p>
+			  <p class="description">{{ business.businessAddress || '暂无地址信息' }}</p>
 			  <div class="business-info-bottom">
 				<div class="price-info">
-				  <span>起送 ¥{{ business.starPrice }}</span>
-				  <span>配送 ¥{{ business.deliveryPrice }}</span>
-				</div>
-				<div
-				  class="business-tags"
-				  v-if="business.promotions && business.promotions.length"
-				>
-				  <span
-					class="tag"
-					v-for="(promo, index) in business.promotions"
-					:key="index"
-				  >
-					{{ promo }}
-				  </span>
+				  <span>起送 ¥{{ business.startPrice.toFixed(2) ||0}}元</span>
+				  <span>配送 ¥{{ business.deliveryPrice.toFixed(2) ||0}}元</span>
 				</div>
 			  </div>
+			  
 			</div>
 		  </div>
-  
 		</div>
 	  </div>
-  
-	  <!-- 底部菜单部分 -->
-	  <!-- <Footer /> -->
 	</div>
   </template>
   
   <script>
-import { ref, onMounted } from "vue";
-import Footer from "../components/Footer.vue";
-import axios from "axios";
-import { useRoute, useRouter } from "vue-router";
-
-export default {
-  name: "BusinessList",
-  components: {
-    Footer,
-  },
-  setup() {
-    const orderTypeId = ref(null);
-    const businessArr = ref([]);
-    const favarr = ref([]);
-    const userInfo = ref(null);
-    const route = useRoute();
-    const router = useRouter();
-    const likes = ref({});
-    const favorites = ref({});
-    const remarks = ref({});
-
-    // 初始化likes、favorites和remarks对象
-    const initializeLikesAndFavorites = async (businessId) => {
-      try {
-        // 初始化likes
-        const likeCountResponse = await axios.post(
-          "/LikesController/getLikesBybusinessId",
-          {
-            businessId: businessId,
-          }
-        );
-        const likeCount = likeCountResponse.data;
-
-        const userLikeResponse = await axios.post(
-          "/LikesController/getLikesByUserIdByBusinessId",
-          {
-            userId: userInfo.value.id,
-            businessId: businessId,
-          }
-        );
-        const isLiked = userLikeResponse.data === 1;
-
-        likes.value[businessId] = {
-          liked: isLiked,
-          count: likeCount || 0,
-        };
-
-        // 初始化favorites
-        const favoriteCountResponse = await axios.post(
-          "/FavoriteController/getFavoriteCountByBusinessId",
-          {
-            businessId: businessId,
-            userId: userInfo.value.id,
-          }
-        );
-        const favoriteCount = favoriteCountResponse.data;
-
-        favorites.value[businessId] = {
-          favorited: favarr.value.includes(businessId),
-          count: favoriteCount || 0,
-        };
-
-        // 初始化remarks
-        const remarkCountResponse = await axios.post(
-          "/RemarkController/getRemarkCountByBusinessId",
-          {
-            businessId: businessId,
-          }
-        );
-        const remarkCount = remarkCountResponse.data;
-
-        remarks.value[businessId] = {
-          count: remarkCount || 0,
-        };
-      } catch (error) {
-        console.error("初始化点赞、收藏和评论状态失败:", error);
-        likes.value[businessId] = { liked: false, count: 0 };
-        favorites.value[businessId] = { favorited: false, count: 0 };
-        remarks.value[businessId] = { count: 0 };
-      }
-    };
-
-    onMounted(async () => {
-      orderTypeId.value = route.query.orderTypeId;
-      // 从sessionStorage获取用户信息
-      const storedUserInfo = sessionStorage.getItem('userInfo');
-      if (storedUserInfo) {
-        userInfo.value = JSON.parse(storedUserInfo);
-      }
-
-      if (!userInfo.value) {
-        alert("用户未登录，请先登录！");
-        router.push({ path: "/login" });
-        return;
-      }
-      
-      try {
-        // 获取商家列表
-        const businessResponse = await axios.get(
-          "/BusinessController/listBusinessByOrderTypeId", 
-          {
-            params: {
-              orderTypeId: orderTypeId.value
-            }
-          }
-        );
-        businessArr.value = businessResponse.data;
-
-        // 获取用户收藏列表
-        const favoriteResponse = await axios.post(
-          "/FavoriteController/listFavoriteByUserId",
-          {
-            userId: userInfo.value.id,
-            businessId: null,
-          }
-        );
-        favarr.value = favoriteResponse.data;
-
-        // 初始化每个商家的点赞、收藏和评论状态
-        businessArr.value.forEach(business => {
-          initializeLikesAndFavorites(business.businessId);
-        });
-
-        // 获取购物车信息
-        await listCart();
-      } catch (error) {
-        console.error("加载数据失败:", error);
-      }
-    });
-
-    const listCart = async () => {
-      try {
-        const response = await axios.post(
-          '/CartController/listCart',
-          {
-            userId: userInfo.value.id
-          }
-        );
-        const cartArr = response.data;
-
-        businessArr.value.forEach((businessItem) => {
-          businessItem.quantity = 0;
-          cartArr.forEach((cartItem) => {
-            if (cartItem.businessId === businessItem.businessId) {
-              businessItem.quantity += cartItem.quantity;
-            }
-          });
-        });
-      } catch (error) {
-        console.error("获取购物车信息失败:", error);
-      }
-    };
-
-    const likeBusiness = async (businessId) => {
-      try {
-        if (!likes.value[businessId]) {
-          likes.value[businessId] = { liked: false, count: 0 };
-        }
-        if (likes.value[businessId].liked) {
-          await axios.post("/LikesController/removeLikes", {
-            userId: userInfo.value.id,
-            businessId,
-          });
-        } else {
-          await axios.post("/LikesController/saveLikes", {
-            userId: userInfo.value.id,
-            businessId,
-          });
-        }
-
-        // 更新点赞数
-        const likeCountResponse = await axios.post(
-          "/LikesController/getLikesBybusinessId",
-          {
-            businessId,
-          }
-        );
-
-        likes.value[businessId] = {
-          liked: !likes.value[businessId].liked,
-          count: likeCountResponse.data || 0,
-        };
-      } catch (error) {
-        console.error("点赞操作失败:", error);
-      }
-    };
-
-    const favoriteBusiness = async (businessId) => {
-      try {
-        if (!favorites.value[businessId]) {
-          favorites.value[businessId] = { favorited: false, count: 0 };
-        }
-
-        if (favorites.value[businessId].favorited) {
-          await axios.post("/FavoriteController/removeFavoriteBusinessId", {
-            userId: userInfo.value.id,
-            businessId: businessId,
-          });
-          favorites.value[businessId].favorited = false;
-        } else {
-          await axios.post("/FavoriteController/saveFavoriteBusinessId", {
-            userId: userInfo.value.id,
-            businessId: businessId,
-          });
-          favorites.value[businessId].favorited = true;
-        }
-
-        // 更新收藏数
-        const favoriteCountResponse = await axios.post(
-          "/FavoriteController/getFavoriteCountByBusinessId",
-          {
-            businessId: businessId,
-            userId: userInfo.value.id,
-          }
-        );
-        favorites.value[businessId].count = favoriteCountResponse.data || 0;
-
-        // 更新收藏列表
-        const favoriteResponse = await axios.post(
-          "/FavoriteController/listFavoriteByUserId",
-          {
-            userId: userInfo.value.id,
-            businessId: null,
-          }
-        );
-        favarr.value = favoriteResponse.data;
-      } catch (error) {
-        console.error("收藏操作失败:", error);
-      }
-    };
-
-    const commentBusiness = (businessId) => {
-      router.push({ path: "/commentBusiness", query: { businessId } });
-    };
-
-    const toBusinessInfo = (businessId) => {
-      router.push({ path: "/businessInfo", query: { businessId } });
-    };
-
-    return {
-      businessArr,
-      userInfo,
-      listCart,
-      toBusinessInfo,
-      likeBusiness,
-      likes,
-      favorites,
-      remarks,
-      favoriteBusiness,
-      commentBusiness,
-    };
-  },
-};
-</script>
-
-
+  import { ref, onMounted } from "vue";
+  import axios from "axios";
+  import { useRoute, useRouter } from "vue-router";
+  import request from "@/utils/request";
+  import toast from "@/utils/toast";
+  export default {
+	name: "BusinessList",
+	setup() {
+	  const businessArr = ref([]);
+	  const route = useRoute();
+	  const router = useRouter();
+  
+	  onMounted(async () => {
+		const orderTypeId = route.query.orderTypeId || 1; // 默认为类型1
+		
+		try {
+		  // 获取商家列表
+		  const response = await request.get(
+			"http://localhost:8080/api/businesses/type", 
+			{
+			  params: {
+				type: orderTypeId
+			  }
+			}
+		  );
+		  
+		  if (response.success) {
+			businessArr.value = response.data;
+		  } else {
+			console.error("获取商家列表失败:", response.message);
+		  }
+		} catch (error) {
+		  console.error("请求商家列表出错:", error);
+		}
+	  });
+  
+	  const toBusinessInfo = (businessId) => {
+		router.push({ 
+		  path: "/businessInfo", 
+		  query: { 
+			id: businessId 
+		  } 
+		});
+	  };
+  
+	  return {
+		businessArr,
+		toBusinessInfo,
+	  };
+	},
+  };
+  </script>
+  
   <style scoped>
-  /****************** 总容器 ******************/
+  /* 保持原有的样式不变 */
   .wrapper {
 	width: 100%;
 	height: 100%;
@@ -318,7 +101,6 @@ export default {
 	background-color: #f5f5f5;
   }
   
-  /****************** header部分 ******************/
   .wrapper header {
 	width: 100%;
 	height: 12vw;
@@ -334,7 +116,6 @@ export default {
 	align-items: center;
   }
   
-  /****************** 商家列表部分 ******************/
   .wrapper .business-list {
 	padding: 2vw;
   }
@@ -364,6 +145,7 @@ export default {
 	height: 20vw;
 	border-radius: 2vw;
 	object-fit: cover;
+	background-color: #eee; /* 图片加载前的背景色 */
   }
   
   .wrapper .business-details {
@@ -384,26 +166,6 @@ export default {
 	margin: 0;
 	color: #333;
 	font-weight: 600;
-  }
-  
-  .wrapper .business-rating {
-	display: flex;
-	align-items: center;
-	gap: 2vw;
-	font-size: 3.2vw;
-  }
-  
-  .wrapper .stars {
-	color: #ffd700;
-  }
-  
-  .wrapper .rating-score {
-	color: #ff6b00;
-	font-weight: 500;
-  }
-  
-  .wrapper .rating-count {
-	color: #666;
   }
   
   .wrapper .description {
@@ -439,79 +201,4 @@ export default {
 	background: #f0f7ff;
 	color: #0097ff;
   }
-  
-  .wrapper .tag.new {
-	background: #e8f5ff;
-	color: #0097ff;
-  }
-  
-  .wrapper .tag.special {
-	background: #fff0e5;
-	color: #ff6b00;
-  }
-  
-  .wrapper .business-actions {
-	border-top: 0.2vw solid #f5f5f5;
-	padding-top: 2vw;
-	margin-top: 2vw;
-  }
-  
-  .wrapper .action-buttons {
-	display: flex;
-	justify-content: flex-end;
-	gap: 3vw;
-  }
-  
-  .wrapper .action-btn {
-	display: flex;
-	align-items: center;
-	gap: 1vw;
-	padding: 2vw 4vw;
-	border: none;
-	border-radius: 6vw;
-	background: #f5f7fa;
-	color: #666;
-	font-size: 3.2vw;
-	cursor: pointer;
-	transition: all 0.3s ease;
-  }
-  
-  .wrapper .action-btn i {
-	font-size: 3.6vw;
-  }
-  
-  .wrapper .action-btn.like {
-	background: #f0f7ff;
-	color: #0097ff;
-  }
-  
-  .wrapper .action-btn.like.active {
-	background: #0097ff;
-	color: white;
-  }
-  
-  .wrapper .action-btn.favorite {
-	background: #fff5f0;
-	color: #ff6b00;
-  }
-  
-  .wrapper .action-btn.favorite.active {
-	background: #ff6b00;
-	color: white;
-  }
-  
-  .wrapper .action-btn.comment {
-	background: #f0fff5;
-	color: #38ca73;
-  }
-  
-  .wrapper .action-btn:hover {
-	transform: translateY(-0.5vw);
-	box-shadow: 0 0.5vw 1vw rgba(0, 0, 0, 0.1);
-  }
-  
-  .wrapper .action-btn:active {
-	transform: scale(0.95);
-  }
   </style>
-  
