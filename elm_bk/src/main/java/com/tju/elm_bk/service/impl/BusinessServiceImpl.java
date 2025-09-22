@@ -321,4 +321,9 @@ public class BusinessServiceImpl implements BusinessService {
         return businessMapper.selectByUserIdAndStatus(userId, status);
     }
 
+    @Override
+    public List<Business> listBusinessByOrderTypeId(Integer type) {
+        return businessMapper.listBusinessByOrderTypeId(type);
+    }
+
 }

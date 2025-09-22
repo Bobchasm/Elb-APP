@@ -106,4 +106,17 @@ public interface BusinessMapper {
             "   AND status = #{status}" +
             "</if>" +
             "</script>")
-    List<Business> selectByUserIdAndStatus(@Param("userId") Long userId, @Param("status") Integer status);}
+    List<Business> selectByUserIdAndStatus(@Param("userId") Long userId, @Param("status") Integer status);
+
+
+    @Select("<script>" +
+            "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain " +
+            "FROM business " +
+            "WHERE is_deleted = 0 AND status = 1" +
+            "<if test='type != null'>" +
+            "   AND order_type_id = #{type}" +
+            "</if>" +
+            "</script>")
+    List<Business> listBusinessByOrderTypeId(@Param("type") Integer type);
+
+}

@@ -157,6 +157,15 @@ public class BusinessController {
     }
 
 
+    /**
+     * 通过类型查所有店铺
+     */
+    @GetMapping("/type")
+    @Operation(summary = "通过类型查所有店铺")
+    public HttpResult<List<Business>> listBusinessByOrderTypeId(@RequestParam(required = false) Integer type) {
+        List<Business> businesses = businessService.listBusinessByOrderTypeId(type);
+        return HttpResult.success(businesses);
+    }
 
 
 }

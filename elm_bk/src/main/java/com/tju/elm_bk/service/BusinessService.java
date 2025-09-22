@@ -22,4 +22,5 @@ public interface BusinessService {
     Integer applyForAddBusiness(Business  business);
     List<BusinessInfoDTO> getAllActiveBusinesses();
     List<Business> getMerchantBusinesses(Long userId, Integer status);
+    List<Business>listBusinessByOrderTypeId(Integer type);
 }
