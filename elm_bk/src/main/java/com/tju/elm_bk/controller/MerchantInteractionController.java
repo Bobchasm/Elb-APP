@@ -49,12 +49,12 @@ public class MerchantInteractionController {
         return HttpResult.success(stats);
     }
 
-//    @GetMapping("/status")
-//    @Operation(summary = "获取用户商铺互动状态")
-//    public HttpResult<MerchantInteractionVO> getUserMerchantInteraction(
-//            @RequestParam Long userId,
-//            @RequestParam Long merchantId) {
-//        MerchantInteractionVO status = interactionService.getUserMerchantInteraction(userId, merchantId);
-//        return HttpResult.success(status);
-//    }
+    @GetMapping("/status")
+    @Operation(summary = "获取用户商铺互动状态")
+    public HttpResult<MerchantInteractionVO> getUserMerchantInteraction(
+            @RequestParam Long userId,
+            @RequestParam Long merchantId) {
+        MerchantInteractionVO status = interactionService.getUserMerchantInteraction(userId, merchantId);
+        return HttpResult.success(status);
+    }
 }

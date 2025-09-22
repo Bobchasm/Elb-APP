@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.tju.elm_bk.dto.BusinessDTO;
+import com.tju.elm_bk.dto.BusinessInfoDTO;
 import com.tju.elm_bk.dto.BusinessPermissionDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Authority;
@@ -75,4 +76,34 @@ public interface BusinessMapper {
      */
     @Select("SELECT id FROM business WHERE user_id = #{userId}")
     List<Long> getBusinessIdsByUserId(Long userId);
-}
+
+    /**
+     * 获取所有已激活的商家信息
+     * @return 商家信息列表
+     */
+    @Select("SELECT " +
+            "    p.id AS userId, " +  // 注意这里改为userId，与DTO字段名一致
+            "    u.username, " +
+            "    p.phone, " +
+            "    p.photo " +
+            "FROM " +
+            "    user_authority ua " +
+            "    JOIN users u ON ua.user_id = u.id " +
+            "    JOIN person p ON ua.user_id = p.id " +
+            "WHERE " +
+            "    ua.authority_name = 'BUSINESS' " +
+            "    AND u.is_deleted = 0 ")
+    List<BusinessInfoDTO>getAllActiveBusinesses();
+
+    @Select("<script>" +
+            "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain " +
+            "FROM business " +
+            "WHERE is_deleted = 0 " +
+            "<if test='userId != null'>" +
+            "   AND user_id = #{userId}" +
+            "</if>" +
+            "<if test='status != null'>" +
+            "   AND status = #{status}" +
+            "</if>" +
+            "</script>")
+    List<Business> selectByUserIdAndStatus(@Param("userId") Long userId, @Param("status") Integer status);}

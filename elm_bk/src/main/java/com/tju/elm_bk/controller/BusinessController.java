@@ -2,6 +2,7 @@ package com.tju.elm_bk.controller;
 
 
 import com.tju.elm_bk.dto.BusinessDTO;
+import com.tju.elm_bk.dto.BusinessInfoDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.exception.APIException;
@@ -127,13 +128,33 @@ public class BusinessController {
     }
 
     @PostMapping("/apply")
-    @Operation(summary = "商家新添加店铺--带状态")
+    @Operation(summary = "(商家和管理员增加店铺)商家新添加店铺--带状态")
     public HttpResult<Integer> applyForAddBusiness(@RequestBody Business business) {
         return HttpResult.success(businessService.applyForAddBusiness(business));
     }
 
+    /**
+     * 查某商家的所有的店铺，可传状态
+     * @return
+     */
 
-
+    @GetMapping("/merchant")
+    @Operation(summary = "(返回需要的)查某商家的所有的店铺，可传状态(管理员商铺管理第二页)")
+    public HttpResult<List<Business>> getMerchantBusinesses(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Integer status) {
+        List<Business> businesses = businessService.getMerchantBusinesses(userId, status);
+        return HttpResult.success(businesses);
+    }
+    /**
+     * 查所有激活的店铺
+     * @return
+     */
+    @GetMapping("/active")
+    @Operation(summary = "查所有激活的商家（管理端商铺管理第一页）")
+    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+        return businessService.getAllActiveBusinesses();
+    }
 
 
 

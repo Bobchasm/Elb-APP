@@ -1,6 +1,7 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.dto.BusinessDTO;
+import com.tju.elm_bk.dto.BusinessInfoDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.entity.User;
@@ -309,5 +310,15 @@ public class BusinessServiceImpl implements BusinessService {
         return businessMapper.applyForAddBusiness(business);
     }
 
+    @Override
+    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+        List<BusinessInfoDTO> businesses = businessMapper.getAllActiveBusinesses();
+        return businesses;
+    }
+
+    @Override
+    public List<Business> getMerchantBusinesses(Long userId, Integer status) {
+        return businessMapper.selectByUserIdAndStatus(userId, status);
+    }
 
 }
