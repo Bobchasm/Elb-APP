@@ -6,20 +6,27 @@
 
     <div class="container wrapper">
       <ul class="business-list">
-        <li v-for="shop in shops" :key="shop.id">
-          <div class="business-info">
-            <img :src="shop.img" :alt="shop.name">
+        <li v-for="shop in shops" :key="shop?.id || index">
+          <img  :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'" 
+                   :alt="shop?.businessName || '未命名商铺'" class="logo"
+                   @error="handleImageError">
             <div class="business-info-detail">
-              <h3>{{ shop.name }}</h3>
+              <h3>{{ shop?.businessName || '未命名商铺' }}</h3>
+              <div class="delivery-info-container">
+  <div class="business-info-delivery">
+    <p>配送费{{ shop?.deliveryPrice || 0 }}元</p>
+  </div>
+  <div class="business-info-delivery">
+    <p>起送费{{ shop?.startPrice || 0 }}元</p>
+  </div>
+</div>
               <div class="business-info-delivery">
-                <p>配送费{{ shop.deliveryFee }}元</p>
+                <p>商家地址：{{ shop?.businessAddress || 暂无地址信息 }}</p>
               </div>
             </div>
-          </div>
-          
           <div class="action-buttons">
-            <button class="edit-btn" @click="editShop(shop.id)">编辑</button>
-            <button class="delete-btn" @click="deleteShop(shop.id)">删除</button>
+            <button class="edit-btn" @click="editShop(shop?.id || index)">编辑</button>
+            <button class="delete-btn" @click="deleteShop(shop?.id || index)">删除</button>
           </div>
         </li>
       </ul>
@@ -48,39 +55,87 @@
 
 <script>
 import Swal from 'sweetalert2';
+import { ref, onMounted } from 'vue';
+import Footer from '../components/Footer.vue';
+import AddressManager from '../components/AddressManager.vue';
+import request from '../utils/request';
+import { useRouter } from 'vue-router';
+import { toast } from '../utils/toast';
 
 export default {
-  name: 'MerchantBusiness',
-  data() {
-    return {
-      shops: [
-        {
-          id: 1,
-          name: "万家饺子（软件园店）",
-          img: "https://via.placeholder.com/100",
-          deliveryFee: 4
-        },
-        {
-          id: 2,
-          name: "喜家德虾仁水饺（西安路店）",
-          img: "https://via.placeholder.com/100",
-          deliveryFee: 3
-        }
-      ]
-    };
+  name: 'MyApplication',
+  components: {
+    Footer,
+    AddressManager
   },
-  methods: {
-    editShop(shopId) {
-      // 1. 点击编辑按钮后跳转到 /merchant/businessinfo 页面
-      // 假设你已经配置了 Vue Router
-      if (this.$router) {
-        this.$router.push(`/merchant/businessinfo?shopId=${shopId}`);
-      } else {
-        console.warn('Vue Router 未配置。将执行模拟跳转。');
-        alert(`跳转到 /merchant/businessinfo?shopId=${shopId}`);
+  setup() {
+    const router = useRouter();
+    const shops = ref([]);
+    const loading = ref(false);
+    const errorMessage = ref('');
+
+    // 获取 token 的函数
+    const getToken = () => {
+      return localStorage.getItem('token') || sessionStorage.getItem('token');
+    };
+
+    // 加载商铺列表
+    const loadShops = async (status = 1) => {
+      loading.value = true;
+      errorMessage.value = '';
+      
+      try {
+        const token = getToken();
+        if (!token) {
+          toast.warning('用户未登录，请先登录！');
+          router.push({ path: '/login' });
+          return;
+        }
+
+        // 获取用户信息
+        const userResponse = await request.get('/api/person', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (userResponse && userResponse.id) {
+          // 使用用户ID获取商铺列表
+          const shopResponse = await request.get('/api/businesses/merchant', {
+            params: {
+              userId: userResponse.id,
+              status: status
+            },
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (shopResponse) {
+            shops.value = shopResponse.data;
+            console.log('商铺列表加载成功:', shops.value);
+          }
+        }
+      } catch (error) {
+        console.error('获取商铺列表失败:', error);
+        
+        if (error.response && error.response.status === 401) {
+          // Token 过期或无效
+          toast.error('登录已过期，请重新登录！');
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
+          router.push({ path: '/login' });
+        } else {
+          errorMessage.value = '获取商铺列表失败，请重试！';
+          toast.error('获取商铺列表失败，请重试！');
+        }
+      } finally {
+        loading.value = false;
       }
-    },
-    async deleteShop(shopId) {
+    };
+
+    // 删除商铺
+    const deleteShop = async (shopId) => {
       const result = await Swal.fire({
         title: '确定删除此店铺？',
         text: "删除后将无法恢复！",
@@ -91,222 +146,407 @@ export default {
         confirmButtonText: '确定删除',
         cancelButtonText: '取消'
       });
+
       if (result.isConfirmed) {
-        console.log(`正在发送删除店铺请求，ID: ${shopId}`);
-        const shopIndex = this.shops.findIndex(shop => shop.id === shopId);
-        if (shopIndex > -1) {
-          this.shops.splice(shopIndex, 1);
-          Swal.fire('删除成功', '店铺已删除。', 'success');
-        }
-      }
-    },
-    async applyNewShop() {
-      // 2. 点击申请新店后弹出模态框表单
-      const { value: formValues } = await Swal.fire({
-        title: '申请新店',
-        html:
-          '<input id="swal-input1" class="swal2-input" placeholder="商家名称">' +
-          '<input id="swal-input2" class="swal2-input" placeholder="商铺名称">' +
-          '<input id="swal-input3" class="swal2-input" placeholder="商铺地址">' +
-          '<textarea id="swal-input4" class="swal2-textarea" placeholder="简介"></textarea>',
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: '确认提交',
-        cancelButtonText: '取消',
-        preConfirm: () => {
-          const merchantName = document.getElementById('swal-input1').value;
-          const shopName = document.getElementById('swal-input2').value;
-          const shopAddress = document.getElementById('swal-input3').value;
-          const description = document.getElementById('swal-input4').value;
-          
-          if (!merchantName || !shopName || !shopAddress) {
-            Swal.showValidationMessage('请填写必填项');
-            return false;
+        try {
+          const token = getToken();
+          if (!token) {
+            toast.warning('用户未登录，请先登录！');
+            router.push({ path: '/login' });
+            return;
           }
-          
-          return { merchantName, shopName, shopAddress, description };
+
+          await request.delete(`/api/businesses/${shopId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          // 删除成功后更新本地列表
+          shops.value = shops.value.filter(shop => shop.id !== shopId);
+          toast.success('店铺删除成功！');
+        } catch (error) {
+          console.error('删除店铺失败:', error);
+          toast.error('删除店铺失败，请重试！');
         }
-      });
-      
-      if (formValues) {
-        // 表单提交成功
-        console.log('新店申请提交成功：', formValues);
-        Swal.fire('提交成功', '新店申请已提交，等待审核。', 'success');
-        // 在实际应用中，这里会发送 API 请求
-        // 例如: axios.post('/api/apply-shop', formValues);
       }
-    }
+    };
+
+    // 编辑商铺
+    const editShop = (shopId) => {
+      if (router) {
+        router.push(`/merchant/businessinfo?businessId=${shopId}`);
+      } else {
+        console.warn('Vue Router 未配置。将执行模拟跳转。');
+        alert(`跳转到 /merchant/businessinfo?businessId=${shopId}`);
+      }
+    };
+
+    // 申请新店
+    const applyNewShop = async () => {
+      try {
+        // 使用一个弹窗同时收集图片和其他信息
+        const { value: formValues } = await Swal.fire({
+          title: '申请新店',
+          html: `
+            <div style="text-align: left;">
+              <div style="margin-bottom: 15px;">
+                <label for="businessImg" style="display: block; margin-bottom: 5px;">商铺图片</label>
+                <input id="businessImg" type="file" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              </div>
+              <input id="businessName" class="swal2-input" placeholder="商铺名称" required>
+              <input id="businessAddress" class="swal2-input" placeholder="商铺地址" required>
+              <textarea id="businessExplain" class="swal2-textarea" placeholder="商铺介绍"></textarea>
+              <input id="deliveryPrice" class="swal2-input" placeholder="配送费(元)" type="number" min="0" step="0.1" required>
+              <input id="startPrice" class="swal2-input" placeholder="起送价(元)" type="number" min="0" step="0.1" required>
+            </div>
+          `,
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonText: '提交申请',
+          cancelButtonText: '取消',
+          preConfirm: async () => {
+            // 获取表单值
+            const businessName = document.getElementById('businessName').value;
+            const businessAddress = document.getElementById('businessAddress').value;
+            const businessExplain = document.getElementById('businessExplain').value;
+            const deliveryPrice = parseFloat(document.getElementById('deliveryPrice').value) || 0;
+            const startPrice = parseFloat(document.getElementById('startPrice').value) || 0;
+            const imageFile = document.getElementById('businessImg').files[0];
+
+            // 验证必填字段
+            if (!businessName || !businessAddress) {
+              Swal.showValidationMessage('请填写必填项');
+              return false;
+            }
+
+            let imageUrl = '';
+            // 如果有上传图片，先上传图片
+            if (imageFile) {
+              const formData = new FormData();
+              formData.append('file', imageFile);
+              
+              try {
+                const uploadResponse = await request.post('/upload', formData, {
+                  headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+                });
+
+                if (uploadResponse && uploadResponse.success) {
+                  imageUrl = uploadResponse.data;
+                } else {
+                  Swal.showValidationMessage('图片上传失败');
+                  return false;
+                }
+              } catch (error) {
+                Swal.showValidationMessage('图片上传出错');
+                return false;
+              }
+            }
+
+            return {
+              businessName,
+              businessAddress,
+              businessExplain,
+              deliveryPrice,
+              startPrice,
+              businessImg: imageUrl
+            };
+          }
+        });
+
+        if (formValues) {
+          // 3. 获取用户ID
+          const token = getToken();
+          if (!token) {
+            toast.warning('用户未登录，请先登录！');
+            router.push({ path: '/login' });
+            return;
+          }
+
+          const userResponse = await request.get('/api/person', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!userResponse || !userResponse.id) {
+            toast.error('获取用户信息失败');
+            return;
+          }
+
+          // 4. 提交申请
+          const applicationData = {
+            ...formValues,
+            userId: userResponse.id
+          };
+
+          const response = await request.post('/api/businesses/apply', applicationData, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response && response.success) {
+            toast.success('新店申请提交成功！');
+            // 刷新店铺列表
+            await loadShops();
+          } else {
+            toast.error(response?.message || '申请提交失败');
+          }
+        }
+      } catch (error) {
+        console.error('申请新店出错:', error);
+        toast.error('申请新店过程中出错，请重试');
+      }
+    };
+
+    // 页面加载时获取商铺列表
+    onMounted(() => {
+      loadShops();
+    });
+
+    return {
+      shops,
+      loading,
+      errorMessage,
+      deleteShop,
+      editShop,
+      applyNewShop
+    };
   }
 };
 </script>
 
-<style scoped>
+
+<style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+    /* ----------------------- 基础样式 ----------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    /* ----------------------- 顶部标题栏 ----------------------- */
+    .header {
+      width: 100%;
+      height: 12vw;
+      max-height: 60px;
+      background-color: #007bff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header h1 {
+      font-size: 5vw;
+      font-size: clamp(18px, 5vw, 24px);
+      color: #fff;
+      margin: 0;
+    }
 
-/* ----------------------- 顶部标题栏 ----------------------- */
-.shop-management-page {
-  font-family: Arial, sans-serif;
-  background-color: #f8f8f8;
-  padding-bottom: 20vw;
+    /* ----------------------- 店铺列表 ----------------------- */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 4vw;
+      padding-bottom: 120px;
+    }
+    .wrapper .business-list {
+      width: 100%;
+      padding: 0;
+      margin: 15px 0;
+      list-style: none;
+    }
+    .wrapper .business-list li {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      background-color: #fff;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wrapper .business-list li:hover {
+      background-color: #f9f9f9;
+    }
+    .business-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .business-image-container {
+      width: 20vw;
+      height: 20vw;
+      max-width: 100px;
+      max-height: 100px;
+      min-width: 80px;
+      min-height: 80px;
+      flex-shrink: 0;
+      margin-right: 12px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+    .business-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .logo { 
+	width: 20vw; 
+	height: 20vw; 
+	object-fit: cover; 
+	border-radius: 1vw; 
+	margin-right: 3vw; 
 }
-.header {
-  width: 100%;
-  height: 12vw;
-  background-color: #007bff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    .business-info-detail {
+      flex: 1;
+    }
+    .business-info-detail h3 {
+      font-size: 4vw;
+      font-size: clamp(16px, 4vw, 20px);
+      margin: 0 0 8px 0;
+      color: #333;
+      font-weight: 600;
+    }
+    .business-info-delivery {
+      font-size: 3.5vw;
+      font-size: clamp(14px, 3.5vw, 16px);
+      color: #666;
+      margin: 4px 0;
+      display: flex;
+    }
+    .delivery-info-container {
+  display: flex; /* 让子元素横向排列 */
+  gap: 10px;     /* 可选：设置间距 */
 }
-.header h1 {
-  font-size: 5vw;
-  color: #fff;
-  margin: 0;
-}
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-left: 10px;
+    }
+    .action-buttons button {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 3.5vw;
+      font-size: clamp(12px, 3.5vw, 14px);
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .action-buttons button.edit-btn {
+      color: #007bff;
+      border-color: #007bff;
+    }
+    .action-buttons button.delete-btn {
+      color: #dc3545;
+      border-color: #dc3545;
+    }
+    .action-buttons button:hover {
+      color: #fff;
+    }
+    .action-buttons button.edit-btn:hover {
+      background-color: #007bff;
+    }
+    .action-buttons button.delete-btn:hover {
+      background-color: #dc3545;
+    }
 
-/* ----------------------- 店铺列表 ----------------------- */
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 4vw;
-}
-.wrapper .business-list {
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-.wrapper .business-list li {
-  padding: 3vw;
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.wrapper .business-list li:hover {
-  background-color: #f9f9f9;
-}
-.wrapper .business-list li .business-info {
-  display: flex;
-  align-items: flex-start;
-}
-.wrapper .business-list li .business-info img {
-  width: 20vw;
-  height: 20vw;
-  object-fit: cover;
-  border-radius: 4px;
-}
-.wrapper .business-list li .business-info .business-info-detail {
-  flex: 1;
-  margin-left: 3vw;
-}
-.wrapper .business-list li .business-info .business-info-detail h3 {
-  font-size: 4vw;
-  margin: 0 0 2vw 0;
-  color: #333;
-}
-.wrapper .business-list li .business-info .business-info-delivery {
-  display: flex;
-  gap: 2vw;
-  font-size: 3vw;
-  color: #666;
-  margin: 0;
-}
-.wrapper .business-list li .business-info-rating,
-.wrapper .business-list li .business-info-promotion {
-  display: none;
-}
-.action-buttons {
-  display: flex;
-  gap: 2vw;
-}
-.action-buttons button {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 1.5vw 3vw;
-  cursor: pointer;
-  font-size: 3vw;
-  transition: background-color 0.3s, color 0.3s;
-}
-.action-buttons button.edit-btn {
-  color: #007bff;
-  border-color: #007bff;
-}
-.action-buttons button.delete-btn {
-  color: #dc3545;
-  border-color: #dc3545;
-}
-.action-buttons button:hover {
-  color: #fff;
-}
-.action-buttons button.edit-btn:hover {
-  background-color: #007bff;
-}
-.action-buttons button.delete-btn:hover {
-  background-color: #dc3545;
-}
+    /* ----------------------- 底部按钮 ----------------------- */
+    .footer-button-container {
+      position: fixed;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      padding: 0 4vw;
+      box-sizing: border-box;
+      z-index: 99;
+    }
+    .apply-button {
+      width: 100%;
+      max-width: 500px;
+      background-color: #007bff;
+      color: #fff;
+      padding: 12px 0;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 4.5vw;
+      font-size: clamp(16px, 4.5vw, 18px);
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .apply-button:hover {
+      background-color: #0069d9;
+    }
 
-/* ----------------------- 底部按钮 ----------------------- */
-.footer-button-container {
-  position: fixed;
-  bottom: 12vw;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  padding: 0 4vw;
-  box-sizing: border-box;
-  z-index: 99;
-}
-.apply-button {
-  width: 100%;
-  background-color: #007bff;
-  color: #fff;
-  padding: 4vw 0;
-  border-radius: 10px;
-  text-decoration: none;
-  font-size: 4vw;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  border: none;
-  cursor: pointer;
-}
+    /* ----------------------- 底部导航栏 ----------------------- */
+    .footer-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 60px;
+      background-color: #fff;
+      border-top: 1px solid #f0f0f0;
+      z-index: 100;
+    }
+    .footer-nav .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #666;
+      text-decoration: none;
+      font-size: 12px;
+      flex-grow: 1;
+      text-align: center;
+      padding: 8px 0;
+    }
+    .footer-nav .nav-item i {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    .footer-nav .nav-item.active {
+      color: #007bff;
+    }
 
-/* ----------------------- 底部导航栏 ----------------------- */
-.footer-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: 12vw;
-  background-color: #fff;
-  border-top: 1px solid #f0f0f0;
-  z-index: 100;
-}
-.footer-nav .nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #666;
-  text-decoration: none;
-  font-size: 3vw;
-  flex-grow: 1;
-  text-align: center;
-}
-.footer-nav .nav-item i {
-  font-size: 5vw;
-  margin-bottom: 1vw;
-}
-.footer-nav .nav-item.active {
-  color: #007bff;
-}
-</style>
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    .error-message {
+      color: #dc3545;
+      text-align: center;
+      padding: 15px;
+      background-color: #f8d7da;
+      border-radius: 6px;
+      margin: 15px;
+    }
+  </style>

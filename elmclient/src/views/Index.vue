@@ -105,43 +105,43 @@
         <!-- 点餐分类部分 -->
         <ul class="foodtype">
             <li @click="toBusinessList(1)">
-                <img src="../assets/dcfl01.png">
+                <img src="@/assets/dcfl01.png" alt="美食">
                 <p>美食</p>
             </li>
             <li @click="toBusinessList(2)">
-                <img src="../assets/dcfl02.png">
+                <img src="@/assets/dcfl02.png" alt="早餐">
                 <p>早餐</p>
             </li>
             <li @click="toBusinessList(3)">
-                <img src="../assets/dcfl03.png">
+                <img src="@/assets/dcfl03.png" alt="跑腿代购">
                 <p>跑腿代购</p>
             </li>
             <li @click="toBusinessList(4)">
-                <img src="../assets/dcfl04.png">
+                <img src="@/assets/dcfl04.png" alt="汉堡披萨">
                 <p>汉堡披萨</p>
             </li>
             <li @click="toBusinessList(5)">
-                <img src="../assets/dcfl05.png">
+                <img src="@/assets/dcfl05.png" alt="甜品饮品">
                 <p>甜品饮品</p>
             </li>
             <li @click="toBusinessList(6)">
-                <img src="../assets/dcfl06.png">
+                <img src="@/assets/dcfl06.png" alt="速食简餐">
                 <p>速食简餐</p>
             </li>
             <li @click="toBusinessList(7)">
-                <img src="../assets/dcfl07.png">
+                <img src="@/assets/dcfl07.png" alt="地方小吃">
                 <p>地方小吃</p>
             </li>
             <li @click="toBusinessList(8)">
-                <img src="../assets/dcfl08.png">
+                <img src="@/assets/dcfl08.png" alt="米粉面馆">
                 <p>米粉面馆</p>
             </li>
             <li @click="toBusinessList(9)">
-                <img src="../assets/dcfl09.png">
+                <img src="@/assets/dcfl09.png" alt="包子粥铺">
                 <p>包子粥铺</p>
             </li>
             <li @click="toBusinessList(10)">
-                <img src="../assets/dcfl10.png">
+                <img src="@/assets/dcfl10.png" alt="炸鸡炸串">
                 <p>炸鸡炸串</p>
             </li>
         </ul>
@@ -156,7 +156,7 @@
         <!-- 超级会员部分 -->
         <div class="supermember">
             <div class="left">
-                <img src="../assets/super_member.png">
+                <img src="@/assets/super_member.png" alt="超级会员">
                 <h3>超级会员</h3>
                 <p>&#8226; 每月享超值权益</p>
             </div>
@@ -180,12 +180,12 @@
             >
                 综合排序<i class="fa fa-caret-down"></i>
             </li>
-            <li 
+            <!-- <li 
                 :class="{ active: sortBy === 'distance' }" 
                 @click="setSortBy('distance')"
             >
                 距离最近
-            </li>
+            </li> -->
             <li 
                 :class="{ active: sortBy === 'sales' }" 
                 @click="setSortBy('sales')"
@@ -285,7 +285,7 @@
         <ul class="business-list">
             <li v-for="business in businessList" :key="business.id || business.businessId" @click="toBusinessInfo(business.id || business.businessId)">
                 <div class="business-info">
-                    <img :src="business.businessImg === 'string' ? require('../assets/default-business.png') : business.businessImg" @error="handleImageError" :alt="business.businessName">
+                    <img :src="business.businessImg === 'string' ? require('@/assets/default-business.png') : business.businessImg" @error="handleImageError" :alt="business.businessName">
                     <div class="business-info-detail">
                         <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
                         <div class="business-info-rating">
@@ -818,7 +818,7 @@ const getDisplayText = (location) => {
 
         // 处理图片加载失败
         const handleImageError = (e) => {
-            e.target.src = require('../assets/default-business.png');
+            e.target.src = require('@/assets/default-business.png');
         };
         
         // 跳转到商家详情页
@@ -1154,7 +1154,7 @@ const getDisplayText = (location) => {
     height: 29vw;
 
     /*此三个样式组合，可以保证背景图片充满整个容器*/
-    background-image: url(../assets/index_banner.png);
+    background-image: url(@/assets/index_banner.png);
     background-repeat: no-repeat;
     background-size: cover;
 

@@ -52,238 +52,262 @@
   </template>
   
   <script>
-  import { ref, onMounted } from "vue";
-  import Footer from "../components/Footer.vue";
-  import axios from "axios";
-  import { useRoute, useRouter } from "vue-router";
-  
-  export default {
-	name: "BusinessList",
-	components: {
-	  Footer,
-	},
-	setup() {
-	  const orderTypeId = ref(null);
-	  const businessArr = ref([]);
-	  const favarr = ref([]);
-	  const user = ref(null);
-	  const route = useRoute();
-	  const router = useRouter();
-	  const likes = ref({});
-	  const favorites = ref({});
-	  const remarks = ref({});
-	  // 初始化likes、favorites和remarks对象
-	  const initializeLikesAndFavorites = async (businessId) => {
-		try {
-		  // 初始化likes
-		  const likeCountResponse = await axios.post(
-			"/LikesController/getLikesBybusinessId",
-			{
-			  businessId: businessId,
-			}
-		  );
-		  const likeCount = likeCountResponse.data;
-  
-		  const userLikeResponse = await axios.post(
-			"/LikesController/getLikesByUserIdByBusinessId",
-			{
-			  userId: user.value.userId,
-			  businessId: businessId,
-			}
-		  );
-		  const isLiked = userLikeResponse.data === 1;
-  
-		  likes.value[businessId] = {
-			liked: isLiked,
-			count: likeCount || 0,
-		  };
-  
-		  // 初始化favorites
-		  const favoriteCountResponse = await axios.post(
-			"/FavoriteController/getFavoriteCountByBusinessId",
-			{
-			  businessId: businessId,
-			  userId: user.value.userId, // 添加userId参数
-			}
-		  );
-		  const favoriteCount = favoriteCountResponse.data;
-  
-		  favorites.value[businessId] = {
-			favorited: favarr.value.includes(businessId),
-			count: favoriteCount || 0,
-		  };
-  
-		  // 初始化remarks
-		  const remarkCountResponse = await axios.post(
-			"/RemarkController/getRemarkCountByBusinessId",
-			{
-			  businessId: businessId,
-			}
-		  );
-		  const remarkCount = remarkCountResponse.data;
-  
-		  remarks.value[businessId] = {
-			count: remarkCount || 0,
-		  };
-		} catch (error) {
-		  console.error("初始化点赞、收藏和评论状态失败:", error);
-		  console.error(error); // 添加详细错误日志
-		  likes.value[businessId] = { liked: false, count: 0 };
-		  favorites.value[businessId] = { favorited: false, count: 0 };
-		  remarks.value[businessId] = { count: 0 };
-		}
-	  };
-  
-	  onMounted(async () => {
-  orderTypeId.value = route.query.orderTypeId;
-  user.value = sessionStorage.getItem("user")
-    ? JSON.parse(sessionStorage.getItem("user"))
-    : null;
+import { ref, onMounted } from "vue";
+import Footer from "../components/Footer.vue";
+import axios from "axios";
+import { useRoute, useRouter } from "vue-router";
 
-  if (!user.value) {
-    alert("用户未登录，请先登录！");
-    router.push({ path: "/login" });
-    return;
-  }
-  
-  try {
-    // 获取商家列表 (改为 GET 请求)
-    const businessResponse = await axios.get(
-      "/BusinessController/listBusinessByOrderTypeId", 
-      {
-        params: {  // GET 请求的参数放在 params 中
-          orderTypeId: orderTypeId.value
-        }
+export default {
+  name: "BusinessList",
+  components: {
+    Footer,
+  },
+  setup() {
+    const orderTypeId = ref(null);
+    const businessArr = ref([]);
+    const favarr = ref([]);
+    const userInfo = ref(null);
+    const route = useRoute();
+    const router = useRouter();
+    const likes = ref({});
+    const favorites = ref({});
+    const remarks = ref({});
+
+    // 初始化likes、favorites和remarks对象
+    const initializeLikesAndFavorites = async (businessId) => {
+      try {
+        // 初始化likes
+        const likeCountResponse = await axios.post(
+          "/LikesController/getLikesBybusinessId",
+          {
+            businessId: businessId,
+          }
+        );
+        const likeCount = likeCountResponse.data;
+
+        const userLikeResponse = await axios.post(
+          "/LikesController/getLikesByUserIdByBusinessId",
+          {
+            userId: userInfo.value.id,
+            businessId: businessId,
+          }
+        );
+        const isLiked = userLikeResponse.data === 1;
+
+        likes.value[businessId] = {
+          liked: isLiked,
+          count: likeCount || 0,
+        };
+
+        // 初始化favorites
+        const favoriteCountResponse = await axios.post(
+          "/FavoriteController/getFavoriteCountByBusinessId",
+          {
+            businessId: businessId,
+            userId: userInfo.value.id,
+          }
+        );
+        const favoriteCount = favoriteCountResponse.data;
+
+        favorites.value[businessId] = {
+          favorited: favarr.value.includes(businessId),
+          count: favoriteCount || 0,
+        };
+
+        // 初始化remarks
+        const remarkCountResponse = await axios.post(
+          "/RemarkController/getRemarkCountByBusinessId",
+          {
+            businessId: businessId,
+          }
+        );
+        const remarkCount = remarkCountResponse.data;
+
+        remarks.value[businessId] = {
+          count: remarkCount || 0,
+        };
+      } catch (error) {
+        console.error("初始化点赞、收藏和评论状态失败:", error);
+        likes.value[businessId] = { liked: false, count: 0 };
+        favorites.value[businessId] = { favorited: false, count: 0 };
+        remarks.value[businessId] = { count: 0 };
       }
-    );
-    businessArr.value = businessResponse.data;
-  } catch (error) {
-    console.error("加载数据失败:", error);
-  }
-});
-	  const listCart = async () => {
-		try {
-		  const response = await axios.post(
-			'/CartController/listCart',{
-				userId:user.value.userId
-			}
-		  );
-		  const cartArr = response.data;
-  
-		  businessArr.value.forEach((businessItem) => {
-			businessItem.quantity = 0;
-			cartArr.forEach((cartItem) => {
-			  if (cartItem.businessId === businessItem.businessId) {
-				businessItem.quantity += cartItem.quantity;
-			  }
-			});
-		  });
-		} catch (error) {
-		  console.error("获取购物车信息失败:", error);
-		}
-	  };
-  
-	  const likeBusiness = async (businessId) => {
-		try {
-		  if (!likes.value[businessId]) {
-			likes.value[businessId] = { liked: false, count: 0 };
-		  }
-		  if (likes.value[businessId].liked) {
-			await axios.post("/LikesController/removeLikes", {
-			  userId: user.value.userId,
-			  businessId,
-			});
-		  } else {
-			await axios.post("/LikesController/saveLikes", {
-			  userId: user.value.userId,
-			  businessId,
-			});
-		  }
-  
-		  // 更新点赞数
-		  const likeCountResponse = await axios.post(
-			"/LikesController/getLikesBybusinessId",
-			{
-			  businessId,
-			}
-		  );
-  
-		  likes.value[businessId] = {
-			liked: !likes.value[businessId].liked,
-			count: likeCountResponse.data || 0,
-		  };
-		} catch (error) {
-		  console.error("点赞操作失败:", error);
-		}
-	  };
-	  const favoriteBusiness = async (businessId) => {
-		try {
-		  if (!favorites.value[businessId]) {
-			favorites.value[businessId] = { favorited: false, count: 0 };
-		  }
-  
-		  if (favorites.value[businessId].favorited) {
-			await axios.post("/FavoriteController/removeFavoriteBusinessId", {
-			  userId: user.value.userId,
-			  businessId: businessId,
-			});
-			favorites.value[businessId].favorited = false;
-		  } else {
-			await axios.post("/FavoriteController/saveFavoriteBusinessId", {
-			  userId: user.value.userId,
-			  businessId: businessId,
-			});
-			favorites.value[businessId].favorited = true;
-		  }
-  
-		  // 更新收藏数
-		  const favoriteCountResponse = await axios.post(
-			"/FavoriteController/getFavoriteCountByBusinessId",
-			{
-			  businessId: businessId,
-			  userId: user.value.userId, // 添加userId参数
-			}
-		  );
-		  favorites.value[businessId].count = favoriteCountResponse.data || 0;
-  
-		  // 更新收藏列表
-		  const favoriteResponse = await axios.post(
-			"/FavoriteController/listFavoriteByUserId",
-			{
-			  userId: user.value.userId,
-			  businessId: null,
-			}
-		  );
-		  favarr.value = favoriteResponse.data;
-		} catch (error) {
-		  console.error("收藏操作失败:", error);
-		}
-	  };
-  
-	  const commentBusiness = (businessId) => {
-		router.push({ path: "/commentBusiness", query: { businessId } });
-	  };
-  
-	  const toBusinessInfo = (businessId) => {
-		router.push({ path: "/businessInfo", query: { businessId } });
-	  };
-  
-	  return {
-		businessArr,
-		user,
-		listCart,
-		toBusinessInfo,
-		likeBusiness,
-		likes,
-		favorites,
-		remarks,
-		favoriteBusiness,
-		commentBusiness,
-	  };
-	},
-  };
-  </script>
-  
+    };
+
+    onMounted(async () => {
+      orderTypeId.value = route.query.orderTypeId;
+      // 从sessionStorage获取用户信息
+      const storedUserInfo = sessionStorage.getItem('userInfo');
+      if (storedUserInfo) {
+        userInfo.value = JSON.parse(storedUserInfo);
+      }
+
+      if (!userInfo.value) {
+        alert("用户未登录，请先登录！");
+        router.push({ path: "/login" });
+        return;
+      }
+      
+      try {
+        // 获取商家列表
+        const businessResponse = await axios.get(
+          "/BusinessController/listBusinessByOrderTypeId", 
+          {
+            params: {
+              orderTypeId: orderTypeId.value
+            }
+          }
+        );
+        businessArr.value = businessResponse.data;
+
+        // 获取用户收藏列表
+        const favoriteResponse = await axios.post(
+          "/FavoriteController/listFavoriteByUserId",
+          {
+            userId: userInfo.value.id,
+            businessId: null,
+          }
+        );
+        favarr.value = favoriteResponse.data;
+
+        // 初始化每个商家的点赞、收藏和评论状态
+        businessArr.value.forEach(business => {
+          initializeLikesAndFavorites(business.businessId);
+        });
+
+        // 获取购物车信息
+        await listCart();
+      } catch (error) {
+        console.error("加载数据失败:", error);
+      }
+    });
+
+    const listCart = async () => {
+      try {
+        const response = await axios.post(
+          '/CartController/listCart',
+          {
+            userId: userInfo.value.id
+          }
+        );
+        const cartArr = response.data;
+
+        businessArr.value.forEach((businessItem) => {
+          businessItem.quantity = 0;
+          cartArr.forEach((cartItem) => {
+            if (cartItem.businessId === businessItem.businessId) {
+              businessItem.quantity += cartItem.quantity;
+            }
+          });
+        });
+      } catch (error) {
+        console.error("获取购物车信息失败:", error);
+      }
+    };
+
+    const likeBusiness = async (businessId) => {
+      try {
+        if (!likes.value[businessId]) {
+          likes.value[businessId] = { liked: false, count: 0 };
+        }
+        if (likes.value[businessId].liked) {
+          await axios.post("/LikesController/removeLikes", {
+            userId: userInfo.value.id,
+            businessId,
+          });
+        } else {
+          await axios.post("/LikesController/saveLikes", {
+            userId: userInfo.value.id,
+            businessId,
+          });
+        }
+
+        // 更新点赞数
+        const likeCountResponse = await axios.post(
+          "/LikesController/getLikesBybusinessId",
+          {
+            businessId,
+          }
+        );
+
+        likes.value[businessId] = {
+          liked: !likes.value[businessId].liked,
+          count: likeCountResponse.data || 0,
+        };
+      } catch (error) {
+        console.error("点赞操作失败:", error);
+      }
+    };
+
+    const favoriteBusiness = async (businessId) => {
+      try {
+        if (!favorites.value[businessId]) {
+          favorites.value[businessId] = { favorited: false, count: 0 };
+        }
+
+        if (favorites.value[businessId].favorited) {
+          await axios.post("/FavoriteController/removeFavoriteBusinessId", {
+            userId: userInfo.value.id,
+            businessId: businessId,
+          });
+          favorites.value[businessId].favorited = false;
+        } else {
+          await axios.post("/FavoriteController/saveFavoriteBusinessId", {
+            userId: userInfo.value.id,
+            businessId: businessId,
+          });
+          favorites.value[businessId].favorited = true;
+        }
+
+        // 更新收藏数
+        const favoriteCountResponse = await axios.post(
+          "/FavoriteController/getFavoriteCountByBusinessId",
+          {
+            businessId: businessId,
+            userId: userInfo.value.id,
+          }
+        );
+        favorites.value[businessId].count = favoriteCountResponse.data || 0;
+
+        // 更新收藏列表
+        const favoriteResponse = await axios.post(
+          "/FavoriteController/listFavoriteByUserId",
+          {
+            userId: userInfo.value.id,
+            businessId: null,
+          }
+        );
+        favarr.value = favoriteResponse.data;
+      } catch (error) {
+        console.error("收藏操作失败:", error);
+      }
+    };
+
+    const commentBusiness = (businessId) => {
+      router.push({ path: "/commentBusiness", query: { businessId } });
+    };
+
+    const toBusinessInfo = (businessId) => {
+      router.push({ path: "/businessInfo", query: { businessId } });
+    };
+
+    return {
+      businessArr,
+      userInfo,
+      listCart,
+      toBusinessInfo,
+      likeBusiness,
+      likes,
+      favorites,
+      remarks,
+      favoriteBusiness,
+      commentBusiness,
+    };
+  },
+};
+</script>
+
+
   <style scoped>
   /****************** 总容器 ******************/
   .wrapper {

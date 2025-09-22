@@ -119,6 +119,7 @@ export default {
 .container {
   max-width: 600px;
   margin: 0 auto;
+  padding-bottom: 40px;
   background-color: #f0f2f5;
   min-height: 100vh;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -187,7 +188,7 @@ export default {
 }
 
 .business-list {
-  padding: 15px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
   gap: 15px;

@@ -84,8 +84,9 @@
     
     <div class="button-section">
       <button class="switch-btn" @click="switchToMerchant">
-        <i class="fas fa-store"></i>切换为商家
-      </button>
+  <i class="fas fa-store"></i>
+  {{ userInfo.authorities?.some(auth => auth.name === 'BUSINESS') ? '切换到商家端' : '申请成为商家' }}
+</button>
       <button class="logout-btn" @click="logout">
         <i class="fas fa-sign-out-alt"></i>退出登录
       </button>
@@ -329,9 +330,25 @@ export default {
       router.push({ path: '/index' });
     };
 
-    const switchToMerchant = () => {
+    const switchToMerchant = async () => {
+  try {
+    // 检查用户权限
+    const hasBusinessPermission = userInfo.value.authorities?.some(
+      auth => auth.name === 'BUSINESS'
+    );
+    
+    if (hasBusinessPermission) {
+      // 有商家权限，直接跳转到商家页面
+      router.push({ name: 'MerchantOrders' });
+    } else {
+      // 没有商家权限，显示申请成为商家弹窗
       showMerchantApplyModal.value = true;
-    };
+    }
+  } catch (error) {
+    console.error('检查商家权限失败:', error);
+    toast.error('请勿重复申请');
+  }
+};
 
     const openEditModal = () => {
       if (userInfo.value) {
@@ -352,18 +369,25 @@ export default {
     };
 
     const applyForMerchant = async () => {
-      try {
-        console.log('用户申请开店:', userInfo.value.id);
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast.success('申请开店成功！管理员将在1-3个工作日内审核您的申请。');
-        closeMerchantApplyModal();
-      } catch (error) {
-        console.error('申请开店失败:', error);
-        toast.error('申请开店失败，请重试！');
+  try {
+    const token = getToken();
+    const response = await request.post('/api/permission/apply-merchant', {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    };
+    });
+    
+    if (response && response.success) {
+      toast.success('申请成功，请等待管理员审核！');
+      closeMerchantApplyModal();
+    } else {
+      toast.error('申请失败，请重试！');
+    }
+  } catch (error) {
+    console.error('申请成为商家失败:', error);
+    toast.error('申请失败，请重试！');
+  }
+};
 
     const submitEdits = async () => {
       if (!editFormData.value.phone) {
@@ -373,7 +397,7 @@ export default {
 
       try {
         const token = getToken();
-        const response = await request.put('/api/person/info', {
+        const response = await request.put('/api/person', {
           id: userInfo.value.id,
           firstName: editFormData.value.firstName,
           lastName: editFormData.value.lastName,
