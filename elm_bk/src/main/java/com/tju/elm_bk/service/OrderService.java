@@ -18,7 +18,7 @@ public interface OrderService {
 
 
 
-    List<OrderItemVO> getOrderItemListByBusiness(Long businessId, Integer orderState);
+    List<OrderItemDetailVO> getOrderItemListByBusiness(Long businessId, Integer orderState);
 
     List<OrderItemVO> getOrderItemListByUser(Integer orderState);
 

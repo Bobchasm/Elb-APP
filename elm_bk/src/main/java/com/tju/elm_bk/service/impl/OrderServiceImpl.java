@@ -128,8 +128,12 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public List<OrderItemVO> getOrderItemListByBusiness(Long businessId, Integer orderState) {
-        return ordersMapper.selectOrderItemsList(businessId, orderState, null);
+    public List<OrderItemDetailVO> getOrderItemListByBusiness(Long businessId, Integer orderState) {
+        List<OrderItemDetailVO> ret = ordersMapper.selectOrderDetailetItem(businessId, orderState);
+        for (OrderItemDetailVO orderItemDetailVO : ret) {
+            orderItemDetailVO.setFoodList(orderDetailetMapper.selectOrderDetailList(orderItemDetailVO.getId()));
+        }
+        return ret;
     }
 
     @Override
@@ -175,7 +179,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         if (orderState == 4) {
-            if (order.getOrderState() != 0) {
+            if (order.getOrderState() != 0 && order.getOrderState() != 1) {
                 throw new APIException(ResultCodeEnum.ORDER_CANCEL_DENY);
             }
             if ((!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId))) {

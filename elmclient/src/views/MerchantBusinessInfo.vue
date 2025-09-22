@@ -77,7 +77,7 @@ import request from '../utils/request';
 export default {
   name: "BusinessInfo",
   setup() {
-    const businessId = ref(null);
+    const businessId = ref();
     const business = ref({});
     const foodArr = ref([]);
     const route = useRoute();

@@ -43,7 +43,7 @@ public class OrderController {
 
     @GetMapping("/list/business")
     @Operation(summary = "根据商家和状态获取订单列表")
-    public HttpResult<List<OrderItemVO>> listOrdersByBusiness(@RequestParam(required = false) Long businessId, @RequestParam(required = false) Integer orderState) {
+    public HttpResult<List<OrderItemDetailVO>> listOrdersByBusiness(@RequestParam(required = false) Long businessId, @RequestParam(required = false) Integer orderState) {
         return HttpResult.success(orderService.getOrderItemListByBusiness(businessId,orderState));
     }
 
