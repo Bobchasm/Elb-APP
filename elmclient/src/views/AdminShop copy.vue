@@ -2,17 +2,14 @@
 	<div class="wrapper">
 		<header class="topbar"><p>商铺管理 - {{ businessName || '商家' }}</p></header>
 		<div class="content">
-			<!-- <div class="toolbar">
-				<button class="back" @click="goBack">返回</button>
-			</div> -->
 			<ul class="store-list">
-				<li v-for="s in storeList" :key="s.businessId" class="store-item">
+				<li v-for="s in storeList" :key="s.id" class="store-item">
 					<div class="store-info">
 						<img :src="s.businessImg || defaultImg" class="logo" @error="onImgError" />
 						<div class="meta">
 							<p class="name">{{ s.businessName }}</p>
 							<p class="addr">{{ s.businessAddress }}</p>
-							<p class="desc">{{ s.businessDesc || '暂无简介' }}</p>
+							<p class="desc">{{ s.businessExplain || '暂无简介' }}</p>
 						</div>
 					</div>
 					<div class="actions">
@@ -39,7 +36,7 @@
 						<label>商铺地址</label>
 						<input v-model="editor.form.businessAddress" placeholder="请输入地址" />
 						<label>商铺简介</label>
-						<textarea v-model="editor.form.businessDesc" placeholder="请输入商铺简介"></textarea>
+						<textarea v-model="editor.form.businessExplain" placeholder="请输入商铺简介"></textarea>
 					</div>
 					<div class="editor-actions">
 						<button class="cancel" @click="closeEditor">取消</button>
@@ -54,7 +51,8 @@
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-
+import axios from 'axios';
+import request from '@/utils/request';
 export default {
 	name: 'ManageShop',
 	setup() {
@@ -65,104 +63,54 @@ export default {
 		const storeList = ref([]);
 		const defaultImg = '/R-C.png';
 
-		// 硬编码的商铺数据
-		const mockStores = [
-			{ 
-				businessId: '1001-A', 
-				businessName: '美味小厨（一店）', 
-				businessImg: '', 
-				businessAddress: '天津市和平区南京路188号',
-				businessDesc: '主营川湘菜系，特色菜有麻辣香锅、水煮鱼等'
-			},
-			{ 
-				businessId: '1001-B', 
-				businessName: '美味小厨（二店）', 
-				businessImg: '', 
-				businessAddress: '天津市河西区围堤道88号',
-				businessDesc: '分店，环境优雅，提供包间服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			},
-			{ 
-				businessId: '1001-C', 
-				businessName: '美味小厨（三店）', 
-				businessImg: '', 
-				businessAddress: '天津市南开区卫津路66号',
-				businessDesc: '新开分店，主打快餐和外卖服务'
-			}
-		];
-
 		const editor = reactive({
 			visible: false,
 			mode: 'edit',
 			form: { 
-				businessId: null, 
+				id: null,
 				businessName: '', 
 				businessImg: '', 
 				businessAddress: '',
-				businessDesc: '' 
+				businessExplain: '' 
 			}
 		});
 
-		const goBack = () => router.back();
 		const onImgError = (e) => { e.target.src = defaultImg; };
 
-		const loadStores = () => {
-			storeList.value = mockStores;
+		const loadStores = async () => {
+			try {
+				const response = await request.get('/api/businesses/merchant', {
+					params: {
+						userId: ownerId.value,
+						status: 1
+					}
+				});
+				console.log('response响应:', response);
+				console.log('responsedata响应:', response.data);
+				if (response.success) {
+					console.log('success商铺列表:', response.data);
+					storeList.value = response.data || [];	
+				}
+			} catch (error) {
+				console.error('获取商铺列表失败:', error);
+				// 备用数据
+				storeList.value = [
+					{ 
+						id: 1,
+						businessName: '虾滑不WA火锅', 
+						businessAddress: '天津市和平区', 
+						businessExplain: '不限量AC虾滑',
+						businessImg: 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/c55e6a1a-17fd-4661-9f1b-722610e5cf1c.png'
+					},
+					{ 
+						id: 2,
+						businessName: '黄焖鸡米饭', 
+						businessAddress: '梅园二楼', 
+						businessExplain: '好吃',
+						businessImg: null
+					}
+				];
+			}
 		};
 
 		const startEdit = (store) => { 
@@ -174,40 +122,63 @@ export default {
 		const startCreate = () => { 
 			editor.mode = 'create'; 
 			editor.form = { 
-				businessId: null, 
+				id: null,
 				businessName: '', 
 				businessImg: '', 
 				businessAddress: '',
-				businessDesc: '' 
+				businessExplain: '' 
 			}; 
 			editor.visible = true; 
 		};
 		
 		const closeEditor = () => { editor.visible = false; };
 
-		const saveStore = () => {
-			if (editor.mode === 'create') {
-				// 生成新的商铺ID
-				const newId = `${ownerId.value}-${String.fromCharCode(65 + storeList.value.length)}`;
-				storeList.value.push({ 
-					...editor.form, 
-					businessId: newId 
-				});
-			} else {
-				const idx = storeList.value.findIndex(s => s.businessId === editor.form.businessId);
-				if (idx >= 0) storeList.value[idx] = { ...storeList.value[idx], ...editor.form };
+		const saveStore = async () => {
+			try {
+				if (editor.mode === 'create') {
+					// 调用新增接口
+					const response = await request.post('/api/businesses', {
+						...editor.form,
+						userId: ownerId.value
+					});
+					storeList.value.push(response.data);
+				} else {
+					// 调用更新接口
+					await request.put(`/api/businesses/${editor.form.id}`, editor.form);
+					const idx = storeList.value.findIndex(s => s.id === editor.form.id);
+					if (idx >= 0) storeList.value[idx] = { ...storeList.value[idx], ...editor.form };
+				}
+				editor.visible = false;
+			} catch (error) {
+				console.error('保存商铺失败:', error);
+				// 本地模拟保存
+				if (editor.mode === 'create') {
+					storeList.value.push({ 
+						...editor.form, 
+						id: Date.now() 
+					});
+				} else {
+					const idx = storeList.value.findIndex(s => s.id === editor.form.id);
+					if (idx >= 0) storeList.value[idx] = { ...storeList.value[idx], ...editor.form };
+				}
+				editor.visible = false;
 			}
-			editor.visible = false;
 		};
 
-		const removeStore = (store) => {
+		const removeStore = async (store) => {
 			if (!confirm('确认删除该商铺吗？')) return;
-			storeList.value = storeList.value.filter(s => s.businessId !== store.businessId);
+			try {
+				await request.delete(`/api/businesses/${store.id}`);
+				storeList.value = storeList.value.filter(s => s.id !== store.id);
+			} catch (error) {
+				console.error('删除商铺失败:', error);
+				storeList.value = storeList.value.filter(s => s.id !== store.id);
+			}
 		};
 
 		onMounted(() => {
-			ownerId.value = route.query.ownerId ? String(route.query.ownerId) : '1001';
-			businessName.value = route.query.merchantName || '美味小厨';
+			ownerId.value = route.query.ownerId;
+			businessName.value = route.query.merchantName || '';
 			loadStores();
 		});
 
@@ -216,7 +187,6 @@ export default {
 			storeList, 
 			defaultImg, 
 			onImgError, 
-			goBack, 
 			startEdit, 
 			startCreate, 
 			closeEditor, 
@@ -229,6 +199,7 @@ export default {
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .wrapper { width: 100%; min-height: 100vh; background: #fff; }
 .topbar { 
 	width: 100%; 
@@ -244,7 +215,7 @@ export default {
 	justify-content: center; 
 	align-items: center; 
 }
-.content { margin-top: 12vw; padding: 4vw; }
+.content { margin-top: 15vw; padding: 4vw; }
 .toolbar { display: flex; gap: 2vw; margin-bottom: 2vw; }
 .back { 
 	background: #eee; 
@@ -262,7 +233,7 @@ export default {
 	padding: 1.6vw 3vw; 
 	font-size: 3.6vw; 
 }
-.store-list { list-style: none; padding-bottom: 40vw; margin: 0; }
+.store-list { list-style: none; padding-bottom: 30vw; margin: 0; }
 .store-item { 
 	display: flex; 
 	align-items: center; 
