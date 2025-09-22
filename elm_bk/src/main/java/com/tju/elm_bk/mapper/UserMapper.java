@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 @Mapper
 public interface UserMapper {
     @Select("SELECT * FROM users WHERE id = #{id} AND is_deleted = 0")
@@ -28,4 +30,6 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE id = #{userId} AND is_deleted = 0")
     Integer countUserById(@Param("userId") Long userId);
 
+    @Update("UPDATE users SET activated = #{activated} WHERE id = #{id}")
+    void updateActivated(User user);
 }

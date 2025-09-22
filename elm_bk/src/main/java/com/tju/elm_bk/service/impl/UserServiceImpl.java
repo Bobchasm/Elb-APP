@@ -87,4 +87,14 @@ public class UserServiceImpl implements UserService {
         targetUser.setUpdater(currentUser.getId());
         userMapper.update(targetUser);
     }
+
+    @Override
+    public void toggleUserActivated(String username, Boolean activated) {
+        User user = userMapper.findByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        user.setActivated(activated);
+        userMapper.updateActivated(user); // 更新数据库activated字段
+    }
 }

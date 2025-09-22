@@ -1,9 +1,6 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.LoginDTO;
-import com.tju.elm_bk.dto.PersonCreateDTO;
-import com.tju.elm_bk.dto.PersonUpdateDTO;
-import com.tju.elm_bk.dto.UserCreateDTO;
+import com.tju.elm_bk.dto.*;
 import com.tju.elm_bk.entity.Authority;
 import com.tju.elm_bk.entity.Person;
 import com.tju.elm_bk.entity.User;
@@ -20,6 +17,7 @@ import com.tju.elm_bk.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,6 +35,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 @Tag(name = "用户管理", description = "提供用户的增删改查操作")
+@Slf4j
 public class UserRestController {
     @Autowired
     private UserMapper userMapper;
@@ -50,9 +49,12 @@ public class UserRestController {
     private PersonService personService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PersonMapper personMapper;
 
     @PostMapping("/users")
     @Operation(summary = "新增用户(仅登录账号)", description = "创建一个新的用户")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UserVO> createUser(@Valid @RequestBody UserCreateDTO newUser) {
         String username = newUser.getUsername();
         if (username == null || username.trim().isEmpty()) {
@@ -121,6 +123,23 @@ public class UserRestController {
         return ResponseEntity.ok(personVO);
     }
 
+    @GetMapping("/persons")
+    @Operation(summary = "获取不同状态的自然人用户", description = "获取不同状态自然人用户，传入0-全部，1-启用，2-禁用")
+    public HttpResult<List<PersonVO>> listPersons(Integer status) {
+        return HttpResult.success(personService.listPersons(status));
+    }
+
+    /**
+     * 搜索用户（按关键词+状态筛选）
+     */
+    @PostMapping("/persons/search")
+    @Operation(summary = "搜索用户（用户名/手机号/邮箱）")
+    public HttpResult<List<PersonVO>> searchPersons(@RequestBody UserSearchDTO searchDTO) {
+        List<PersonVO> searchResult = personService.searchPersons(searchDTO);
+        return HttpResult.success(searchResult);
+    }
+
+
     @PostMapping("/password")
     @Operation(summary = "修改密码", description = "已登录用户可修改自己的密码，管理员可修改任何用户的密码")
     public ResponseEntity<String> updateUserPassword(@Valid @RequestBody LoginDTO loginDto) {
@@ -150,6 +169,7 @@ public class UserRestController {
 
     @PostMapping("/persons")
     @Operation(summary = "新增自然人用户", description = "创建一个新的自然人用户")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PersonVO addPerson(@Valid @RequestBody PersonCreateDTO createDTO) {
         String username = createDTO.getUsername();
         if (username == null || username.trim().isEmpty()) {
@@ -222,7 +242,7 @@ public class UserRestController {
     @PostMapping("/register")
     @Operation(summary = "新增用户(仅允许顾客注册)", description = "创建一个新的用户")
     @Transactional
-    public HttpResult<UserVO> addUser(@Valid @RequestBody UserCreateDTO newUser) {
+    public HttpResult<PersonVO> addUser(@Valid @RequestBody PersonCreateDTO newUser) {
         String username = newUser.getUsername();
         if (username == null || username.trim().isEmpty()) {
             throw new APIException("用户名不能为空");
@@ -247,36 +267,43 @@ public class UserRestController {
         // 保存用户
         userService.addUser(user);
 
-        // 分配默认USER角色
-//        Authority userAuthority = authorityMapper.findByName("USER");
-//        if (userAuthority != null) {
-//            userMapper.insertUserAuthority(user.getId(), userAuthority.getName());
-//        }
-        if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
-            Authority userAuthority = authorityMapper.findByName("USER");
-            if (userAuthority != null) {
-                userMapper.insertUserAuthority(user.getId(), userAuthority.getName());
-            }
-        } else {
-            // 保存用户指定的角色
-            for (Authority authority : user.getAuthorities()) {
-                userMapper.insertUserAuthority(user.getId(), authority.getName());
-            }
+         //分配默认USER角色
+        Authority userAuthority = authorityMapper.findByName("USER");
+        if (userAuthority != null) {
+            userMapper.insertUserAuthority(user.getId(), userAuthority.getName());
+        }else{
+            throw new APIException("USER权限不存在");
         }
+//        if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
+//            Authority userAuthority = authorityMapper.findByName("USER");
+//            if (userAuthority != null) {
+//                userMapper.insertUserAuthority(user.getId(), userAuthority.getName());
+//            }
+//        } else {
+//            // 保存用户指定的角色
+//            for (Authority authority : user.getAuthorities()) {
+//                userMapper.insertUserAuthority(user.getId(), authority.getName());
+//            }
+//        }
 
         User user1 = userService.getUserWithAuthorities(user.getUsername());
-        UserVO userVO=new UserVO();
-        BeanUtils.copyProperties(user1, userVO);
+        log.info("user1:{}",user1);
+        PersonVO personVO = new PersonVO();
+
+        BeanUtils.copyProperties(newUser, personVO);
+        BeanUtils.copyProperties(user1, personVO);
         // 返回包含权限信息的用户对象
-        return HttpResult.success(userVO);
+        return HttpResult.success(personVO);
     }
 
-    @PatchMapping("/{username}/status")
-    @Operation(summary = "启用/禁用用户", description = "根据用户名切换用户的启用/禁用状态，仅管理员可操作")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public HttpResult<UserVO> changeUserStatus(@PathVariable String username) {
-        UserVO updatedUser = userService.changeUserStatus(username);
-        return HttpResult.success(updatedUser);
+    @PutMapping("/{username}/status")
+    @Operation(summary = "启用/禁用用户")
+    public HttpResult<String> toggleUserStatus(
+            @PathVariable String username,
+            @RequestParam Boolean activated) { // true-启用，false-禁用
+        userService.toggleUserActivated(username, activated);
+        String message = activated ? "用户已启用" : "用户已禁用";
+        return HttpResult.success(message);
     }
 
     @DeleteMapping("/{username}")
@@ -294,6 +321,11 @@ public class UserRestController {
         return HttpResult.success(updatedPerson);
     }
 
+    @GetMapping("/personInfo")
+    @Operation(summary = "根据id获取自然人属性", description = "根据id获取自然人属性")
+    public HttpResult<Person> getPersonInfo(Long id) {
+        return HttpResult.success(personMapper.getPersonByUserId(id));
+    }
 
     // 获取当前登录用户
     private User getCurrentUser() {

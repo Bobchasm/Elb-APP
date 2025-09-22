@@ -64,4 +64,7 @@ public class PersonVO {
 
     @Schema(description = "照片")
     private String photo;
+
+    @Schema(description = "启用/禁用")
+    private Boolean activated;
 }

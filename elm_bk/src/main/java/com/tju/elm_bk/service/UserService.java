@@ -19,4 +19,6 @@ public interface UserService {
     UserVO changeUserStatus(String username);
 
     void deleteUser(String username);
+
+    void toggleUserActivated(String username, Boolean activated);
 }

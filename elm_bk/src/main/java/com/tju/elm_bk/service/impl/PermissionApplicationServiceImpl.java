@@ -4,6 +4,7 @@ import com.tju.elm_bk.dto.AuditPermissionDTO;
 import com.tju.elm_bk.dto.BusinessDTO;
 import com.tju.elm_bk.dto.BusinessPermissionDTO;
 import com.tju.elm_bk.entity.Authority;
+import com.tju.elm_bk.entity.Notification;
 import com.tju.elm_bk.entity.PermissionApplication;
 import com.tju.elm_bk.entity.User;
 import com.tju.elm_bk.exception.APIException;
@@ -48,6 +49,9 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     @Autowired
     private BusinessMapper businessMapper;
 
+    @Autowired
+    private NotificationMapper notificationMapper;
+
     /**
      * 顾客申请成为商家
      */
@@ -85,7 +89,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
 
         //6. 通过WebSocket向管理员推送消息
         try {
-            sendMerchantApplyNotification(currentUserId, currentUser.getUsername());
+            sendMerchantApplyNotification(currentUserId, currentUser.getUsername(), application.getId());
         } catch (JSONException e) {
             throw new APIException("消息发送失败");
         }
@@ -233,15 +237,28 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     private void sendAuditPassNotification(Long userId,Integer type) {
         JSONObject message = new JSONObject();
         message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
+        Notification notification = new Notification();
         if(type==0){
+            String content = "恭喜！您的申请已通过审核，现在可以开始营业了";
+            notification.setNotificationContent(content);
             message.put("type", 0); // 0表示申请成为商家的回复
-            message.put("content", "恭喜！您的商家申请已通过审核，现在可以开展商家业务了");
+            message.put("content",content);
         }else if(type==1){
+            String content = "恭喜！您的开店申请已通过审核，现在可以开始营业了";
+            notification.setNotificationContent(content);
             message.put("type", 1); // 1表示申请开店的回复
-            message.put("content", "恭喜！您的开店申请已通过审核，现在可以开始营业了");
+            message.put("content", content);
         }
         message.put("userId", userId);
         webSocketServer.sendToAllClient(message.toJSONString());
+
+        notification.setUserId(userId); // 接收消息的用户ID
+        notification.setNotificationType(type); // 0=商家申请，1=开店申请
+        notification.setAuditResult(1); // 1=通过，2=拒绝
+        notification.setIsRead(0);
+        notification.setIsDeleted(0);
+        notification.setCreateTime(LocalDateTime.now()); // 当前时间
+        notificationMapper.insert(notification); // 插入数据库
     }
 
     /**
@@ -250,15 +267,27 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     private void sendAuditRejectNotification(Long userId,Integer type) {
         JSONObject message = new JSONObject();
         message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
+        Notification notification = new Notification();
         if(type==0){
+            String content = "抱歉，您的商家申请未通过审核";
+            notification.setNotificationContent(content);
             message.put("type", 0); // 0表示申请成为商家的回复
-            message.put("content", "抱歉，您的商家申请未通过审核");
+            message.put("content", content);
         }else if(type==1){
+            String content = "抱歉，您的开店申请未通过审核";
+            notification.setNotificationContent(content);
             message.put("type", 1); // 1表示申请开店的回复
-            message.put("content", "抱歉，您的开店申请未通过审核");
+            message.put("content", content);
         }
         message.put("userId", userId);
         webSocketServer.sendToAllClient(message.toJSONString());
+        notification.setUserId(userId); // 接收消息的用户ID
+        notification.setNotificationType(type); // 0=商家申请，1=开店申请
+        notification.setAuditResult(2); // 1=通过，2=拒绝
+        notification.setIsRead(0);
+        notification.setIsDeleted(0);
+        notification.setCreateTime(LocalDateTime.now()); // 当前时间
+        notificationMapper.insert(notification); // 插入数据库
     }
 
     /**
@@ -266,9 +295,10 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
      * @param userId 申请人ID
      * @param username 申请人用户名
      */
-    private void sendMerchantApplyNotification(Long userId, String username) throws JSONException {
+    private void sendMerchantApplyNotification(Long userId, String username,Long applicationId) throws JSONException {
         // 构建消息体（包含type、userId、content）
         JSONObject message = new JSONObject();
+        message.put("applicationId", applicationId);
         message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         message.put("type", 0); // 0表示申请成为商家
         message.put("userId", userId);
