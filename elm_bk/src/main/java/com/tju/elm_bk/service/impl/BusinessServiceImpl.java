@@ -7,6 +7,7 @@ import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.BusinessMapper;
+import com.tju.elm_bk.mapper.MerchantInteractionMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.BusinessService;
@@ -35,6 +36,8 @@ public class BusinessServiceImpl implements BusinessService {
     @Autowired
     private UserService userService;
     @Autowired
+    private MerchantInteractionMapper interactionMapper;
+    @Autowired
     private UserMapper userMapper;
     @Autowired
     private final BusinessMapper businessMapper;
@@ -43,7 +46,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BusinessVO getBusinessById(Long id) {
         //这里需要权限检查吗
-        System.out.println("查询商家ID: " + id);
+//        System.out.println("查询商家ID: " + id);
         return businessMapper.getBusinessById(id);
     }
 
@@ -74,7 +77,7 @@ public class BusinessServiceImpl implements BusinessService {
         if(!isSelf&&!isAdmin){
             throw new RuntimeException("不是该商家自己的商铺，更新失败");
         }
-        System.out.println("前端--更新商家信息为: " + updateDto);
+//        System.out.println("前端--更新商家信息为: " + updateDto);
         // 1. 更新商户基本信息
         int result = businessMapper.updateBusiness(id, updateDto);
         if (result == 0) {throw new RuntimeException("更新商户信息失败，商户不存在或已被删除");}
@@ -194,38 +197,21 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore ,boolean isSales) {
         List<BusinessSearchVO> businesses = businessMapper.searchBusinesses(keyword);
-        System.out.println(businesses);
+//        System.out.println(businesses);
         // 为每个店铺计算评分与销量
         for (BusinessSearchVO business : businesses) {
             Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
             int salesCount = businessMapper.getSalesCount(business.getId());
-            int likeCount = 0;
-            int collectCount = 0;
-
-            // 安全地处理可能为null的值
-            Object likeObj = interactionCounts.get("likeCount");
-            Object collectObj = interactionCounts.get("collectCount");
-
-            if (likeObj instanceof BigDecimal) {
-                likeCount = ((BigDecimal) likeObj).intValue();
-            } else if (likeObj instanceof Long) {
-                likeCount = ((Long) likeObj).intValue();
-            } else if (likeObj instanceof Integer) {
-                likeCount = (Integer) likeObj;
-            }
-
-            if (collectObj instanceof BigDecimal) {
-                collectCount = ((BigDecimal) collectObj).intValue();
-            } else if (collectObj instanceof Long) {
-                collectCount = ((Long) collectObj).intValue();
-            } else if (collectObj instanceof Integer) {
-                collectCount = (Integer) collectObj;
-            }
-
+            Integer likeCount = interactionMapper.countLikesByMerchantId(business.getId());
+            Integer collectCount = interactionMapper.countCollectionsByMerchantId(business.getId());
             // 计算评分 (点赞权重0.6，收藏权重0.4，归一化到1-5分)
             double normalizedRating = 1 + 4 * (0.6 * likeCount / (likeCount + 10.0) + 0.4 * collectCount / (collectCount + 10.0));
             BigDecimal rating = BigDecimal.valueOf(normalizedRating).setScale(2, RoundingMode.HALF_UP);
             business.setScore(rating);
+//            System.out.println("Business ID: " + business.getId() +
+//                    ", likeCount: " + likeCount +
+//                    ", collectCount: " + collectCount +
+//                    ", rawRating: " + normalizedRating);
             business.setSalesCount(salesCount);
         }
 
@@ -247,7 +233,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (comparator != null) {
             businesses.sort(comparator);
         }
-        System.out.println(businesses);
+//        System.out.println(businesses);
         return businesses;
     }
 

@@ -38,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private DeliveryAddressMapper deliveryAddressMapper;
 
-    // 订单状态(0-待支付,1-待接单,2-已结单,3-已完成,4-已取消
+    // 订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
 
     static {

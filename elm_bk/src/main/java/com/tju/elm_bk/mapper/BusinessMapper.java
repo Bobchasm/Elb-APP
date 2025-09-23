@@ -70,7 +70,7 @@ public interface BusinessMapper {
     Integer getSalesCount(@Param("businessId") Long businessId);
 
     /**
-     * 根据用户ID查询对应的所有商家ID
+     * 根据用户ID查询对应的所有商铺ID
      * @param userId 用户ID
      * @return 商家ID列表
      */

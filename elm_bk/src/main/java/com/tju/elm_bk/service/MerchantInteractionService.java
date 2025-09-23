@@ -24,11 +24,18 @@ public interface MerchantInteractionService {
     List<BusinessSearchVO> getUserCollections(Long userId);
 
     /**
-     * 获取商家的统计信息
-     * @param merchantId 商家ID
-     * @return 商家统计信息
+     * 获取商铺的统计信息
+     * @param merchantId 商铺ID
+     * @return 商铺统计信息
      */
     MerchantStatsVO getMerchantStats(Long merchantId);
+
+    /**
+     * 获取用户对商铺的统计信息
+     * @param userId 用户ID
+     * @return 商家统计信息
+     */
+    List<MerchantStatsVO>getMerchantStatsByUserId(Long userId);
 
     /**
      * 获取用户对商家的互动状态

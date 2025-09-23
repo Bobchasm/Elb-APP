@@ -83,13 +83,13 @@
         AND b.is_deleted = 0
         ORDER BY mi.create_time DESC
     </select>
-    <!-- 统计商家的点赞数 -->
+    <!-- 统计商铺的点赞数 -->
     <select id="countLikesByMerchantId" resultType="java.lang.Integer">
         SELECT COUNT(*) FROM merchant_interaction
         WHERE merchant_id = #{merchantId} AND liked = true
     </select>
 
-    <!-- 统计商家的收藏数 -->
+    <!-- 统计商铺的收藏数 -->
     <select id="countCollectionsByMerchantId" resultType="java.lang.Integer">
         SELECT COUNT(*) FROM merchant_interaction
         WHERE merchant_id = #{merchantId} AND collected = true

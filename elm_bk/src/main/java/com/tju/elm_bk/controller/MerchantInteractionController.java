@@ -48,6 +48,12 @@ public class MerchantInteractionController {
         MerchantStatsVO stats = interactionService.getMerchantStats(merchantId);
         return HttpResult.success(stats);
     }
+    @GetMapping("/statsByUserId/{userId}")
+    @Operation(summary = "获取某商家下的所有商铺的点赞收藏总数")
+    public HttpResult<List<MerchantStatsVO>> getMerchantStatsByUserId(@PathVariable Long userId) {
+        List<MerchantStatsVO> stats = interactionService.getMerchantStatsByUserId(userId);
+        return HttpResult.success(stats);
+    }
 
     @GetMapping("/status")
     @Operation(summary = "获取用户商铺互动状态")
