@@ -353,7 +353,7 @@ export default {
 .topbar {
   width: 100%;
   height: 12vw;
-  background-color: #409eff;
+  background-color: #0097ff;
   color: #fff;
   font-size: 4.8vw;
   position: fixed;
@@ -426,7 +426,7 @@ export default {
 }
 
 .merchant-tabs li.active {
-  background: #3f72af;
+  background: #3490de;
   color: #ffffff;
   font-weight: 600;
   transform: translateY(-0.5vw);

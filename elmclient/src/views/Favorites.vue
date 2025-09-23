@@ -1,7 +1,8 @@
 <template>
   <div>
+    <BackButton />
     <div class="header">
-      <i class="fas fa-chevron-left back-icon" @click="goBack"></i>
+      <!-- <i class="fas fa-chevron-left back-icon" @click="goBack"></i> -->
       <h1>我的收藏</h1>
     </div>
     <div class="container">
@@ -46,8 +47,19 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
 import request from '@/utils/request';
+import { Back } from '@element-plus/icons-vue';
 export default {
   name: 'Favorites',
+  components: {
+    BackButton: {
+      components: { Back },
+      template: `
+        <div class="header">
+          <i class="fas fa-chevron-left back-icon" @click="$emit('go-back')"></i>
+        </div>
+      `
+    }
+  },
   setup() {
     const router = useRouter();
     const favoriteList = ref([]);
@@ -93,9 +105,9 @@ export default {
       });
     };
 
-    const goBack = () => {
-      router.back();
-    };
+    // const goBack = () => {
+    //   router.back();
+    // };
 
     onMounted(() => {
       fetchFavorites();
@@ -106,7 +118,7 @@ export default {
       loading,
       errorMessage,
       goToBusinessInfo,
-      goBack
+      // goBack
     };
   }
 };

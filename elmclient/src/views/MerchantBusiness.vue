@@ -429,7 +429,7 @@ body {
   width: 100%;
   height: 12vw;
   max-height: 60px;
-  background-color: #007bff;
+  background-color: #0097ff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -444,6 +444,7 @@ body {
   font-size: clamp(18px, 5vw, 24px);
   color: #fff;
   margin: 0;
+  font-family: 'miscrosoft yahei', Arial, sans-serif;
 }
 
 /* ----------------------- 状态标签栏 ----------------------- */
@@ -470,7 +471,7 @@ body {
 }
 
 .status-tabs button.active {
-  color: #007bff;
+  color: #0097ff;
   background-color: #e6f2ff;
   font-weight: bold;
 }
@@ -591,8 +592,8 @@ body {
 }
 
 .action-buttons button.edit-btn {
-  color: #007bff;
-  border-color: #007bff;
+  color: #0097ff;
+  border-color: #0097ff;
 }
 
 .action-buttons button.delete-btn {
@@ -605,7 +606,7 @@ body {
 }
 
 .action-buttons button.edit-btn:hover {
-  background-color: #007bff;
+  background-color: #0097ff;
 }
 
 .action-buttons button.delete-btn:hover {
@@ -658,7 +659,7 @@ body {
 .apply-button {
   width: 100%;
   max-width: 500px;
-  background-color: #007bff;
+  background-color: #0097ff;
   color: #fff;
   padding: 12px 0;
   border-radius: 10px;
@@ -673,7 +674,7 @@ body {
 }
 
 .apply-button:hover {
-  background-color: #0069d9;
+  background-color: #0097ff;
 }
 
 /* ----------------------- 底部导航栏 ----------------------- */
@@ -709,7 +710,7 @@ body {
 }
 
 .footer-nav .nav-item.active {
-  color: #007bff;
+  color: #0097ff;
 }
 
 /* 加载状态 */
