@@ -1,8 +1,9 @@
 <template>
 	<div class="wrapper">
-		<header class="topbar">
-			<p>订单详情</p>
-		</header>
+		<BackButton :show-back-button="true" />
+		<div class="header">
+            <h1 class="title">订单详情</h1>
+        </div>
 		
 		<!-- 加载提示 -->
 		<div v-if="loading" class="loading">
@@ -93,8 +94,10 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
 
+import BackButton from '../components/BackButton.vue';
 export default {
 	name: 'ListDetail',
+	components: { BackButton },
 	setup() {
 		const route = useRoute();
 		const router = useRouter();
@@ -265,7 +268,25 @@ export default {
 	min-height: 100vh;
 	background: #f5f7fa;
 }
-
+ 
+.wrapper header {
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.wrapper title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
+}
+  
 .topbar {
 	width: 100%;
 	height: 12vw;
