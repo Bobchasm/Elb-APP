@@ -98,7 +98,7 @@
 	width: 100%;
 	height: 100%;
 	position: relative;
-	padding-top: 12vw;
+	padding-top: 0;
 	background-color: #f5f5f5;
   }
   
