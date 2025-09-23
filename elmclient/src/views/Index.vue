@@ -322,6 +322,7 @@ export default {
         const router = useRouter();
         const userInfo = ref(null);
         const businessList = ref([]);
+        const originalBusinessList = ref([]); // 保存原始数据用于筛选和排序
         const ratingMap = ref({});
         const currentLocation = ref('定位中...');
         const searchKeyword = ref('');
@@ -631,9 +632,9 @@ const getDisplayText = (location) => {
         };
 
         const computeRatings = () => {
-            const entries = businessList.value || [];
+            const entries = originalBusinessList.value || [];
             if (!entries.length) { ratingMap.value = {}; return; }
-            const reactionCounts = entries.map(b => getReactionCount(b.businessId));
+            const reactionCounts = entries.map(b => getReactionCount(b.businessId || b.id));
             const commentCounts = entries.map(b => guessCommentCount(b));
             const rMin = Math.min(...reactionCounts);
             const rMax = Math.max(...reactionCounts);
@@ -650,13 +651,95 @@ const getDisplayText = (location) => {
                 let rating = 1 + combined * 4; // map to [1,5]
                 if (rating < 1) rating = 1;
                 if (rating > 5) rating = 5;
-                map[b.businessId] = rating.toFixed(1);
+                map[b.businessId || b.id] = rating.toFixed(1);
             });
             ratingMap.value = map;
         };
 
         const getBusinessRating = (businessId) => {
             return ratingMap.value[businessId] || '1.0';
+        };
+
+        // 排序商家列表
+        const sortBusinessList = (list, sortType) => {
+            console.log('=== 开始排序商家列表 ===');
+            console.log('排序类型:', sortType);
+            console.log('待排序商家数量:', list.length);
+            
+            // 显示排序前有销量的商家
+            const beforeSalesData = list.filter(b => (b.salesCount || 0) > 0);
+            console.log('排序前有销量的商家:', beforeSalesData.map(b => ({
+                name: b.businessName,
+                id: b.id,
+                sales: b.salesCount
+            })));
+            
+            const sortedList = [...list];
+            
+            switch (sortType) {
+                case 'default':
+                    // 综合排序：评分优先，评分相同则按ID排序（ID大的在前，表示较新的商家）
+                    sortedList.sort((a, b) => {
+                        const scoreA = parseFloat(a.score || getBusinessRating(a.id || a.businessId));
+                        const scoreB = parseFloat(b.score || getBusinessRating(b.id || b.businessId));
+                        
+                        // 评分比较（保留一位小数精度）
+                        const scoreDiff = Math.round((scoreB - scoreA) * 10) / 10;
+                        if (Math.abs(scoreDiff) >= 0.1) {
+                            return scoreDiff; // 评分降序
+                        }
+                        
+                        // 评分相同，按ID排序（ID越大表示越新）
+                        const idA = parseInt(a.id || a.businessId || 0);
+                        const idB = parseInt(b.id || b.businessId || 0);
+                        return idB - idA; // ID降序（新的在前）
+                    });
+                    break;
+                    
+                case 'sales':
+                    // 销量排序：销量优先，销量相同则按ID排序（ID大的在前）
+                    console.log('🔄 执行销量排序');
+                    sortedList.sort((a, b) => {
+                        const salesA = parseInt(a.salesCount || 0);
+                        const salesB = parseInt(b.salesCount || 0);
+                        
+                        // 详细记录排序过程
+                        if (salesA > 0 || salesB > 0) {
+                            console.log(`比较: ${a.businessName}(销量${salesA}) vs ${b.businessName}(销量${salesB})`);
+                        }
+                        
+                        if (salesA !== salesB) {
+                            const result = salesB - salesA; // 销量降序（高销量在前）
+                            if (salesA > 0 || salesB > 0) {
+                                console.log(`  结果: ${result > 0 ? b.businessName : a.businessName} 排在前面`);
+                            }
+                            return result;
+                        }
+                        
+                        // 销量相同，按ID排序（ID越大表示越新）
+                        const idA = parseInt(a.id || a.businessId || 0);
+                        const idB = parseInt(b.id || b.businessId || 0);
+                        return idB - idA; // ID降序（新的在前）
+                    });
+                    console.log('✅ 销量排序完成');
+                    break;
+                    
+                default:
+                    // 默认不排序，保持原有顺序
+                    break;
+            }
+            
+            // 显示排序后的结果
+            const afterSalesData = sortedList.filter(b => (b.salesCount || 0) > 0);
+            console.log('排序后有销量的商家:', afterSalesData.map((b, index) => ({
+                排名: index + 1,
+                name: b.businessName,
+                id: b.id,
+                sales: b.salesCount
+            })));
+            
+            console.log('=== 排序完成 ===');
+            return sortedList;
         };
 
         const navigateToOrders = () => {
@@ -675,7 +758,91 @@ const getDisplayText = (location) => {
                 search.style.position = 'static';
             }
         };
+        // 测试search接口
+        const testSearchAPI = async () => {
+            console.log('🧪 === 直接测试search接口 ===');
+            try {
+                const response = await request.get('/api/businesses/search', { 
+                    params: { keyword: '', isScore: 0, isSales: 0 } 
+                });
+                console.log('🔍 Search接口完整响应:', response);
+                console.log('🔍 响应数据类型:', typeof response);
+                console.log('🔍 响应是否有success字段:', 'success' in response);
+                console.log('🔍 响应是否有data字段:', 'data' in response);
+                
+                if (response && response.success && response.data && Array.isArray(response.data)) {
+                    console.log('✅ Search接口数据格式正确');
+                    const withSales = response.data.filter(item => item.salesCount > 0);
+                    console.log('🏆 Search接口返回的有销量商家:', withSales);
+                } else {
+                    console.log('❌ Search接口数据格式不正确');
+                }
+            } catch (error) {
+                console.error('🔥 Search接口调用失败:', error);
+            }
+        };
+
+        // 测试用硬编码数据
+        const testWithHardcodedData = () => {
+            console.log('🧪 === 使用硬编码数据测试 ===');
+            const testData = [
+                {
+                    "id": 1,
+                    "businessName": "虾滑火锅",
+                    "businessImg": "https://sunnybigevent.oss-cn-beijing.aliyuncs.com/bbd37656-0eae-41be-995e-e2be0b96aca2.png",
+                    "startPrice": 120.00,
+                    "deliveryPrice": 10.00,
+                    "score": 1.00,
+                    "salesCount": 4
+                },
+                {
+                    "id": 40,
+                    "businessName": "螺狮粉",
+                    "businessImg": "",
+                    "startPrice": 2.00,
+                    "deliveryPrice": 10.00,
+                    "score": 1.00,
+                    "salesCount": 3
+                },
+                {
+                    "id": 42,
+                    "businessName": "发送",
+                    "businessImg": "https://sunnybigevent.oss-cn-beijing.aliyuncs.com/18fa7ba5-83f2-4cc8-8b9f-e4ffaa10875d.png",
+                    "startPrice": 1.00,
+                    "deliveryPrice": 1.00,
+                    "score": 1.00,
+                    "salesCount": 2
+                },
+                {
+                    "id": 37,
+                    "businessName": "面的传奇面馆",
+                    "businessImg": "",
+                    "startPrice": 1.00,
+                    "deliveryPrice": 1.00,
+                    "score": 1.00,
+                    "salesCount": 1
+                },
+                {
+                    "id": 2,
+                    "businessName": "黄焖鸡米饭黄焖鸡米饭",
+                    "businessImg": null,
+                    "startPrice": 2.00,
+                    "deliveryPrice": 1.00,
+                    "score": 1.00,
+                    "salesCount": 0
+                }
+            ];
+            
+            console.log('🧪 硬编码数据:', testData);
+            originalBusinessList.value = testData;
+            computeRatings();
+            applyFiltersAndSort();
+        };
+
         onMounted(() => {
+            console.log('🚀 === 页面加载开始 ===');
+            console.log('Vue组件已挂载');
+            
             // 先从localStorage获取保存的位置
     const savedLocation = localStorage.getItem('userLocation');
     if (savedLocation) {
@@ -700,6 +867,12 @@ const getDisplayText = (location) => {
     
             window.addEventListener('scroll', handleScroll);
 
+            console.log('📋 准备获取商家列表');
+            
+            // 🧪 临时使用硬编码数据测试 - 先测试硬编码数据是否正常
+            // console.log('🧪 启用硬编码数据测试');
+            // testWithHardcodedData();
+            
             getBusinessList();
         });
 
@@ -756,10 +929,12 @@ const getDisplayText = (location) => {
 
                     // 更新商家列表 - 根据API文档的响应格式处理
                     if (response && response.success && response.data && Array.isArray(response.data)) {
-                        businessList.value = response.data;
+                        originalBusinessList.value = response.data; // 搜索结果也保存为原始数据
                         computeRatings();
+                        applyFiltersAndSort(); // 应用筛选和排序
                     } else {
                         console.warn('搜索响应格式不正确:', response);
+                        originalBusinessList.value = [];
                         businessList.value = [];
                     }
 
@@ -779,58 +954,139 @@ const getDisplayText = (location) => {
 
         // 设置排序方式
         const setSortBy = (type) => {
+            console.log('🔄 === 用户点击排序按钮 ===');
+            console.log('从', sortBy.value, '切换到', type);
+            console.log('当前原始数据数量:', originalBusinessList.value.length);
+            console.log('当前显示数据数量:', businessList.value.length);
+            
+            // 🔍 在排序前再次检查原始数据
+            console.log('🔍 排序前最后检查 - originalBusinessList中的销量:');
+            const preCheckSales = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
+            preCheckSales.forEach(business => {
+                console.log(`- ${business.businessName}: salesCount=${business.salesCount}`);
+            });
+            
             sortBy.value = type;
-            console.log('设置排序方式:', type);
 
             if (searchKeyword.value.trim() !== '') {
+                console.log('🔍 有搜索关键词，执行搜索');
                 performSearch(); // 重新搜索以应用新的排序
             } else {
-                getBusinessList(); // 如果没有搜索关键词，重新加载所有商家
+                console.log('📋 无搜索关键词，直接排序筛选');
+                // 对当前列表进行排序和筛选
+                applyFiltersAndSort();
             }
         };
 
         // 获取商家列表
         const getBusinessList = () => {
-            console.log('开始获取商家列表...');
-            // 尝试使用新的API路径
-            request.get('/api/businesses', { params: { orderTypeId: 1 } })
+            console.log('=== 开始获取商家列表 ===');
+            console.log('🔄 改用search接口获取数据，因为/api/businesses接口返回的数据有问题');
+            console.log('请求URL: /api/businesses/search');
+            console.log('请求参数:', { keyword: '', isScore: 0, isSales: 0 });
+            // 使用search接口获取所有商家数据
+            request.get('/api/businesses/search', { params: { keyword: '', isScore: 0, isSales: 0 } })
                 .then(response => {
-                    console.log('商家列表响应:', response);
-                    // 检查响应数据结构
+                    console.log('=== 商家列表API响应 ===');
+                    console.log('响应状态:', response?.status);
+                    console.log('完整响应对象:', response);
+                    console.log('响应数据结构:', {
+                        success: response?.success,
+                        hasData: !!response?.data,
+                        dataType: Array.isArray(response?.data) ? 'Array' : typeof response?.data,
+                        dataLength: response?.data?.length
+                    });
+                    
+                    // 🔍 详细检查response.data的前3个元素
+                    if (response?.data && Array.isArray(response.data)) {
+                        console.log('🔍 response.data前3个元素的详细信息:');
+                        response.data.slice(0, 3).forEach((item, index) => {
+                            console.log(`元素 ${index + 1}:`, item);
+                            console.log(`  - businessName: ${item.businessName} (类型: ${typeof item.businessName})`);
+                            console.log(`  - salesCount: ${item.salesCount} (类型: ${typeof item.salesCount})`);
+                            console.log(`  - id: ${item.id} (类型: ${typeof item.id})`);
+                        });
+                        
+                        // 🔍 特别检查有销量的商家
+                        const withSales = response.data.filter(item => item.salesCount > 0);
+                        console.log('🏆 API返回的有销量商家:', withSales.map(item => ({
+                            name: item.businessName,
+                            sales: item.salesCount,
+                            id: item.id
+                        })));
+                    }
+                    
+                    // 检查响应数据结构 - 注意：request拦截器返回response.data，所以response就是数据本身
                     if (response && response.success && response.data && Array.isArray(response.data)) {
-                        businessList.value = response.data;
-                        console.log('商家列表数据:', businessList.value);
+                        console.log('✅ 响应数据格式正确');
+                        
+                        // 🔍 在赋值前检查原始响应数据
+                        console.log('🔍 赋值前 - 检查response.data中的销量数据:');
+                        const responseWithSales = response.data.filter(b => (b.salesCount || 0) > 0);
+                        responseWithSales.forEach(business => {
+                            console.log(`- ${business.businessName}: salesCount=${business.salesCount} (类型: ${typeof business.salesCount})`);
+                        });
+                        
+                        originalBusinessList.value = response.data; // 保存原始数据
+                        
+                        // 🔍 赋值后立即检查
+                        console.log('🔍 赋值后 - 检查originalBusinessList中的销量数据:');
+                        const assignedWithSales = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
+                        assignedWithSales.forEach(business => {
+                            console.log(`- ${business.businessName}: salesCount=${business.salesCount} (类型: ${typeof business.salesCount})`);
+                        });
+                        
+                        // 🔍 验证数据完整性
+                        console.log('🔍 数据完整性验证:');
+                        console.log('response.data === originalBusinessList.value:', response.data === originalBusinessList.value);
+                        console.log('JSON比较:', JSON.stringify(responseWithSales) === JSON.stringify(assignedWithSales));
+                        
+                        console.log('📊 原始商家数据总数:', originalBusinessList.value.length);
+                        
+                        // 详细显示前5个商家的完整数据
+                        console.log('🔍 前5个商家的完整数据:');
+                        originalBusinessList.value.slice(0, 5).forEach((business, index) => {
+                            console.log(`${index + 1}. ${business.businessName || '无名称'}:`, {
+                                id: business.id,
+                                salesCount: business.salesCount,
+                                score: business.score,
+                                startPrice: business.startPrice,
+                                deliveryPrice: business.deliveryPrice
+                            });
+                        });
+                        
+                        // 显示所有有销量的商家
+                        const businessesWithSales = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
+                        console.log('🏆 有销量的商家数量:', businessesWithSales.length);
+                        businessesWithSales.forEach(business => {
+                            console.log(`- ${business.businessName}: 销量 ${business.salesCount}`);
+                        });
+                        
                         computeRatings();
+                        applyFiltersAndSort(); // 应用筛选和排序
                     } else if (response && Array.isArray(response)) {
                         // 如果直接返回数组
-                        businessList.value = response;
-                        console.log('商家列表数据:', businessList.value);
+                        originalBusinessList.value = response; // 保存原始数据
+                        console.log('商家列表数据:', originalBusinessList.value);
+                        console.log('前5个商家的销量数据:', originalBusinessList.value.slice(0, 5).map(b => ({
+                            name: b.businessName,
+                            id: b.id,
+                            salesCount: b.salesCount
+                        })));
                         computeRatings();
+                        applyFiltersAndSort(); // 应用筛选和排序
                     } else {
                         console.warn('响应数据为空或格式不正确:', response);
+                        originalBusinessList.value = [];
                         businessList.value = [];
                     }
                 })
                 .catch(error => {
                     console.error('获取商家列表失败:', error);
-                    // 如果新接口失败，尝试使用搜索接口获取所有商家
-                    console.log('尝试使用搜索接口获取商家列表...');
-                    request.get('/api/businesses/search', { params: { keyword: '', isScore: 0, isSales: 0 } })
-                        .then(searchResponse => {
-                            console.log('搜索接口响应:', searchResponse);
-                            if (searchResponse && searchResponse.success && searchResponse.data && Array.isArray(searchResponse.data)) {
-                                businessList.value = searchResponse.data;
-                                console.log('通过搜索接口获取的商家列表:', businessList.value);
-                                computeRatings();
-                            } else {
-                                console.warn('搜索接口响应格式不正确:', searchResponse);
-                                businessList.value = [];
-                            }
-                        })
-                        .catch(searchError => {
-                            console.error('搜索接口也失败了:', searchError);
-                            businessList.value = [];
-                        });
+                    console.error('错误详情:', error.response?.data);
+                    console.error('错误状态:', error.response?.status);
+                    originalBusinessList.value = [];
+                    businessList.value = [];
                 });
         };
 
@@ -856,10 +1112,107 @@ const getDisplayText = (location) => {
             showFilter.value = false;
         };
 
+        // 应用筛选和排序的统一函数
+        const applyFiltersAndSort = () => {
+            console.log('🔧 === 开始应用筛选和排序 ===');
+            console.log('筛选条件:', filters.value);
+            console.log('排序方式:', sortBy.value);
+            console.log('原始数据数量:', originalBusinessList.value.length);
+            
+            // 检查原始数据中的销量情况
+            const originalSalesData = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
+            console.log('📈 原始数据中有销量的商家:', originalSalesData.map(b => ({
+                name: b.businessName,
+                id: b.id,
+                sales: b.salesCount
+            })));
+            
+            // 从原始数据开始筛选
+            console.log('🔄 开始筛选 - 复制原始数据');
+            let filteredList = [...originalBusinessList.value];
+            
+            // 🔍 检查复制后的数据
+            console.log('🔍 复制后的数据检查:');
+            const copiedWithSales = filteredList.filter(b => (b.salesCount || 0) > 0);
+            copiedWithSales.forEach(business => {
+                console.log(`- ${business.businessName}: salesCount=${business.salesCount} (类型: ${typeof business.salesCount})`);
+            });
+
+            // 免配送费筛选
+            if (filters.value.freeDelivery) {
+                const beforeCount = filteredList.length;
+                filteredList = filteredList.filter(business =>
+                    business.deliveryPrice === 0 || business.deliveryPrice === null
+                );
+                console.log(`免配送费筛选: ${beforeCount} -> ${filteredList.length}`);
+            }
+
+            // 起送价筛选
+            if (filters.value.startPrice !== '0') {
+                const maxPrice = parseInt(filters.value.startPrice);
+                const beforeCount = filteredList.length;
+                filteredList = filteredList.filter(business => {
+                    const startPrice = business.startPrice || business.starPrice || 0;
+                    return startPrice <= maxPrice;
+                });
+                console.log(`起送价筛选(≤${maxPrice}): ${beforeCount} -> ${filteredList.length}`);
+            }
+
+            console.log('筛选后数量:', filteredList.length);
+
+            // 应用排序
+            const sortedList = sortBusinessList(filteredList, sortBy.value);
+            
+            businessList.value = sortedList;
+            console.log('筛选和排序后的商家列表:', sortedList.length, '个商家');
+            
+            // 输出前5个商家的排序信息用于调试
+            if (sortedList.length > 0) {
+                const debugInfo = sortedList.slice(0, 5).map(business => ({
+                    name: business.businessName || '未命名',
+                    score: parseFloat(business.score || getBusinessRating(business.id || business.businessId)),
+                    sales: parseInt(business.salesCount || 0),
+                    id: business.id || business.businessId,
+                    rawSalesCount: business.salesCount // 显示原始销量数据
+                }));
+                console.log(`排序后前5个商家 (${sortBy.value}排序):`, debugInfo);
+                
+                // 如果是销量排序，特别显示销量信息
+                if (sortBy.value === 'sales') {
+                    const salesInfo = sortedList.map(business => ({
+                        name: business.businessName || '未命名',
+                        sales: parseInt(business.salesCount || 0),
+                        id: business.id || business.businessId,
+                        rawSalesCount: business.salesCount
+                    })).sort((a, b) => b.sales - a.sales).slice(0, 8);
+                    console.log('销量排序详情（前8名）:', salesInfo);
+                }
+                
+                // 检查最终显示的数据
+                console.log('🎯 === 最终显示数据检查 ===');
+                console.log('最终businessList总数量:', businessList.value.length);
+                console.log('最终businessList前5个商家详情:');
+                businessList.value.slice(0, 5).forEach((business, index) => {
+                    console.log(`${index + 1}. ${business.businessName}:`, {
+                        id: business.id,
+                        salesCount: business.salesCount,
+                        score: business.score,
+                        原始销量值: business.salesCount,
+                        销量类型: typeof business.salesCount
+                    });
+                });
+                
+                // 特别检查模板绑定的数据
+                console.log('🎭 模板显示检查 - 前5个商家的销量显示值:');
+                businessList.value.slice(0, 5).forEach((business, index) => {
+                    const displayValue = business.salesCount || 0;
+                    console.log(`${index + 1}. ${business.businessName}: 显示值=${displayValue} (原值=${business.salesCount})`);
+                });
+            }
+        };
+
         const applyFilters = () => {
-            console.log('应用筛选条件:', filters.value);
-            // 这里可以添加筛选逻辑
-            filterBusinessList();
+            applyFiltersAndSort();
         };
 
         const resetFilters = () => {
@@ -867,35 +1220,13 @@ const getDisplayText = (location) => {
                 freeDelivery: false,
                 startPrice: '0'
             };
-            applyFilters();
+            sortBy.value = 'default'; // 重置排序为默认
+            applyFiltersAndSort();
         };
 
         const confirmFilters = () => {
-            applyFilters();
+            applyFiltersAndSort();
             hideFilter();
-        };
-
-        // 筛选商家列表
-        const filterBusinessList = () => {
-            let filteredList = [...businessList.value];
-
-            // 免配送费筛选
-            if (filters.value.freeDelivery) {
-                filteredList = filteredList.filter(business =>
-                    business.deliveryPrice === 0 || business.deliveryPrice === null
-                );
-            }
-
-            // 起送价筛选
-            if (filters.value.startPrice !== '0') {
-                const maxPrice = parseInt(filters.value.startPrice);
-                filteredList = filteredList.filter(business =>
-                    business.startPrice <= maxPrice
-                );
-            }
-
-            businessList.value = filteredList;
-            console.log('筛选后的商家列表:', filteredList);
         };
 
         return {
@@ -935,7 +1266,11 @@ const getDisplayText = (location) => {
             hideFilter,
             applyFilters,
             resetFilters,
-            confirmFilters
+            confirmFilters,
+            applyFiltersAndSort,
+            sortBusinessList,
+            testWithHardcodedData,
+            testSearchAPI
         };
     },
     components: {
