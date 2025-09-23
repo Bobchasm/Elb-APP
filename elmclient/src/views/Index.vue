@@ -732,9 +732,9 @@ const getDisplayText = (location) => {
                     // 调用搜索接口
                     const response = await request.get('/api/businesses/search', { params });
 
-                    console.log('搜索响应:', response);
-                    console.log('响应状态:', response?.status);
-                    console.log('响应数据:', response?.data);
+                    console.log('111搜索响应:', response);
+                    console.log('222响应状态:', response?.status);
+                    console.log('333响应数据:', response?.data);
 
                     // 更新商家列表 - 根据API文档的响应格式处理
                     if (response && response.success && response.data && Array.isArray(response.data)) {
