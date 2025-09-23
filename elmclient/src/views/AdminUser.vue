@@ -287,7 +287,7 @@ onMounted(() => {
 }
 
 .container {
-  max-width: 600px;
+  /* max-width: 600px; */
   margin: 0 auto;
   background: #fff;
   min-height: 100vh;
@@ -298,6 +298,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   position: relative;
+  padding:0;
 }
 
 .top-background {
