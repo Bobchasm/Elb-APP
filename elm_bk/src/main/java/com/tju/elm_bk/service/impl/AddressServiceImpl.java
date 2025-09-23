@@ -70,10 +70,10 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(DeliveryAddress deliveryAddress) {
+    public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(Long userId) {
         String currentUsername = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new APIException("当前用户未登录"));
-        User targetUser = userMapper.findByUserIdWithAuthorities(deliveryAddress.getUserId());
+        User targetUser = userMapper.findByUserIdWithAuthorities(userId);
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         boolean isAdmin = currentUser.getAuthorities().stream()
                 .anyMatch(auth -> "ADMIN".equals(auth.getName()));
@@ -84,15 +84,15 @@ public class AddressServiceImpl implements AddressService {
             throw  new APIException("目标用户不存在");
         }
         if (currentUser.getUsername().equals(targetUser.getUsername()) || isAdmin){
-            return HttpResult.success(deliveryAddressMapper.listDeliveryAddressByUserId(deliveryAddress));
+            return HttpResult.success(deliveryAddressMapper.listDeliveryAddressByUserId(userId));
         }else {
             return HttpResult.failure(ResultCodeEnum.NOT_ENOUGH_PERMISSION);
         }
     }
 
     @Override
-    public HttpResult<DeliveryAddress> getDeliveryAddressById(DeliveryAddress deliveryAddress) {
-        return HttpResult.success(deliveryAddressMapper.getDeliveryAddressById(deliveryAddress.getId()));
+    public HttpResult<DeliveryAddress> getDeliveryAddressById(Long id) {
+        return HttpResult.success(deliveryAddressMapper.getDeliveryAddressById(id));
     }
 
     @Override

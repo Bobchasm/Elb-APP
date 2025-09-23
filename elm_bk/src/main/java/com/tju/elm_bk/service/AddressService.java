@@ -11,9 +11,9 @@ import java.util.List;
 public interface AddressService {
     HttpResult<AddressVO> addDeliveryAddress(@Valid AddressCreateDTO createDTO);
 
-    HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(DeliveryAddress deliveryAddress);
+    HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(Long userId);
 
-    HttpResult<DeliveryAddress> getDeliveryAddressById(DeliveryAddress deliveryAddress);
+    HttpResult<DeliveryAddress> getDeliveryAddressById(Long id);
 
     HttpResult updateDeliveryAddress(DeliveryAddress deliveryAddress);
 
