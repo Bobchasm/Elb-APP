@@ -2,6 +2,7 @@
     <div class="wrapper">
         <!-- header部分 -->
         <!-- 首页点进去后展示的内容 -->
+        <BackButton />
         <header>
             <p>商家信息</p>
         </header>
@@ -99,9 +100,11 @@
 import { ref, onMounted, computed, watch, onErrorCaptured } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import request from "@/utils/request";
+import BackButton from "../components/BackButton.vue";
 
 export default {
     name: "BusinessInfo",
+    components: { BackButton },
     setup() {
         const route = useRoute();
         const router = useRouter();

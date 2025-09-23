@@ -1,5 +1,6 @@
 <template>
   <div class="notifications-container">
+     <BackButton />
     <div class="header">
       <h1 class="title">消息与通知</h1>
       <div v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</div>
@@ -46,6 +47,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
+import BackButton from "../components/BackButton.vue";
 
 // 状态管理
 const messages = ref([]);
@@ -264,15 +266,17 @@ const formatTime = (timeStr) => {
 }
 
 .header {
-  padding: 20px;
-  text-align: center;
-  background: linear-gradient(to right, #3a7bd5, #00d2ff);
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background-color: #0097ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  z-index: 100;
 }
 /* .header {
   padding: 20px;
@@ -282,10 +286,10 @@ const formatTime = (timeStr) => {
 } */
 
 .title {
-  margin: 0;
-  font-size: 24px;
+ font-size: 1.1rem;
+  color: #ffffff;
   font-weight: 600;
-  color:white;
+  margin: 0;
 }
 
 .unread-badge {
