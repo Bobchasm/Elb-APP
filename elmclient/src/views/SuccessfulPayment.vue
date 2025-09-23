@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div class="top-green"></div>
+    <div class="top-blue"></div>
     <div class="gou">
       <img :src='myimage' class="goutu">
     </div>
@@ -98,13 +98,13 @@ html, body {
   padding-top: 0;
 }
 
-.top-green {
+.top-blue {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 12vw;
-  background-color: #4caf50;
+  background-color: #2196F3; /* Changed to a blue color */
 }
 
 .gou {
@@ -116,7 +116,7 @@ html, body {
   width: 12vw;
   height: 12vw;
   border-radius: 50%;
-  background-color: #4caf50;
+  background-color: #2196F3; /* Changed to a blue color */
   padding: 3vw;
   box-shadow: 0 0 1vw rgba(0, 0, 0, 0.1);
 }
@@ -151,7 +151,7 @@ html, body {
 
 .back-home button {
   padding: 2vw 4vw;
-  background-color: #4caf50;
+  background-color: #2196F3; /* Changed to a blue color */
   color: white;
   border: none;
   border-radius: 1vw;
@@ -161,6 +161,6 @@ html, body {
 }
 
 .back-home button:hover {
-  background-color: #45a049;
+  background-color: #1976D2; /* A slightly darker blue for hover effect */
 }
 </style>
