@@ -377,8 +377,7 @@ export default {
                 console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
 
                 const response = await request.get('/api/merchant/interaction/status', {
-                    params: { userId, merchantId: businessId.value },
-                    headers: { 'Cache-Control': 'no-cache' }
+                    params: { userId: userId, merchantId: businessId.value },
                 });
 
                 console.log("互动状态API响应:", response);
