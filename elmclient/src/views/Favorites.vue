@@ -1,8 +1,9 @@
 <template>
-  <div>
+
+    <BackButton />
     <div class="header">
       <i class="fas fa-chevron-left back-icon" @click="goBack"></i>
-      <h1>我的收藏</h1>
+      <h1 class="title">我的收藏</h1>
     </div>
     <div class="container">
       <div v-if="loading" class="loading-message">
@@ -21,8 +22,10 @@
       <div v-else class="business-list">
         <div v-for="business in favoriteList" :key="business.businessId" class="business-item"
           @click="goToBusinessInfo(business.businessId)">
-          <img :src="business.businessImg" :alt="business.businessName" class="business-img">
-          <div class="business-details">
+          <img :src="business.businessImg || require('@/assets/default-business.png')"
+     :alt="business.businessName"
+     class="business-img"
+     @error="handleImageError"><div class="business-details">
             <div class="business-name">{{ business.businessName }}</div>
             <div class="business-info-row">
               <span class="star-rating">
@@ -38,16 +41,19 @@
         </div>
       </div>
     </div>
-  </div>
+
 </template>
 
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
-import request from '@/utils/request';
+import request from '@/utils/request'; // 使用封装好的request
+import BackButton from '../components/BackButton.vue';
+
 export default {
   name: 'Favorites',
+  components: { BackButton },
   setup() {
     const router = useRouter();
     const favoriteList = ref([]);
@@ -65,8 +71,10 @@ export default {
           return;
         }
 
+        // 调用后端API获取收藏列表
         const response = await request.get(`/api/merchant/interaction/collections/${userInfo.id}`);
 
+        // 将后端返回的数据映射到前端需要的格式
         favoriteList.value = response.data.map(business => ({
           businessId: business.id,
           businessName: business.businessName,
@@ -112,6 +120,7 @@ export default {
 };
 </script>
 
+
 <style scoped>
 /* 整个页面的基本样式，确保没有默认外边距 */
 body {
@@ -121,6 +130,15 @@ body {
 
 /* 顶部栏，不受 container 限制，贴近边缘 */
 .header {
+  /* padding: 20px; */
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* border-radius: 16px 16px 0 0; */
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
   position: sticky;
   top: 0;
   left: 0;
@@ -136,8 +154,9 @@ body {
 
 /* 主内容容器，保持居中和最大宽度 */
 .container {
-  max-width: 600px;
-  margin: 0 auto;
+  /* max-width: 600px; */
+  width:100%;
+  /* margin: 0 auto; */
   padding-bottom: 40px;
   background-color: #f0f2f5;
   min-height: 100vh;
@@ -150,7 +169,7 @@ body {
   font-size: 1.1rem;
   color: #ffffff;
   font-weight: 600;
-  margin: 0;
+  color:white;
 }
 
 .back-icon {
@@ -193,7 +212,7 @@ body {
 }
 
 .business-list {
-  padding: 0px 15px; /* 增加左右内边距，使列表内容与页面两边有一定间隔 */
+  padding: 0px ; /* 增加左右内边距，使列表内容与页面两边有一定间隔 */
   margin-top: 15px;
   display: flex;
   flex-direction: column;
@@ -204,7 +223,7 @@ body {
   display: flex;
   align-items: center;
   background-color: #fff;
-  padding: 15px;
+  /* padding: 15px; */
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   cursor: pointer;
