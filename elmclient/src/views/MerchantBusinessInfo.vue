@@ -67,8 +67,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from "vue";
-import axios from "axios";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Swal from 'sweetalert2';
 import request from '../utils/request';
@@ -76,85 +75,62 @@ import request from '../utils/request';
 export default {
   name: "BusinessInfo",
   setup() {
+    const route = useRoute();
     const businessId = ref();
     const business = ref({});
     const foodArr = ref([]);
-    const route = useRoute();
-
     const favoriteCount = ref({});
 
     onMounted(() => {
       businessId.value = parseInt(route.query.businessId);
-      // 在实际项目中，这里会发送 API 请求
       fetchBusinessBaseData();
       fetchBusinessFavoriteData();
       fetchBusinessFoodListData();
     });
 
-    // // 模拟数据
-    // const mockBusinessData = {
-    //   businessId: 1,
-    //   businessName: '美味汉堡店',
-    //   businessImg: 'https://i.ibb.co/L5Qy0fD/burger.jpg',
-    //   starPrice: 15,
-    //   deliveryPrice: 3,
-    //   businessExplain: '我们的汉堡采用新鲜牛肉和时令蔬菜，手工制作，美味多汁！',
-    //   likes: Math.floor(Math.random() * 1000),
-    //   collections: Math.floor(Math.random() * 500)
-    // };
-
-    const mockFoodData = [
-      { foodId: 1, foodName: '经典牛肉汉堡', foodImg: 'https://i.ibb.co/L5Qy0fD/burger.jpg', foodExplain: '招牌主打，经典美味', foodPrice: 25, quantity: 0 },
-      { foodId: 2, foodName: '薯条', foodImg: 'https://i.ibb.co/CByP6zP/fries.jpg', foodExplain: '酥脆可口，黄金薯条', foodPrice: 8, quantity: 0 },
-      { foodId: 3, foodName: '可乐', foodImg: 'https://i.ibb.co/3W6qWbH/coke.jpg', foodExplain: '冰爽解渴，畅饮无限', foodPrice: 6, quantity: 0 }
-    ];
-
-    // 商铺基本信息
+    // 获取商铺基本信息
     const fetchBusinessBaseData = () => {
       request.get("/api/businesses/" + businessId.value)
-      .then(response => {
+        .then(response => {
           business.value = response.data;
-      }).catch(error => {
-          console.error('获取失败:', error);
-      });
+        })
+        .catch(error => {
+          console.error('获取商铺信息失败:', error);
+        });
     };
-    // 商铺点赞收藏信息
+
+    // 获取商铺点赞收藏数据
     const fetchBusinessFavoriteData = () => {
       request.get("/api/merchant/interaction/stats/" + businessId.value)
-      .then(response => {
-        favoriteCount.value = response.data;
-      }).catch(error => {
-          console.error('获取失败:', error);
-      });
+        .then(response => {
+          favoriteCount.value = response.data;
+        })
+        .catch(error => {
+          console.error('获取点赞收藏数据失败:', error);
+        });
     };
-    // 商铺商品列表
+
+    // 获取商铺商品列表
     const fetchBusinessFoodListData = () => {
       request.get("/api/foods/list?businessId=" + businessId.value)
-      .then(response => {
-        foodArr.value = response.data;
-      }).catch(error => {
-          console.error('获取失败:', error);
-      });
+        .then(response => {
+          foodArr.value = response.data;
+        })
+        .catch(error => {
+          console.error('获取商品列表失败:', error);
+        });
     };
 
-    
-
-    
-
-    const fetchBusinessAndFoodData = () => {
-      // 模拟API请求，使用假数据
-      business.value = mockBusinessData;
-      foodArr.value = mockFoodData;
-    };
-
+    // 编辑商铺信息
     const showEditBusinessModal = async () => {
       let selectedFile = null;
-      let currentImageUrl = business.value.businessImg; // 保存当前图片URL
+      let currentImageUrl = business.value.businessImg;
+      const currentOrderTypeId = business.value.orderTypeId || '';
 
       const { value: formValues } = await Swal.fire({
         title: '编辑商铺信息',
-        html:
-          `<div style="text-align: center; margin-bottom: 15px;">
+        html: `
+          <div style="text-align: center; margin-bottom: 15px;">
             <img id="image-preview" src="${business.value.businessImg}" style="max-width: 200px; max-height: 150px; border-radius: 5px; border: 2px dashed #ddd; margin: 0 auto;">
           </div>
           <div style="text-align: center; margin-bottom: 15px;">
@@ -162,16 +138,29 @@ export default {
               更换图片
             </button>
           </div>
-          <input id="swal-input-name" class="swal2-input" placeholder="商铺名称" value="${business.value.businessName}">
-          <input id="swal-input-star" type="number" class="swal2-input" placeholder="起送费" value="${business.value.startPrice}">
-          <input id="swal-input-delivery" type="number" class="swal2-input" placeholder="配送费" value="${business.value.deliveryPrice}">
-          <textarea id="swal-input-explain" class="swal2-textarea" placeholder="简介">${business.value.businessExplain}</textarea>`,
+          <input id="businessName" class="swal2-input" placeholder="商铺名称" value="${business.value.businessName}">
+          <input id="startPrice" type="number" class="swal2-input" placeholder="起送费" value="${business.value.startPrice}">
+          <input id="deliveryPrice" type="number" class="swal2-input" placeholder="配送费" value="${business.value.deliveryPrice}">
+          <textarea id="businessExplain" class="swal2-textarea" placeholder="商铺介绍">${business.value.businessExplain}</textarea>
+          <select id="orderTypeId" class="swal2-input" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="" disabled ${!currentOrderTypeId ? 'selected' : ''}>请选择商铺类型</option>
+            <option value="1" ${currentOrderTypeId === 1 ? 'selected' : ''}>美食</option>
+            <option value="2" ${currentOrderTypeId === 2 ? 'selected' : ''}>早餐</option>
+            <option value="3" ${currentOrderTypeId === 3 ? 'selected' : ''}>跑腿代购</option>
+            <option value="4" ${currentOrderTypeId === 4 ? 'selected' : ''}>汉堡披萨</option>
+            <option value="5" ${currentOrderTypeId === 5 ? 'selected' : ''}>甜品饮品</option>
+            <option value="6" ${currentOrderTypeId === 6 ? 'selected' : ''}>速食简食</option>
+            <option value="7" ${currentOrderTypeId === 7 ? 'selected' : ''}>地方小吃</option>
+            <option value="8" ${currentOrderTypeId === 8 ? 'selected' : ''}>米粉面馆</option>
+            <option value="9" ${currentOrderTypeId === 9 ? 'selected' : ''}>包子粥铺</option>
+            <option value="10" ${currentOrderTypeId === 10 ? 'selected' : ''}>炸鸡炸串</option>
+          </select>
+        `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         didOpen: () => {
-          // 创建隐藏的文件输入元素
           const fileInput = document.createElement('input');
           fileInput.type = 'file';
           fileInput.accept = 'image/*';
@@ -188,8 +177,6 @@ export default {
           fileInput.addEventListener('change', (event) => {
             if (event.target.files.length > 0) {
               selectedFile = event.target.files[0];
-
-              // 创建预览图
               const reader = new FileReader();
               reader.onload = (e) => {
                 imagePreview.src = e.target.result;
@@ -199,19 +186,19 @@ export default {
           });
         },
         preConfirm: async () => {
-          const name = document.getElementById('swal-input-name').value;
-          const star = parseFloat(document.getElementById('swal-input-star').value);
-          const delivery = parseFloat(document.getElementById('swal-input-delivery').value);
-          const explain = document.getElementById('swal-input-explain').value;
+          const businessName = document.getElementById('businessName').value;
+          const startPrice = parseFloat(document.getElementById('startPrice').value);
+          const deliveryPrice = parseFloat(document.getElementById('deliveryPrice').value);
+          const businessExplain = document.getElementById('businessExplain').value;
+          const orderTypeId = document.getElementById('orderTypeId').value;
 
-          if (!name || isNaN(star) || isNaN(delivery)) {
+          if (!businessName || isNaN(startPrice) || isNaN(deliveryPrice) || !orderTypeId) {
             Swal.showValidationMessage('请填写完整且正确的信息');
             return false;
           }
 
           let finalImageUrl = currentImageUrl;
 
-          // 如果选择了新图片，先上传图片
           if (selectedFile) {
             try {
               const formData = new FormData();
@@ -237,11 +224,12 @@ export default {
           }
 
           return {
-            name,
-            img: finalImageUrl,
-            star,
-            delivery,
-            explain
+            businessName,
+            businessImg: finalImageUrl,
+            startPrice,
+            deliveryPrice,
+            businessExplain,
+            orderTypeId: parseInt(orderTypeId)
           };
         }
       });
@@ -256,27 +244,21 @@ export default {
 
       if (formValues) {
         try {
-          // 准备更新数据
           const updateData = {
-            businessName: formValues.name,
-            businessImg: formValues.img,
-            startPrice: formValues.star,
-            deliveryPrice: formValues.delivery,
-            businessExplain: formValues.explain
+            businessName: formValues.businessName,
+            businessImg: formValues.businessImg,
+            startPrice: formValues.startPrice,
+            deliveryPrice: formValues.deliveryPrice,
+            businessExplain: formValues.businessExplain,
+            orderTypeId: formValues.orderTypeId
           };
 
-          // 发送PUT请求更新商家信息
           const response = await request.put(`/api/businesses/${businessId.value}`, updateData);
 
           if (response.success) {
-            // 更新本地数据
             business.value = {
               ...business.value,
-              businessName: formValues.name,
-              businessImg: formValues.img,
-              startPrice: formValues.star,
-              deliveryPrice: formValues.delivery,
-              businessExplain: formValues.explain
+              ...updateData
             };
 
             Swal.fire({
@@ -296,30 +278,31 @@ export default {
       }
     };
 
+    // 添加新商品
     const showAddNewFoodModal = async () => {
       let selectedFile = null;
 
       const { value: formValues } = await Swal.fire({
         title: '添加新商品',
-        html:
-          `<div style="text-align: center; margin-bottom: 15px;">
+        html: `
+          <div style="text-align: center; margin-bottom: 15px;">
             <img id="image-preview" src="" style="max-width: 200px; max-height: 150px; border-radius: 5px; border: 2px dashed #ddd; display: none; margin: 0 auto;">
-          <div id="no-image-text" style="color: #999; font-size: 14px;">暂无图片</div>
+            <div id="no-image-text" style="color: #999; font-size: 14px;">暂无图片</div>
           </div>
           <div style="text-align: center; margin-bottom: 15px;">
             <button type="button" id="upload-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
               选择图片
             </button>
           </div>
-          <input id="swal-food-name" class="swal2-input" placeholder="商品名称">
-          <input id="swal-food-explain" class="swal2-input" placeholder="商品简介">
-          <input id="swal-food-price" type="number" class="swal2-input" placeholder="商品价格">`,
+          <input id="foodName" class="swal2-input" placeholder="商品名称">
+          <input id="foodExplain" class="swal2-input" placeholder="商品简介">
+          <input id="foodPrice" type="number" class="swal2-input" placeholder="商品价格">
+        `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         didOpen: () => {
-          // 创建隐藏的文件输入元素
           const fileInput = document.createElement('input');
           fileInput.type = 'file';
           fileInput.accept = 'image/*';
@@ -337,11 +320,9 @@ export default {
           fileInput.addEventListener('change', (event) => {
             if (event.target.files.length > 0) {
               selectedFile = event.target.files[0];
-
-              // 创建预览图 - 直接设置src，不需要imagePreviewUrl变量
               const reader = new FileReader();
               reader.onload = (e) => {
-                imagePreview.src = e.target.result; // 直接设置src
+                imagePreview.src = e.target.result;
                 imagePreview.style.display = 'block';
                 noImageText.style.display = 'none';
               };
@@ -350,11 +331,11 @@ export default {
           });
         },
         preConfirm: async () => {
-          const name = document.getElementById('swal-food-name').value;
-          const explain = document.getElementById('swal-food-explain').value;
-          const price = parseFloat(document.getElementById('swal-food-price').value);
+          const foodName = document.getElementById('foodName').value;
+          const foodExplain = document.getElementById('foodExplain').value;
+          const foodPrice = parseFloat(document.getElementById('foodPrice').value);
 
-          if (!name || !explain || isNaN(price)) {
+          if (!foodName || !foodExplain || isNaN(foodPrice)) {
             Swal.showValidationMessage('请填写完整且正确的信息');
             return false;
           }
@@ -365,7 +346,6 @@ export default {
           }
 
           try {
-            // 上传图片
             const formData = new FormData();
             formData.append('file', selectedFile);
 
@@ -379,10 +359,10 @@ export default {
 
             if (uploadResponse && uploadResponse.data) {
               return {
-                name,
-                img: uploadResponse.data, // 使用服务器返回的图片路径
-                explain,
-                price
+                foodName,
+                foodImg: uploadResponse.data,
+                foodExplain,
+                foodPrice
               };
             } else {
               throw new Error('上传失败');
@@ -404,21 +384,18 @@ export default {
 
       if (formValues) {
         try {
-          // 创建新商品对象
           const newFood = {
-            foodName: formValues.name,
-            foodImg: formValues.img,
-            foodExplain: formValues.explain,
-            foodPrice: formValues.price,
+            foodName: formValues.foodName,
+            foodImg: formValues.foodImg,
+            foodExplain: formValues.foodExplain,
+            foodPrice: formValues.foodPrice,
             businessId: businessId.value,
-            shelveStatus: 1 // 默认上架状态
+            shelveStatus: 1
           };
 
-          // 发送API请求添加商品
           const response = await request.post('/api/foods/addItem', newFood);
 
           if (response.success) {
-            // 重新获取商品列表
             await fetchBusinessFoodListData();
             Swal.fire({
               icon: 'success',
@@ -437,16 +414,16 @@ export default {
       }
     };
 
-
+    // 编辑商品信息
     const showEditFoodModal = async (id, index) => {
       const foodItem = foodArr.value[index];
       let selectedFile = null;
-      let currentImageUrl = foodItem.foodImg; // 保存当前图片URL
+      let currentImageUrl = foodItem.foodImg;
 
       const { value: formValues } = await Swal.fire({
         title: '编辑商品信息',
-        html:
-          `<div style="text-align: center; margin-bottom: 15px;">
+        html: `
+          <div style="text-align: center; margin-bottom: 15px;">
             <img id="image-preview" src="${foodItem.foodImg}" style="max-width: 200px; max-height: 150px; border-radius: 5px; border: 2px dashed #ddd; margin: 0 auto;">
           </div>
           <div style="text-align: center; margin-bottom: 15px;">
@@ -454,15 +431,15 @@ export default {
               更换图片
             </button>
           </div>
-          <input id="swal-food-name" class="swal2-input" placeholder="商品名称" value="${foodItem.foodName}">
-          <input id="swal-food-explain" class="swal2-input" placeholder="商品简介" value="${foodItem.foodExplain}">
-          <input id="swal-food-price" type="number" class="swal2-input" placeholder="商品价格" value="${foodItem.foodPrice}">`,
+          <input id="foodName" class="swal2-input" placeholder="商品名称" value="${foodItem.foodName}">
+          <input id="foodExplain" class="swal2-input" placeholder="商品简介" value="${foodItem.foodExplain}">
+          <input id="foodPrice" type="number" class="swal2-input" placeholder="商品价格" value="${foodItem.foodPrice}">
+        `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         didOpen: () => {
-          // 创建隐藏的文件输入元素
           const fileInput = document.createElement('input');
           fileInput.type = 'file';
           fileInput.accept = 'image/*';
@@ -479,8 +456,6 @@ export default {
           fileInput.addEventListener('change', (event) => {
             if (event.target.files.length > 0) {
               selectedFile = event.target.files[0];
-
-              // 创建预览图
               const reader = new FileReader();
               reader.onload = (e) => {
                 imagePreview.src = e.target.result;
@@ -490,13 +465,12 @@ export default {
           });
         },
         preConfirm: async () => {
-          const name = document.getElementById('swal-food-name').value;
-          const explain = document.getElementById('swal-food-explain').value;
-          const price = parseFloat(document.getElementById('swal-food-price').value);
+          const foodName = document.getElementById('foodName').value;
+          const foodExplain = document.getElementById('foodExplain').value;
+          const foodPrice = parseFloat(document.getElementById('foodPrice').value);
 
           let finalImageUrl = currentImageUrl;
 
-          // 如果选择了新图片，先上传图片
           if (selectedFile) {
             try {
               const formData = new FormData();
@@ -522,10 +496,10 @@ export default {
           }
 
           return {
-            name,
-            img: finalImageUrl,
-            explain,
-            price
+            foodName,
+            foodImg: finalImageUrl,
+            foodExplain,
+            foodPrice
           };
         }
       });
@@ -540,27 +514,24 @@ export default {
 
       if (formValues) {
         try {
-          // 准备更新数据
           const updateData = {
-            foodId: id, // 商品ID
-            foodName: formValues.name,
-            foodImg: formValues.img,
-            foodExplain: formValues.explain,
-            foodPrice: formValues.price,
+            foodId: id,
+            foodName: formValues.foodName,
+            foodImg: formValues.foodImg,
+            foodExplain: formValues.foodExplain,
+            foodPrice: formValues.foodPrice,
             businessId: businessId.value
           };
 
-          // 发送API请求修改商品
           const response = await request.post('/api/foods/modifyItem', updateData);
 
           if (response.success) {
-            // 更新本地数据
             foodArr.value[index] = {
               ...foodItem,
-              foodName: formValues.name,
-              foodImg: formValues.img,
-              foodExplain: formValues.explain,
-              foodPrice: formValues.price
+              foodName: formValues.foodName,
+              foodImg: formValues.foodImg,
+              foodExplain: formValues.foodExplain,
+              foodPrice: formValues.foodPrice
             };
 
             Swal.fire({
@@ -580,19 +551,20 @@ export default {
       }
     };
 
-    const shelveFood = (id,shelveStatus,index) => {
+    // 上架/下架商品
+    const shelveFood = (id, shelveStatus, index) => {
       const newStatus = shelveStatus === 0 ? 1 : 0;
-      request.get("/api/foods/status?foodId=" + id + "&shelveStatus=" + (shelveStatus === 0 ? 1 : 0)
-      ).then((response) => {
-        if (response.success) {
-          foodArr.value[index].shelveStatus = newStatus;
-          Swal.fire(shelveStatus == 0 ? '上架成功' : '下架成功');
-        }
-      });
+      request.get(`/api/foods/status?foodId=${id}&shelveStatus=${newStatus}`)
+        .then((response) => {
+          if (response.success) {
+            foodArr.value[index].shelveStatus = newStatus;
+            Swal.fire(shelveStatus == 0 ? '上架成功' : '下架成功');
+          }
+        });
     };
 
-
-    const deleteFood = (id,index) => {
+    // 删除商品
+    const deleteFood = (id, index) => {
       Swal.fire({
         title: '确定要删除吗？',
         text: "删除后将无法恢复！",
@@ -604,13 +576,13 @@ export default {
         cancelButtonText: '取消'
       }).then((result) => {
         if (result.isConfirmed) {
-          request.get("/api/foods/delete?foodId=" + id
-          ).then((response) => {
-            if (response.success) {
-              foodArr.value.splice(index, 1);
-              Swal.fire('删除成功');
-            }
-          });
+          request.get(`/api/foods/delete?foodId=${id}`)
+            .then((response) => {
+              if (response.success) {
+                foodArr.value.splice(index, 1);
+                Swal.fire('删除成功');
+              }
+            });
         }
       });
     };
@@ -625,7 +597,7 @@ export default {
       shelveFood,
       deleteFood
     };
-  },
+  }
 };
 </script>
 

@@ -7,23 +7,23 @@
     <div class="container wrapper">
       <ul class="business-list">
         <li v-for="shop in shops" :key="shop?.id || index">
-          <img  :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'" 
-                   :alt="shop?.businessName || '未命名商铺'" class="logo"
-                   @error="handleImageError">
-            <div class="business-info-detail">
-              <h3>{{ shop?.businessName || '未命名商铺' }}</h3>
-              <div class="delivery-info-container">
-  <div class="business-info-delivery">
-    <p>配送费{{ shop?.deliveryPrice || 0 }}元</p>
-  </div>
-  <div class="business-info-delivery">
-    <p>起送费{{ shop?.startPrice || 0 }}元</p>
-  </div>
-</div>
+          <img
+            :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'"
+            :alt="shop?.businessName || '未命名商铺'" class="logo" @error="handleImageError">
+          <div class="business-info-detail">
+            <h3>{{ shop?.businessName || '未命名商铺' }}</h3>
+            <div class="delivery-info-container">
               <div class="business-info-delivery">
-                <p>商家地址：{{ shop?.businessAddress || 暂无地址信息 }}</p>
+                <p>配送费{{ shop?.deliveryPrice || 0 }}元</p>
+              </div>
+              <div class="business-info-delivery">
+                <p>起送费{{ shop?.startPrice || 0 }}元</p>
               </div>
             </div>
+            <div class="business-info-delivery">
+              <p>商家地址：{{ shop?.businessAddress || 暂无地址信息 }}</p>
+            </div>
+          </div>
           <div class="action-buttons">
             <button class="edit-btn" @click="editShop(shop?.id || index)">编辑</button>
             <button class="delete-btn" @click="deleteShop(shop?.id || index)">删除</button>
@@ -83,7 +83,7 @@ export default {
     const loadShops = async (status = 1) => {
       loading.value = true;
       errorMessage.value = '';
-      
+
       try {
         const token = getToken();
         if (!token) {
@@ -118,7 +118,7 @@ export default {
         }
       } catch (error) {
         console.error('获取商铺列表失败:', error);
-        
+
         if (error.response && error.response.status === 401) {
           // Token 过期或无效
           toast.error('登录已过期，请重新登录！');
@@ -199,6 +199,19 @@ export default {
               <textarea id="businessExplain" class="swal2-textarea" placeholder="商铺介绍"></textarea>
               <input id="deliveryPrice" class="swal2-input" placeholder="配送费(元)" type="number" min="0" step="0.1" required>
               <input id="startPrice" class="swal2-input" placeholder="起送价(元)" type="number" min="0" step="0.1" required>
+              <select id="orderTypeId" class="swal2-input" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="" disabled selected>请选择商铺类型</option>
+                <option value="1">美食</option>
+                <option value="2">早餐</option>
+                <option value="3">跑腿代购</option>
+                <option value="4">汉堡披萨</option>
+                <option value="5">甜品饮品</option>
+                <option value="6">速食简食</option>
+                <option value="7">地方小吃</option>
+                <option value="8">米粉面馆</option>
+                <option value="9">包子粥铺</option>
+                <option value="10">炸鸡炸串</option>
+              </select>
             </div>
           `,
           focusConfirm: false,
@@ -212,10 +225,11 @@ export default {
             const businessExplain = document.getElementById('businessExplain').value;
             const deliveryPrice = parseFloat(document.getElementById('deliveryPrice').value) || 0;
             const startPrice = parseFloat(document.getElementById('startPrice').value) || 0;
+            const orderTypeId = document.getElementById('orderTypeId').value;
             const imageFile = document.getElementById('businessImg').files[0];
 
             // 验证必填字段
-            if (!businessName || !businessAddress) {
+            if (!businessName || !businessAddress || !orderTypeId) {
               Swal.showValidationMessage('请填写必填项');
               return false;
             }
@@ -232,6 +246,12 @@ export default {
                     'Content-Type': 'multipart/form-data'
                   }
                 });
+
+                console.log('提交的数据:', {
+                ...formValues,
+                userId: userResponse.id
+              });
+
 
                 if (uploadResponse && uploadResponse.success) {
                   imageUrl = uploadResponse.data;
@@ -251,13 +271,14 @@ export default {
               businessExplain,
               deliveryPrice,
               startPrice,
-              businessImg: imageUrl
+              businessImg: imageUrl,
+              orderTypeId: parseInt(orderTypeId)
             };
           }
         });
 
         if (formValues) {
-          // 3. 获取用户ID
+          // 获取用户ID
           const token = getToken();
           if (!token) {
             toast.warning('用户未登录，请先登录！');
@@ -276,7 +297,7 @@ export default {
             return;
           }
 
-          // 4. 提交申请
+          // 提交申请
           const applicationData = {
             ...formValues,
             userId: userResponse.id
@@ -291,6 +312,8 @@ export default {
           if (response && response.success) {
             toast.success('新店申请提交成功！');
             // 刷新店铺列表
+            console.log('刷新店铺列表response.data', response.data);
+            console.log('刷新店铺列表response', response);
             await loadShops();
           } else {
             toast.error(response?.message || '申请提交失败');
@@ -322,231 +345,260 @@ export default {
 
 <style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-    /* ----------------------- 基础样式 ----------------------- */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f8f8;
-      color: #333;
-      line-height: 1.6;
-    }
-    
-    /* ----------------------- 顶部标题栏 ----------------------- */
-    .header {
-      width: 100%;
-      height: 12vw;
-      max-height: 60px;
-      background-color: #007bff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .header h1 {
-      font-size: 5vw;
-      font-size: clamp(18px, 5vw, 24px);
-      color: #fff;
-      margin: 0;
-    }
 
-    /* ----------------------- 店铺列表 ----------------------- */
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 0 4vw;
-      padding-bottom: 120px;
-    }
-    .wrapper .business-list {
-      width: 100%;
-      padding: 0;
-      margin: 15px 0;
-      list-style: none;
-    }
-    .wrapper .business-list li {
-      padding: 12px;
-      border-bottom: 1px solid #f0f0f0;
-      background-color: #fff;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .wrapper .business-list li:hover {
-      background-color: #f9f9f9;
-    }
-    .business-item {
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
-    .business-image-container {
-      width: 20vw;
-      height: 20vw;
-      max-width: 100px;
-      max-height: 100px;
-      min-width: 80px;
-      min-height: 80px;
-      flex-shrink: 0;
-      margin-right: 12px;
-      position: relative;
-      overflow: hidden;
-      border-radius: 6px;
-    }
-    .business-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 6px;
-    }
-    .logo { 
-	width: 20vw; 
-	height: 20vw; 
-	object-fit: cover; 
-	border-radius: 1vw; 
-	margin-right: 3vw; 
+/* ----------------------- 基础样式 ----------------------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-    .business-info-detail {
-      flex: 1;
-    }
-    .business-info-detail h3 {
-      font-size: 4vw;
-      font-size: clamp(16px, 4vw, 20px);
-      margin: 0 0 8px 0;
-      color: #333;
-      font-weight: 600;
-    }
-    .business-info-delivery {
-      font-size: 3.5vw;
-      font-size: clamp(14px, 3.5vw, 16px);
-      color: #666;
-      margin: 4px 0;
-      display: flex;
-    }
-    .delivery-info-container {
-  display: flex; /* 让子元素横向排列 */
-  gap: 10px;     /* 可选：设置间距 */
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8f8f8;
+  color: #333;
+  line-height: 1.6;
 }
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-left: 10px;
-    }
-    .action-buttons button {
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 3.5vw;
-      font-size: clamp(12px, 3.5vw, 14px);
-      transition: all 0.3s;
-      white-space: nowrap;
-    }
-    .action-buttons button.edit-btn {
-      color: #007bff;
-      border-color: #007bff;
-    }
-    .action-buttons button.delete-btn {
-      color: #dc3545;
-      border-color: #dc3545;
-    }
-    .action-buttons button:hover {
-      color: #fff;
-    }
-    .action-buttons button.edit-btn:hover {
-      background-color: #007bff;
-    }
-    .action-buttons button.delete-btn:hover {
-      background-color: #dc3545;
-    }
 
-    /* ----------------------- 底部按钮 ----------------------- */
-    .footer-button-container {
-      position: fixed;
-      bottom: 70px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      padding: 0 4vw;
-      box-sizing: border-box;
-      z-index: 99;
-    }
-    .apply-button {
-      width: 100%;
-      max-width: 500px;
-      background-color: #007bff;
-      color: #fff;
-      padding: 12px 0;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 4.5vw;
-      font-size: clamp(16px, 4.5vw, 18px);
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .apply-button:hover {
-      background-color: #0069d9;
-    }
+/* ----------------------- 顶部标题栏 ----------------------- */
+.header {
+  width: 100%;
+  height: 12vw;
+  max-height: 60px;
+  background-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    /* ----------------------- 底部导航栏 ----------------------- */
-    .footer-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      height: 60px;
-      background-color: #fff;
-      border-top: 1px solid #f0f0f0;
-      z-index: 100;
-    }
-    .footer-nav .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #666;
-      text-decoration: none;
-      font-size: 12px;
-      flex-grow: 1;
-      text-align: center;
-      padding: 8px 0;
-    }
-    .footer-nav .nav-item i {
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
-    .footer-nav .nav-item.active {
-      color: #007bff;
-    }
+.header h1 {
+  font-size: 5vw;
+  font-size: clamp(18px, 5vw, 24px);
+  color: #fff;
+  margin: 0;
+}
 
-    /* 加载状态 */
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-    .error-message {
-      color: #dc3545;
-      text-align: center;
-      padding: 15px;
-      background-color: #f8d7da;
-      border-radius: 6px;
-      margin: 15px;
-    }
-  </style>
+/* ----------------------- 店铺列表 ----------------------- */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 4vw;
+  padding-bottom: 120px;
+}
+
+.wrapper .business-list {
+  width: 100%;
+  padding: 0;
+  margin: 15px 0;
+  list-style: none;
+}
+
+.wrapper .business-list li {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fff;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wrapper .business-list li:hover {
+  background-color: #f9f9f9;
+}
+
+.business-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.business-image-container {
+  width: 20vw;
+  height: 20vw;
+  max-width: 100px;
+  max-height: 100px;
+  min-width: 80px;
+  min-height: 80px;
+  flex-shrink: 0;
+  margin-right: 12px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.business-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.logo {
+  width: 20vw;
+  height: 20vw;
+  object-fit: cover;
+  border-radius: 1vw;
+  margin-right: 3vw;
+}
+
+.business-info-detail {
+  flex: 1;
+}
+
+.business-info-detail h3 {
+  font-size: 4vw;
+  font-size: clamp(16px, 4vw, 20px);
+  margin: 0 0 8px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.business-info-delivery {
+  font-size: 3.5vw;
+  font-size: clamp(14px, 3.5vw, 16px);
+  color: #666;
+  margin: 4px 0;
+  display: flex;
+}
+
+.delivery-info-container {
+  display: flex;
+  /* 让子元素横向排列 */
+  gap: 10px;
+  /* 可选：设置间距 */
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.action-buttons button {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 3.5vw;
+  font-size: clamp(12px, 3.5vw, 14px);
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.action-buttons button.edit-btn {
+  color: #007bff;
+  border-color: #007bff;
+}
+
+.action-buttons button.delete-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.action-buttons button:hover {
+  color: #fff;
+}
+
+.action-buttons button.edit-btn:hover {
+  background-color: #007bff;
+}
+
+.action-buttons button.delete-btn:hover {
+  background-color: #dc3545;
+}
+
+/* ----------------------- 底部按钮 ----------------------- */
+.footer-button-container {
+  position: fixed;
+  bottom: 70px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 4vw;
+  box-sizing: border-box;
+  z-index: 99;
+}
+
+.apply-button {
+  width: 100%;
+  max-width: 500px;
+  background-color: #007bff;
+  color: #fff;
+  padding: 12px 0;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 4.5vw;
+  font-size: clamp(16px, 4.5vw, 18px);
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.apply-button:hover {
+  background-color: #0069d9;
+}
+
+/* ----------------------- 底部导航栏 ----------------------- */
+.footer-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  background-color: #fff;
+  border-top: 1px solid #f0f0f0;
+  z-index: 100;
+}
+
+.footer-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #666;
+  text-decoration: none;
+  font-size: 12px;
+  flex-grow: 1;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.footer-nav .nav-item i {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.footer-nav .nav-item.active {
+  color: #007bff;
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  padding: 15px;
+  background-color: #f8d7da;
+  border-radius: 6px;
+  margin: 15px;
+}
+</style>

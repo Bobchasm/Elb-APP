@@ -147,7 +147,7 @@
             u.updater as user_updater
         FROM business b
                  LEFT JOIN users u ON b.user_id = u.id
-        WHERE b.is_deleted = 0
+        WHERE b.is_deleted = 0 AND b.status = 1
         ORDER BY b.create_time DESC
     </select>
 
