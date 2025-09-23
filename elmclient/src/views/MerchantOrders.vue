@@ -402,6 +402,8 @@ export default {
   -ms-overflow-style: none;
   touch-action: pan-x;
   height: 14vw;
+  scroll-behavior: auto; /* 禁用平滑滚动，更直接 */
+  -webkit-overflow-scrolling: touch; /* 启用动量滚动 */
 }
 
 .merchant-tabs::-webkit-scrollbar {
@@ -457,6 +459,9 @@ export default {
   touch-action: pan-x;
   box-shadow: 0 1vw 2vw rgba(0, 0, 0, 0.1);
   border-radius: 0 0 3vw 3vw;
+  height: 14vw;
+  scroll-behavior: auto; /* 禁用平滑滚动，更直接 */
+  -webkit-overflow-scrolling: touch; /* 启用动量滚动 */
 }
 
 .tabs::-webkit-scrollbar {
