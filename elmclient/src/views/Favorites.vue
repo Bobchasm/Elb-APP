@@ -46,7 +46,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
 import request from '@/utils/request';
-
 export default {
   name: 'Favorites',
   setup() {
