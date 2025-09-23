@@ -86,7 +86,7 @@
                 </div>
                 <!-- 达到起送费 -->
 
-                <div class="cart-right-item" @click="toOrder" v-show="totalSettle >= business.starPrice">
+                <div class="cart-right-item" @click="toOrder">
                     去结算
                 </div>
             </div>
@@ -439,10 +439,10 @@ export default {
                 return;
             }
             router.push({
-                path: "/orders",
+                path: "/cart",
                 query: {
                     businessId: businessId.value,
-                    cart: JSON.stringify(localCart.value)
+                    //cart: JSON.stringify(localCart.value)
                 }
             });
         };
@@ -580,7 +580,7 @@ onMounted(async () => {
 /****************** 商家logo部分 ******************/
 .wrapper .business-logo {
 	width: 100%;
-	height: 35vw;
+	height: 50vw;
 	/*使用上外边距避开header部分*/
 	margin-top: 12vw;
 	display: flex;
@@ -590,7 +590,7 @@ onMounted(async () => {
 
 .wrapper .business-logo img {
 	width: 40vw;
-	height: 30vw;
+	height: 40vw;
 	border-radius: 5px;
 }
 

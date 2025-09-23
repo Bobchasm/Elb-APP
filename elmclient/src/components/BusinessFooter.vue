@@ -145,7 +145,11 @@ export default defineComponent({
     };
     
     const toOrders = () => {
-      router.push({ path: '/merchant/orders' });
+      router.push({ path: '/merchant/orders',
+        query: {
+          businessId: businessId.value,
+        } 
+      });
     };
     
     const toProfile = () => {
