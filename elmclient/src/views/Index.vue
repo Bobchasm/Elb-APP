@@ -384,12 +384,16 @@
 
         <!-- 底部菜单部分 -->
 
+        <!-- AI助手组件 -->
+        <AIAssistant />
+
     </div>
 </template>
 
 <script>
 import { ref, onMounted, onBeforeUnmount,computed } from 'vue';
 import Footer from '../components/Footer.vue';
+import AIAssistant from '../components/AIAssistant.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '../utils/request';
@@ -1522,7 +1526,8 @@ const getDisplayText = (location) => {
         };
     },
     components: {
-        Footer
+        Footer,
+        AIAssistant
     }
 }
 </script>
