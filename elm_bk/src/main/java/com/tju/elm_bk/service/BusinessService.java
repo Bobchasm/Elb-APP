@@ -8,6 +8,7 @@ import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
+import com.tju.elm_bk.vo.MerchantStatsVO;
 
 import java.util.List;
 
@@ -23,4 +24,5 @@ public interface BusinessService {
     List<BusinessInfoDTO> getAllActiveBusinesses();
     List<Business> getMerchantBusinesses(Long userId, Integer status);
     List<Business>listBusinessByOrderTypeId(Integer type);
+    List<MerchantStatsVO> getBusinessIdList();
 }

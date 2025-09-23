@@ -7,9 +7,7 @@ import com.tju.elm_bk.dto.BusinessInfoDTO;
 import com.tju.elm_bk.dto.BusinessPermissionDTO;
 import com.tju.elm_bk.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.entity.Authority;
-import com.tju.elm_bk.vo.BusinessPermissionVO;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.BusinessVO;
+import com.tju.elm_bk.vo.*;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessVO;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -70,7 +68,7 @@ public interface BusinessMapper {
     Integer getSalesCount(@Param("businessId") Long businessId);
 
     /**
-     * 根据用户ID查询对应的所有商家ID
+     * 根据用户ID查询对应的所有商铺ID
      * @param userId 用户ID
      * @return 商家ID列表
      */
@@ -96,7 +94,7 @@ public interface BusinessMapper {
     List<BusinessInfoDTO>getAllActiveBusinesses();
 
     @Select("<script>" +
-            "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain " +
+            "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain, status " +
             "FROM business " +
             "WHERE is_deleted = 0 " +
             "<if test='userId != null'>" +
@@ -118,5 +116,8 @@ public interface BusinessMapper {
             "</if>" +
             "</script>")
     List<Business> listBusinessByOrderTypeId(@Param("type") Integer type);
+
+    @Select("select id as merchantId, business_name as merchantName from business where user_id = #{userId} and is_deleted = 0 and status = 1")
+    List<MerchantStatsVO> selectBusinessIdListByUserId(Long userId);
 
 }

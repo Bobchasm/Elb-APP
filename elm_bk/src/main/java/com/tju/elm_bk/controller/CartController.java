@@ -40,7 +40,7 @@ public class CartController {
         return HttpResult.success(cartService.addItem(foodId, quantity));
     }
 
-    @PutMapping("/quantity")
+    @GetMapping("/quantity")
     @Operation(summary = "修改购物车指定商品数量",description = "quantity传0时移除该条记录")
     public HttpResult<Long> updateItemQuantity(@RequestParam Long cartId, @RequestParam Integer quantity) {
         return HttpResult.success(cartService.updateItem(cartId,quantity));

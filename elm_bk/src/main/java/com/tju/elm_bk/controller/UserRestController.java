@@ -263,9 +263,14 @@ public class UserRestController {
 
         // 加密密码
         user.setPassword(passwordEncoder.encode(user.getPassword() != null ? user.getPassword() : "password"));
+        Person person = new Person();
+        BeanUtils.copyProperties(newUser, person);
+
 
         // 保存用户
         userService.addUser(user);
+        person.setId(user.getId());
+        personService.addPerson(person);
 
          //分配默认USER角色
         Authority userAuthority = authorityMapper.findByName("USER");

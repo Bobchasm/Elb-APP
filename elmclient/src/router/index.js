@@ -19,12 +19,8 @@ import AdminUser from '@/views/AdminUser.vue'
 import Search from '@/views/Search.vue'
 import SearchTest from '@/views/SearchTest.vue'
 import Cart from '@/views/Cart.vue'
-//import Discover from '@/views/Discover.vue'
-import RChoose from '@/views/RChoose.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
-//商家端订单
-//import BusinessOrderManage from '@/views/BusinessOrderManage.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
 
 //商家端路由配置
@@ -143,11 +139,6 @@ const routes = [
     component: Cart
   },
   {
-    path: '/rChoose',
-    name: 'RChoose',
-    component: RChoose
-  },
-  {
     path:'/merchantOrders',
     name:'MerchantOrders',
     component:MerchantOrders
@@ -171,6 +162,11 @@ const routes = [
     path:'/businessInformation',
     name:'BusinessInformation',
     component:BusinessInformation
+  },
+  {
+    path:'/merchantProfile',
+    name:'MerchantProfile',
+    component:MerchantProfile
   },
   {
     path:'/businessView',

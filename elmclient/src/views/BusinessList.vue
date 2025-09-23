@@ -1,38 +1,39 @@
 <template>
 	<div class="wrapper">
+		<BackButton :show-back-button="true" />
 	  <!-- header部分 -->
-	  <header>
-		<p>商家列表</p>
-	  </header>
+	  <div class="header">
+            <h1 class="title">商家列表</h1>
+        </div>
   
 	  <!-- 商家列表部分 -->
 	  <div class="business-list">
 		<div
-		  class="business-item"
-		  v-for="business in businessArr"
-		  :key="business.id"
-		>
-		  <div class="business-info" @click="toBusinessInfo(business.id)">
-			<img 
-			  :src="business.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/bbd37656-0eae-41be-995e-e2be0b96aca2.png'" 
-			  :alt="business.businessName" 
-			/>
-			<div class="business-details">
-			  <div class="business-header">
-				<h3>{{ business.businessName || '未知商铺' }}</h3>
-			  </div>
-			  <p class="description">{{ business.businessExplain || '暂无描述' }}</p>
-			  <p class="description">{{ business.businessAddress || '暂无地址信息' }}</p>
-			  <div class="business-info-bottom">
-				<div class="price-info">
-				  <span>起送 ¥{{ business.startPrice.toFixed(2) ||0}}元</span>
-				  <span>配送 ¥{{ business.deliveryPrice.toFixed(2) ||0}}元</span>
-				</div>
-			  </div>
-			  
-			</div>
-		  </div>
-		</div>
+  class="business-item"
+  v-for="business in businessArr"
+  :key="business.id"
+  @click="toBusinessInfo(business.id)"
+>
+  <div class="business-info">
+    <img 
+      :src="business.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/bbd37656-0eae-41be-995e-e2be0b96aca2.png'" 
+      :alt="business.businessName" 
+    />
+    <div class="business-details">
+      <div class="business-header">
+        <h3>{{ business.businessName || '未知商铺' }}</h3>
+      </div>
+      <p class="description">{{ business.businessExplain || '暂无描述' }}</p>
+      <p class="description">{{ business.businessAddress || '暂无地址信息' }}</p>
+      <div class="business-info-bottom">
+        <div class="price-info">
+          <span>起送 ¥{{ business.startPrice.toFixed(2) ||0}}元</span>
+          <span>配送 ¥{{ business.deliveryPrice.toFixed(2) ||0}}元</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 	  </div>
 	</div>
   </template>
@@ -42,9 +43,11 @@
   import axios from "axios";
   import { useRoute, useRouter } from "vue-router";
   import request from "@/utils/request";
+  import BackButton from "@/components/BackButton.vue";
   import toast from "@/utils/toast";
   export default {
 	name: "BusinessList",
+	components: { BackButton },
 	setup() {
 	  const businessArr = ref([]);
 	  const route = useRoute();
@@ -75,13 +78,11 @@
 	  });
   
 	  const toBusinessInfo = (businessId) => {
-		router.push({ 
-		  path: "/businessInfo", 
-		  query: { 
-			id: businessId 
-		  } 
-		});
-	  };
+            router.push({
+                path: '/businessInfo',
+                query: { businessId }
+            });
+        };
   
 	  return {
 		businessArr,
@@ -97,24 +98,27 @@
 	width: 100%;
 	height: 100%;
 	position: relative;
-	padding-top: 12vw;
+	padding-top: 0;
 	background-color: #f5f5f5;
   }
   
   .wrapper header {
-	width: 100%;
-	height: 12vw;
-	background-color: #0097ff;
-	color: #fff;
-	font-size: 4.8vw;
-	position: fixed;
-	left: 0;
-	top: 0;
-	z-index: 1000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-  }
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.wrapper title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
+}
   
   .wrapper .business-list {
 	padding: 2vw;

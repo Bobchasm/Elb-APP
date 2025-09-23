@@ -2,11 +2,25 @@
   <div class="wrapper">
     <!-- 顶部蓝色栏 -->
     <header class="topbar">
-      <p>商家订单</p>
+      <p>商家订单管理</p>
     </header>
 
-    <!-- 页面标题 -->
-    <div class="page-title">订单管理中心</div>
+    <!-- 商铺选择栏 -->
+    <div class="merchant-selector" v-if="merchantList.length > 0">
+      <!-- <div class="merchant-header">
+        <span class="merchant-title">选择店铺</span>
+      </div> -->
+      <ul class="merchant-tabs">
+        <li
+          v-for="merchant in merchantList"
+          :key="merchant.merchantId"
+          :class="{ active: selectedMerchantId === merchant.merchantId }"
+          @click="selectMerchant(merchant.merchantId)"
+        >
+          {{ merchant.merchantName }}
+        </li>
+      </ul>
+    </div>
 
     <!-- 订单状态分类 -->
     <ul class="tabs">
@@ -56,7 +70,7 @@
 
           <div class="price-row">
             <br><span class="items-title">配送费: &#165;{{ order.deliveryPrice || '0.00' }}</span>
-					</div>
+          </div>
           
           <div class="order-footer">
             <span class="order-time">下单时间: {{ formatTime(order.orderDate) }}</span>
@@ -75,11 +89,6 @@
           <template v-else-if="order.orderState === 2">
             <button class="complete-btn" @click.stop="completeOrder(order.id)">完成订单</button>
           </template>
-
-          <!-- 已完成/已取消：查看详情 -->
-          <!-- <template v-else>
-            <button class="detail-btn" @click.stop="goDetail(order)">查看详情</button>
-          </template> -->
         </div>
       </li>
     </ul>
@@ -90,7 +99,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router'; // 添加 useRoute
+import { useRouter, useRoute } from 'vue-router';
 import request from '../utils/request';
 import BusinessFooter from '@/components/BusinessFooter.vue';
 
@@ -99,10 +108,16 @@ export default {
   components: { BusinessFooter },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const loading = ref(false);
     const orders = ref([]);
-    const businessId = ref();
-    const route = useRoute(); // 添加这行
+    const businessId = ref(1);
+    
+    // 新增：商铺列表和选中状态
+    const merchantList = ref([]);
+    const selectedMerchantId = ref(null);
+    const loadingMerchants = ref(false);
+
     // 订单状态标签
     const statusTabs = ref(['全部', '待接单', '已接单', '已完成', '已取消']);
     const activeStatusTab = ref(0);
@@ -116,8 +131,41 @@ export default {
       4: "已取消"
     };
 
+    // 获取商铺列表
+    const fetchMerchantList = async () => {
+      loadingMerchants.value = true;
+      try {
+        const response = await request.get("/api/businesses/id_list");
+        if (response.success) {
+          merchantList.value = response.data || [];
+          console.log("获取商铺列表成功:", merchantList.value);
+          
+          // 默认选择第一个商铺
+          if (merchantList.value.length > 0) {
+            selectedMerchantId.value = merchantList.value[0].merchantId;
+            businessId.value = selectedMerchantId.value;
+          }
+        } else {
+          console.error('获取商铺列表失败:', response.message);
+        }
+      } catch (error) {
+        console.error("请求商铺列表失败:", error);
+      } finally {
+        loadingMerchants.value = false;
+      }
+    };
+
+    // 选择商铺
+    const selectMerchant = (merchantId) => {
+      selectedMerchantId.value = merchantId;
+      businessId.value = merchantId;
+      fetchOrders(); // 重新加载该商铺的订单
+    };
+
     // 获取订单列表
     const fetchOrders = async () => {
+      if (!selectedMerchantId.value) return;
+      
       loading.value = true;
       try {
         const response = await request.get("/api/orders/list/business", {
@@ -239,23 +287,18 @@ export default {
     };
 
     // 完成订单
-    const completeOrder = async (orderId) => {
-      if (!confirm("确定要完成订单吗？")) return;
-
+    const completeOrder = async (id) => {
       try {
-        const response = await request.post("/api/orders/complete", {
-          orderId: orderId
-        });
-
-        if (response.data.success) {
-          alert("订单已完成");
-          fetchOrders(); // 重新加载订单
+        const response = await request.put("/api/orders/status?orderState=3&orderId=" + id);
+        if (response.success) {
+          alert("确认完成成功");
+          fetchOrders();
         } else {
-          alert("完成订单失败: " + response.data.message);
+          alert(response.message);
         }
       } catch (error) {
-        console.error("完成订单失败:", error);
-        alert("完成订单失败，请稍后重试");
+        console.error(error);
+        alert("确认失败,请稍后重试");
       }
     };
 
@@ -268,18 +311,25 @@ export default {
     };
 
     onMounted(() => {
-      businessId.value = parseInt(route.query.businessId);
-      fetchOrders();
+      // 先获取商铺列表，然后自动加载第一个商铺的订单
+      fetchMerchantList().then(() => {
+        if (selectedMerchantId.value) {
+          fetchOrders();
+        }
+      });
     });
 
     return {
       loading,
       orders,
+      merchantList,
+      selectedMerchantId,
       statusTabs,
       activeStatusTab,
       orderCounts,
       filteredOrders,
       fetchOrders,
+      selectMerchant,
       changeStatusTab,
       getStatusText,
       getStatusClass,
@@ -315,38 +365,129 @@ export default {
   align-items: center;
 }
 
-.page-title {
+/* 商铺选择栏 */
+.merchant-selector {
+  background:#f0f5f9;
   margin-top: 12vw;
-  padding: 4vw;
-  font-size: 4.5vw;
-  color: #333;
-  font-weight: bold;
-  background: white;
+  box-shadow: 0 2vw 4vw rgba(102, 126, 234, 0.2);
+  padding: 3vw 0 0 0;
+  position: fixed;
+  top: 0vw;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  width: 100%;
+  height: 17vw;
 }
 
-/* 标签栏 */
+.merchant-header {
+  padding: 0 4vw 2vw 4vw;
+}
+
+.merchant-title {
+  font-size: 3.8vw;
+  color: #fff;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.merchant-tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 4vw;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 3vw;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+  height: 14vw;
+  scroll-behavior: auto; /* 禁用平滑滚动，更直接 */
+  -webkit-overflow-scrolling: touch; /* 启用动量滚动 */
+}
+
+.merchant-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.merchant-tabs li {
+  margin-right: 4vw;
+  padding: 2.5vw 4vw;
+  font-size: 3.6vw;
+  color: #2f3335;
+  background: #d0dff1;
+  border-radius: 2vw;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  touch-action: pan-x;
+}
+
+.merchant-tabs li.active {
+  background: #3f72af;
+  color: #ffffff;
+  font-weight: 600;
+  transform: translateY(-0.5vw);
+  box-shadow: 0 1vw 2vw rgba(0, 0, 0, 0.2);
+}
+
+.merchant-tabs li:not(.active):hover {
+  background: #f7fbfc;
+  transform: translateY(-0.2vw);
+}
+
+/* 订单状态分类 - 修复滑动问题 */
 .tabs {
   display: flex;
   align-items: center;
   padding: 0 4vw;
-  background: white;
+  background: #c3ecfe;
   border-bottom: 1px solid #f0f0f0;
   overflow-x: auto;
   white-space: nowrap;
+  position: fixed;
+  top: 29vw; /* 顶部栏12vw + 商铺栏17vw */
+  left: 0;
+  right: 0;
+  z-index: 998;
+  width: 100%;
+  height: 12vw; /* 固定高度，确保滑动区域独立 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+  box-shadow: 0 1vw 2vw rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 3vw 3vw;
+  height: 14vw;
+  scroll-behavior: auto; /* 禁用平滑滚动，更直接 */
+  -webkit-overflow-scrolling: touch; /* 启用动量滚动 */
 }
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
 .tabs li {
   margin-right: 6vw;
   padding: 3vw 0;
   font-size: 3.8vw;
-  color: #666;
+  color: #262424;
   position: relative;
   cursor: pointer;
   flex: 0 0 auto;
+  touch-action: pan-x;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .tabs li.active {
-  color: #409eff;
+  color: #3490de;
   font-weight: 600;
 }
+
 .tabs li.active::after {
   content: "";
   position: absolute;
@@ -358,7 +499,13 @@ export default {
   border-radius: 0.4vw;
 }
 
-/* 加载和空状态 */
+/* 调整订单列表的上边距，为固定栏留出空间 */
+.order-list {
+  padding: 4vw;
+  margin-top: 41vw; /* 顶部栏12vw + 商铺栏17vw + 状态栏12vw */
+}
+
+/* 调整空状态和加载状态的上边距 */
 .loading, .empty-state {
   display: flex;
   justify-content: center;
@@ -369,21 +516,19 @@ export default {
   background: white;
   margin: 3vw;
   border-radius: 2vw;
+  margin-top: 44vw; /* 41vw + 3vw 边距 */
 }
 
+/* 其他样式保持不变 */
 .empty-state {
   flex-direction: column;
 }
+
 .empty-state img {
   width: 30vw;
   height: 30vw;
   margin-bottom: 4vw;
   opacity: 0.5;
-}
-
-/* 订单列表 */
-.order-list {
-  padding: 4vw;
 }
 
 .order-item {
@@ -413,6 +558,8 @@ export default {
   border-radius: 1vw;
   font-size: 3.2vw;
   font-weight: 500;
+  position: relative;
+  z-index: 10; /* 确保在最上层 */
 }
 
 .status-badge.unpaid {
@@ -428,8 +575,8 @@ export default {
 	color: #52c41a;
 }
 .status-badge.done {
-	background: #f9f9f9;
-	color: #1bc3d2;
+	background: #fdf4de;
+	color: #ffa700;
 }
 .status-badge.canceled {
 	background: #f9f9f9;

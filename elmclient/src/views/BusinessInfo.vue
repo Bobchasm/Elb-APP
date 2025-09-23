@@ -1,11 +1,11 @@
 <template>
     <div class="wrapper">
+        <BackButton :show-back-button="true" />
         <!-- header部分 -->
         <!-- 首页点进去后展示的内容 -->
-        <BackButton />
-        <header>
-            <p>商家信息</p>
-        </header>
+        <div class="header">
+            <h1 class="title">商家信息</h1>
+        </div>
         <!-- 商家logo部分 -->
         <div class="business-logo">
             <img :src="business.businessImg || require('@/assets/default-business.png')" />
@@ -50,10 +50,10 @@
                 </div>
                 <div class="food-right">
                     <div>
-                        <i class="fa fa-minus-circle" @click="minus(index)" v-show="item.quantity != 0"></i>
+                        <i class="fa fa-minus-circle" @click="minus(index)" v-show="getCartQuantity(item.id) > 0"></i>
                     </div>
                     <p>
-                        <span v-show="item.quantity != 0">{{ item.quantity }}</span>
+                        <span v-show="getCartQuantity(item.id) > 0">{{ getCartQuantity(item.id) }}</span>
                     </p>
                     <div>
                         <i class="fa fa-plus-circle" @click="add(index)"></i>
@@ -68,7 +68,7 @@
                 <div class="cart-left-icon" :style="totalQuantity == 0
                     ? 'background-color:#505051;'
                     : 'background-color:#3190E8;'
-                    " @click="goToCart(businessId.value)">
+                    " @click="goToCart(businessId)">
                     <i class="fa fa-shopping-cart"></i>
                     <div class="cart-left-icon-quantity" v-show="totalQuantity != 0">
                         {{ totalQuantity }}
@@ -81,13 +81,17 @@
             </div>
             <div class="cart-right">
                 <!-- 不够起送费 -->
-                <div class="cart-right-item" v-show="totalSettle - business.deliveryPrice < business.starPrice"
-                    style="background-color: #535356; cursor: default">
-                    &#165;{{ business.starPrice }}起送
+                <div class="cart-right-item" v-show="!canOrder" style="background-color: #535356; cursor: default">
+                    &#165;{{ business.startPrice }}起送
                 </div>
-                <!-- 达到起送费 -->
-
-                <div class="cart-right-item" @click="toOrder">
+                <!-- 达到起送费但商品总价小于配送费 -->
+                <div class="cart-right-item" v-show="canOrder && totalPrice < business.deliveryPrice"
+                    style="background-color: #969696; cursor: not-allowed">
+                    商品总价不足
+                </div>
+                <!-- 达到起送费且商品总价大于等于配送费 -->
+                <div class="cart-right-item" v-show="canOrder && totalPrice >= business.deliveryPrice" @click="toOrder"
+                    style="background-color: #38ca73; cursor: pointer">
                     去结算
                 </div>
             </div>
@@ -95,13 +99,11 @@
     </div>
 </template>
 
-
 <script>
 import { ref, onMounted, computed, watch, onErrorCaptured } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import request from "@/utils/request";
-import BackButton from "../components/BackButton.vue";
-
+import BackButton from "@/components/BackButton.vue";
 export default {
     name: "BusinessInfo",
     components: { BackButton },
@@ -125,16 +127,15 @@ export default {
             remarks: ""
         });
         const foodArr = ref([]);
+        const cartItems = ref([]); // 购物车商品列表
         const loadingBusiness = ref(false);
         const loadingFoods = ref(false);
+        const loadingCart = ref(false);
 
         // 用户交互状态
         const isLiked = ref(false);
         const isFavorited = ref(false);
         const interactionLoading = ref(false);
-
-        // 本地购物车实现
-        const localCart = ref({});
 
         const fetchUserInfo = async () => {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -164,78 +165,240 @@ export default {
             return false;
         });
 
-        // 初始化本地购物车
-        const initLocalCart = () => {
-            const cartData = localStorage.getItem(`cart_${businessId.value}`);
-            console.log(`初始化购物车，businessId: ${businessId.value}, 本地存储数据:`, cartData);
-            if (cartData) {
-                try {
-                    localCart.value = JSON.parse(cartData);
-                    console.log("解析后的购物车数据:", localCart.value);
-                } catch (e) {
-                    console.error("解析购物车数据失败:", e);
-                    localCart.value = {};
+        // 获取购物车列表
+        const fetchCartList = async () => {
+            if (!userInfo.value?.id || !businessId.value) {
+                console.log('用户未登录或商家ID为空，不获取购物车');
+                cartItems.value = [];
+                return;
+            }
+
+            loadingCart.value = true;
+            try {
+                const response = await request.get("/api/carts/list", {
+                    params: { businessId: businessId.value }
+                });
+                console.log("购物车列表API响应:", response);
+
+                if (response.success) {
+                    cartItems.value = response.data || [];
+                    console.log("购物车列表设置成功:", cartItems.value);
+                } else {
+                    console.error('获取购物车列表失败:', response.message);
+                    cartItems.value = [];
                 }
-            } else {
-                console.log("未找到本地购物车数据");
+            } catch (error) {
+                console.error("获取购物车列表失败:", error);
+                cartItems.value = [];
+            } finally {
+                loadingCart.value = false;
             }
         };
 
-        // 保存购物车到本地存储
-        const saveCartToLocal = () => {
-            console.log("保存购物车到本地:", localCart.value);
-            localStorage.setItem(`cart_${businessId.value}`, JSON.stringify(localCart.value));
+        // 获取指定食品在购物车中的数量
+        const getCartQuantity = (foodId) => {
+            const cartItem = cartItems.value.find(item => item.foodId === foodId);
+            return cartItem ? cartItem.quantity : 0;
         };
 
-        // 加载用户互动状态（使用新的查询接口）
+        // 添加商品到购物车
+        const addToCart = async (index) => {
+            const food = foodArr.value[index];
+            console.log(`添加商品到购物车: ${food.foodName}, foodId: ${food.id}`);
+
+            // 检查用户是否登录
+            if (!userInfo.value?.id) {
+                alert('请先登录');
+                return;
+            }
+
+            try {
+                const currentQuantity = getCartQuantity(food.id);
+                const newQuantity = currentQuantity + 1;
+
+                console.log('当前数量:', currentQuantity, '新数量:', newQuantity);
+
+                if (currentQuantity > 0) {
+                    // 如果商品已在购物车中，更新数量
+                    await updateCartItem(food.id, newQuantity);
+                } else {
+                    // 如果商品不在购物车中，添加新商品
+                    await addNewCartItem(food.id);
+                }
+
+                // 重新获取购物车列表以更新显示
+                await fetchCartList();
+                console.log('添加商品成功');
+            } catch (error) {
+                console.error('添加商品到购物车失败:', error);
+                alert('添加商品失败，请重试');
+            }
+        };
+
+        // 添加新商品到购物车
+        const addNewCartItem = async (foodId) => {
+            try {
+                console.log('添加新商品到购物车, foodId:', foodId);
+
+                const response = await request.get("/api/carts/add", {
+                    params: { foodId: foodId, quantity: 1 }
+                });
+
+                console.log('添加购物车接口响应:', response);
+
+                if (response.success) {
+                    console.log('添加新商品成功');
+                    return true;
+                } else {
+                    throw new Error(response.message || '添加商品失败');
+                }
+            } catch (error) {
+                console.error('添加新商品到购物车失败:', error);
+                throw error;
+            }
+        };
+
+        // 更新购物车商品数量
+        const updateCartItem = async (foodId, newQuantity) => {
+            try {
+                console.log('更新购物车商品数量, foodId:', foodId, 'newQuantity:', newQuantity);
+
+                // 先找到对应的购物车项ID
+                const cartItem = cartItems.value.find(item => item.foodId === foodId);
+                if (!cartItem) {
+                    throw new Error(`未找到foodId ${foodId}对应的购物车项`);
+                }
+
+                const response = await request.get("/api/carts/quantity", {
+                    params: {
+                        cartId: cartItem.id,
+                        quantity: newQuantity
+                    }
+                });
+
+                if (response.success) {
+                    console.log('更新商品数量成功');
+                    return true;
+                } else {
+                    throw new Error(response.message || '更新数量失败');
+                }
+            } catch (error) {
+                console.error('更新购物车商品数量失败:', error);
+                throw error;
+            }
+        };
+
+        // 从购物车移除商品（减少数量）
+        const removeFromCart = async (index) => {
+            const food = foodArr.value[index];
+            console.log(`从购物车移除商品: ${food.foodName}, foodId: ${food.id}`);
+
+            // 检查用户是否登录
+            if (!userInfo.value?.id) {
+                alert('请先登录');
+                return;
+            }
+
+            try {
+                const currentQuantity = getCartQuantity(food.id);
+                if (currentQuantity <= 0) {
+                    console.log('商品不在购物车中');
+                    return;
+                }
+
+                const newQuantity = currentQuantity - 1;
+
+                if (newQuantity <= 0) {
+                    // 如果数量为0，从购物车中删除
+                    await deleteCartItem(food.id);
+                } else {
+                    // 减少数量
+                    await updateCartItem(food.id, newQuantity);
+                }
+
+                // 重新获取购物车列表以更新显示
+                await fetchCartList();
+                console.log('移除商品成功');
+            } catch (error) {
+                console.error('从购物车移除商品失败:', error);
+                alert('移除商品失败，请重试');
+            }
+        };
+
+        // 从购物车删除商品
+        const deleteCartItem = async (foodId) => {
+            try {
+                console.log('从购物车删除商品, foodId:', foodId);
+
+                const cartItem = cartItems.value.find(item => item.foodId === foodId);
+                if (!cartItem) {
+                    console.log('商品不在购物车中，无需删除');
+                    return;
+                }
+
+                const response = await request.get("/api/carts/remove", {
+                    params: { cartId: cartItem.id }
+                });
+
+                if (response.success) {
+                    console.log('删除商品成功');
+                    return true;
+                } else {
+                    throw new Error(response.message || '删除商品失败');
+                }
+            } catch (error) {
+                console.error('从购物车删除商品失败:', error);
+                throw error;
+            }
+        };
+
+        // 加载用户互动状态
         const loadReactions = async () => {
-    try {
-        // 确保有有效的businessId
-        if (!businessId.value) {
-            console.error("缺少businessId");
-            return;
-        }
+            try {
+                if (!businessId.value) {
+                    console.error("缺少businessId");
+                    return;
+                }
 
-        // 等待用户信息加载（最多等待2秒）
-        let retry = 0;
-        while (!userInfo.value?.id && retry < 4) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            retry++;
-        }
+                let retry = 0;
+                while (!userInfo.value?.id && retry < 4) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retry++;
+                }
 
-        const userId = userInfo.value?.id;
-        if (!userId) {
-            console.log("用户未登录，不加载互动状态");
-            isLiked.value = false;
-            isFavorited.value = false;
-            return;
-        }
+                const userId = userInfo.value?.id;
+                if (!userId) {
+                    console.log("用户未登录，不加载互动状态");
+                    isLiked.value = false;
+                    isFavorited.value = false;
+                    return;
+                }
 
-        console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
-        
-        const response = await request.get('/api/merchant/interaction/status', {
-            params: { userId, merchantId: businessId.value },
-            headers: { 'Cache-Control': 'no-cache' } // 防止缓存
-        });
+                console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
 
-        console.log("互动状态API响应:", response);
+                const response = await request.get('/api/merchant/interaction/status', {
+                    params: { userId, merchantId: businessId.value },
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
 
-        // 根据实际API响应结构调整
-        if (response?.success) {
-            isLiked.value = Boolean(response.data?.liked);
-            isFavorited.value = Boolean(response.data?.collected);
-            console.log(`设置互动状态 - 点赞: ${isLiked.value}, 收藏: ${isFavorited.value}`);
-        } else {
-            console.error("API返回失败:", response?.message);
-            isLiked.value = false;
-            isFavorited.value = false;
-        }
-    } catch (error) {
-        console.error("加载互动状态异常:", error);
-        isLiked.value = false;
-        isFavorited.value = false;
-    }
-};
+                console.log("互动状态API响应:", response);
+
+                // 根据实际API响应结构调整
+                if (response?.success) {
+                    isLiked.value = Boolean(response.data?.liked);
+                    isFavorited.value = Boolean(response.data?.collected);
+                    console.log(`设置互动状态 - 点赞: ${isLiked.value}, 收藏: ${isFavorited.value}`);
+                } else {
+                    console.error("API返回失败:", response?.message);
+                    isLiked.value = false;
+                    isFavorited.value = false;
+                }
+            } catch (error) {
+                console.error("加载互动状态异常:", error);
+                isLiked.value = false;
+                isFavorited.value = false;
+            }
+        };
         // 更新互动状态到后端
         const updateInteraction = async (type, newValue) => {
             try {
@@ -366,8 +529,7 @@ export default {
                         foodImg: item.foodImg,
                         remarks: item.remarks,
                         businessId: item.businessId,
-                        businessName: item.businessName,
-                        quantity: localCart.value[item.id] || 0
+                        businessName: item.businessName
                     }));
                     console.log("食品列表设置成功:", foodArr.value);
                 } else {
@@ -392,8 +554,7 @@ export default {
                             foodImg: require('@/assets/default-food.png'),
                             remarks: "模拟备注",
                             businessId: businessId.value,
-                            businessName: "模拟商家",
-                            quantity: 0
+                            businessName: "模拟商家"
                         }
                     ];
                 }
@@ -403,40 +564,9 @@ export default {
             }
         };
 
-        // 购物车操作
-        const addToCart = (index) => {
-            const food = foodArr.value[index];
-            console.log(`添加商品到购物车: ${food.foodName}, 当前数量: ${food.quantity}`);
-
-            if (!localCart.value[food.id]) {
-                localCart.value[food.id] = 0;
-            }
-            localCart.value[food.id]++;
-            food.quantity = localCart.value[food.id];
-            saveCartToLocal();
-
-            console.log(`添加后购物车状态:`, localCart.value);
-        };
-
-        const removeFromCart = (index) => {
-            const food = foodArr.value[index];
-            console.log(`从购物车移除商品: ${food.foodName}, 当前数量: ${food.quantity}`);
-
-            if (localCart.value[food.id] <= 1) {
-                delete localCart.value[food.id];
-                food.quantity = 0;
-            } else {
-                localCart.value[food.id]--;
-                food.quantity = localCart.value[food.id];
-            }
-            saveCartToLocal();
-
-            console.log(`移除后购物车状态:`, localCart.value);
-        };
-
-        // 跳转到订单页面
-        const toOrder = () => {
-            console.log("跳转到订单页面，当前购物车:", localCart.value);
+        // 跳转到购物车页面
+        const goToCart = (id) => {
+            console.log("跳转到订单页面，当前购物车商品数量:", totalQuantity.value);
             if (totalQuantity.value === 0) {
                 alert("请先添加商品到购物车");
                 return;
@@ -444,31 +574,30 @@ export default {
             router.push({
                 path: "/cart",
                 query: {
-                    businessId: businessId.value,
-                    //cart: JSON.stringify(localCart.value)
+                    businessId: id
                 }
             });
         };
 
-        // 跳转到购物车页面
-        const goToCart = () => {
-            console.log("跳转到购物车页面，当前购物车:", localCart.value);
+        // 跳转到订单页面
+        const toOrder = () => {
+            console.log("跳转到购物车页面，当前购物车商品数量:", totalQuantity.value);
             if (totalQuantity.value === 0) {
                 alert("购物车为空");
                 return;
             }
-            router.push({
-                path: "/cart",
-                query: {
-                    businessId: businessId.value,
-                    cart: JSON.stringify(localCart.value)
-                }
-            });
+            // 跳转到结算页面
+			router.push({
+				path: '/UserAddress',
+				query: {
+					businessId: businessId.value,
+				}
+			});
         };
 
-        // 计算属性
+        // 计算属性 - 基于后端购物车数据
         const totalPrice = computed(() => {
-            const total = foodArr.value.reduce((total, item) => {
+            const total = cartItems.value.reduce((total, item) => {
                 return total + (item.foodPrice || 0) * (item.quantity || 0);
             }, 0);
             console.log(`计算总价: ${total}`);
@@ -476,7 +605,7 @@ export default {
         });
 
         const totalQuantity = computed(() => {
-            const quantity = Object.values(localCart.value).reduce((sum, qty) => sum + qty, 0);
+            const quantity = cartItems.value.reduce((sum, item) => sum + (item.quantity || 0), 0);
             console.log(`计算总数量: ${quantity}`);
             return quantity;
         });
@@ -495,29 +624,23 @@ export default {
         });
 
         // 初始化
-    
-// 修改 onMounted 部分
-onMounted(async () => {
-    console.log("组件挂载完成");
-    businessId.value = parseInt(route.query.businessId);
-    
-    if (!businessId.value) {
-        console.error("无效的商家ID:", route.query.businessId);
-        router.push("/");
-        return;
-    }
+        onMounted(async () => {
+            console.log("组件挂载完成");
+            businessId.value = parseInt(route.query.businessId);
 
-    // 先加载用户信息
-    await fetchUserInfo();
-    
-    // 然后加载其他数据
-    initLocalCart();
-    await fetchBusinessInfo();
-    await fetchFoodList();
-    
-    // 最后加载互动状态（确保有用户ID）
-    await loadReactions();
-});
+            if (!businessId.value) {
+                console.error("无效的商家ID:", route.query.businessId);
+                router.push("/");
+                return;
+            }
+
+            await fetchUserInfo();
+            await fetchBusinessInfo();
+            await fetchFoodList();
+            await fetchCartList(); // 获取购物车数据
+            await loadReactions();
+        });
+
         // 监听businessId变化
         watch(() => route.query.businessId, (newId) => {
             console.log("路由businessId变化:", newId);
@@ -525,9 +648,9 @@ onMounted(async () => {
                 businessId.value = parseInt(newId);
                 console.log("新的businessId:", businessId.value);
                 fetchUserInfo();
-                initLocalCart();
                 fetchBusinessInfo();
                 fetchFoodList();
+                fetchCartList(); // 重新获取购物车数据
                 loadReactions();
             }
         });
@@ -543,6 +666,7 @@ onMounted(async () => {
             canOrder,
             isLiked,
             isFavorited,
+            getCartQuantity,
             add: addToCart,
             minus: removeFromCart,
             toOrder,
@@ -555,232 +679,247 @@ onMounted(async () => {
 };
 </script>
 
-
-
 <style scoped>
+/* 样式部分保持不变 */
 /****************** 总容器 ******************/
 .wrapper {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 /****************** header部分 ******************/
+/* .wrapper header {
+    width: 100%;
+    height: 12vw;
+    background-color: #0097ff;
+    color: #fff;
+    font-size: 4.8vw;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+} */
 .wrapper header {
-	width: 100%;
-	height: 12vw;
-	background-color: #0097ff;
-	color: #fff;
-	font-size: 4.8vw;
-	position: fixed;
-	left: 0;
-	top: 0;
-	z-index: 1000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
 }
-
+.wrapper title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
+}
 /****************** 商家logo部分 ******************/
 .wrapper .business-logo {
-	width: 100%;
-	height: 50vw;
-	/*使用上外边距避开header部分*/
-	margin-top: 12vw;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+    width: 100%;
+    height: 50vw;
+    /*使用上外边距避开header部分*/
+    margin-top: 12vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .wrapper .business-logo img {
-	width: 40vw;
-	height: 40vw;
-	border-radius: 5px;
+    width: 40vw;
+    height: 40vw;
+    border-radius: 5px;
 }
 
 /****************** 商家信息部分 ******************/
 .wrapper .business-info {
-	width: 100%;
-	height: 20vw;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	position: relative;
+    width: 100%;
+    height: 20vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
 .wrapper .business-info h1 {
-	font-size: 5vw;
+    font-size: 5vw;
 }
 
 .wrapper .business-info .reactions {
-	position: absolute;
-	right: 3vw;
-	bottom: -2vw;
-	display: flex;
-	gap: 4vw;
+    position: absolute;
+    right: 3vw;
+    bottom: -2vw;
+    display: flex;
+    gap: 4vw;
 }
 
 .wrapper .business-info .reactions .reaction {
-	display: flex;
-	align-items: center;
-	gap: 1vw;
-	cursor: pointer;
-	user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    cursor: pointer;
+    user-select: none;
 }
 
 .wrapper .business-info .reactions .reaction i {
-	font-size: 5vw;
-	color: #bbb;
+    font-size: 5vw;
+    color: #bbb;
 }
 
 .wrapper .business-info p {
-	font-size: 3vw;
-	color: #666;
-	margin-top: 1vw;
+    font-size: 3vw;
+    color: #666;
+    margin-top: 1vw;
 }
 
 /****************** 食品列表部分 ******************/
 .wrapper .food {
-	width: 100%;
-	/*使用下外边距避开footer部分*/
-	margin-bottom: 14vw;
+    width: 100%;
+    /*使用下外边距避开footer部分*/
+    margin-bottom: 14vw;
 }
 
 .wrapper .food li {
-	width: 100%;
-	box-sizing: border-box;
-	padding: 2.5vw;
-	user-select: none;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2.5vw;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .wrapper .food li .food-left {
-	display: flex;
-	align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .wrapper .food li .food-left img {
-	width: 20vw;
-	height: 20vw;
+    width: 20vw;
+    height: 20vw;
 }
 
 .wrapper .food li .food-left .food-left-info {
-	margin-left: 3vw;
+    margin-left: 3vw;
 }
 
 .wrapper .food li .food-left .food-left-info h3 {
-	font-size: 3.8vw;
-	color: #555;
+    font-size: 3.8vw;
+    color: #555;
 }
 
 .wrapper .food li .food-left .food-left-info p {
-	font-size: 3vw;
-	color: #888;
-	margin-top: 2vw;
+    font-size: 3vw;
+    color: #888;
+    margin-top: 2vw;
 }
 
 .wrapper .food li .food-right {
-	width: 16vw;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+    width: 16vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .wrapper .food li .food-right .fa-minus-circle {
-	font-size: 5.5vw;
-	color: #999;
-	cursor: pointer;
+    font-size: 5.5vw;
+    color: #999;
+    cursor: pointer;
 }
 
 .wrapper .food li .food-right p {
-	font-size: 3.6vw;
-	color: #333;
+    font-size: 3.6vw;
+    color: #333;
 }
 
 .wrapper .food li .food-right .fa-plus-circle {
-	font-size: 5.5vw;
-	color: #0097ef;
-	cursor: pointer;
+    font-size: 5.5vw;
+    color: #0097ef;
+    cursor: pointer;
 }
 
 /****************** 购物车部分 ******************/
 .wrapper .cart {
-	width: 100%;
-	height: 14vw;
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	display: flex;
+    width: 100%;
+    height: 14vw;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    display: flex;
 }
 
 .wrapper .cart .cart-left {
-	flex: 2;
-	background-color: #505051;
-	display: flex;
+    flex: 2;
+    background-color: #505051;
+    display: flex;
 }
 
 .wrapper .cart .cart-left .cart-left-icon {
-	width: 16vw;
-	height: 16vw;
-	box-sizing: border-box;
-	border: solid 1.6vw #444;
-	border-radius: 8vw;
-	background-color: #3190e8;
-	font-size: 7vw;
-	color: #fff;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	margin-top: -4vw;
-	margin-left: 3vw;
-	position: relative;
+    width: 16vw;
+    height: 16vw;
+    box-sizing: border-box;
+    border: solid 1.6vw #444;
+    border-radius: 8vw;
+    background-color: #3190e8;
+    font-size: 7vw;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -4vw;
+    margin-left: 3vw;
+    position: relative;
 }
 
 .wrapper .cart .cart-left .cart-left-icon-quantity {
-	width: 5vw;
-	height: 5vw;
-	border-radius: 2.5vw;
-	background-color: red;
-	color: #fff;
-	font-size: 3.6vw;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	position: absolute;
-	right: -1.5vw;
-	top: -1.5vw;
+    width: 5vw;
+    height: 5vw;
+    border-radius: 2.5vw;
+    background-color: red;
+    color: #fff;
+    font-size: 3.6vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    right: -1.5vw;
+    top: -1.5vw;
 }
 
 .wrapper .cart .cart-left .cart-left-info p:first-child {
-	font-size: 4.5vw;
-	color: #fff;
-	margin-top: 1vw;
+    font-size: 4.5vw;
+    color: #fff;
+    margin-top: 1vw;
 }
 
 .wrapper .cart .cart-left .cart-left-info p:last-child {
-	font-size: 2.8vw;
-	color: #aaa;
+    font-size: 2.8vw;
+    color: #aaa;
 }
 
 .wrapper .cart .cart-right {
-	flex: 1;
+    flex: 1;
 }
 
 /*达到起送费时的样式*/
 .wrapper .cart .cart-right .cart-right-item {
-	width: 100%;
-	height: 100%;
-	background-color: #38ca73;
-	color: #fff;
-	font-size: 4.5vw;
-	font-weight: 700;
-	user-select: none;
-	cursor: pointer;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #38ca73;
+    color: #fff;
+    font-size: 4.5vw;
+    font-weight: 700;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 </style>
 

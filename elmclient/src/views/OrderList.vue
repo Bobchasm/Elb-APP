@@ -67,7 +67,7 @@
 					
 					<!-- 已完成/已取消：查看详情 -->
 					<template v-else>
-						<button class="detail-btn" @click.stop="goDetail(item)">查看详情</button>
+						<button class="detail-btn" @click="goDetail(item.id)">查看详情</button>
 					</template>
 				</div>
 			</li>
@@ -419,10 +419,12 @@ export default {
 }
 
 .status-badge {
-	padding: 1vw 2vw;
-	border-radius: 1vw;
-	font-size: 3.2vw;
-	font-weight: 500;
+  padding: 1vw 2vw;
+  border-radius: 1vw;
+  font-size: 3.2vw;
+  font-weight: 500;
+  position: relative;
+  z-index: 10; /* 确保在最上层 */
 }
 
 .status-badge.unpaid {
@@ -438,8 +440,8 @@ export default {
 	color: #52c41a;
 }
 .status-badge.done {
-	background: #f9f9f9;
-	color: #1bc3d2;
+	background: #fdf4de;
+	color: #ffa700;
 }
 .status-badge.canceled {
 	background: #f9f9f9;

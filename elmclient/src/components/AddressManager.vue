@@ -37,9 +37,14 @@
             <input v-model="addressForm.contactTel" placeholder="输入手机号" />
           </div>
           <div class="modal-item">
-            <label>性别</label>
-            <input v-model="addressForm.contactSex" placeholder="1男/2女" />
-          </div>
+            <div class="title">
+			        性别：
+              </div>
+              <div class="content" style="font-size: 4vw;">
+                <input type="radio" v-model="addressForm.contactSex" value="1" style="width:6vw;height:3.2vw;">男
+                <input type="radio" v-model="addressForm.contactSex" value="0" style="width:6vw;height:3.2vw;">女
+              </div>
+            </div>
           <div class="modal-item">
             <label>详细地址</label>
             <textarea v-model="addressForm.address" placeholder="输入详细地址"></textarea>
@@ -62,7 +67,7 @@ import { toast } from '../utils/toast';
 import request from '../utils/request';
 
 const props = defineProps({
-  userId: String
+  id: String
 });
 
 const addresses = ref([]);
@@ -73,10 +78,13 @@ const addressForm = ref({
   id: null,
   contactName: '',
   contactTel: '',
-  contactSex: null,
+  contactSex: 0,
   address: '',
-  userId: props.userId
+  userId: props.id
 });
+const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
+const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
+const user = userFromLocal || userFromSession;
 
 onMounted(() => {
   loadAddresses();
@@ -84,16 +92,14 @@ onMounted(() => {
 
 // 加载地址列表的方法
 const loadAddresses = async () => {
-  if (!props.userId) {
+  if (!props.id) {
     toast.warning('用户未登录，无法获取地址列表');
     return;
   }
 
   isLoading.value = true;
   try {
-    // 使用 request.get 方法来发送 GET 请求
-    // 假设你的 request 工具支持 params 选项
-    const response = await request.get('/api/addresses', { params: { userId: props.userId } });
+    const response = await request.get('/api/addresses/listDeliveryAddressByUserId', { params: { userId: props.id} });
     addresses.value = response.data;
     // 如果接口返回的数据中包含了省市区和详细地址的组合，这里不需要再进行处理
     // addresses.value = addresses.value.map(addr => ({
@@ -122,7 +128,7 @@ const openAddressModal = (address = null) => {
       contactTel: '',
       contactSex: null,
       address: '',
-      userId: props.userId
+      userId: props.id
     };
   }
   showAddressModal.value = true;
@@ -146,12 +152,12 @@ const submitAddress = async () => {
       await request.post('/api/addresses/updateDeliveryAddress', { ...form });
       toast.success('地址修改成功！');
     } else {
-      await request.post('/api/address', {
+      await request.post('/api/addresses', {
         contactName: form.contactName,
         contactTel: form.contactTel,
         contactSex: form.contactSex,
         address: form.address,
-        customer: { id: form.userId }
+        customer: { username: user.username }
       });
       toast.success('地址添加成功！');
     }
@@ -159,7 +165,7 @@ const submitAddress = async () => {
     loadAddresses();
   } catch (error) {
     console.error('操作失败:', error);
-    toast.error('操作失败，请重试！');
+    toast.error('操作失.$attrs败，请重试！');
   }
 };
 
@@ -167,7 +173,7 @@ const deleteAddress = async (id) => {
   if (confirm('确定要删除此地址吗？')) {
     try {
       // 使用 request.post 方法发送 POST 请求
-      await request.post('/api/addresses/removeDeliveryAddress', null, { params: { id: id } });
+      await request.put('/api/addresses/removeDeliveryAddress',  {  id: id });
       toast.success('地址删除成功！');
       loadAddresses();
     } catch (error) {
@@ -378,5 +384,14 @@ const deleteAddress = async (id) => {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+.radio-group {
+  display: flex;
+  gap: 15px; /* 两个选项之间的间距 */
+  margin-top: 5px;
+}
+
+.radio-group input {
+  margin-right: 5px; /* 单选按钮和文字的间距 */
 }
 </style>

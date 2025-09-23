@@ -11,6 +11,7 @@ import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.BusinessService;
 import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
+import com.tju.elm_bk.vo.MerchantStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -165,6 +166,12 @@ public class BusinessController {
     public HttpResult<List<Business>> listBusinessByOrderTypeId(@RequestParam(required = false) Integer type) {
         List<Business> businesses = businessService.listBusinessByOrderTypeId(type);
         return HttpResult.success(businesses);
+    }
+
+    @GetMapping("/id_list")
+    @Operation(summary = "获取当前商家用户商铺id列表")
+    public HttpResult<List<MerchantStatsVO>> getBusinessIdList() {
+        return HttpResult.success(businessService.getBusinessIdList());
     }
 
 

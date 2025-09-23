@@ -54,7 +54,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
-import { useRouter } from 'vue-router';
+import { useRouter,useRoute } from 'vue-router';
 import { toast } from '../utils/toast';
 import request from '../utils/request';
 
@@ -75,7 +75,8 @@ export default {
 			}
 		});
 
-		//const businessId = ref(null);
+		const route = useRoute();
+		const businessId = ref(route.query.businessId);
 		const user = ref(null);
 		const router = useRouter();
 		const reg = /^1[3456789]\d{9}$/;
@@ -87,7 +88,7 @@ export default {
 			deliveryAddress.value.customer.id = user.value.id; 
 			deliveryAddress.value.customer.username = user.value.username; 
           }
-			//businessId.value = user.value.businessId;
+			businessId.value = route.query.businessId;
 		});
 		
 		const addUserAddress = () => {
@@ -106,15 +107,9 @@ export default {
 			
 			request.post('/api/addresses', deliveryAddress.value)
 				.then(response => {
-					// if (response.data > 0) {
-					// 	toast.success('添加地址成功！');
-					// 	router.push({ path: '/userAddress', query: { businessId: businessId.value } });
-					// } else {
-					// 	toast.error('新增地址失败！');
-					// }
 					if (response.success) {
 							toast.success('添加地址成功！');
-							router.push({ path: '/userAddress' });
+							router.push({ path: '/userAddress' , query: { businessId: businessId.value }});
 						} else {
 							toast.error('新增地址失败！原因：' + response.message);
 						}
@@ -127,7 +122,7 @@ export default {
 
 		return {
 			deliveryAddress,
-			//businessId,
+			businessId,
 			user,
 			addUserAddress
 		};
