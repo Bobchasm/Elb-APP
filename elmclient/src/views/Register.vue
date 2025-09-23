@@ -9,16 +9,21 @@
     <ul class="form-box">
       <!-- 用户名 -->
       <li class="form-item">
-        <label for="userName" class="form-item-title">用户名称：</label>
+        <label for="username" class="form-item-title">用户名称：</label>
         <div class="form-item-content">
-          <input id="userName" type="text" v-model="user.userName" placeholder="用户名称" />
+          <input
+            id="username"
+            type="text"
+            v-model="user.username"
+            placeholder="用户名称"
+          />
         </div>
       </li>
       <!-- 手机号码 -->
       <li class="form-item">
         <label for="userId" class="form-item-title">手机号码：</label>
         <div class="form-item-content">
-          <input id="userId" type="text" @blur="checkUserId" v-model="user.userId" placeholder="手机号码" />
+          <input id="userId" type="text" v-model="user.id" placeholder="手机号码" />
         </div>
       </li>
       <!-- 密码 -->
@@ -37,9 +42,9 @@
       </li>
       <!-- 邮箱 -->
       <li class="form-item">
-        <label for="userEmail" class="form-item-title">邮箱：</label>
+        <label for="useremail" class="form-item-title">邮箱：</label>
         <div class="form-item-content">
-          <input id="userEmail" type="text" v-model="user.userEmail" placeholder="请输入邮箱" />
+          <input id="useremail" type="text" v-model="user.useremail" placeholder="请输入邮箱" />
         </div>
       </li>
       <!-- 头像 -->
@@ -56,9 +61,9 @@
       <li class="form-item gender-item">
         <div class="form-item-title">性别：</div>
         <div class="form-item-content">
-          <input type="radio" v-model="user.userSex" value="1" id="male" />
+          <input type="radio" v-model="user.usersex" value="1" id="male" />
           <label for="male">男</label>
-          <input type="radio" v-model="user.userSex" value="0" id="female" />
+          <input type="radio" v-model="user.usersex" value="0" id="female" />
           <label for="female">女</label>
         </div>
       </li>
@@ -68,50 +73,50 @@
     <div class="button-register">
       <button @click="register">注册</button>
     </div>
+
+    <!-- 自定义消息框 -->
+    <div v-if="messageBoxVisible" class="message-box-overlay">
+      <div class="message-box">
+        <p>{{ messageBoxMessage }}</p>
+        <button @click="closeMessageBox">确定</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import request from '../utils/request';
 
 export default {
   name: 'Register',
   setup() {
     const router = useRouter();
     const user = reactive({
-      userId: '',
+      id: '',
       password: '',
-      userName: '',
-      userEmail: '',
-      userSex: 1,
-      userImg: ''
+      username: '',
+      useremail: '',
+      usersex: 0,
+      userimg: ''
     });
     const confirmPassword = ref('');
-    const avatar = ref(null); // 用于存储头像文件的 Base64 字符串
+    const avatar = ref(null);
 
-    // 校验手机号码是否已存在
-    const checkUserId = () => {
-      // 如果手机号码为空，不进行校验
-      if (!user.userId) return;
-      const reg = /^1[3456789]\d{9}$/;
-      if (!reg.test(user.userId)) {
-        alert('手机号码格式错误，请重新输入！');
-        user.userId = ''; // 清空输入
-        return;
-      }
+    // 消息框状态
+    const messageBoxVisible = ref(false);
+    const messageBoxMessage = ref('');
 
-      axios.post('UserController/userIdExists', { userId: user.userId })
-        .then(response => {
-          if (response.data === 1) {
-            user.userId = '';
-            alert('此手机号码已存在！');
-          }
-        })
-        .catch(error => {
-          console.error(error);
-        });
+    // 显示消息框
+    const showMessageBox = (message) => {
+      messageBoxMessage.value = message;
+      messageBoxVisible.value = true;
+    };
+
+    // 关闭消息框
+    const closeMessageBox = () => {
+      messageBoxVisible.value = false;
     };
 
     // 处理头像文件上传
@@ -120,7 +125,7 @@ export default {
       if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          avatar.value = e.target.result; // 保存 Base64 字符串
+          avatar.value = e.target.result;
         };
         reader.readAsDataURL(file);
       } else {
@@ -128,56 +133,78 @@ export default {
       }
     };
 
-    // 注册函数
+    // 注册函数，包含所有校验和注册请求
     const register = () => {
-      // 检查用户名
-      if (!user.userName) {
-        alert('用户名不能为空！');
+      // 客户端校验
+      user.username = user.username.trim();
+      if (!user.username) {
+        showMessageBox('用户名不能为空！');
         return;
       }
-      if (user.userName.length > 8) {
-        alert('用户名过长！');
+      if (user.username.length > 8) {
+        showMessageBox('用户名过长！');
         return;
       }
 
-      // 检查密码
-      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-      if (!user.password || !regex.test(user.password)) {
-        alert('密码格式错误，请确保包含至少一个大写字母、一个小写字母和一个数字，长度至少为8个字符。');
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+      if (!user.password || !passwordRegex.test(user.password)) {
+        showMessageBox('密码格式错误，请确保包含至少一个大写字母、一个小写字母和一个数字，长度至少为8个字符。');
         return;
       }
       if (user.password !== confirmPassword.value) {
-        alert('两次输入的密码不一致！');
+        showMessageBox('两次输入的密码不一致！');
         return;
       }
       
-      // 检查邮箱
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!user.userEmail || !emailRegex.test(user.userEmail)) {
-        alert('邮箱格式不正确！');
+      if (!user.useremail || !emailRegex.test(user.useremail)) {
+        showMessageBox('邮箱格式不正确！');
         return;
       }
 
-      // 将头像 Base64 字符串赋值给 user.userImg
       if (avatar.value) {
-        user.userImg = avatar.value;
+        user.userimg = avatar.value;
       } else {
-        alert('请上传头像！');
+        showMessageBox('请上传头像！');
         return;
       }
 
-      // 注册请求
-      axios.post('UserController/saveUser', user)
+      // 构建符合API规范的请求体
+      const registerPayload = {
+        username: user.username,
+        password: user.password,
+        authorities: [], // 假设这是一个空数组
+        deleted: false // 假设新用户未被删除
+      };
+      
+      request.post('/api/register', registerPayload)
         .then(response => {
-          if (response.data > 0) {
-            alert('注册成功！');
-            router.push({ path: '/index' });
+          console.log('注册请求成功，服务器响应数据:', response);
+          
+          // 检查服务器响应中的 success 字段
+          if (response && response.success) {
+            showMessageBox('注册成功！');
+            // 注册成功后跳转
+            setTimeout(() => {
+              router.push({ path: '/index' });
+            }, 1500); // 1.5秒后跳转
           } else {
-            alert('注册失败！');
+            // success 为 false 或字段不存在的情况
+            let errorMessage = '注册失败！服务器返回了无效数据。';
+            if (response&& response.message) {
+              errorMessage = `注册失败！原因：${response.message}`;
+            }
+            showMessageBox(errorMessage);
           }
         })
         .catch(error => {
-          console.error(error);
+          console.error('注册请求发生错误:', error.response|| error.message);
+          
+          if (error.response?.status === 409) { // 假设409是用户名冲突的错误码
+            showMessageBox('此用户名已存在！');
+          } else {
+            showMessageBox('请求失败，请检查网络或服务器！');
+          }
         });
     };
 
@@ -185,9 +212,11 @@ export default {
       user,
       confirmPassword,
       avatar,
-      checkUserId,
       handleFileUpload,
-      register
+      register,
+      messageBoxVisible,
+      messageBoxMessage,
+      closeMessageBox
     };
   }
 };
@@ -309,5 +338,45 @@ export default {
   border-radius: 4px;
   border: none;
   outline: none;
+  cursor: pointer;
+}
+
+/****************** 自定义消息框 ******************/
+.message-box-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.message-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 300px;
+}
+
+.message-box p {
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #333;
+}
+
+.message-box button {
+  background: #0097ff;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>

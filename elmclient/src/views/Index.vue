@@ -101,7 +101,7 @@
             </div>
         </div>
 
-        
+
         <!-- 点餐分类部分 -->
         <ul class="foodtype">
             <li @click="toBusinessList(1)">
@@ -174,26 +174,21 @@
 
         <!-- 推荐方式部分 -->
         <ul class="recommendtype">
-            <li 
-                :class="{ active: sortBy === 'default' }" 
+            <li
+                :class="{ active: sortBy === 'default' }"
                 @click="setSortBy('default')"
             >
                 综合排序<i class="fa fa-caret-down"></i>
             </li>
-            <!-- <li 
-                :class="{ active: sortBy === 'distance' }" 
-                @click="setSortBy('distance')"
-            >
-                距离最近
-            </li> -->
-            <li 
-                :class="{ active: sortBy === 'sales' }" 
+
+            <li
+                :class="{ active: sortBy === 'sales' }"
                 @click="setSortBy('sales')"
             >
                 销量最高
             </li>
-            <li 
-                :class="{ active: showFilter }" 
+            <li
+                :class="{ active: showFilter }"
                 @click="toggleFilter"
             >
                 筛选<i class="fa fa-filter"></i>
@@ -210,14 +205,14 @@
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
-                    
+
                     <div class="filter-content">
                         <!-- 免配送费筛选 -->
                         <div class="filter-section">
                             <h4>配送费</h4>
                             <label class="filter-option">
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     v-model="filters.freeDelivery"
                                     @change="applyFilters"
                                 >
@@ -230,9 +225,9 @@
                             <h4>起送价</h4>
                             <div class="price-range">
                                 <label class="filter-option">
-                                    <input 
-                                        type="radio" 
-                                        name="startPrice" 
+                                    <input
+                                        type="radio"
+                                        name="startPrice"
                                         value="0"
                                         v-model="filters.startPrice"
                                         @change="applyFilters"
@@ -240,9 +235,9 @@
                                     <span>不限</span>
                                 </label>
                                 <label class="filter-option">
-                                    <input 
-                                        type="radio" 
-                                        name="startPrice" 
+                                    <input
+                                        type="radio"
+                                        name="startPrice"
                                         value="20"
                                         v-model="filters.startPrice"
                                         @change="applyFilters"
@@ -250,9 +245,9 @@
                                     <span>20元以下</span>
                                 </label>
                                 <label class="filter-option">
-                                    <input 
-                                        type="radio" 
-                                        name="startPrice" 
+                                    <input
+                                        type="radio"
+                                        name="startPrice"
                                         value="30"
                                         v-model="filters.startPrice"
                                         @change="applyFilters"
@@ -260,9 +255,9 @@
                                     <span>30元以下</span>
                                 </label>
                                 <label class="filter-option">
-                                    <input 
-                                        type="radio" 
-                                        name="startPrice" 
+                                    <input
+                                        type="radio"
+                                        name="startPrice"
                                         value="50"
                                         v-model="filters.startPrice"
                                         @change="applyFilters"
@@ -744,11 +739,6 @@ const getDisplayText = (location) => {
                     } else if (sortBy.value === 'sales') {
                         params.isScore = 0;
                         params.isSales = 1;
-                    } else if (sortBy.value === 'distance') {
-                        params.isScore = 0;
-                        params.isSales = 0;
-                        // 距离排序可能需要后端支持，这里先按评分排序
-                        params.isScore = 1;
                     } else {
                         params.isScore = 0;
                         params.isSales = 0;
@@ -791,7 +781,7 @@ const getDisplayText = (location) => {
         const setSortBy = (type) => {
             sortBy.value = type;
             console.log('设置排序方式:', type);
-            
+
             if (searchKeyword.value.trim() !== '') {
                 performSearch(); // 重新搜索以应用新的排序
             } else {
@@ -891,7 +881,7 @@ const getDisplayText = (location) => {
 
             // 免配送费筛选
             if (filters.value.freeDelivery) {
-                filteredList = filteredList.filter(business => 
+                filteredList = filteredList.filter(business =>
                     business.deliveryPrice === 0 || business.deliveryPrice === null
                 );
             }
@@ -899,7 +889,7 @@ const getDisplayText = (location) => {
             // 起送价筛选
             if (filters.value.startPrice !== '0') {
                 const maxPrice = parseInt(filters.value.startPrice);
-                filteredList = filteredList.filter(business => 
+                filteredList = filteredList.filter(business =>
                     business.startPrice <= maxPrice
                 );
             }
@@ -1182,7 +1172,7 @@ const getDisplayText = (location) => {
     height: 29vw;
 
     /*此三个样式组合，可以保证背景图片充满整个容器*/
-    background-image: url(@/assets/index_banner.png);
+    background-image: url(../assets/index_banner.png);
     background-repeat: no-repeat;
     background-size: cover;
 
