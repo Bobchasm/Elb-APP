@@ -1,0 +1,303 @@
+{
+  "info": {
+    "name": "AI智能客服测试集合",
+    "description": "饿了吧外卖平台AI智能客服系统的完整测试用例",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "test-session-{{$randomUUID}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. 健康检查",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat", "health"]
+        }
+      }
+    },
+    {
+      "name": "2. 基础对话测试",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"你好，我想了解一下你们的外卖平台\",\n  \"userId\": {{userId}},\n  \"chatType\": \"general\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "3. 商家查询测试",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"附近有什么好吃的川菜馆吗？\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"business-query-001\",\n  \"chatType\": \"business\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "4. 菜品推荐测试",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"今天想吃点清淡的菜，有什么推荐吗？\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"food-recommend-001\",\n  \"chatType\": \"food\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "5. 订单查询测试",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"我的订单怎么还没到？能帮我查一下吗？\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"order-query-001\",\n  \"chatType\": \"order\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "6. 连续对话 - 第一轮",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"我想点外卖\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"continuous-chat-001\",\n  \"chatType\": \"general\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "7. 连续对话 - 第二轮",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"有什么好的火锅推荐吗？价格在50元左右的\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"continuous-chat-001\",\n  \"chatType\": \"business\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "8. 获取对话历史",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat/history?userId={{userId}}&page=1&size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat", "history"],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. 根据会话ID获取历史",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat/history/session/continuous-chat-001",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat", "history", "session", "continuous-chat-001"]
+        }
+      }
+    },
+    {
+      "name": "10. 复杂查询测试",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"我想要一家距离我比较近的，有麻辣香锅的，价格在30元左右的商家，最好配送费不要太贵\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"complex-query-001\",\n  \"chatType\": \"business\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "11. 投诉处理测试",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"我的外卖送错了，而且已经凉了，我要投诉\",\n  \"userId\": {{userId}},\n  \"sessionId\": \"complaint-001\",\n  \"chatType\": \"general\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    },
+    {
+      "name": "12. 清理旧对话记录",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat/history/clean?keepCount=50",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat", "history", "clean"],
+          "query": [
+            {
+              "key": "keepCount",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "错误场景 - 空消息",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"\",\n  \"userId\": {{userId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "chat"]
+        }
+      }
+    }
+  ]
+}

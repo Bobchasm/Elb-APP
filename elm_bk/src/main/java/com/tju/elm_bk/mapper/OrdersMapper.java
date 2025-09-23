@@ -88,4 +88,12 @@ public interface OrdersMapper {
 
     @Select("select sum(order_total) from orders where order_state = 3 and is_deleted = 0")
     Double countPrice();
+
+    // AI服务相关查询方法
+    @Select("SELECT * FROM orders WHERE id = #{id} AND is_deleted = 0")
+    Order selectById(Long id);
+
+    @Select("SELECT * FROM orders WHERE customer_id = #{userId} AND is_deleted = 0 " +
+            "ORDER BY order_date DESC LIMIT #{limit}")
+    List<Order> selectRecentOrdersByUserId(@Param("userId") Long userId, @Param("limit") Integer limit);
 }
