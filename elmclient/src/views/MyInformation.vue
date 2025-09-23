@@ -579,12 +579,12 @@ const checkNewMessages = async () => {
 <style scoped>
 .container {
   max-width: 600px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
   background: #fff;
   min-height: 100vh;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
+  padding-bottom: 20vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -799,6 +799,7 @@ const checkNewMessages = async () => {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-bottom: 30px;
 }
 .logout-btn:hover {
   background: linear-gradient(135deg, #7b2cce, #3a00b0);

@@ -19,7 +19,14 @@
         </div>
       </div>
     </div>
-
+    <div class="button-section">
+      <button class="switch-btn" @click="switchToCustomer">
+        <i class="fas fa-user"></i> 切换为顾客
+      </button>
+      <button class="logout-btn" @click="logout">
+        <i class="fas fa-sign-out-alt"></i> 退出登录
+      </button>
+    </div>
     <!-- 修改为显示商铺列表 -->
     <div class="stores-container">
       <div class="store-card" v-for="store in stores" :key="store.merchantId">
@@ -41,14 +48,7 @@
       </div>
     </div>
 
-    <div class="button-section">
-      <button class="switch-btn" @click="switchToCustomer">
-        <i class="fas fa-user"></i> 切换为顾客
-      </button>
-      <button class="logout-btn" @click="logout">
-        <i class="fas fa-sign-out-alt"></i> 退出登录
-      </button>
-    </div>
+    
 
     <div class="bottom-nav">
       <router-link to="/merchant/business" class="nav-item">

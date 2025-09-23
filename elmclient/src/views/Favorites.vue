@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  
     <BackButton />
     <div class="header">
       <i class="fas fa-chevron-left back-icon" @click="goBack"></i>
@@ -22,8 +22,10 @@
       <div v-else class="business-list">
         <div v-for="business in favoriteList" :key="business.businessId" class="business-item"
           @click="goToBusinessInfo(business.businessId)">
-          <img :src="business.businessImg" :alt="business.businessName" class="business-img">
-          <div class="business-details">
+          <img :src="business.businessImg || require('@/assets/default-business.png')" 
+     :alt="business.businessName" 
+     class="business-img"
+     @error="handleImageError"><div class="business-details">
             <div class="business-name">{{ business.businessName }}</div>
             <div class="business-info-row">
               <span class="star-rating">
@@ -39,7 +41,7 @@
         </div>
       </div>
     </div>
-  </div>
+  
 </template>
 
 <script>
@@ -152,8 +154,9 @@ body {
 
 /* 主内容容器，保持居中和最大宽度 */
 .container {
-  max-width: 600px;
-  margin: 0 auto;
+  /* max-width: 600px; */
+  width:100%;
+  /* margin: 0 auto; */
   padding-bottom: 40px;
   background-color: #f0f2f5;
   min-height: 100vh;
@@ -209,7 +212,7 @@ body {
 }
 
 .business-list {
-  padding: 0px 15px; /* 增加左右内边距，使列表内容与页面两边有一定间隔 */
+  padding: 0px ; /* 增加左右内边距，使列表内容与页面两边有一定间隔 */
   margin-top: 15px;
   display: flex;
   flex-direction: column;
@@ -220,7 +223,7 @@ body {
   display: flex;
   align-items: center;
   background-color: #fff;
-  padding: 15px;
+  /* padding: 15px; */
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   cursor: pointer;

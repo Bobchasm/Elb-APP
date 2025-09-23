@@ -3,7 +3,7 @@
 		<header class="topbar"><p>商铺管理</p></header>
 		<div class="content">
 			<!-- 所有商家列表 -->
-			<h2 class="section-title">商家列表</h2>
+			<!-- <h2 class="section-title">商家列表</h2> -->
 			<ul class="business-list">
 				<li v-for="b in businessList" :key="b.userId" class="business-item">
 					<div class="info" >

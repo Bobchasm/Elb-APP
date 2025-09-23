@@ -293,12 +293,14 @@ onMounted(() => {
   min-height: 100vh;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
+  padding-bottom: 5vh;
+  padding-left: 0;
+  padding-right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  padding:0;
+ 
 }
 
 .top-background {
