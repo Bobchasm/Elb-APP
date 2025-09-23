@@ -173,6 +173,11 @@ const routes = [
     component:BusinessInformation
   },
   {
+    path:'/merchantProfile',
+    name:'MerchantProfile',
+    component:MerchantProfile
+  },
+  {
     path:'/businessView',
     name:'BusinessView',
     component:BusinessView

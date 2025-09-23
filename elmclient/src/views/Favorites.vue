@@ -1,8 +1,9 @@
 <template>
   <div class="container">
+    <BackButton />
     <div class="header">
       <i class="fas fa-chevron-left back-icon" @click="goBack"></i>
-      <h1>我的收藏</h1>
+      <h1 class="title">我的收藏</h1>
     </div>
 
     <div v-if="loading" class="loading-message">
@@ -45,9 +46,11 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
 import request from '@/utils/request'; // 使用封装好的request
+import BackButton from '../components/BackButton.vue';
 
 export default {
   name: 'Favorites',
+  components: { BackButton },
   setup() {
     const router = useRouter();
     const favoriteList = ref([]);
@@ -72,7 +75,7 @@ export default {
         favoriteList.value = response.data.map(business => ({
           businessId: business.id,
           businessName: business.businessName,
-          businessImg: business.businessImg,
+          businessImg: business.businessImg||'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/b8b083fd-1bd5-4417-a790-476ffbef9de3.png',
           starRating: Number(business.score) || 0, // 确保是数字
           salesVolume: business.salesCount || 0,
           deliveryFee: Number(business.deliveryPrice) || 0,
@@ -117,37 +120,34 @@ export default {
 
 <style scoped>
 .container {
-  max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
+    height: 100%;
+  /* max-width: 600px; */
+  margin: 0;
   padding-bottom: 40px;
   background-color: #f0f2f5;
-  min-height: 100vh;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
 }
 
 .header {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50px;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  z-index: 100;
+  /* padding: 20px; */
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
 }
-
-.header h1 {
-  font-size: 1.1rem;
-  color: #333;
-  font-weight: 600;
+.title {
   margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
 }
-
 .back-icon {
   position: absolute;
   left: 5px;
@@ -188,7 +188,7 @@ export default {
 }
 
 .business-list {
-  padding: 25px;
+  /* padding: 25px; */
   display: flex;
   flex-direction: column;
   gap: 15px;

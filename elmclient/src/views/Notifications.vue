@@ -1,5 +1,6 @@
 <template>
   <div class="notifications-container">
+    <BackButton/>
     <div class="header">
       <h1 class="title">消息与通知</h1>
       <div v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</div>
@@ -44,8 +45,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import request from '../utils/request';
-import { toast } from '../utils/toast';
+import request from '@/utils/request';
+import { toast } from '@/utils/toast';
+import BackButton from '@/components/BackButton.vue';
+
 
 // 状态管理
 const messages = ref([]);

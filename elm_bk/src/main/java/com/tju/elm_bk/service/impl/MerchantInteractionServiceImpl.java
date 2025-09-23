@@ -139,30 +139,12 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
             BusinessVO businessVO =businessMapper.getBusinessById(businessId);
             BusinessSearchVO businessSearchVO=new BusinessSearchVO();
               //计算每一个商铺的评分和销售量
-            Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(businessId);
+
             int salesCount = businessMapper.getSalesCount(businessId);
-            int likeCount = 0;
-            int collectCount = 0;
 
-            // 安全地处理可能为null的值
-            Object likeObj = interactionCounts.get("likeCount");
-            Object collectObj = interactionCounts.get("collectCount");
+            Integer likeCount = interactionMapper.countLikesByMerchantId(businessId);
+            Integer collectCount = interactionMapper.countCollectionsByMerchantId(businessId);
 
-            if (likeObj instanceof BigDecimal) {
-                likeCount = ((BigDecimal) likeObj).intValue();
-            } else if (likeObj instanceof Long) {
-                likeCount = ((Long) likeObj).intValue();
-            } else if (likeObj instanceof Integer) {
-                likeCount = (Integer) likeObj;
-            }
-
-            if (collectObj instanceof BigDecimal) {
-                collectCount = ((BigDecimal) collectObj).intValue();
-            } else if (collectObj instanceof Long) {
-                collectCount = ((Long) collectObj).intValue();
-            } else if (collectObj instanceof Integer) {
-                collectCount = (Integer) collectObj;
-            }
 
             // 计算评分 (点赞权重0.6，收藏权重0.4，归一化到1-5分)
             double normalizedRating = 1 + 4 * (0.6 * likeCount / (likeCount + 10.0) + 0.4 * collectCount / (collectCount + 10.0));
@@ -213,6 +195,19 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
             log.error("获取商家统计信息失败: merchantId={}", merchantId, e);
             throw new APIException(ResultCodeEnum.SERVER_ERROR);
         }
+    }
+
+    @Override
+    public List<MerchantStatsVO>getMerchantStatsByUserId(Long userId){
+        List<Long> businessIds =businessMapper.getBusinessIdsByUserId(userId);
+        List<MerchantStatsVO> merchantStatsVOS=new ArrayList<>();
+        for(Long businessId:businessIds){
+            MerchantStatsVO merchantStatsVO=getMerchantStats(businessId);
+            merchantStatsVOS.add(merchantStatsVO);
+            log.info("获取商铺{}的统计信息成功: 点赞数={}, 收藏数={}, 评分={}", businessId, merchantStatsVO.getLikeCount(), merchantStatsVO.getCollectCount(), merchantStatsVO.getRating());
+
+        }
+        return merchantStatsVOS;
     }
 
     @Override

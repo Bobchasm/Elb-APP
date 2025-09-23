@@ -20,18 +20,24 @@
       </div>
     </div>
 
-    <div class="store-data-bar">
-      <div class="data-item">
-        <div class="data-value">{{ merchantData.likes }}</div>
-        <div class="data-label">点赞</div>
-      </div>
-      <div class="data-item">
-        <div class="data-value">{{ merchantData.favorites }}</div>
-        <div class="data-label">收藏</div>
-      </div>
-      <div class="data-item">
-        <div class="data-value">{{ merchantData.rating }}</div>
-        <div class="data-label">评分</div>
+    <!-- 修改为显示商铺列表 -->
+    <div class="stores-container">
+      <div class="store-card" v-for="store in stores" :key="store.merchantId">
+        <div class="store-name">{{ store.merchantName }}</div>
+        <div class="store-data-bar">
+          <div class="data-item">
+            <div class="data-value">{{ store.likeCount }}</div>
+            <div class="data-label">点赞</div>
+          </div>
+          <div class="data-item">
+            <div class="data-value">{{ store.collectCount }}</div>
+            <div class="data-label">收藏</div>
+          </div>
+          <div class="data-item">
+            <div class="data-value">{{ store.rating }}</div>
+            <div class="data-label">评分</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -74,11 +80,7 @@ export default {
     const defaultAvatar = 'https://via.placeholder.com/100'; // 备用默认头像
 
     const merchant = ref(null);
-    const merchantData = ref({
-      likes: null,
-      favorites: null,
-      rating: null,
-    });
+    const stores = ref([]); // 存储商铺列表
     
     const loading = ref(false);
 
@@ -120,16 +122,13 @@ export default {
       }
     };
     
-    // 新增：加载商家统计数据
-    const loadMerchantStats = async (merchantId) => {
+    // 修改：加载商家统计数据，现在获取的是商铺列表
+    const loadMerchantStats = async (userId) => {
       try {
-        const response = await request.get(`/api/merchant/interaction/stats/${merchantId}`);
+        const response = await request.get(`http://localhost:8080/api/merchant/interaction/statsByUserId/${userId}`);
         
         if (response && response.success && response.data) {
-          const stats = response.data;
-          merchantData.value.likes = stats.likeCount;
-          merchantData.value.favorites = stats.collectCount;
-          merchantData.value.rating = stats.rating;
+          stores.value = response.data;
         } else {
           toast.error('获取商家统计数据失败！');
         }
@@ -151,7 +150,7 @@ export default {
 
     return {
       merchant,
-      merchantData,
+      stores,
       formattedPhone,
       loading,
       defaultAvatar,
@@ -163,7 +162,7 @@ export default {
 </script>
 
 <style scoped>
-/* 保持所有原有样式不变 */
+/* 原有样式保持不变 */
 .container {
   max-width: 600px;
   margin: 0 auto;
@@ -279,25 +278,41 @@ export default {
   margin-right: 8px;
   color: #3498db;
 }
-/* 删除了 .edit-icon 样式 */
-/* .edit-icon {
-  margin-left: auto;
-  color: #3498db;
-  font-size: 16px;
-  cursor: pointer;
-} */
+
+/* 新增商铺列表样式 */
+.stores-container {
+  width: 92%;
+  max-width: 500px;
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transform: translateY(-50px);
+}
+
+.store-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 15px;
+}
+
+.store-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 /* 店铺数据栏样式 */
 .store-data-bar {
   display: flex;
   justify-content: space-around;
-  width: 92%;
-  max-width: 500px;
-  padding: 24px 0;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  margin: 20px auto;
-  transform: translateY(-50px);
+  width: 100%;
+  padding: 15px 0;
+  border-radius: 12px;
+  background: #f8f9fa;
 }
 
 .data-item {
@@ -406,9 +421,6 @@ export default {
   font-size: 20px;
   margin-bottom: 4px;
 }
-
-/* 删除了模态框相关的 CSS */
-/* .modal-overlay, .modal-content, .modal-item, .modal-buttons, .modal-content input, .modal-content textarea, .modal-buttons button { ... } */
 
 @media (max-width: 480px) {
   .container, .user-card, .button-section {

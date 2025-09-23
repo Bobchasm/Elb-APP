@@ -26,10 +26,10 @@ public interface MerchantInteractionMapper {
     // 获取某用户收藏的商家id列表
     @Select("SELECT merchant_id FROM merchant_interaction WHERE user_id = #{userId} AND collected = 1")
     List<Long> selectUserCollectionIds(@Param("userId") Long userId);
-    // 统计商家的点赞数
+    // 统计商铺的点赞数
     Integer countLikesByMerchantId(@Param("merchantId") Long merchantId);
 
-    // 统计商家的收藏数
+    // 统计商铺的收藏数
     Integer countCollectionsByMerchantId(@Param("merchantId") Long merchantId);
 
     // 根据商铺id获取商铺名

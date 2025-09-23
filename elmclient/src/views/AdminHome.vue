@@ -601,8 +601,8 @@ const initWebSocket = () => {
 }
 
 .admin-container {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: #ffffff;
+  color: write;
   line-height: 1.6;
   padding: 0;
   max-width: 100%;
@@ -612,9 +612,9 @@ const initWebSocket = () => {
 .container {
   max-width: 600px;
   margin: 0 auto;
-  background: #fff;
+  background: #ffffff;
   /* min-height: 100vh; */
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); */
   border-radius: 16px;
   padding-bottom: 65px;
   display: flex;

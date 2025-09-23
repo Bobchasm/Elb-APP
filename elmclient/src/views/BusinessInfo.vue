@@ -1,10 +1,11 @@
 <template>
     <div class="wrapper">
+        <BackButton :show-back-button="true" />
         <!-- header部分 -->
         <!-- 首页点进去后展示的内容 -->
-        <header>
-            <p>商家信息</p>
-        </header>
+        <div class="header">
+            <h1 class="title">商家信息</h1>
+        </div>
         <!-- 商家logo部分 -->
         <div class="business-logo">
             <img :src="business.businessImg || require('@/assets/default-business.png')" />
@@ -27,7 +28,8 @@
                     <span v-if="interactionLoading" class="loading-dots">...</span>
                 </div>
                 <div class="reaction" @click.stop="toggleFavorite"
-                    :class="{ 'active': isFavorited, 'disabled': interactionLoading }" :title="isFavorited ? '已收藏' : '收藏'">
+                    :class="{ 'active': isFavorited, 'disabled': interactionLoading }"
+                    :title="isFavorited ? '已收藏' : '收藏'">
                     <i class="fa fa-star"
                         :style="isFavorited ? 'color:#e74c3c' : interactionLoading ? 'color:#ddd' : 'color:#bbb'"></i>
                     <span v-if="interactionLoading" class="loading-dots">...</span>
@@ -101,9 +103,10 @@
 import { ref, onMounted, computed, watch, onErrorCaptured } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import request from "@/utils/request";
-
+import BackButton from "@/components/BackButton.vue";
 export default {
     name: "BusinessInfo",
+    components: { BackButton },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -380,6 +383,7 @@ export default {
 
                 console.log("互动状态API响应:", response);
 
+                // 根据实际API响应结构调整
                 if (response?.success) {
                     isLiked.value = Boolean(response.data?.liked);
                     isFavorited.value = Boolean(response.data?.collected);
@@ -395,10 +399,10 @@ export default {
                 isFavorited.value = false;
             }
         };
-
         // 更新互动状态到后端
         const updateInteraction = async (type, newValue) => {
             try {
+                // 如果已经是目标状态，则不再执行
                 if ((type === 'like' && isLiked.value === newValue) ||
                     (type === 'favorite' && isFavorited.value === newValue)) {
                     console.log(`已经是目标状态，无需更新: ${type}=${newValue}`);
@@ -442,6 +446,8 @@ export default {
             }
         };
 
+
+        // 修改切换函数，增加状态检查
         const toggleLike = async () => {
             if (interactionLoading.value) return;
             if (!userInfo.value?.id) {
@@ -459,6 +465,8 @@ export default {
             }
             await updateInteraction('favorite', !isFavorited.value);
         };
+
+
 
         // 获取商家信息
         const fetchBusinessInfo = async () => {
@@ -508,6 +516,7 @@ export default {
                 console.log("食品列表API响应:", response);
 
                 if (response.success) {
+                    // 过滤掉下架商品（shelveStatus === 0）
                     const availableFoods = response.data.filter(food => food.shelveStatus === 1);
                     console.log("可用食品列表:", availableFoods);
 
@@ -532,6 +541,7 @@ export default {
                 console.error("获取食品列表失败:", error);
                 console.error("错误详情:", error.response || error.message);
 
+                // 开发环境使用模拟数据
                 if (process.env.NODE_ENV === "development") {
                     console.log("使用模拟食品数据");
                     foodArr.value = [
@@ -606,6 +616,7 @@ export default {
             return settle;
         });
 
+        // 检查是否达到起送费
         const canOrder = computed(() => {
             const canOrder = totalPrice.value >= business.value.startPrice;
             console.log(`检查是否可下单: ${canOrder}`);
@@ -677,7 +688,7 @@ export default {
 }
 
 /****************** header部分 ******************/
-.wrapper header {
+/* .wrapper header {
     width: 100%;
     height: 12vw;
     background-color: #0097ff;
@@ -690,8 +701,24 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+} */
+.wrapper header {
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
 }
-
+.wrapper title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
+}
 /****************** 商家logo部分 ******************/
 .wrapper .business-logo {
     width: 100%;
@@ -895,3 +922,5 @@ export default {
     align-items: center;
 }
 </style>
+
+

@@ -68,7 +68,7 @@ public interface BusinessMapper {
     Integer getSalesCount(@Param("businessId") Long businessId);
 
     /**
-     * 根据用户ID查询对应的所有商家ID
+     * 根据用户ID查询对应的所有商铺ID
      * @param userId 用户ID
      * @return 商家ID列表
      */
@@ -94,7 +94,7 @@ public interface BusinessMapper {
     List<BusinessInfoDTO>getAllActiveBusinesses();
 
     @Select("<script>" +
-            "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain " +
+            "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain, status " +
             "FROM business " +
             "WHERE is_deleted = 0 " +
             "<if test='userId != null'>" +

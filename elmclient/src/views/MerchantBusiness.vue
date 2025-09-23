@@ -4,9 +4,24 @@
       <h1>我的商铺</h1>
     </div>
 
+    <!-- 状态筛选标签 -->
+    <div class="status-tabs">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.status" 
+        :class="{ active: activeTab === tab.status }"
+        @click="changeTab(tab.status)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+
     <div class="container wrapper">
       <ul class="business-list">
-        <li v-for="shop in shops" :key="shop?.id || index">
+        <li v-for="shop in filteredShops" :key="shop?.id || index">
+          <!-- <div class="status-badge" :class="getStatusClass(shop.status)">
+            {{ getStatusText(shop.status) }}
+          </div> -->
           <img
             :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'"
             :alt="shop?.businessName || '未命名商铺'" class="logo" @error="handleImageError">
@@ -25,7 +40,7 @@
             </div>
           </div>
           <div class="action-buttons">
-            <button class="edit-btn" @click="editShop(shop?.id || index)">编辑</button>
+            <button class="edit-btn" @click="editShop(shop?.id || index)" :disabled="shop.status === 2">编辑</button>
             <button class="delete-btn" @click="deleteShop(shop?.id || index)">删除</button>
           </div>
         </li>
@@ -55,7 +70,7 @@
 
 <script>
 import Swal from 'sweetalert2';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import Footer from '../components/Footer.vue';
 import AddressManager from '../components/AddressManager.vue';
 import request from '../utils/request';
@@ -65,7 +80,7 @@ import { toast } from '../utils/toast';
 export default {
   name: 'MyApplication',
   components: {
-    Footer,
+    AddressManager,
     AddressManager
   },
   setup() {
@@ -73,14 +88,57 @@ export default {
     const shops = ref([]);
     const loading = ref(false);
     const errorMessage = ref('');
+    const activeTab = ref(null); // 当前选中的状态标签
+
+    // 状态标签配置
+    const tabs = [
+      { status: null, label: '全部' },
+      { status: 0, label: '审核中' },
+      { status: 1, label: '已上线' },
+      { status: 2, label: '未通过' }
+    ];
 
     // 获取 token 的函数
     const getToken = () => {
       return localStorage.getItem('token') || sessionStorage.getItem('token');
     };
 
+    // 状态文本映射
+    const getStatusText = (status) => {
+      switch (status) {
+        case 0: return '审核中';
+        case 1: return '已上线';
+        case 2: return '审核未通过';
+        default: return '未知状态';
+      }
+    };
+
+    // 状态样式映射
+    const getStatusClass = (status) => {
+      switch (status) {
+        case 0: return 'status-pending';
+        case 1: return 'status-approved';
+        case 2: return 'status-rejected';
+        default: return '';
+      }
+    };
+
+    // 根据当前选中的标签筛选商铺
+    const filteredShops = computed(() => {
+      if (activeTab.value === null) {
+        return shops.value;
+      }
+      return shops.value.filter(shop => shop.status === activeTab.value);
+    });
+
+    // 切换标签
+    const changeTab = (status) => {
+      activeTab.value = status;
+      loadShops(status);
+    };
+
     // 加载商铺列表
-    const loadShops = async (status = 1) => {
+    const loadShops = async (status = null) => {
       loading.value = true;
       errorMessage.value = '';
 
@@ -100,12 +158,14 @@ export default {
         });
 
         if (userResponse && userResponse.id) {
-          // 使用用户ID获取商铺列表
+          // 根据状态参数获取商铺列表
+          const params = { userId: userResponse.id };
+          if (status !== null) {
+            params.status = status;
+          }
+
           const shopResponse = await request.get('/api/businesses/merchant', {
-            params: {
-              userId: userResponse.id,
-              status: status
-            },
+            params,
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -185,6 +245,14 @@ export default {
     // 申请新店
     const applyNewShop = async () => {
       try {
+        // 获取 token 放在最前面
+        const token = getToken();
+        if (!token) {
+          toast.warning('用户未登录，请先登录！');
+          router.push({ path: '/login' });
+          return;
+        }
+
         // 使用一个弹窗同时收集图片和其他信息
         const { value: formValues } = await Swal.fire({
           title: '申请新店',
@@ -243,24 +311,24 @@ export default {
               try {
                 const uploadResponse = await request.post('/upload', formData, {
                   headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}` // 使用外部的 token
                   }
                 });
 
-                console.log('提交的数据:', {
-                ...formValues,
-                userId: userResponse.id
-              });
-
-
-                if (uploadResponse && uploadResponse.success) {
+                if (uploadResponse && uploadResponse.success && uploadResponse.data) {
                   imageUrl = uploadResponse.data;
                 } else {
-                  Swal.showValidationMessage('图片上传失败');
+                  Swal.showValidationMessage(uploadResponse?.message || '图片上传失败');
                   return false;
                 }
               } catch (error) {
-                Swal.showValidationMessage('图片上传出错');
+                console.error('图片上传出错:', error.response || error);
+                Swal.showValidationMessage(
+                  error.response?.data?.message || 
+                  error.message || 
+                  '图片上传出错'
+                );
                 return false;
               }
             }
@@ -279,13 +347,6 @@ export default {
 
         if (formValues) {
           // 获取用户ID
-          const token = getToken();
-          if (!token) {
-            toast.warning('用户未登录，请先登录！');
-            router.push({ path: '/login' });
-            return;
-          }
-
           const userResponse = await request.get('/api/person', {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -311,37 +372,40 @@ export default {
 
           if (response && response.success) {
             toast.success('新店申请提交成功！');
-            // 刷新店铺列表
-            console.log('刷新店铺列表response.data', response.data);
-            console.log('刷新店铺列表response', response);
-            await loadShops();
+            await loadShops(activeTab.value);
           } else {
             toast.error(response?.message || '申请提交失败');
           }
         }
       } catch (error) {
         console.error('申请新店出错:', error);
-        toast.error('申请新店过程中出错，请重试');
+        toast.error(error.response?.data?.message || '申请新店过程中出错，请重试');
       }
     };
 
     // 页面加载时获取商铺列表
     onMounted(() => {
-      loadShops();
+      // 默认加载全部商铺
+      changeTab(null);
     });
 
     return {
       shops,
       loading,
       errorMessage,
+      tabs,
+      activeTab,
+      filteredShops,
       deleteShop,
       editShop,
-      applyNewShop
+      applyNewShop,
+      getStatusText,
+      getStatusClass,
+      changeTab
     };
   }
 };
 </script>
-
 
 <style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
@@ -382,12 +446,45 @@ body {
   margin: 0;
 }
 
+/* ----------------------- 状态标签栏 ----------------------- */
+.status-tabs {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 60px;
+  z-index: 99;
+}
+
+.status-tabs button {
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.status-tabs button.active {
+  color: #007bff;
+  background-color: #e6f2ff;
+  font-weight: bold;
+}
+
+.status-tabs button:hover {
+  background-color: #f0f0f0;
+}
+
 /* ----------------------- 店铺列表 ----------------------- */
 .container {
   max-width: 600px;
   margin: 0 auto;
   padding: 0 4vw;
-  padding-bottom: 120px;
+  padding-bottom: 140px;
 }
 
 .wrapper .business-list {
@@ -407,6 +504,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .wrapper .business-list li:hover {
@@ -470,9 +568,7 @@ body {
 
 .delivery-info-container {
   display: flex;
-  /* 让子元素横向排列 */
   gap: 10px;
-  /* 可选：设置间距 */
 }
 
 .action-buttons {
@@ -516,10 +612,40 @@ body {
   background-color: #dc3545;
 }
 
+.action-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ----------------------- 状态标签 ----------------------- */
+.status-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  z-index: 1;
+}
+
+.status-pending {
+  background-color: #ffc107; /* 黄色，表示审核中 */
+}
+
+.status-approved {
+  background-color: #28a745; /* 绿色，表示已上线 */
+}
+
+.status-rejected {
+  background-color: #dc3545; /* 红色，表示审核未通过 */
+}
+
 /* ----------------------- 底部按钮 ----------------------- */
 .footer-button-container {
   position: fixed;
-  bottom: 70px;
+  bottom: 80px;
   left: 0;
   right: 0;
   display: flex;
