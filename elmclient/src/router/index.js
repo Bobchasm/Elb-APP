@@ -155,6 +155,26 @@ const routes = [
     component:BusinessRegister
   },
   {
+    path:'/merchantOrders',
+    name:'MerchantOrders',
+    component:MerchantOrders
+  },
+  {
+    path:'/merchantProfile',
+    name:'MerchantProfile',
+    component:MerchantProfile
+  },
+  {
+    path:'/merchantBusiness',
+    name:'MerchantBusiness',
+    component:MerchantBusiness
+  },
+  {
+    path:'/merchantBusinessInfo',
+    name:'MerchantBusinessInfo',
+    component:MerchantBusinessInfo
+  },
+  {
     path:'/businessInformation',
     name:'BusinessInformation',
     component:BusinessInformation

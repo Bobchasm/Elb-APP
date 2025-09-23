@@ -4,6 +4,7 @@ package com.tju.elm_bk.controller;
 
 import com.tju.elm_bk.dto.MerchantInteractionDTO;
 import com.tju.elm_bk.service.MerchantInteractionService;
+import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.MerchantInteractionVO;
 import com.tju.elm_bk.vo.MerchantStatsVO;
 import com.tju.elm_bk.result.HttpResult;
@@ -36,8 +37,8 @@ public class MerchantInteractionController {
 
     @GetMapping("/collections/{userId}")
     @Operation(summary = "获取某用户收藏列表")
-    public HttpResult<List<MerchantInteractionVO>> getUserCollections(@PathVariable Long userId) {
-        List<MerchantInteractionVO> collections = interactionService.getUserCollections(userId);
+    public HttpResult<List<BusinessSearchVO>> getUserCollections(@PathVariable Long userId) {
+        List<BusinessSearchVO> collections = interactionService.getUserCollections(userId);
         return HttpResult.success(collections);
     }
 
@@ -48,12 +49,12 @@ public class MerchantInteractionController {
         return HttpResult.success(stats);
     }
 
-//    @GetMapping("/status")
-//    @Operation(summary = "获取用户商铺互动状态")
-//    public HttpResult<MerchantInteractionVO> getUserMerchantInteraction(
-//            @RequestParam Long userId,
-//            @RequestParam Long merchantId) {
-//        MerchantInteractionVO status = interactionService.getUserMerchantInteraction(userId, merchantId);
-//        return HttpResult.success(status);
-//    }
+    @GetMapping("/status")
+    @Operation(summary = "获取用户商铺互动状态")
+    public HttpResult<MerchantInteractionVO> getUserMerchantInteraction(
+            @RequestParam Long userId,
+            @RequestParam Long merchantId) {
+        MerchantInteractionVO status = interactionService.getUserMerchantInteraction(userId, merchantId);
+        return HttpResult.success(status);
+    }
 }

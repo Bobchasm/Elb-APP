@@ -1,39 +1,88 @@
 <template>
 	<div class="wrapper">
-		<header class="topbar"><p>订单详情</p></header>
-		<div class="content">
-			<!-- 顶部下单人信息 -->
-			<div class="user-info">
-				<p><span>下单人：</span>{{ userName || '-' }}</p>
-				<p><span>手机号：</span>{{ userPhone || '-' }}</p>
-				<p><span>地址：</span>{{ userAddress || '-' }}</p>
-				<p><span>状态：</span>{{ statusText }}</p>
+		<header class="topbar">
+			<p>订单详情</p>
+		</header>
+		
+		<!-- 加载提示 -->
+		<div v-if="loading" class="loading">
+			<p>加载中...</p>
+		</div>
+		
+		<!-- 错误提示 -->
+		<div v-else-if="error" class="error">
+			<p>{{ error }}</p>
+			<button @click="retry">重新加载</button>
+		</div>
+		
+		<!-- 订单详情内容 -->
+		<div v-else class="content">
+			<!-- 订单状态和基本信息 -->
+			<div class="order-status">
+				<div class="status-icon" :class="getStatusClass(orderDetail.orderState)">
+					<i class="fa" :class="getStatusIcon(orderDetail.orderState)"></i>
+				</div>
+				<div class="status-info">
+					<h3>{{ getStatusText(orderDetail.orderState) }}</h3>
+					<p>订单号: {{ orderDetail.id || '-' }}</p>
+					<p>下单时间: {{ formatTime(orderDetail.orderDate) }}</p>
+				</div>
 			</div>
 
-			<!-- 商家与订单信息 -->
-			<div class="shop-info">
-				<p class="shop-name">{{ shopName || '-' }}</p>
-				<p class="shop-addr">{{ shopAddress || '地址未知' }}</p>
+			<!-- 收货人信息 -->
+			<div class="info-section">
+				<h3 class="section-title">收货信息</h3>
+				<div class="info-content">
+					<p><span>收货人:</span> {{ orderDetail.contactName || '-' }} {{ getGenderText(orderDetail.contactSex) }}</p>
+					<p><span>联系电话:</span> {{ orderDetail.contactTel || '-' }}</p>
+					<p><span>配送地址:</span> {{ orderDetail.address || '-' }}</p>
+				</div>
 			</div>
 
-			<!-- 菜品明细 -->
-			<ul class="items">
-				<li v-for="(it, idx) in items" :key="idx" class="row">
-					<span class="food-name">{{ it.foodName }}</span>
-					<span class="food-qty">× {{ it.quantity }}</span>
-					<span class="food-price">¥ {{ Number(it.foodPrice).toFixed(2) }}</span>
-				</li>
-				<li class="row fee" v-if="deliveryPrice != null">
-					<span class="food-name">配送费</span>
-					<span class="spacer"></span>
-					<span class="food-price">¥ {{ Number(deliveryPrice).toFixed(2) }}</span>
-				</li>
-			</ul>
+			<!-- 商家信息 -->
+			<div class="info-section">
+				<h3 class="section-title">商家信息</h3>
+				<div class="info-content">
+					<p><span>商家名称:</span> {{ orderDetail.businessName || '-' }}</p>
+				</div>
+			</div>
 
-			<!-- 合计 -->
-			<div class="total">
-				<span>合计</span>
-				<strong>¥ {{ Number(total).toFixed(2) }}</strong>
+			<!-- 商品明细 -->
+			<div class="info-section">
+				<h3 class="section-title">商品明细</h3>
+				<div class="items-list">
+					<div v-for="(item, index) in orderDetail.foodList" :key="index" class="item-row">
+						<div class="item-info">
+							<span class="item-name">{{ item.foodName || '未知商品' }} &#165;{{ item.foodPrice }} &nbsp; × {{ item.quantity || 0 }}</span>
+						</div>
+						<div class="item-price">¥ {{ (item.foodPrice * item.quantity).toFixed(2) }}</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 费用汇总 -->
+			<div class="info-section">
+				<h3 class="section-title">费用明细</h3>
+				<div class="price-details">
+					<div class="price-row">
+						<span>商品金额</span>
+						<span>¥ {{ itemsTotal.toFixed(2) }}</span>
+					</div>
+					<div class="price-row">
+						<span>配送费</span>
+						<span>&#165;{{ orderDetail.deliveryPrice || '0.00' }}</span>
+					</div>
+					<div class="price-row total">
+						<span>实付款</span>
+						<span>¥ {{ orderDetail.orderTotal.toFixed(2) }}</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- 操作按钮 -->
+			<div v-if="orderDetail.orderState === 0" class="action-buttons">
+				<button class="btn cancel-btn" @click="cancelOrder">取消订单</button>
+				<button class="btn pay-btn" @click="payOrder">立即支付</button>
 			</div>
 		</div>
 	</div>
@@ -42,7 +91,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import request from '../utils/request';
 
 export default {
 	name: 'ListDetail',
@@ -50,108 +99,161 @@ export default {
 		const route = useRoute();
 		const router = useRouter();
 		const orderId = ref(null);
-		const order = ref(null);
-		const items = ref([]);
-		const shopName = ref('');
-		const shopAddress = ref('');
-		const deliveryPrice = ref(0);
-		const userName = ref('');
-		const userPhone = ref('');
-		const userAddress = ref('');
-		const orderState = ref(null);
+		const orderDetail = ref({});
+		const loading = ref(true);
+		const error = ref('');
+		
+		// 配送费（这里假设固定值，实际应该从API获取）
+		const deliveryPrice = ref(5);
 
-		const statusText = computed(() => {
-			// 优先字符串状态
-			if (order.value && typeof order.value.status === 'string') return order.value.status;
-			if (orderState.value === 1) return '已接单';
-			if (orderState.value === -1) return '已取消';
-			if (orderState.value === 2) return '已完成';
-			return '待支付';
+		// 获取订单详情
+		const fetchOrderDetail = async () => {
+			loading.value = true;
+			error.value = '';
+			
+			try {
+				const response = await request.get("/api/orders/detail", {
+					params: { orderId: orderId.value }
+				});
+				
+				if (response.success) {
+					orderDetail.value = response.data || {};
+					console.log("订单详情:", orderDetail.value);
+				} else {
+					error.value = '获取订单详情失败: ' + response.message;
+				}
+			} catch (err) {
+				console.error('获取订单详情失败:', err);
+				error.value = '网络错误，请稍后重试';
+			} finally {
+				loading.value = false;
+			}
+		};
+
+		// 重新加载
+		const retry = () => {
+			fetchOrderDetail();
+		};
+
+		// 获取状态文本
+		const getStatusText = (state) => {
+			const statusMap = {
+				0: "待支付",
+				1: "待接单", 
+				2: "已接单",
+				3: "已完成",
+				4: "已取消"
+			};
+			return statusMap[state] || "未知状态";
+		};
+
+		// 获取状态样式类
+		const getStatusClass = (state) => {
+			const classMap = {
+				0: "status-unpaid",
+				1: "status-pending",
+				2: "status-accepted", 
+				3: "status-done",
+				4: "status-canceled"
+			};
+			return classMap[state] || "status-unknown";
+		};
+
+		// 获取状态图标
+		const getStatusIcon = (state) => {
+			const iconMap = {
+				0: "fa-clock-o",
+				1: "fa-hourglass-half",
+				2: "fa-check-circle",
+				3: "fa-check-circle",
+				4: "fa-times-circle"
+			};
+			return iconMap[state] || "fa-question-circle";
+		};
+
+		// 获取性别文本
+		const getGenderText = (gender) => {
+			return gender === 1 ? '先生' : gender === 2 ? '女士' : '';
+		};
+
+		// 格式化时间
+		const formatTime = (timeString) => {
+			if (!timeString) return "-";
+			try {
+				const date = new Date(timeString);
+				return date.toLocaleString('zh-CN');
+			} catch (e) {
+				return timeString;
+			}
+		};
+
+		// 计算商品总金额
+		const itemsTotal = computed(() => {
+			if (!orderDetail.value.foodList || !Array.isArray(orderDetail.value.foodList)) {
+				return 0;
+			}
+			return orderDetail.value.foodList.reduce((total, item) => {
+				return total + (item.foodPrice || 0) * (item.quantity || 0);
+			}, 0);
 		});
 
-		onMounted(async () => {
-			orderId.value = parseInt(route.query.orderId);
+		// 取消订单
+		const cancelOrder = async () => {
+			if (!confirm("确定要取消此订单吗？")) return;
+			
+			try {
+				const response = await request.post("/api/orders/cancel", { 
+					orderId: orderId.value 
+				});
+				
+				if (response.data.success) {
+					alert("订单取消成功");
+					// 重新加载订单详情
+					fetchOrderDetail();
+				} else {
+					alert("取消失败: " + response.data.message);
+				}
+			} catch (err) {
+				console.error("取消订单失败:", err);
+				alert("取消订单失败，请稍后重试");
+			}
+		};
+
+		// 支付订单
+		const payOrder = () => {
+			router.push({ 
+				path: "/payment", 
+				query: { orderId: orderId.value } 
+			});
+		};
+
+		onMounted(() => {
+			orderId.value = route.query.orderId;
 			if (!orderId.value) {
-				router.push({ path: '/orderList' });
+				error.value = "订单ID不能为空";
+				loading.value = false;
 				return;
 			}
-			// 先尝试从 sessionStorage 回填（虚拟订单或接口不可用时）
-			let stored = null;
-			try { stored = JSON.parse(sessionStorage.getItem('selectedOrder') || 'null'); } catch (e) { stored = null; }
-			if (stored && stored.orderId === orderId.value) {
-				order.value = stored;
-				orderState.value = order.value.orderState ?? null;
-				userName.value = order.value.userName || (order.value.user && order.value.user.userName) || '';
-				userPhone.value = order.value.userPhone || (order.value.user && order.value.user.userTel) || '';
-				userAddress.value = order.value.userAddress || (order.value.user && order.value.user.userAddress) || '';
-				if (order.value.business) {
-					shopName.value = order.value.business.businessName || '';
-					shopAddress.value = order.value.business.businessAddress || '';
-					deliveryPrice.value = order.value.business.deliveryPrice ?? 0;
-				}
-				items.value = Array.isArray(order.value.detailet) ? order.value.detailet : [];
-			}
-			try {
-				// 基本订单信息
-				const orderResp = await axios.post('OrdersController/getOrderById', { orderId: orderId.value });
-				if (orderResp && orderResp.data) {
-					order.value = orderResp.data;
-					orderState.value = order.value.orderState ?? orderState.value;
-					// 顶部用户信息（兼容字段）
-					userName.value = order.value.userName || (order.value.user && order.value.user.userName) || userName.value;
-					userPhone.value = order.value.userPhone || (order.value.user && order.value.user.userTel) || userPhone.value;
-					userAddress.value = order.value.userAddress || (order.value.user && order.value.user.userAddress) || userAddress.value;
-				}
-
-				// 商家信息
-				if (order.value && order.value.business) {
-					shopName.value = order.value.business.businessName || '';
-					shopAddress.value = order.value.business.businessAddress || '';
-					deliveryPrice.value = order.value.business.deliveryPrice ?? 0;
-				}
-
-				// 明细
-				try {
-					const detailResp = await axios.post('OrdersController/listOrderDetailetByOrderId', { orderId: orderId.value });
-					if (detailResp && Array.isArray(detailResp.data)) {
-						items.value = detailResp.data;
-					} else if (!items.value.length && stored && Array.isArray(stored.detailet)) {
-						items.value = stored.detailet;
-					}
-				} catch (e) {
-					// 使用本地存储明细兜底
-					if (!items.value.length && stored && Array.isArray(stored.detailet)) {
-						items.value = stored.detailet;
-					}
-				}
-
-				// 如果总价或配送费缺失，尽量从订单对象兜底
-				if ((deliveryPrice.value == null || isNaN(deliveryPrice.value)) && order.value.business) {
-					deliveryPrice.value = order.value.business.deliveryPrice ?? 0;
-				}
-			} catch (e) {
-				console.warn('接口获取失败，已尝试使用本地数据', e);
-				if (!order.value) {
-					alert('加载订单详情失败');
-				}
-			}
+			
+			fetchOrderDetail();
 		});
-
-		const itemsTotal = computed(() => items.value.reduce((sum, it) => sum + Number(it.foodPrice) * Number(it.quantity), 0));
-		const total = computed(() => Number(itemsTotal.value) + Number(deliveryPrice.value || 0));
 
 		return {
 			orderId,
-			order,
-			items,
-			shopName,
-			shopAddress,
+			orderDetail,
+			loading,
+			error,
 			deliveryPrice,
-			userName,
-			userPhone,
-			userAddress,
-			statusText,
-			total
+			itemsTotal,
+			fetchOrderDetail,
+			retry,
+			getStatusText,
+			getStatusClass,
+			getStatusIcon,
+			getGenderText,
+			formatTime,
+			cancelOrder,
+			payOrder
 		};
 	}
 };
@@ -161,8 +263,9 @@ export default {
 .wrapper {
 	width: 100%;
 	min-height: 100vh;
-	background: #fff;
+	background: #f5f7fa;
 }
+
 .topbar {
 	width: 100%;
 	height: 12vw;
@@ -177,56 +280,212 @@ export default {
 	justify-content: center;
 	align-items: center;
 }
+
 .content {
-	margin-top: 12vw;
+	padding-top: 12vw;
+	padding-bottom: 20vw;
+}
+
+.loading, .error {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 20vw 4vw;
+	font-size: 4vw;
+	color: #666;
+}
+
+.error button {
+	margin-top: 4vw;
+	padding: 2vw 6vw;
+	background: #409eff;
+	color: white;
+	border: none;
+	border-radius: 1vw;
+	cursor: pointer;
+}
+
+/* 订单状态区域 */
+.order-status {
+	display: flex;
+	align-items: center;
+	padding: 6vw 4vw;
+	background: white;
+	margin-bottom: 3vw;
+}
+
+.status-icon {
+	width: 16vw;
+	height: 16vw;
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-right: 4vw;
+	font-size: 8vw;
+}
+
+.status-unpaid {
+	background: #fff0f0;
+	color: #ff4d4f;
+}
+
+.status-pending {
+	background: #e6f7ff;
+	color: #1890ff;
+}
+
+.status-accepted {
+	background: #f6ffed;
+	color: #52c41a;
+}
+
+.status-done {
+	background: #f9f9f9;
+	color: #999;
+}
+
+.status-canceled {
+	background: #f9f9f9;
+	color: #999;
+}
+
+.status-unknown {
+	background: #f9f9f9;
+	color: #666;
+}
+
+.status-info h3 {
+	font-size: 4.5vw;
+	color: #333;
+	margin-bottom: 1vw;
+	font-weight: bold;
+}
+
+.status-info p {
+	font-size: 3.6vw;
+	color: #666;
+	margin: 0.5vw 0;
+}
+
+/* 信息区块 */
+.info-section {
+	background: white;
+	margin-bottom: 3vw;
 	padding: 4vw;
 }
-.user-info p {
-	font-size: 3.6vw;
+
+.section-title {
+	font-size: 4.2vw;
 	color: #333;
-	margin: 1vw 0;
+	margin-bottom: 3vw;
+	font-weight: bold;
+	border-bottom: 1px solid #f0f0f0;
+	padding-bottom: 2vw;
 }
-.user-info span {
-	color: #999;
-	margin-right: 1vw;
-}
-.shop-info {
-	margin-top: 3vw;
-	padding: 3vw;
-	background: #fafafa;
-	border-radius: 1.2vw;
-}
-.shop-name {
-	font-size: 4vw;
+
+.info-content p {
+	font-size: 3.8vw;
 	color: #333;
+	margin: 2vw 0;
+	display: flex;
 }
-.shop-addr {
-	font-size: 3.2vw;
-	color: #888;
-	margin-top: 1vw;
+
+.info-content span {
+	color: #666;
+	margin-right: 2vw;
+	min-width: 20vw;
 }
-.items {
-	margin-top: 4vw;
+
+/* 商品列表 */
+.items-list {
+	border-top: 1px solid #f0f0f0;
 }
-.row {
+
+.item-row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 2.4vw 0;
-	border-bottom: 1px solid #f2f2f2;
+	padding: 3vw 0;
+	border-bottom: 1px solid #f0f0f0;
 }
-.food-name { font-size: 3.6vw; color: #333; }
-.food-qty { font-size: 3.2vw; color: #666; }
-.food-price { font-size: 3.6vw; color: #333; }
-.fee .spacer { flex: 1; }
-.total {
+
+.item-info {
+	flex: 1;
+}
+
+.item-name {
+	font-size: 3.8vw;
+	color: #333;
+}
+
+.item-quantity {
+	font-size: 3.4vw;
+	color: #666;
+	margin-left: 2vw;
+}
+
+.item-price {
+	font-size: 3.8vw;
+	color: #333;
+	font-weight: 500;
+}
+
+/* 价格明细 */
+.price-details {
+	border-top: 1px solid #f0f0f0;
+	padding-top: 3vw;
+}
+
+.price-row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding-top: 3.2vw;
-	font-size: 4vw;
+	padding: 2vw 0;
+	font-size: 3.8vw;
+	color: #333;
 }
-.total strong { color: #1e80ff; }
+
+.price-row.total {
+	border-top: 1px solid #f0f0f0;
+	margin-top: 2vw;
+	padding-top: 3vw;
+	font-weight: bold;
+	font-size: 4.2vw;
+	color: #ff6b00;
+}
+
+/* 操作按钮 */
+.action-buttons {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: white;
+	padding: 3vw 4vw;
+	display: flex;
+	justify-content: flex-end;
+	gap: 3vw;
+	border-top: 1px solid #f0f0f0;
+}
+
+.btn {
+	padding: 3vw 6vw;
+	border-radius: 1.6vw;
+	font-size: 3.8vw;
+	cursor: pointer;
+	border: none;
+}
+
+.cancel-btn {
+	background: #fff;
+	color: #666;
+	border: 1px solid #ddd;
+}
+
+.pay-btn {
+	background: #409eff;
+	color: #fff;
+}
 </style>
-
-

@@ -93,52 +93,55 @@
         <!-- search部分 -->
         <div class="search">
             <div class="search-fixed-top" ref="fixedBox">
-                <div class="search-box" @click="navigateToSearch">
-                    <i class="fa fa-search"></i>搜索饿了么商家、商品名称
+                <div class="search-box">
+                    <i class="fa fa-search"></i>
+                    <input v-model="searchKeyword" type="text" placeholder="搜索饿了么商家、商品名称" @keyup.enter="performSearch" />
+                    <button @click="performSearch" class="search-btn">搜索</button>
                 </div>
             </div>
         </div>
 
+        
         <!-- 点餐分类部分 -->
         <ul class="foodtype">
             <li @click="toBusinessList(1)">
-                <img src="../assets/dcfl01.png">
+                <img src="@/assets/dcfl01.png" alt="美食">
                 <p>美食</p>
             </li>
             <li @click="toBusinessList(2)">
-                <img src="../assets/dcfl02.png">
+                <img src="@/assets/dcfl02.png" alt="早餐">
                 <p>早餐</p>
             </li>
             <li @click="toBusinessList(3)">
-                <img src="../assets/dcfl03.png">
+                <img src="@/assets/dcfl03.png" alt="跑腿代购">
                 <p>跑腿代购</p>
             </li>
             <li @click="toBusinessList(4)">
-                <img src="../assets/dcfl04.png">
+                <img src="@/assets/dcfl04.png" alt="汉堡披萨">
                 <p>汉堡披萨</p>
             </li>
             <li @click="toBusinessList(5)">
-                <img src="../assets/dcfl05.png">
+                <img src="@/assets/dcfl05.png" alt="甜品饮品">
                 <p>甜品饮品</p>
             </li>
             <li @click="toBusinessList(6)">
-                <img src="../assets/dcfl06.png">
+                <img src="@/assets/dcfl06.png" alt="速食简餐">
                 <p>速食简餐</p>
             </li>
             <li @click="toBusinessList(7)">
-                <img src="../assets/dcfl07.png">
+                <img src="@/assets/dcfl07.png" alt="地方小吃">
                 <p>地方小吃</p>
             </li>
             <li @click="toBusinessList(8)">
-                <img src="../assets/dcfl08.png">
+                <img src="@/assets/dcfl08.png" alt="米粉面馆">
                 <p>米粉面馆</p>
             </li>
             <li @click="toBusinessList(9)">
-                <img src="../assets/dcfl09.png">
+                <img src="@/assets/dcfl09.png" alt="包子粥铺">
                 <p>包子粥铺</p>
             </li>
             <li @click="toBusinessList(10)">
-                <img src="../assets/dcfl10.png">
+                <img src="@/assets/dcfl10.png" alt="炸鸡炸串">
                 <p>炸鸡炸串</p>
             </li>
         </ul>
@@ -153,7 +156,7 @@
         <!-- 超级会员部分 -->
         <div class="supermember">
             <div class="left">
-                <img src="../assets/super_member.png">
+                <img src="@/assets/super_member.png" alt="超级会员">
                 <h3>超级会员</h3>
                 <p>&#8226; 每月享超值权益</p>
             </div>
@@ -171,24 +174,126 @@
 
         <!-- 推荐方式部分 -->
         <ul class="recommendtype">
-            <li>综合排序<i class="fa fa-caret-down"></i></li>
-            <li>距离最近</li>
-            <li>销量最高</li>
-            <li>筛选<i class="fa fa-filter"></i></li>
+            <li 
+                :class="{ active: sortBy === 'default' }" 
+                @click="setSortBy('default')"
+            >
+                综合排序<i class="fa fa-caret-down"></i>
+            </li>
+            <!-- <li 
+                :class="{ active: sortBy === 'distance' }" 
+                @click="setSortBy('distance')"
+            >
+                距离最近
+            </li> -->
+            <li 
+                :class="{ active: sortBy === 'sales' }" 
+                @click="setSortBy('sales')"
+            >
+                销量最高
+            </li>
+            <li 
+                :class="{ active: showFilter }" 
+                @click="toggleFilter"
+            >
+                筛选<i class="fa fa-filter"></i>
+            </li>
         </ul>
+
+        <!-- 筛选弹窗 -->
+        <transition name="fade">
+            <div v-if="showFilter" class="filter-modal" @click.self="hideFilter">
+                <div class="filter-container">
+                    <div class="filter-header">
+                        <h3>筛选条件</h3>
+                        <button class="close-btn" @click="hideFilter">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="filter-content">
+                        <!-- 免配送费筛选 -->
+                        <div class="filter-section">
+                            <h4>配送费</h4>
+                            <label class="filter-option">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="filters.freeDelivery"
+                                    @change="applyFilters"
+                                >
+                                <span>免配送费</span>
+                            </label>
+                        </div>
+
+                        <!-- 起送价筛选 -->
+                        <div class="filter-section">
+                            <h4>起送价</h4>
+                            <div class="price-range">
+                                <label class="filter-option">
+                                    <input 
+                                        type="radio" 
+                                        name="startPrice" 
+                                        value="0"
+                                        v-model="filters.startPrice"
+                                        @change="applyFilters"
+                                    >
+                                    <span>不限</span>
+                                </label>
+                                <label class="filter-option">
+                                    <input 
+                                        type="radio" 
+                                        name="startPrice" 
+                                        value="20"
+                                        v-model="filters.startPrice"
+                                        @change="applyFilters"
+                                    >
+                                    <span>20元以下</span>
+                                </label>
+                                <label class="filter-option">
+                                    <input 
+                                        type="radio" 
+                                        name="startPrice" 
+                                        value="30"
+                                        v-model="filters.startPrice"
+                                        @change="applyFilters"
+                                    >
+                                    <span>30元以下</span>
+                                </label>
+                                <label class="filter-option">
+                                    <input 
+                                        type="radio" 
+                                        name="startPrice" 
+                                        value="50"
+                                        v-model="filters.startPrice"
+                                        @change="applyFilters"
+                                    >
+                                    <span>50元以下</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-footer">
+                        <button class="btn-reset" @click="resetFilters">重置</button>
+                        <button class="btn-confirm" @click="confirmFilters">确定</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
         <!-- 推荐商家列表部分 -->
         <ul class="business-list">
-            <li v-for="business in businessList" :key="business.businessId" @click="toBusinessInfo(business.businessId)">
+            <li v-for="business in businessList" :key="business.id || business.businessId" @click="toBusinessInfo(business.id || business.businessId)">
                 <div class="business-info">
-                    <img :src="business.businessImg" @error="handleImageError" :alt="business.businessName">
+                    <img :src="business.businessImg === 'string' ? require('@/assets/default-business.png') : business.businessImg" @error="handleImageError" :alt="business.businessName">
                     <div class="business-info-detail">
-                        <h3>{{ business.businessName }}</h3>
+                        <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
                         <div class="business-info-rating">
-                            <span class="rating-number">评分：{{ getBusinessRating(business.businessId) }}</span>
+                            <span class="rating-number">评分：{{ business.score || getBusinessRating(business.id || business.businessId) }}</span>
+                            <span class="sales-number">销量：{{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
-                            <span>起送 ¥{{ business.starPrice }}</span>
+                            <span>起送 ¥{{ business.startPrice || business.starPrice }}</span>
                             <span>配送 ¥{{ business.deliveryPrice }}</span>
                         </div>
                         <div class="business-info-promotion">
@@ -224,7 +329,14 @@ export default {
         const businessList = ref([]);
         const ratingMap = ref({});
         const currentLocation = ref('定位中...');
+        const searchKeyword = ref('');
+        const sortBy = ref('default');
         const showPicker = ref(false);
+        const showFilter = ref(false);
+        const filters = ref({
+            freeDelivery: false,
+            startPrice: '0'
+        });
         const loading = ref(false);
         const locationData = ref([]);
         const currentLevel = ref(0);
@@ -272,7 +384,7 @@ export default {
         const getCurrentLocation = async () => {
             try {
                 // 使用高德地图IP定位API
-                const response = await axios.get(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
+                const response = await request.get(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
                 if (response.data.status === '1' && response.data.city) {
                     currentLocation.value = response.data.city;
                     // 初始化选择位置
@@ -307,7 +419,7 @@ export default {
         const loadProvinces = async () => {
             loading.value = true;
             try {
-                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=中国&subdistrict=1`);
+                const response = await request.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=中国&subdistrict=1`);
                 if (response.data.status === '1') {
                     locationData.value = response.data.districts[0].districts;
                     currentLevel.value = 0;
@@ -323,7 +435,7 @@ export default {
         const loadCities = async (provinceCode, provinceName) => {
             loading.value = true;
             try {
-                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${provinceCode}&subdistrict=1`);
+                const response = await request.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${provinceCode}&subdistrict=1`);
                 if (response.data.status === '1' && response.data.districts[0].districts) {
                     locationData.value = response.data.districts[0].districts;
                     currentLevel.value = 1;
@@ -343,7 +455,7 @@ export default {
         const loadDistricts = async (cityCode, cityName) => {
             loading.value = true;
             try {
-                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${cityCode}&subdistrict=1`);
+                const response = await request.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${cityCode}&subdistrict=1`);
                 if (response.data.status === '1' && response.data.districts[0].districts) {
                     locationData.value = response.data.districts[0].districts;
                     currentLevel.value = 2;
@@ -616,21 +728,125 @@ const getDisplayText = (location) => {
             router.push({ path: '/search' });
         };
 
+        // 执行搜索
+        const performSearch = async () => {
+            if (searchKeyword.value.trim() !== '') {
+                try {
+                    // 构建查询参数
+                    const params = {
+                        keyword: searchKeyword.value.trim()
+                    };
+
+                    // 根据排序方式添加参数
+                    if (sortBy.value === 'score') {
+                        params.isScore = 1;
+                        params.isSales = 0;
+                    } else if (sortBy.value === 'sales') {
+                        params.isScore = 0;
+                        params.isSales = 1;
+                    } else if (sortBy.value === 'distance') {
+                        params.isScore = 0;
+                        params.isSales = 0;
+                        // 距离排序可能需要后端支持，这里先按评分排序
+                        params.isScore = 1;
+                    } else {
+                        params.isScore = 0;
+                        params.isSales = 0;
+                    }
+
+                    console.log('搜索参数:', params);
+                    console.log('请求URL:', 'http://localhost:8080/api/businesses/search');
+
+                    // 调用搜索接口
+                    const response = await request.get('/api/businesses/search', { params });
+
+                    console.log('搜索响应:', response);
+                    console.log('响应状态:', response?.status);
+                    console.log('响应数据:', response?.data);
+
+                    // 更新商家列表 - 根据API文档的响应格式处理
+                    if (response && response.success && response.data && Array.isArray(response.data)) {
+                        businessList.value = response.data;
+                        computeRatings();
+                    } else {
+                        console.warn('搜索响应格式不正确:', response);
+                        businessList.value = [];
+                    }
+
+                } catch (error) {
+                    console.error('搜索失败:', error);
+                    console.error('错误详情:', error.response?.data);
+                    console.error('错误状态:', error.response?.status);
+                    console.error('错误信息:', error.message);
+                    // 如果搜索失败，显示所有商家
+                    getBusinessList();
+                }
+            } else {
+                // 如果搜索关键词为空，显示所有商家
+                getBusinessList();
+            }
+        };
+
+        // 设置排序方式
+        const setSortBy = (type) => {
+            sortBy.value = type;
+            console.log('设置排序方式:', type);
+            
+            if (searchKeyword.value.trim() !== '') {
+                performSearch(); // 重新搜索以应用新的排序
+            } else {
+                getBusinessList(); // 如果没有搜索关键词，重新加载所有商家
+            }
+        };
+
         // 获取商家列表
         const getBusinessList = () => {
-            axios.get('BusinessController/listBusinessByOrderTypeId?orderTypeId=1')
+            console.log('开始获取商家列表...');
+            // 尝试使用新的API路径
+            request.get('/api/businesses', { params: { orderTypeId: 1 } })
                 .then(response => {
-                    businessList.value = response.data;
-                    computeRatings();
+                    console.log('商家列表响应:', response);
+                    // 检查响应数据结构
+                    if (response && response.success && response.data && Array.isArray(response.data)) {
+                        businessList.value = response.data;
+                        console.log('商家列表数据:', businessList.value);
+                        computeRatings();
+                    } else if (response && Array.isArray(response)) {
+                        // 如果直接返回数组
+                        businessList.value = response;
+                        console.log('商家列表数据:', businessList.value);
+                        computeRatings();
+                    } else {
+                        console.warn('响应数据为空或格式不正确:', response);
+                        businessList.value = [];
+                    }
                 })
                 .catch(error => {
                     console.error('获取商家列表失败:', error);
+                    // 如果新接口失败，尝试使用搜索接口获取所有商家
+                    console.log('尝试使用搜索接口获取商家列表...');
+                    request.get('/api/businesses/search', { params: { keyword: '', isScore: 0, isSales: 0 } })
+                        .then(searchResponse => {
+                            console.log('搜索接口响应:', searchResponse);
+                            if (searchResponse && searchResponse.success && searchResponse.data && Array.isArray(searchResponse.data)) {
+                                businessList.value = searchResponse.data;
+                                console.log('通过搜索接口获取的商家列表:', businessList.value);
+                                computeRatings();
+                            } else {
+                                console.warn('搜索接口响应格式不正确:', searchResponse);
+                                businessList.value = [];
+                            }
+                        })
+                        .catch(searchError => {
+                            console.error('搜索接口也失败了:', searchError);
+                            businessList.value = [];
+                        });
                 });
         };
 
         // 处理图片加载失败
         const handleImageError = (e) => {
-            e.target.src = '../assets/default-business.png';
+            e.target.src = require('@/assets/default-business.png');
         };
         
         // 跳转到商家详情页
@@ -639,6 +855,57 @@ const getDisplayText = (location) => {
                 path: '/businessInfo',
                 query: { businessId }
             });
+        };
+
+        // 筛选功能
+        const toggleFilter = () => {
+            showFilter.value = !showFilter.value;
+        };
+
+        const hideFilter = () => {
+            showFilter.value = false;
+        };
+
+        const applyFilters = () => {
+            console.log('应用筛选条件:', filters.value);
+            // 这里可以添加筛选逻辑
+            filterBusinessList();
+        };
+
+        const resetFilters = () => {
+            filters.value = {
+                freeDelivery: false,
+                startPrice: '0'
+            };
+            applyFilters();
+        };
+
+        const confirmFilters = () => {
+            applyFilters();
+            hideFilter();
+        };
+
+        // 筛选商家列表
+        const filterBusinessList = () => {
+            let filteredList = [...businessList.value];
+
+            // 免配送费筛选
+            if (filters.value.freeDelivery) {
+                filteredList = filteredList.filter(business => 
+                    business.deliveryPrice === 0 || business.deliveryPrice === null
+                );
+            }
+
+            // 起送价筛选
+            if (filters.value.startPrice !== '0') {
+                const maxPrice = parseInt(filters.value.startPrice);
+                filteredList = filteredList.filter(business => 
+                    business.startPrice <= maxPrice
+                );
+            }
+
+            businessList.value = filteredList;
+            console.log('筛选后的商家列表:', filteredList);
         };
 
         return {
@@ -667,7 +934,18 @@ const getDisplayText = (location) => {
             selectLocation,
             isSelected,
             confirmLocation,
-            getDisplayText
+            getDisplayText,
+            searchKeyword,
+            sortBy,
+            performSearch,
+            setSortBy,
+            showFilter,
+            filters,
+            toggleFilter,
+            hideFilter,
+            applyFilters,
+            resetFilters,
+            confirmFilters
         };
     },
     components: {
@@ -773,8 +1051,9 @@ const getDisplayText = (location) => {
     border-radius: 2px;
 
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    padding: 0 2vw;
 
     font-size: 3.5vw;
     color: #AEAEAE;
@@ -783,8 +1062,75 @@ const getDisplayText = (location) => {
     user-select: none;
 }
 
+.wrapper .search .search-fixed-top .search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 3.5vw;
+    color: #333;
+    margin: 0 1vw;
+}
+
+.wrapper .search .search-fixed-top .search-box input::placeholder {
+    color: #AEAEAE;
+}
+
+.wrapper .search .search-fixed-top .search-box .search-btn {
+    background: #0097ff;
+    color: white;
+    border: none;
+    padding: 1.5vw 3vw;
+    border-radius: 1vw;
+    font-size: 3vw;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.wrapper .search .search-fixed-top .search-box .search-btn:hover {
+    background: #0080e0;
+}
+
 .wrapper .search .search-fixed-top .search-box .fa-search {
     margin-right: 1vw;
+}
+
+/* 排序选项样式 */
+.sort-options {
+    width: 100%;
+    padding: 3vw;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 2vw;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.sort-buttons button {
+    padding: 2vw 4vw;
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #666;
+    border-radius: 2vw;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 3.2vw;
+    min-width: 20vw;
+}
+
+.sort-buttons button:hover {
+    border-color: #0097ff;
+    color: #0097ff;
+}
+
+.sort-buttons button.active {
+    background-color: #0097ff;
+    color: white;
+    border-color: #0097ff;
 }
 
 /****************** 点餐分类部分 ******************/
@@ -836,7 +1182,7 @@ const getDisplayText = (location) => {
     height: 29vw;
 
     /*此三个样式组合，可以保证背景图片充满整个容器*/
-    background-image: url(../assets/index_banner.png);
+    background-image: url(@/assets/index_banner.png);
     background-repeat: no-repeat;
     background-size: cover;
 
@@ -1006,6 +1352,12 @@ const getDisplayText = (location) => {
 .wrapper .business-list li .business-info .business-info-rating .rating-number {
     font-size: 2.8vw;
     color: #999;
+}
+
+.wrapper .business-list li .business-info .business-info-rating .sales-number {
+    font-size: 2.8vw;
+    color: #999;
+    margin-left: 2vw;
 }
 
 .wrapper .business-list li .business-info .business-info-rating .sales {
@@ -1280,5 +1632,170 @@ const getDisplayText = (location) => {
 
 .fade-enter-from, .fade-leave-to {
     opacity: 0;
+}
+
+/* 推荐方式样式 */
+.wrapper .recommendtype {
+    width: 100%;
+    height: 5vw;
+    margin-bottom: 5vw;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.wrapper .recommendtype li {
+    font-size: 3.5vw;
+    color: #555;
+    cursor: pointer;
+    transition: color 0.3s;
+    padding: 1vw 2vw;
+    border-radius: 1vw;
+}
+
+.wrapper .recommendtype li:hover {
+    color: #0097ff;
+}
+
+.wrapper .recommendtype li.active {
+    color: #0097ff;
+    background-color: #f0f8ff;
+}
+
+/* 筛选弹窗样式 */
+.filter-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.filter-container {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, #0097ff, #0066cc);
+    color: white;
+}
+
+.filter-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.filter-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.filter-section {
+    margin-bottom: 25px;
+}
+
+.filter-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+}
+
+.filter-option input[type="checkbox"],
+.filter-option input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.filter-option:hover {
+    color: #0097ff;
+}
+
+.price-range {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #f0f0f0;
+    background-color: #fafafa;
+}
+
+.btn-reset, .btn-confirm {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-reset {
+    background-color: #f8f9fa;
+    color: #666;
+}
+
+.btn-reset:hover {
+    background-color: #e9ecef;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #0097ff, #0066cc);
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: linear-gradient(135deg, #0080e0, #0055aa);
+    transform: translateY(-1px);
 }
 </style>

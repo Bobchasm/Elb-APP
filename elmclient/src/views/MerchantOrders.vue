@@ -1,24 +1,12 @@
 <template>
   <div class="wrapper">
-    <!-- 顶部蓝色栏，与 OrderList 保持一致 -->
+    <!-- 顶部蓝色栏 -->
     <header class="topbar">
-      <p>订单</p>
+      <p>商家订单</p>
     </header>
 
-    <!-- 页面标题，与 OrderList 保持一致 -->
+    <!-- 页面标题 -->
     <div class="page-title">订单管理中心</div>
-
-    <!-- 店铺切换，沿用 OrderList 的 tabs 样式（支持左右滑动） -->
-    <ul class="tabs tabs-scroll">
-      <li
-        v-for="(s, idx) in shops"
-        :key="s.businessId || idx"
-        :class="{ active: activeShopIndex === idx }"
-        @click="selectShop(idx)"
-      >
-        {{ s.businessName || `店铺${idx + 1}` }}
-      </li>
-    </ul>
 
     <!-- 订单状态分类 -->
     <ul class="tabs">
@@ -26,287 +14,292 @@
         v-for="(t, i) in statusTabs"
         :key="t"
         :class="{ active: activeStatusTab === i }"
-        @click="activeStatusTab = i"
+        @click="changeStatusTab(i)"
       >
-        {{ t }}
+        {{ t }} <span v-if="orderCounts[i] > 0">({{ orderCounts[i] }})</span>
       </li>
     </ul>
 
-    <!-- 订单列表，沿用 OrderList 的结构与样式 -->
-    <!-- 商家端：点击订单项跳转到订单详情（共用 ListDetail） -->
-    <ul class="order-list">
-      <li v-for="o in currentOrdersFiltered" :key="o.orderId" class="order-item" @click="goDetail(o)" title="查看订单详情">
-        <img class="thumb" src="/baozi.jpg" alt="thumb">
-        <div class="meta">
-          <p class="name">订单号：#{{ o.orderId }}</p>
-          <p class="sub">顾客：{{ o.userName || '-' }}</p>
-          
-          <p class="price">¥ {{ Number(o.orderTotal).toFixed(2) }}</p>
-          <span class="status-badge" :class="badgeClass(o.status)">{{ statusText(o.status) }}</span>
+    <!-- 加载提示 -->
+    <div v-if="loading" class="loading">
+      <p>加载中...</p>
+    </div>
+
+    <!-- 空状态提示 -->
+    <div v-else-if="filteredOrders.length === 0" class="empty-state">
+      <img src="../assets/empty-order.png" alt="暂无订单">
+      <p>暂无订单</p>
+    </div>
+
+    <!-- 订单列表 -->
+    <ul v-else class="order-list">
+      <li v-for="order in filteredOrders" :key="order.id" class="order-item" title="查看订单详情">
+        <div class="order-header">
+          <span class="order-id">订单号: {{ order.id }}</span>
+          <span class="status-badge" :class="getStatusClass(order.orderState)">{{ getStatusText(order.orderState) }}</span>
         </div>
+
+        <div class="order-content">
+          <div class="customer-info">
+            <p><span>顾客:</span> {{ order.customerName || '-' }}</p>
+            <p><span>电话:</span> {{ order.contactTel || '-' }}</p>
+            <p><span>地址:</span> {{ order.address || '-' }}</p>
+          </div>
+
+          <div class="order-items">
+            <p class="items-title">商品明细:</p>
+            <div v-for="(item, index) in order.foodList" :key="index" class="item-row">
+              <span class="item-name">{{ item.foodName || '未知商品' }}&nbsp; &#165;{{ item.foodPrice }} &nbsp; × {{ item.quantity || 0 }}</span>
+              <span class="item-price">¥ {{ (item.foodPrice * item.quantity).toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <div class="price-row">
+            <br><span class="items-title">配送费: &#165;{{ order.deliveryPrice || '0.00' }}</span>
+					</div>
+          
+          <div class="order-footer">
+            <span class="order-time">下单时间: {{ formatTime(order.orderDate) }}</span>
+            <span class="order-total">总计: ¥ {{ order.orderTotal.toFixed(2) }}</span>
+          </div>
+        </div>
+
         <div class="actions">
-          <template v-if="o.status === '待接单'">
-            <button class="cancel-btn" @click.stop="reject(o)">拒单</button>
-            <button class="confirm-btn" @click.stop="accept(o)">接单</button>
+          <!-- 待接单：拒单 + 接单 -->
+          <template v-if="order.orderState === 1">
+            <button class="cancel-btn" @click.stop="rejectOrder(order.id)">拒单</button>
+            <button class="confirm-btn" @click.stop="acceptOrder(order.id)">接单</button>
           </template>
-          <template v-else-if="o.status === '已接单'">
-            <button class="confirm-btn" @click.stop="finish(o)">完成</button>
+
+          <!-- 已接单：完成订单 -->
+          <template v-else-if="order.orderState === 2">
+            <button class="complete-btn" @click.stop="completeOrder(order.id)">完成订单</button>
           </template>
-          <template v-else-if="o.status === '已取消'">
-            <button class="cancel-btn disabled" disabled @click.stop>已取消</button>
-          </template>
-          <template v-else>
-            <button class="confirm-btn disabled" disabled @click.stop>已完成</button>
-          </template>
+
+          <!-- 已完成/已取消：查看详情 -->
+          <!-- <template v-else>
+            <button class="detail-btn" @click.stop="goDetail(order)">查看详情</button>
+          </template> -->
         </div>
       </li>
     </ul>
 
     <BusinessFooter />
   </div>
-  </template>
+</template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router'; // 添加 useRoute
+import request from '../utils/request';
 import BusinessFooter from '@/components/BusinessFooter.vue';
 
 export default {
   name: 'BusinessOrderManage',
   components: { BusinessFooter },
   setup() {
-    const route = useRoute();
     const router = useRouter();
-
-    const shops = ref([]);
-    const activeShopIndex = ref(0);
-    const orderMap = ref({}); // businessId -> orders
-    const statusTabs = ref(['全部', '待接单', '已接单', '已取消', '已完成']);
+    const loading = ref(false);
+    const orders = ref([]);
+    const businessId = ref();
+    const route = useRoute(); // 添加这行
+    // 订单状态标签
+    const statusTabs = ref(['全部', '待接单', '已接单', '已完成', '已取消']);
     const activeStatusTab = ref(0);
 
-    const currentBusinessId = computed(() => shops.value[activeShopIndex.value]?.businessId);
-    const currentOrders = computed(() => orderMap.value[currentBusinessId.value] || []);
-    const currentOrdersFiltered = computed(() => {
-      const all = currentOrders.value;
-      switch (activeStatusTab.value) {
-        case 1: return all.filter(o => o.status === '待接单');
-        case 2: return all.filter(o => o.status === '已接单');
-        case 3: return all.filter(o => o.status === '已取消');
-        case 4: return all.filter(o => o.status === '已完成');
-        default: return all;
+    // 订单状态映射
+    const statusMap = {
+      0: "待支付",
+      1: "待接单",
+      2: "已接单",
+      3: "已完成",
+      4: "已取消"
+    };
+
+    // 获取订单列表
+    const fetchOrders = async () => {
+      loading.value = true;
+      try {
+        const response = await request.get("/api/orders/list/business", {
+          params: { businessId: businessId.value }
+        });
+
+        if (response.success) {
+          orders.value = response.data || [];
+          console.log("获取商家订单成功:", orders.value);
+        } else {
+          console.error('获取商家订单失败:', response.data.message);
+          alert('获取订单列表失败: ' + response.data.message);
+        }
+      } catch (error) {
+        console.error("请求商家订单失败:", error);
+        alert("获取订单列表失败，请稍后重试！");
+      } finally {
+        loading.value = false;
       }
+    };
+
+    // 切换状态标签
+    const changeStatusTab = (index) => {
+      activeStatusTab.value = index;
+    };
+
+    // 计算各状态订单数量
+    const orderCounts = computed(() => {
+      const counts = [0, 0, 0, 0, 0]; // 全部, 待接单, 已接单, 已完成, 已取消
+
+      orders.value.forEach(order => {
+        counts[0]++; // 全部
+        if (order.orderState === 1) counts[1]++; // 待接单
+        else if (order.orderState === 2) counts[2]++; // 已接单
+        else if (order.orderState === 3) counts[3]++; // 已完成
+        else if (order.orderState === 4) counts[4]++; // 已取消
+      });
+
+      return counts;
     });
 
-    const tabWithCount = (t, i) => {
-      const counts = {
-        all: currentOrders.value.length,
-        pending: currentOrders.value.filter(o => o.status === '待接单').length,
-        accepted: currentOrders.value.filter(o => o.status === '已接单').length,
-        canceled: currentOrders.value.filter(o => o.status === '已取消').length,
-        done: currentOrders.value.filter(o => o.status === '已完成').length
+    // 过滤订单
+    const filteredOrders = computed(() => {
+      if (activeStatusTab.value === 0) return orders.value; // 全部
+
+      const statusMap = {
+        1: 1, // 待接单
+        2: 2, // 已接单
+        3: 3, // 已完成
+        4: 4  // 已取消
       };
-      const map = [counts.all, counts.pending, counts.accepted, counts.canceled, counts.done];
-      return `${t} (${map[i]})`;
+
+      const targetStatus = statusMap[activeStatusTab.value];
+      return orders.value.filter(order => order.orderState === targetStatus);
+    });
+
+    // 获取状态文本
+    const getStatusText = (state) => {
+      return statusMap[state] || "未知状态";
     };
 
-    const statusText = (s) => s;
-    const badgeClass = (s) => {
-      switch (s) {
-        case '待接单': return 'pending';
-        case '已接单': return 'accepted';
-        case '已取消': return 'canceled';
-        case '已完成': return 'done';
-        default: return '';
-      }
-    };
-
-    const ensureBusinessLogin = () => {
-      const bu = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
-      if (!bu || !bu.isBusiness) {
-        alert('请先登录商家账号！');
-        router.push('/businessLogin');
-        return null;
-      }
-      return bu;
-    };
-
-    const normalizeOrder = (raw) => {
-      return {
-        orderId: raw.orderId,
-        orderTotal: raw.orderTotal || 0,
-        userName: raw.userName || raw.user?.userName,
-        itemsText: raw.itemsText || '—',
-        status: raw.status // 字符串：待接单/已接单/已取消/已完成
+    // 获取状态样式类
+    const getStatusClass = (state) => {
+      const classMap = {
+        0: "unpaid",
+        1: "pending",
+        2: "accepted",
+        3: "done",
+        4: "canceled"
       };
+      return classMap[state] || "";
     };
 
-    const loadShopsAndOrders = async (businessId) => {
-      // 店铺切换条：当前业务只展示该商家的多个门店
+    // 格式化时间
+    const formatTime = (timeString) => {
+      if (!timeString) return "-";
       try {
-        const bizResp = await axios.post('BusinessController/listStoresByOwner', { businessId });
-        const list = Array.isArray(bizResp.data) && bizResp.data.length > 0 ? bizResp.data : null;
-        if (list) {
-          shops.value = list;
-        } else {
-          // ===== 虚拟店铺 开始 =====
-          shops.value = [
-            { businessId: `${businessId}-A`, businessName: '美味小厨' },
-            { businessId: `${businessId}-B`, businessName: '街角奶茶店' },
-            { businessId: `${businessId}-C`, businessName: '深夜食堂' }
-          ];
-          // ===== 虚拟店铺 结束 =====
-        }
+        const date = new Date(timeString);
+        return date.toLocaleString('zh-CN');
       } catch (e) {
-        // ===== 虚拟店铺 开始 =====
-        shops.value = [
-          { businessId: `${businessId}-A`, businessName: '美味小厨', businessAddress: '和平区南京路188号', deliveryPrice: 5 },
-          { businessId: `${businessId}-B`, businessName: '街角奶茶店', businessAddress: '南开区鼓楼北街20号', deliveryPrice: 3 },
-          { businessId: `${businessId}-C`, businessName: '深夜食堂', businessAddress: '河西区围堤道88号', deliveryPrice: 4 }
-        ];
-        // ===== 虚拟店铺 结束 =====
+        return timeString;
       }
+    };
 
-      // 为每个店铺加载订单
-      for (let i = 0; i < shops.value.length; i++) {
-        const sid = shops.value[i].businessId;
-        try {
-          const resp = await axios.post('OrdersController/listOrdersByBusinessId', { businessId: sid });
-          const arr = Array.isArray(resp.data) ? resp.data.map(item => normalizeOrder(mapBackendToMerchantStatus(item))) : [];
-          orderMap.value[sid] = seedMock(arr, i);
-        } catch (e) {
-          orderMap.value[sid] = seedMock([], i);
+    // 接单
+    const acceptOrder = async (id) => {
+      if (!confirm("确定要接单吗？")) return;
+
+      try {
+        const response = await request.put("/api/orders/status?orderState=2&orderId=" + id);
+        if (response.success) {
+          alert("接单成功");
+          fetchOrders(); // 重新加载订单
+        } else {
+          alert("接单失败: " + response.message);
         }
+      } catch (error) {
+        console.error(error);
+        alert("接单失败，请稍后重试");
       }
     };
 
-    const mapBackendToMerchantStatus = (o) => {
-      // 后端若使用数字状态，可在此转换
-      // 0:未支付 1:已接单 ... 这里只映射为商家视角的四态
-      let status = '待接单';
-      if (o.orderState === -1) status = '已取消';
-      else if (o.orderState === 1) status = '已接单';
-      else if (o.orderState === 2) status = '已完成';
-      return { ...o, status };
+    // 拒单
+    const rejectOrder = async (id) => {
+      if (!confirm("确定要拒单吗？")) return;
+
+      try {
+        const response = await request.put("/api/orders/status?orderState=4&orderId=" + id);
+        if (response.success) {
+          alert("拒绝成功");
+          fetchOrders(); // 重新加载订单
+        } else {
+          alert(response.message);
+        }
+      } catch (error) {
+        console.error(error);
+        alert("拒绝失败，请稍后重试");
+      }
     };
 
-    // 演示/联调用：补充一些订单
-    const seedMock = (base, shopIndex = 0) => {
-      if (base.length > 0) return base;
-      // ===== 虚拟订单 开始 =====
-      const baseId = 20231027000 + shopIndex * 100;
-      const nowId = (n) => baseId + n;
-      const presets = [
-        [
-          { orderId: nowId(1), userName: '张三', itemsText: '红烧肉套餐 x1，可乐 x1', orderTotal: 35, status: '待接单' },
-          { orderId: nowId(2), userName: '李四', itemsText: '宫保鸡丁 x1，米饭 x2', orderTotal: 28, status: '已接单' },
-          { orderId: nowId(3), userName: '王五', itemsText: '麻辣香锅 x1', orderTotal: 56, status: '已完成' },
-          { orderId: nowId(4), userName: '赵六', itemsText: '鱼香肉丝 x1，米饭 x1', orderTotal: 26, status: '已取消' }
-        ],
-        [
-          { orderId: nowId(1), userName: '小李', itemsText: '黑糖珍珠奶茶 x2', orderTotal: 24, status: '待接单' },
-          { orderId: nowId(2), userName: '小王', itemsText: '芝士奶盖绿茶 x1', orderTotal: 16, status: '已接单' },
-          { orderId: nowId(3), userName: '小赵', itemsText: '抹茶拿铁 x1', orderTotal: 18, status: '已完成' }
-        ],
-        [
-          { orderId: nowId(1), userName: '夜猫', itemsText: '牛肉拉面 x1', orderTotal: 22, status: '待接单' },
-          { orderId: nowId(2), userName: '加班狗', itemsText: '炒饭 x1，可乐 x1', orderTotal: 20, status: '已接单' },
-          { orderId: nowId(3), userName: '码农', itemsText: '煎饺 x1', orderTotal: 15, status: '已完成' }
-        ]
-      ];
-      const pick = presets[shopIndex % presets.length];
-      return pick;
-      // ===== 虚拟订单 结束 =====
+    // 完成订单
+    const completeOrder = async (orderId) => {
+      if (!confirm("确定要完成订单吗？")) return;
+
+      try {
+        const response = await request.post("/api/orders/complete", {
+          orderId: orderId
+        });
+
+        if (response.data.success) {
+          alert("订单已完成");
+          fetchOrders(); // 重新加载订单
+        } else {
+          alert("完成订单失败: " + response.data.message);
+        }
+      } catch (error) {
+        console.error("完成订单失败:", error);
+        alert("完成订单失败，请稍后重试");
+      }
     };
 
-    // 操作
-    const accept = (o) => { o.status = '已接单'; };
-    const reject = (o) => { o.status = '已取消'; };
-    const cancel = (o) => { o.status = '已取消'; };
-    const finish = (o) => { o.status = '已完成'; };
-
-    // 解析 itemsText -> 明细数组的简易兜底
-    const parseItemsText = (text = '', total = 0) => {
-      if (!text) return [];
-      const parts = text.split(/[，,]/).map(s => s.trim()).filter(Boolean);
-      const items = parts.map(p => {
-        const m = p.match(/(.+?)\s*[x×]\s*(\d+)/i);
-        return {
-          foodName: m ? m[1].trim() : p,
-          quantity: m ? Number(m[2]) : 1,
-          foodPrice: 0
-        };
+    // 查看订单详情
+    const goDetail = (order) => {
+      router.push({
+        path: '/orderDetail',
+        query: { orderId: order.id }
       });
-      const qtySum = items.reduce((s, it) => s + (Number(it.quantity) || 0), 0) || 1;
-      const unit = Number(total) / qtySum;
-      items.forEach(it => { it.foodPrice = unit; });
-      return items;
-    };
-
-    const goDetail = (o) => {
-      const biz = shops.value[activeShopIndex.value] || {};
-      // 映射为 ListDetail 可识别的结构
-      const mappedOrder = {
-        orderId: o.orderId,
-        orderTotal: o.orderTotal,
-        // 提供字符串状态，ListDetail 将兼容渲染
-        status: o.status,
-        // 尽量给出数值状态（用于后端一致性），无法精准映射时留空
-        orderState: o.status === '已取消' ? -1 : (o.status === '已完成' ? 2 : (o.status === '已接单' ? 1 : 0)),
-        userName: o.userName || '-',
-        userPhone: o.userPhone || '—',
-        userAddress: o.userAddress || '—',
-        business: {
-          businessName: biz.businessName || '—',
-          businessAddress: biz.businessAddress || '地址未知',
-          deliveryPrice: biz.deliveryPrice ?? 0
-        },
-        // 优先后端明细；如没有，解析 itemsText 兜底
-        detailet: Array.isArray(o.detailet) && o.detailet.length > 0 ? o.detailet : parseItemsText(o.itemsText, o.orderTotal)
-      };
-      try { sessionStorage.setItem('selectedOrder', JSON.stringify(mappedOrder)); } catch (e) {}
-      router.push({ path: '/listDetail', query: { orderId: o.orderId } });
-    };
-
-    const selectShop = (idx) => {
-      activeShopIndex.value = idx;
-      activeStatusTab.value = 0; // 重置为“全部”
     };
 
     onMounted(() => {
-      const bu = ensureBusinessLogin();
-      if (!bu) return;
-      loadShopsAndOrders(bu.businessId);
+      businessId.value = parseInt(route.query.businessId);
+      fetchOrders();
     });
 
     return {
-      shops,
-      activeShopIndex,
-      currentOrders,
-      currentOrdersFiltered,
-      tabWithCount,
-      accept,
-      reject,
-      cancel,
-      finish,
-      statusText,
-      badgeClass,
-      goDetail,
-      selectShop,
+      loading,
+      orders,
       statusTabs,
-      activeStatusTab
+      activeStatusTab,
+      orderCounts,
+      filteredOrders,
+      fetchOrders,
+      changeStatusTab,
+      getStatusText,
+      getStatusClass,
+      formatTime,
+      acceptOrder,
+      rejectOrder,
+      completeOrder,
+      goDetail
     };
   }
 };
 </script>
 
 <style scoped>
-/* 直接复用 OrderList 的样式命名，确保风格一致 */
 .wrapper {
   width: 100%;
-  height: 100%;
-  background: #fff;
+  min-height: 100vh;
+  background: #f5f7fa;
 }
+
 .topbar {
   width: 100%;
   height: 12vw;
@@ -321,29 +314,29 @@ export default {
   justify-content: center;
   align-items: center;
 }
+
 .page-title {
   margin-top: 12vw;
   padding: 4vw;
-  font-size: 4vw;
+  font-size: 4.5vw;
   color: #333;
+  font-weight: bold;
+  background: white;
 }
+
+/* 标签栏 */
 .tabs {
   display: flex;
   align-items: center;
   padding: 0 4vw;
+  background: white;
   border-bottom: 1px solid #f0f0f0;
-}
-.tabs-scroll {
   overflow-x: auto;
   white-space: nowrap;
-  scrollbar-width: none; /* Firefox */
-}
-.tabs-scroll::-webkit-scrollbar { /* Chrome/Safari */
-  display: none;
 }
 .tabs li {
   margin-right: 6vw;
-  padding: 2vw 0;
+  padding: 3vw 0;
   font-size: 3.8vw;
   color: #666;
   position: relative;
@@ -351,7 +344,7 @@ export default {
   flex: 0 0 auto;
 }
 .tabs li.active {
-  color: #333;
+  color: #409eff;
   font-weight: 600;
 }
 .tabs li.active::after {
@@ -360,69 +353,191 @@ export default {
   left: 0;
   bottom: 0;
   width: 100%;
-  height: .8vw;
+  height: 0.8vw;
   background: #409eff;
-  border-radius: .4vw;
+  border-radius: 0.4vw;
 }
+
+/* 加载和空状态 */
+.loading, .empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10vw;
+  font-size: 4vw;
+  color: #999;
+  background: white;
+  margin: 3vw;
+  border-radius: 2vw;
+}
+
+.empty-state {
+  flex-direction: column;
+}
+.empty-state img {
+  width: 30vw;
+  height: 30vw;
+  margin-bottom: 4vw;
+  opacity: 0.5;
+}
+
+/* 订单列表 */
 .order-list {
   padding: 4vw;
 }
+
 .order-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 4vw;
   background: #fff;
-  border-radius: 1.6vw;
-  box-shadow: 0 2px 10px rgba(0,0,0,.05);
-  padding: 3vw;
+  border-radius: 2vw;
+  box-shadow: 0 1vw 2vw rgba(0,0,0,.05);
+  padding: 4vw;
+  margin-bottom: 4vw;
 }
-.thumb {
-  width: 28vw;
-  height: 28vw;
-  object-fit: cover;
-  border-radius: 1.2vw;
-  margin-right: 3vw;
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 3vw;
+  border-bottom: 1px solid #f5f5f5;
+  margin-bottom: 3vw;
 }
-.meta { flex: 1; }
-.name { font-size: 4vw; color: #333; }
-.sub { font-size: 3.2vw; color: #999; margin-top: 1vw; }
-.price { font-size: 4.2vw; color: #3a78ff; margin-top: 2vw; }
+
+.order-id {
+  font-size: 3.6vw;
+  color: #999;
+}
+
 .status-badge {
-  display: inline-block;
-  margin-top: 1.2vw;
-  padding: .6vw 1.6vw;
-  border-radius: 1.2vw;
-  font-size: 3vw;
-  line-height: 1;
-  background: #e6eefb;
-  color: #8aa8e5;
+  padding: 1vw 2vw;
+  border-radius: 1vw;
+  font-size: 3.2vw;
+  font-weight: 500;
 }
-.status-badge.done { background: #eef0f3; color: #97a0af; }
-.status-badge.pending { background: #e6f4ff; color: #1e80ff; }
-.status-badge.canceled { background: #fdeeee; color: #e15656; }
-.status-badge.accepted { background: #e8f5e9; color: #43a047; }
-.actions { display: flex; flex-direction: column; align-items: center; }
-.confirm-btn {
-  background: #1e80ff;
-  color: #fff;
+
+.status-badge.unpaid {
+	background: #fff0f0;
+	color: #ff4d4f;
+}
+.status-badge.pending {
+	background: #e6f7ff;
+	color: #1890ff;
+}
+.status-badge.accepted {
+	background: #f6ffed;
+	color: #52c41a;
+}
+.status-badge.done {
+	background: #f9f9f9;
+	color: #1bc3d2;
+}
+.status-badge.canceled {
+	background: #f9f9f9;
+	color: #999;
+}
+
+.order-content {
+  margin-bottom: 4vw;
+}
+
+.customer-info p {
+  font-size: 3.6vw;
+  color: #333;
+  margin: 1.5vw 0;
+  display: flex;
+}
+
+.customer-info span {
+  color: #666;
+  margin-right: 2vw;
+  min-width: 12vw;
+}
+
+.items-title {
+  font-size: 3.8vw;
+  color: #333;
+  font-weight: 500;
+  margin: 3vw 0 2vw 0;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 3vw;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5vw 0;
+  font-size: 3.6vw;
+  color: #333;
+}
+
+.item-name {
+  flex: 1;
+}
+
+.item-quantity {
+  margin: 0 3vw;
+  color: #666;
+}
+
+.item-price {
+  font-weight: 500;
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3vw;
+  padding-top: 3vw;
+  border-top: 1px solid #f0f0f0;
+}
+
+.order-time {
+  font-size: 3.4vw;
+  color: #999;
+}
+
+.order-total {
+  font-size: 4vw;
+  color: #ff6b00;
+  font-weight: bold;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2vw;
+  padding-top: 3vw;
+  border-top: 1px solid #f5f5f5;
+}
+
+.actions button {
+  padding: 2.5vw 4vw;
+  border-radius: 1.6vw;
+  font-size: 3.6vw;
+  cursor: pointer;
   border: none;
-  border-radius: 1.6vw;
-  padding: 2.4vw 5vw;
-  font-size: 4.6vw;
-  cursor: pointer;
 }
-.confirm-btn.disabled { background: #e6e9ef; color: #fff; cursor: not-allowed; }
+
 .cancel-btn {
-  background: #ffffff;
-  color: #e15656;
-  border: 1px solid #f3caca;
-  border-radius: 1.6vw;
-  padding: 2vw 5vw;
-  font-size: 4.2vw;
-  margin-top: 1.6vw;
-  cursor: pointer;
+  background: #fff;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f !important;
 }
-.cancel-btn.disabled { background: #f5f5f5; color: #bbb; border-color: #eee; cursor: not-allowed; }
+
+.confirm-btn {
+  background: #409eff;
+  color: #fff;
+}
+
+.complete-btn {
+  background: #52c41a;
+  color: #fff;
+}
+
+.detail-btn {
+  background: #f5f5f5;
+  color: #666;
+}
 </style>
-
-

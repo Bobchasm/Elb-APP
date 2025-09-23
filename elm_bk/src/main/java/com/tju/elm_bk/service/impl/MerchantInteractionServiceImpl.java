@@ -2,9 +2,12 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.entity.MerchantInteraction;
+import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.mapper.MerchantInteractionMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.service.MerchantInteractionService;
+import com.tju.elm_bk.vo.BusinessSearchVO;
+import com.tju.elm_bk.vo.BusinessVO;
 import com.tju.elm_bk.vo.MerchantInteractionVO;
 import com.tju.elm_bk.vo.MerchantStatsVO;
 import com.tju.elm_bk.dto.MerchantInteractionDTO;
@@ -17,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -27,6 +33,8 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
     private UserMapper userMapper;
     @Autowired
     private MerchantInteractionMapper interactionMapper;
+    @Autowired
+    private BusinessMapper businessMapper;
 
     @Override
     @Transactional
@@ -74,28 +82,99 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
         }
     }
 
-    @Override
-    public List<MerchantInteractionVO> getUserCollections(Long userId) {
+//    @Override
+//    public List<BusinessSearchVO> getUserCollections(Long userId) {
+//        try {
+//            if (userId == null) {
+//                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+//            }
+//            // 检查用户是否存在
+//            if (!isUserExists(userId)) {
+//                throw new APIException(ResultCodeEnum.NOT_FOUND);
+//            }
+//
+//            List<BusinessSearchVO> collections = interactionMapper.selectUserCollections(userId);
+//            log.info("获取用户{}的收藏列表成功，共{}条记录", userId, collections.size());
+//            return collections;
+//
+//        } catch (APIException e) {
+//            log.warn("业务异常: {}", e.getMessage());
+//            throw e;
+//        } catch (Exception e) {
+//            log.error("获取用户收藏列表失败: userId={}", userId, e);
+//            throw new APIException(ResultCodeEnum.SERVER_ERROR);
+//        }
+//    }
+
+    private BigDecimal calculateRating(Map<String, Object> interactionCounts) {
         try {
-            if (userId == null) {
-                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
-            }
-            // 检查用户是否存在
-            if (!isUserExists(userId)) {
-                throw new APIException(ResultCodeEnum.NOT_FOUND);
-            }
+            int likeCount = getCount(interactionCounts.get("likeCount"));
+            int collectCount = getCount(interactionCounts.get("collectCount"));
 
-            List<MerchantInteractionVO> collections = interactionMapper.selectUserCollections(userId);
-            log.info("获取用户{}的收藏列表成功，共{}条记录", userId, collections.size());
-            return collections;
-
-        } catch (APIException e) {
-            log.warn("业务异常: {}", e.getMessage());
-            throw e;
+            double normalizedRating = 1 + 4 * (0.6 * likeCount / (likeCount + 10.0) + 0.4 * collectCount / (collectCount + 10.0));
+            return BigDecimal.valueOf(normalizedRating).setScale(2, RoundingMode.HALF_UP);
         } catch (Exception e) {
-            log.error("获取用户收藏列表失败: userId={}", userId, e);
-            throw new APIException(ResultCodeEnum.SERVER_ERROR);
+            log.error("计算评分失败", e);
+            return BigDecimal.ZERO;
         }
+    }
+
+    private int getCount(Object countObj) {
+        if (countObj instanceof BigDecimal) {
+            return ((BigDecimal) countObj).intValue();
+        } else if (countObj instanceof Long) {
+            return ((Long) countObj).intValue();
+        } else if (countObj instanceof Integer) {
+            return (Integer) countObj;
+        }
+        return 0;
+    }
+    @Override
+    public List<BusinessSearchVO> getUserCollections(Long userId) {
+        //先写一个通过用户id查询商铺id列表的方法
+        List< Long> businessIds = interactionMapper.selectUserCollectionIds(userId);
+        //通过商家id查询商铺信息 —— 只没有评分和销售量
+        List<BusinessSearchVO> businessSearchVOS=new ArrayList<>();
+        for(Long businessId:businessIds){
+            BusinessVO businessVO =businessMapper.getBusinessById(businessId);
+            BusinessSearchVO businessSearchVO=new BusinessSearchVO();
+              //计算每一个商铺的评分和销售量
+            Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(businessId);
+            int salesCount = businessMapper.getSalesCount(businessId);
+            int likeCount = 0;
+            int collectCount = 0;
+
+            // 安全地处理可能为null的值
+            Object likeObj = interactionCounts.get("likeCount");
+            Object collectObj = interactionCounts.get("collectCount");
+
+            if (likeObj instanceof BigDecimal) {
+                likeCount = ((BigDecimal) likeObj).intValue();
+            } else if (likeObj instanceof Long) {
+                likeCount = ((Long) likeObj).intValue();
+            } else if (likeObj instanceof Integer) {
+                likeCount = (Integer) likeObj;
+            }
+
+            if (collectObj instanceof BigDecimal) {
+                collectCount = ((BigDecimal) collectObj).intValue();
+            } else if (collectObj instanceof Long) {
+                collectCount = ((Long) collectObj).intValue();
+            } else if (collectObj instanceof Integer) {
+                collectCount = (Integer) collectObj;
+            }
+
+            // 计算评分 (点赞权重0.6，收藏权重0.4，归一化到1-5分)
+            double normalizedRating = 1 + 4 * (0.6 * likeCount / (likeCount + 10.0) + 0.4 * collectCount / (collectCount + 10.0));
+            BigDecimal rating = BigDecimal.valueOf(normalizedRating).setScale(2, RoundingMode.HALF_UP);
+            businessSearchVO.setScore(rating);
+            businessSearchVO.setSalesCount(salesCount);
+            businessSearchVOS.add(new BusinessSearchVO(businessVO.getId(),businessVO.getBusinessName(),businessVO.getBusinessImg(),businessVO.getStartPrice(),businessVO.getDeliveryPrice(),businessSearchVO.getScore(),businessSearchVO.getSalesCount()));
+
+
+        }
+        return businessSearchVOS;
+
     }
 
     private boolean isUserExists(Long userId) {

@@ -19,6 +19,9 @@ public class OrderItemDetailVO {
     @Schema(description = "订单总金额")
     private BigDecimal orderTotal;
 
+    @Schema(description = "订单配送费")
+    private BigDecimal deliveryPrice;
+
     @Schema(description = "订单状态(0-待支付,1-待接单,2-已结单,3-已完成,4-已取消")
     private Integer orderState;
 
@@ -35,7 +38,10 @@ public class OrderItemDetailVO {
     private Long businessId;
 
     @Schema(description = "商家名")
-    private Long businessName;
+    private String businessName;
+
+    @Schema(description = "商家图片")
+    private String businessImg;
 
     @Schema(description = "地址ID")
     private Long addressId;
@@ -47,7 +53,7 @@ public class OrderItemDetailVO {
     private Integer contactSex;
 
     @Schema(description = "联系人姓名")
-    private Integer contactName;
+    private String contactName;
 
     @Schema(description = "联系方式")
     private String contactTel;

@@ -26,6 +26,9 @@ public class CartItemVO {
     @Schema(description = "商品ID")
     private Long foodId;
 
+    @Schema(description = "商品图片")
+    private String foodImg;
+
     @Schema(description = "商品名")
     private String foodName;
 

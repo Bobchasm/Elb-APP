@@ -62,9 +62,7 @@
       return localStorage.getItem('savedUserName') || '';
     });
 
-    
     const login = async () => {
-		console.log('执行了');
       // 1. 表单校验
       if (!userName.value.trim()) {
         alert('用户名不能为空！');
@@ -96,7 +94,6 @@
           alert('登录失败，未获取到token！');
           return;
         }
-
 
         // 5. 根据“记住我”状态存储 token
         const storage = rememberMe.value ? localStorage : sessionStorage;
@@ -133,7 +130,7 @@
 		}
 		}
 		router.push({ path: targetPath });
-		
+
       } catch (error) {
         // 捕获网络错误或后端500等异常
         const errorMsg = error.response?.data?.message || '网络异常，登录失败！';

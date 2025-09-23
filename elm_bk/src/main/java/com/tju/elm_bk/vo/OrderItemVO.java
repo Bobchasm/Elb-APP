@@ -33,4 +33,7 @@ public class OrderItemVO {
     @Schema(description = "商家名")
     private String businessName;
 
+    @Schema(description = "商家图片")
+    private String businessImg;
+
 }
