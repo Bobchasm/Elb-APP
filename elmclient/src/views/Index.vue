@@ -384,12 +384,16 @@
 
         <!-- 底部菜单部分 -->
 
+        <!-- AI助手组件 -->
+        <AIAssistant />
+
     </div>
 </template>
 
 <script>
 import { ref, onMounted, onBeforeUnmount,computed } from 'vue';
 import Footer from '../components/Footer.vue';
+import AIAssistant from '../components/AIAssistant.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '../utils/request';
@@ -1522,7 +1526,8 @@ const getDisplayText = (location) => {
         };
     },
     components: {
-        Footer
+        Footer,
+        AIAssistant
     }
 }
 </script>
@@ -1749,10 +1754,10 @@ const getDisplayText = (location) => {
 /****************** 销量冠军3D轮播图部分 ******************/
 .wrapper .top-businesses-carousel {
     width: 95%;
-    margin: 3vw auto;
+    margin: 1.5vw auto; /* 进一步减少上下外边距 */
     background: white;
     border-radius: 2vw;
-    padding: 3vw 2vw;
+    padding: 1.5vw 2vw; /* 进一步减少上下内边距 */
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     position: relative;
     z-index: 10; /* 确保在搜索框之下 */
@@ -1760,12 +1765,12 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .carousel-header {
     text-align: center;
-    margin-bottom: 3vw;
+    margin-bottom: 1.5vw; /* 减少标题下方间距 */
     color: #333;
 }
 
 .wrapper .top-businesses-carousel .carousel-header h3 {
-    font-size: 4vw;
+    font-size: 6vw; /* 增大字体大小 */
     margin: 0 0 1vw 0;
     font-weight: 700;
     text-shadow: none;
@@ -1780,13 +1785,13 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .carousel-3d-container {
     position: relative;
-    height: 50vw; /* 增加高度 */
-    min-height: 300px; /* 设置最小高度 */
+    height: 50vw; /* 减少整体高度，让占位更小 */
+    min-height: 320px; /* 减少最小高度 */
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 5vw 15vw; /* 扩大悬停区域 */
-    margin: -5vw -15vw; /* 负边距保持视觉位置不变 */
+    padding: 3vw 12vw; /* 减少内边距，让占位更小 */
+    margin: -3vw -12vw; /* 调整负边距 */
 }
 
 .wrapper .top-businesses-carousel .carousel-3d-item {
@@ -1818,11 +1823,11 @@ const getDisplayText = (location) => {
 }
 
 .wrapper .top-businesses-carousel .business-card-3d {
-    width: 45vw;
-    min-width: 280px; /* 设置最小宽度 */
+    width: 38vw; /* 减少卡片宽度 */
+    min-width: 240px; /* 减少最小宽度 */
     background: white;
     border-radius: 2vw;
-    padding: 3vw;
+    padding: 2.5vw; /* 减少内边距 */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     position: relative;
     overflow: hidden;
@@ -1859,10 +1864,11 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .business-image {
     width: 100%;
-    height: 22vw;
+    height: 25vw; /* 调整图片高度，在更小的卡片中保持比例 */
+    min-height: 160px; /* 调整最小高度 */
     border-radius: 1.5vw;
     overflow: hidden;
-    margin-bottom: 2vw;
+    margin-bottom: 1.5vw; /* 减少底部间距 */
 }
 
 .wrapper .top-businesses-carousel .business-image img {
@@ -1881,18 +1887,18 @@ const getDisplayText = (location) => {
 }
 
 .wrapper .top-businesses-carousel .business-info h4 {
-    font-size: 3.5vw;
+    font-size: 3.2vw; /* 稍微减少字体大小 */
     font-weight: 700;
     color: #333;
-    margin: 0 0 1.5vw 0;
+    margin: 0 0 1vw 0; /* 减少底部间距 */
     line-height: 1.2;
 }
 
 .wrapper .top-businesses-carousel .stats {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1.5vw;
-    gap: 1.5vw;
+    margin-bottom: 1vw; /* 减少底部间距 */
+    gap: 1vw; /* 减少间隙 */
 }
 
 .wrapper .top-businesses-carousel .sales {
@@ -1973,7 +1979,7 @@ const getDisplayText = (location) => {
     display: flex;
     justify-content: center;
     gap: 1.5vw;
-    margin-top: 3vw;
+    margin-top: 1.5vw; /* 减少指示器上方间距 */
 }
 
 .wrapper .top-businesses-carousel .indicator {
