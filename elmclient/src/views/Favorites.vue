@@ -1,9 +1,8 @@
 <template>
-  <div class="container">
-    <BackButton />
+  <div>
     <div class="header">
       <i class="fas fa-chevron-left back-icon" @click="goBack"></i>
-      <h1 class="title">我的收藏</h1>
+      <h1>我的收藏</h1>
     </div>
     <div class="container">
       <div v-if="loading" class="loading-message">
@@ -46,12 +45,10 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
-import request from '@/utils/request'; // 使用封装好的request
-import BackButton from '../components/BackButton.vue';
+import request from '@/utils/request';
 
 export default {
   name: 'Favorites',
-  components: { BackButton },
   setup() {
     const router = useRouter();
     const favoriteList = ref([]);
@@ -69,10 +66,8 @@ export default {
           return;
         }
 
-        // 调用后端API获取收藏列表
         const response = await request.get(`/api/merchant/interaction/collections/${userInfo.id}`);
 
-        // 将后端返回的数据映射到前端需要的格式
         favoriteList.value = response.data.map(business => ({
           businessId: business.id,
           businessName: business.businessName,
@@ -118,7 +113,6 @@ export default {
 };
 </script>
 
-
 <style scoped>
 /* 整个页面的基本样式，确保没有默认外边距 */
 body {
@@ -128,15 +122,6 @@ body {
 
 /* 顶部栏，不受 container 限制，贴近边缘 */
 .header {
-  /* padding: 20px; */
-  text-align: center;
-  background: linear-gradient(to right, #3a7bd5, #00d2ff);
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 20px;
   position: sticky;
   top: 0;
   left: 0;
@@ -166,7 +151,7 @@ body {
   font-size: 1.1rem;
   color: #ffffff;
   font-weight: 600;
-  color:white;
+  margin: 0;
 }
 
 .back-icon {
