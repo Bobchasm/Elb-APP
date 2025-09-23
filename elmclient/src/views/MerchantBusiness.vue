@@ -364,7 +364,7 @@ export default {
             userId: userResponse.id
           };
 
-          const response = await request.post('/api/businesses/apply', applicationData, {
+          const response = await request.post('/api/permission/apply-shop', applicationData, {
             headers: {
               'Authorization': `Bearer ${token}`
             }

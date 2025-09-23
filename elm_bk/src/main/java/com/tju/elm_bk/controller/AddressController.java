@@ -11,10 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,17 +30,17 @@ public class AddressController {
     }
 
     @Operation(summary = "获取用户地址列表")
-    @PostMapping("/listDeliveryAddressByUserId")
-    public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(@RequestBody DeliveryAddress deliveryAddress)
+    @GetMapping("/listDeliveryAddressByUserId")
+    public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(Long userId)
     {
-        return addressService.listDeliveryAddressByUserId(deliveryAddress);
+        return addressService.listDeliveryAddressByUserId(userId);
     }
 
     @Operation(summary = "根据配送地址id获取地址")
-    @PostMapping("/getDeliveryAddressById")
-    public HttpResult<DeliveryAddress> getDeliveryAddressById(@RequestBody DeliveryAddress deliveryAddress)
+    @GetMapping("/getDeliveryAddressById")
+    public HttpResult<DeliveryAddress> getDeliveryAddressById(Long id)
     {
-        return addressService.getDeliveryAddressById(deliveryAddress);
+        return addressService.getDeliveryAddressById(id);
     }
 
     @Operation(summary = "更新配送地址")
@@ -54,10 +51,9 @@ public class AddressController {
     }
 
     @Operation(summary = "删除配送地址")
-    @PostMapping("/removeDeliveryAddress")
+    @PutMapping("/removeDeliveryAddress")
     public HttpResult removeDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress)
     {
-        deliveryAddress.setIsDeleted(true);
         return addressService.deleteDeliveryAddress(deliveryAddress);
     }
 }

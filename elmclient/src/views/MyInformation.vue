@@ -39,11 +39,11 @@
     </div>
 
     <!-- 隐藏的文件输入框 -->
-    <input 
-      type="file" 
-      ref="fileInput" 
-      style="display: none" 
-      accept="image/*" 
+    <input
+      type="file"
+      ref="fileInput"
+      style="display: none"
+      accept="image/*"
       @change="handleFileUpload"
     >
 
@@ -149,7 +149,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted,onUnmounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import AddressManager from '../components/AddressManager.vue';
 import request from '../utils/request'; // 使用 request 而不是 axios
@@ -170,9 +170,11 @@ export default {
     const showEditModal = ref(false);
     const showMerchantApplyModal = ref(false);
     const showAddressSection = ref(false);
-    const unreadMessageCount = ref(0); 
+    const unreadMessageCount = ref(0);
     const uploading = ref(false); // add：上传状态
     const fileInput = ref(null); // add：文件输入框引用
+    const webSocket = ref(null);
+    const isConnected = ref(false);
 
     const editFormData = ref({
       firstName: '',
@@ -191,6 +193,52 @@ export default {
       return userInfo.value.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
     });
 
+    const initWebSocket = () => {
+  // 清除之前的连接
+  if (webSocket.value) {
+    webSocket.value.close();
+  }
+
+  try {
+    const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+
+    webSocket.value = new WebSocket(wsUrl);
+
+    webSocket.value.onopen = () => {
+      console.log('WebSocket 连接成功');
+      isConnected.value = true;
+      toast.success('已连接消息通知');
+    };
+
+    webSocket.value.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        handleNewMessage(message);
+      } catch (err) {
+        console.error('解析消息失败:', err);
+      }
+    };
+
+    webSocket.value.onclose = (event) => {
+      console.log('WebSocket 连接关闭，代码:', event.code);
+      isConnected.value = false;
+      if (event.code !== 1000) {
+        setTimeout(initWebSocket, 3000);
+      }
+    };
+
+    webSocket.value.onerror = (err) => {
+      console.error('WebSocket 错误:', err);
+      isConnected.value = false;
+    };
+  } catch (err) {
+    console.error('初始化 WebSocket 失败:', err);
+  }
+};
+
+
     onMounted(async () => {
       // 先检查 token
       const token = getToken();
@@ -199,10 +247,70 @@ export default {
         router.push({ path: '/login' });
         return;
       }
-      
+      initWebSocket();
+
       await loadUserData();
       await checkNewMessages();
     });
+
+    onUnmounted(() => {
+  if (webSocket.value) {
+    webSocket.value.close();
+  }
+});
+const handleNewMessage = (message) => {
+  toast.info(`新消息：${message.content}`);
+
+  // 检查是否是"商家申请通过"的消息
+  if (message.content.includes('您的成为商家申请已通过审核')) {
+    // 更新用户权限（添加商家权限）
+    if (userInfo.value.authorities && Array.isArray(userInfo.value.authorities)) {
+      const hasBusinessAuth = userInfo.value.authorities.some(auth => auth.name === 'BUSINESS');
+      if (!hasBusinessAuth) {
+        // 添加商家权限标识
+        userInfo.value.authorities.push({ name: 'BUSINESS' });
+        // 同步更新本地存储
+        const tokenFromLocal = localStorage.getItem('token');
+        const tokenFromSession = sessionStorage.getItem('token');
+        const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+        storage.setItem('userInfo', JSON.stringify(userInfo.value));
+      }
+    }
+  }
+
+  // 延迟调用，确保后端数据已更新
+  setTimeout(() => {
+    checkNewMessages().catch(err => {
+      console.error('新消息触发重新检查失败:', err);
+      toast.error('新消息已收到，但加载失败');
+    });
+  }, 300);
+};
+
+const checkNewMessages = async () => {
+  try {
+    const token = getToken();
+    if (!token) return;
+
+    const response = await request.get(`/api/notifications?userId=${userInfo.value.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response && response.success && response.data) {
+      unreadMessageCount.value = response.data.filter(
+        item => item.isDeleted === 0 && item.isRead === 0
+      ).length;
+    } else {
+      unreadMessageCount.value = 0;
+    }
+  } catch (error) {
+    console.error('检查未读消息失败:', error);
+    unreadMessageCount.value = 0;
+  }
+};
+
 
     // 新增：触发文件选择
     const triggerFileInput = () => {
@@ -226,7 +334,7 @@ export default {
       }
 
       uploading.value = true;
-      
+
       try {
         const token = getToken();
         const formData = new FormData();
@@ -283,7 +391,7 @@ export default {
           toast.warning('用户未登录，请先登录！');
           router.push({ path: '/login' });
           return;
-        } 
+        }
 
         // 使用 request 调用 API
         const response = await request.get('/api/person', {
@@ -299,7 +407,7 @@ export default {
         }
       } catch (error) {
         console.error('获取用户信息失败:', error);
-        
+
         if (error.response && error.response.status === 401) {
           // Token 过期或无效
           toast.error('登录已过期，请重新登录！');
@@ -315,31 +423,6 @@ export default {
         loading.value = false;
       }
     };
-
-    const checkNewMessages = async () => {
-  try {
-    const token = getToken();
-    if (!token) return;
-    
-    const response = await request.get(`/api/notifications?userId=${userInfo.value.id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (response && response.success && response.data) {
-      // 计算未删除且未读的消息数量
-      unreadMessageCount.value = response.data.filter(
-        item => item.isDeleted === 0 && item.isRead === 0
-      ).length;
-    } else {
-      unreadMessageCount.value = 0;
-    }
-  } catch (error) {
-    console.error('检查未读消息失败:', error);
-    unreadMessageCount.value = 0;
-  }
-};
     const logout = () => {
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
@@ -353,7 +436,7 @@ export default {
     const hasBusinessPermission = userInfo.value.authorities?.some(
       auth => auth.name === 'BUSINESS'
     );
-    
+
     if (hasBusinessPermission) {
       // 有商家权限，直接跳转到商家页面
       router.push({ name: 'MerchantProfile' });
@@ -393,7 +476,7 @@ export default {
         'Authorization': `Bearer ${token}`
       }
     });
-    
+
     if (response && response.success) {
       toast.success('申请成功，请等待管理员审核！');
       closeMerchantApplyModal();
@@ -484,7 +567,7 @@ export default {
       navigateTo,
       switchToMerchant,
       showAddressSection,
-      
+
       triggerFileInput,
       handleFileUpload,
       unreadMessageCount

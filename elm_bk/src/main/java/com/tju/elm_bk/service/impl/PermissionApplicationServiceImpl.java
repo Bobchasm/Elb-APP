@@ -239,7 +239,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         Notification notification = new Notification();
         if(type==0){
-            String content = "恭喜！您的申请已通过审核，现在可以开始营业了";
+            String content = "恭喜！您的成为商家申请已通过审核，现在可以开始营业了";
             notification.setNotificationContent(content);
             message.put("type", 0); // 0表示申请成为商家的回复
             message.put("content",content);
@@ -269,7 +269,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
         Notification notification = new Notification();
         if(type==0){
-            String content = "抱歉，您的商家申请未通过审核";
+            String content = "抱歉，您的成为商家申请未通过审核";
             notification.setNotificationContent(content);
             message.put("type", 0); // 0表示申请成为商家的回复
             message.put("content", content);

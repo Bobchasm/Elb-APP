@@ -14,7 +14,7 @@
         <result column="photo" property="photo"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.tju.elm_bk.entity.Person">
+    <insert id="insert" parameterType="com.tju.elm_bk.entity.Person" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO person (
         id,
         email,

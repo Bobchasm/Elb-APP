@@ -79,8 +79,8 @@
 
 			try {
 				// 修改为POST请求，参数放在请求体中
-				const response = await request.post('/api/addresses/getDeliveryAddressById', {
-					id: id.value
+				const response = await request.get('/api/addresses/getDeliveryAddressById', {
+					params:{id: id.value}
 				});
 				deliveryAddress.value = response.data;
 			} catch (error) {

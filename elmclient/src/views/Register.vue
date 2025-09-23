@@ -19,11 +19,33 @@
           />
         </div>
       </li>
+      <li class="form-item">
+        <label for="firstname" class="form-item-title">姓：</label>
+        <div class="form-item-content">
+          <input
+            id="firstname"
+            type="text"
+            v-model="user.firstname"
+            placeholder="姓"
+          />
+        </div>
+      </li>
+      <li class="form-item">
+        <label for="lastname" class="form-item-title">名：</label>
+        <div class="form-item-content">
+          <input
+            id="lastname"
+            type="text"
+            v-model="user.lastname"
+            placeholder="名"
+          />
+        </div>
+      </li>
       <!-- 手机号码 -->
       <li class="form-item">
-        <label for="userId" class="form-item-title">手机号码：</label>
+        <label for="phone" class="form-item-title">手机号码：</label>
         <div class="form-item-content">
-          <input id="userId" type="text" v-model="user.id" placeholder="手机号码" />
+          <input id="phone" type="text" v-model="user.phone" placeholder="手机号码" />
         </div>
       </li>
       <!-- 密码 -->
@@ -94,12 +116,14 @@ export default {
   setup() {
     const router = useRouter();
     const user = reactive({
-      id: '',
+      phone: '',
       password: '',
       username: '',
       useremail: '',
       usersex: 0,
-      userimg: ''
+      firstname: '',
+      lastname: '',
+      photo: ''
     });
     const confirmPassword = ref('');
     const avatar = ref(null);
@@ -120,18 +144,44 @@ export default {
     };
 
     // 处理头像文件上传
-    const handleFileUpload = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          avatar.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        avatar.value = null;
-      }
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    // 1. 先预览头像
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatar.value = e.target.result; // 显示本地预览
     };
+    reader.readAsDataURL(file);
+
+    // 2. 使用request请求实例上传到后端
+    try {
+      // 创建FormData对象，用于文件上传
+      const formData = new FormData();
+      formData.append('file', file); // 键名'file'与后端MultipartFile参数名保持一致
+
+      // 发送POST请求到后端接口（使用项目中的request实例）
+      const result = await request.post('/upload', formData);
+
+      // 处理响应（假设后端返回格式为{success: boolean, data: string}）
+      if (result.success) {
+        // 将后端返回的URL赋值给user.photo
+        user.photo = result.data;
+        console.log('头像上传成功，URL已保存:', user.photo);
+      } else {
+        throw new Error(result.message || '上传失败，后端返回异常');
+      }
+    } catch (error) {
+      console.error('头像上传出错:', error.message || '网络请求失败');
+      // 错误提示（可替换为项目中的提示组件）
+      // alert('头像上传失败，请重试');
+    }
+  } else {
+    // 未选择文件时清空
+    avatar.value = null;
+    user.photo = null;
+  }
+};
 
     // 注册函数，包含所有校验和注册请求
     const register = () => {
@@ -139,6 +189,14 @@ export default {
       user.username = user.username.trim();
       if (!user.username) {
         showMessageBox('用户名不能为空！');
+        return;
+      }
+      if (!user.firstname) {
+        showMessageBox('姓不能为空！');
+        return;
+      }
+      if (!user.lastname) {
+        showMessageBox('名不能为空！');
         return;
       }
       if (user.username.length > 8) {
@@ -162,10 +220,9 @@ export default {
         return;
       }
 
-      if (avatar.value) {
-        user.userimg = avatar.value;
-      } else {
-        showMessageBox('请上传头像！');
+          // 检查头像是否已上传成功
+      if (!user.photo) {
+        showMessageBox('请先上传头像！');
         return;
       }
 
@@ -173,8 +230,12 @@ export default {
       const registerPayload = {
         username: user.username,
         password: user.password,
-        authorities: [], // 假设这是一个空数组
-        deleted: false // 假设新用户未被删除
+        phone: user.phone,
+        email: user.useremail,
+        firstName: user.firstname,
+        lastName: user.lastname,
+        photo: user.photo,
+        gender: user.usersex
       };
       
       request.post('/api/register', registerPayload)

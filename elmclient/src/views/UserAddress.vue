@@ -15,7 +15,7 @@
 				<div class="addresslist-right">
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
-					<button class="select-btn" 
+					<button class="select-btn"
 							:class="{ 'selected': addressSelectedId === item.id }"
 							@click="selectUserAddress(item.id)"
 							:disabled="addressSelectedId === item.id">
@@ -61,15 +61,14 @@ export default {
 			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
 			user.value = userFromLocal || userFromSession;
-			//businessId.value = 1
 			businessId.value = route.query.businessId;
 			listDeliveryAddressByUserId();
 		});
 
 		const listDeliveryAddressByUserId = () => {
 			// 查询送货地址
-			request.post('/api/addresses/listDeliveryAddressByUserId', {
-				userId: user.value.id
+			request.get('/api/addresses/listDeliveryAddressByUserId', {
+				params:{userId: user.value.id}
 			}).then(response => {
 				deliveryAddressArr.value = response.data;
 			}).catch(error => {
@@ -129,7 +128,7 @@ export default {
 				return;
 			}
 
-			request.post('/api/addresses/removeDeliveryAddress', {
+			request.put('/api/addresses/removeDeliveryAddress', {
 				id: id
 			}).then(response => {
 				console.log(response.data);
