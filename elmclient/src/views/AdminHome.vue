@@ -546,7 +546,6 @@ const initWebSocket = () => {
      * 退出登录
      */
     const logout = () => {
-      if (confirm('确定要退出登录吗？')) {
         // 清除存储的登录信息
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
@@ -557,9 +556,8 @@ const initWebSocket = () => {
           webSocket.value.close();
         }
         // 跳转到登录页
-        router.push('/login');
+        router.push('/index');
         toast.success('已成功退出登录');
-      }
     };
 
 
@@ -607,7 +605,11 @@ const initWebSocket = () => {
   padding: 0;
   max-width: 100%;
   overflow-x: hidden;
-  padding-bottom: 70px;
+  padding-bottom: 0;
+  /* 关键：允许垂直溢出滚动 */
+  overflow-y: auto;
+  /* 优化：设置最小高度为屏幕高度，确保内容少也占满屏幕 */
+  min-height: 100vh;
 }
 .container {
   max-width: 600px;
@@ -621,14 +623,17 @@ const initWebSocket = () => {
   flex-direction: column;
   align-items: center;
   position: relative;
+  height: 100%;
 }
 /* 确保底部导航在最上层 */
 .admin-footer {
   z-index: 1000; /* 提高 z-index */
+  padding-bottom: 0;
+  background-color: transparent;
 }
 .admin-container {
   /* 确保容器有足够的内边距给底部导航留出空间 */
-  padding-bottom: 70px; /* 导航高度 + 一些间距 */
+  padding-bottom: 0; /* 导航高度 + 一些间距 */
 }
 .top-background {
   width: 100%;
@@ -690,7 +695,7 @@ const initWebSocket = () => {
 .user-card {
   width: 92%;
   max-width: 500px;
-  margin: 0 auto 20px;
+  margin: -50px auto 20px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -700,7 +705,7 @@ const initWebSocket = () => {
   gap: 20px;
   position: relative;
   z-index: 2;
-  transform: translateY(-50px);
+  /* transform: translateY(-50px); */
 }
 .avatar {
   width: 100px;
@@ -808,7 +813,8 @@ const initWebSocket = () => {
 .review-section {
   background: white;
   border-radius: 16px;
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   margin-bottom: 30px;
   width: 92%;

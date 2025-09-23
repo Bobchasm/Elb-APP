@@ -52,7 +52,6 @@
 		const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 		const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
 		user.value = userFromLocal || userFromSession;
-		//businessId.value = 1
 		businessId.value = route.query.businessId;
 		listDeliveryAddressByUserId();
 	  });
@@ -104,15 +103,11 @@
 		  return;
 		}
   
-		request.post('/api/addresses/removeDeliveryAddress', {
+		request.put('/api/addresses/removeDeliveryAddress', {
         id: id
       }).then(response => {
 		console.log(response.data);
         if (response.success) {
-          let deliveryAddress = JSON.parse(localStorage.getItem(user.value.id.toString()));
-          if (deliveryAddress && deliveryAddress.id === id ) {
-            localStorage.removeItem(user.value.id.toString());
-          }
           listDeliveryAddressByUserId();
         } else {
           alert('删除地址失败！');

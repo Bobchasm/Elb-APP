@@ -108,6 +108,12 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public HttpResult deleteDeliveryAddress(DeliveryAddress deliveryAddress) {
+        deliveryAddress.setIsDeleted(true);
+        deliveryAddress.setUpdateTime(LocalDateTime.now());
+        String currentUsername = SecurityUtils.getCurrentUsername()
+                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        Long currentUserId = userMapper.getUserIdByUsername(currentUsername);
+        deliveryAddress.setUpdater(currentUserId);
         return HttpResult.success(deliveryAddressMapper.updateDeliveryAddress(deliveryAddress));
     }
 }

@@ -15,6 +15,6 @@ public interface DeliveryAddressMapper {
 
     void insert(DeliveryAddress address);
 
-    @Select("SELECT * FROM delivery_address WHERE user_id=#{userId}")
+    @Select("SELECT * FROM delivery_address WHERE user_id=#{userId} AND is_deleted=0")
     List<DeliveryAddress> listDeliveryAddressByUserId(DeliveryAddress deliveryAddress);
 }

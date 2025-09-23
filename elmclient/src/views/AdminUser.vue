@@ -283,7 +283,7 @@ onMounted(() => {
   padding: 0;
   max-width: 100%;
   overflow-x: hidden;
-  padding-bottom: 70px;
+  padding-bottom: 0;
 }
 
 .container {
@@ -691,11 +691,5 @@ onMounted(() => {
   .user-details {
     flex-direction: column;
   }
-}
-
-/* 适配底部导航：给容器添加底部内边距，避免内容被导航遮挡 */
-.container {
-  /* 在原有样式基础上添加 */
-  padding-bottom: 0; /* 导航高度55px + 10px间距 */
 }
 </style>

@@ -717,7 +717,7 @@ const getDisplayText = (location) => {
         const goToRChoose = () => {
             // 跳转到注册页面
             console.log('111111');
-            router.push({name:'RChoose'});
+            router.push({path: '/register'});
         }
         const navigateToSearch = () => {
             router.push({ path: '/search' });

@@ -11,10 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,10 +51,9 @@ public class AddressController {
     }
 
     @Operation(summary = "删除配送地址")
-    @PostMapping("/removeDeliveryAddress")
+    @PutMapping("/removeDeliveryAddress")
     public HttpResult removeDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress)
     {
-        deliveryAddress.setIsDeleted(true);
         return addressService.deleteDeliveryAddress(deliveryAddress);
     }
 }
