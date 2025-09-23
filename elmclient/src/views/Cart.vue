@@ -43,7 +43,7 @@
 				<div class="total-price">
 					<p style="color: black;">总计:  <span style="color:crimson;">&#165; {{ totalPrice }}</span></p>
 				</div>
-				<button class="checkout-btn" @click="checkout">去结算</button>
+				<button class="checkout-btn" @click="checkout">去下单</button>
 			</div>
 		</div>
 

@@ -14,6 +14,7 @@ import com.tju.elm_bk.service.UserService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.vo.BusinessSearchVO;
 import com.tju.elm_bk.vo.BusinessVO;
+import com.tju.elm_bk.vo.MerchantStatsVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -324,6 +325,15 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public List<Business> listBusinessByOrderTypeId(Integer type) {
         return businessMapper.listBusinessByOrderTypeId(type);
+    }
+
+    @Override
+    public List<MerchantStatsVO> getBusinessIdList() {
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
+
+        return businessMapper.selectBusinessIdListByUserId(currentUser.getId());
     }
 
 }

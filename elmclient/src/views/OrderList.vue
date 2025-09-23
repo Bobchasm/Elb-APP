@@ -67,7 +67,7 @@
 					
 					<!-- 已完成/已取消：查看详情 -->
 					<template v-else>
-						<button class="detail-btn" @click.stop="goDetail(item)">查看详情</button>
+						<button class="detail-btn" @click="goDetail(item.id)">查看详情</button>
 					</template>
 				</div>
 			</li>
@@ -435,11 +435,11 @@ export default {
 }
 .status-badge.accepted {
 	background: #f6ffed;
-	color: #52c41a;
+	color: #63b83c;
 }
 .status-badge.done {
-	background: #f9f9f9;
-	color: #1bc3d2;
+	background: #fdf4de;
+	color: #ffa700;
 }
 .status-badge.canceled {
 	background: #f9f9f9;

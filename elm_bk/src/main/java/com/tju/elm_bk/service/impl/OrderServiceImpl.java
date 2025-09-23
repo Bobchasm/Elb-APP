@@ -220,6 +220,10 @@ public class OrderServiceImpl implements OrderService {
         for (CartItemVO cartItemVO : cartItemsInBusiness) {
             totalPrice += (cartItemVO.getFoodPrice() * cartItemVO.getQuantity());
         }
+
+        if (totalPrice == 0.0) {
+            throw new APIException(ResultCodeEnum.ORDER_SUBMIT_FAILED);
+        }
         totalPrice += business.getDeliveryPrice().doubleValue();
 
         // 浮点数精度,保留两位小数

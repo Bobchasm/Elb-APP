@@ -1,5 +1,6 @@
 package com.tju.elm_bk.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,6 +27,7 @@ public class OrderItemDetailVO {
     private Integer orderState;
 
     @Schema(description = "下单时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private LocalDateTime orderDate;
 
     @Schema(description = "客户ID")
