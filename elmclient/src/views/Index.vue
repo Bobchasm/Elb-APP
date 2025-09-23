@@ -146,11 +146,78 @@
             </li>
         </ul>
 
-        <!-- 横幅广告部分（注意：此处有背景图片） -->
-        <div class="banner">
-            <h3>品质套餐</h3>
-            <p>搭配齐全吃得好</p>
-            <a>立即抢购 &gt;</a>
+        <!-- 销量冠军轮播图部分 -->
+        <div class="top-businesses-carousel">
+            <div class="carousel-header">
+                <h3>🏆 销量冠军榜</h3>
+                <p>最受欢迎的优质商家</p>
+            </div>
+            
+            <div class="carousel-3d-container" v-if="topThreeBusinesses.length > 0">
+                <!-- 左侧箭头按钮 -->
+                <div class="carousel-arrow carousel-arrow-left" @click="prevSlide">
+                    <i class="fa fa-chevron-left"></i>
+                </div>
+                
+                <!-- 轮播图内容 -->
+                <div 
+                    v-for="(business, index) in topThreeBusinesses" 
+                    :key="business.id"
+                    :class="[
+                        'carousel-3d-item',
+                        {
+                            'active': index === currentSlide,
+                            'left': index === getPrevIndex(),
+                            'right': index === getNextIndex()
+                        }
+                    ]"
+                    @click="goToSlide(index)"
+                >
+                    <div class="business-card-3d">
+                        <!-- 排名徽章 -->
+                        <div class="rank-badge" :class="getRankClass(index)">
+                            <span>{{ getRankText(index) }}</span>
+                        </div>
+                        
+                        <!-- 商家图片 -->
+                        <div class="business-image">
+                            <img 
+                                :src="business.businessImg && business.businessImg !== 'string' ? business.businessImg : require('@/assets/default-business.png')" 
+                                :alt="business.businessName"
+                                @error="handleImageError"
+                            >
+                        </div>
+                        
+                        <!-- 商家信息 -->
+                        <div class="business-info">
+                            <h4>{{ business.businessName || '商家名称' }}</h4>
+                            <div class="stats">
+                                <span class="sales">🔥 {{ business.salesCount || 0 }}</span>
+                                <span class="rating">⭐ {{ business.score || getBusinessRating(business.id) }}</span>
+                            </div>
+                            <div class="delivery-info">
+                                <span>起送 ¥{{ business.startPrice || business.starPrice || 0 }}</span>
+                                <span>配送 ¥{{ business.deliveryPrice || 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧箭头按钮 -->
+                <div class="carousel-arrow carousel-arrow-right" @click="nextSlide">
+                    <i class="fa fa-chevron-right"></i>
+                </div>
+                
+                <!-- 指示器 -->
+                <div class="carousel-indicators">
+                    <span 
+                        v-for="(business, index) in topThreeBusinesses" 
+                        :key="index"
+                        :class="['indicator', { active: index === currentSlide }]"
+                        @click="goToSlide(index)"
+                    ></span>
+                </div>
+            </div>
         </div>
 
         <!-- 超级会员部分 -->
@@ -324,6 +391,12 @@ export default {
         const businessList = ref([]);
         const originalBusinessList = ref([]); // 保存原始数据用于筛选和排序
         const ratingMap = ref({});
+        
+        // 轮播图相关
+        const currentSlide = ref(0);
+        const topThreeBusinesses = ref([]);
+        let autoPlayTimer = null;
+        
         const currentLocation = ref('定位中...');
         const searchKeyword = ref('');
         const sortBy = ref('default');
@@ -660,6 +733,93 @@ const getDisplayText = (location) => {
             return ratingMap.value[businessId] || '1.0';
         };
 
+        // 获取销量前三的商家
+        const updateTopThreeBusinesses = () => {
+            if (originalBusinessList.value.length === 0) return;
+            
+            const businesses = [...originalBusinessList.value];
+            
+            // 按销量排序获取前三
+            const sortedBySales = businesses
+                .sort((a, b) => {
+                    const salesA = parseInt(a.salesCount || 0);
+                    const salesB = parseInt(b.salesCount || 0);
+                    if (salesA !== salesB) {
+                        return salesB - salesA; // 销量降序
+                    }
+                    // 销量相同按ID降序
+                    return (b.id || 0) - (a.id || 0);
+                })
+                .slice(0, 3);
+            
+            topThreeBusinesses.value = sortedBySales;
+            console.log('🏆 销量前三商家:', topThreeBusinesses.value.map(b => ({
+                name: b.businessName,
+                sales: b.salesCount || 0,
+                id: b.id
+            })));
+            
+            // 数据更新后启动自动轮播
+            restartAutoPlay();
+        };
+
+        // 轮播控制函数
+        const goToSlide = (index) => {
+            currentSlide.value = index;
+            restartAutoPlay();
+        };
+
+        const nextSlide = () => {
+            currentSlide.value = (currentSlide.value + 1) % topThreeBusinesses.value.length;
+        };
+
+        const prevSlide = () => {
+            currentSlide.value = currentSlide.value === 0 
+                ? topThreeBusinesses.value.length - 1 
+                : currentSlide.value - 1;
+        };
+
+        const getPrevIndex = () => {
+            return currentSlide.value === 0 ? 2 : currentSlide.value - 1;
+        };
+
+        const getNextIndex = () => {
+            return currentSlide.value === 2 ? 0 : currentSlide.value + 1;
+        };
+
+        // 自动轮播功能
+        const startAutoPlay = () => {
+            if (topThreeBusinesses.value.length > 1) {
+                autoPlayTimer = setInterval(() => {
+                    nextSlide();
+                }, 3000); // 3秒自动切换
+            }
+        };
+
+        const stopAutoPlay = () => {
+            if (autoPlayTimer) {
+                clearInterval(autoPlayTimer);
+                autoPlayTimer = null;
+            }
+        };
+
+        const restartAutoPlay = () => {
+            stopAutoPlay();
+            startAutoPlay();
+        };
+
+        // 排名相关函数
+        const getRankClass = (index) => {
+            const classes = ['champion', 'runner-up', 'third'];
+            return classes[index] || 'other';
+        };
+
+        const getRankText = (index) => {
+            const texts = ['冠军', '亚军', '季军'];
+            return texts[index] || '优秀';
+        };
+
+
         // 排序商家列表
         const sortBusinessList = (list, sortType) => {
             console.log('=== 开始排序商家列表 ===');
@@ -836,6 +996,7 @@ const getDisplayText = (location) => {
             console.log('🧪 硬编码数据:', testData);
             originalBusinessList.value = testData;
             computeRatings();
+            updateTopThreeBusinesses(); // 更新轮播图数据
             applyFiltersAndSort();
         };
 
@@ -878,6 +1039,7 @@ const getDisplayText = (location) => {
 
         onBeforeUnmount(() => {
             window.removeEventListener('scroll', handleScroll);
+            stopAutoPlay(); // 清理自动轮播定时器
         });
 
         const toBusinessList = (orderTypeId) => {
@@ -931,6 +1093,7 @@ const getDisplayText = (location) => {
                     if (response && response.success && response.data && Array.isArray(response.data)) {
                         originalBusinessList.value = response.data; // 搜索结果也保存为原始数据
                         computeRatings();
+                        updateTopThreeBusinesses(); // 更新轮播图数据
                         applyFiltersAndSort(); // 应用筛选和排序
                     } else {
                         console.warn('搜索响应格式不正确:', response);
@@ -1063,6 +1226,7 @@ const getDisplayText = (location) => {
                         });
                         
                         computeRatings();
+                        updateTopThreeBusinesses(); // 更新轮播图数据
                         applyFiltersAndSort(); // 应用筛选和排序
                     } else if (response && Array.isArray(response)) {
                         // 如果直接返回数组
@@ -1074,6 +1238,7 @@ const getDisplayText = (location) => {
                             salesCount: b.salesCount
                         })));
                         computeRatings();
+                        updateTopThreeBusinesses(); // 更新轮播图数据
                         applyFiltersAndSort(); // 应用筛选和排序
                     } else {
                         console.warn('响应数据为空或格式不正确:', response);
@@ -1270,7 +1435,21 @@ const getDisplayText = (location) => {
             applyFiltersAndSort,
             sortBusinessList,
             testWithHardcodedData,
-            testSearchAPI
+            testSearchAPI,
+            // 轮播图相关
+            currentSlide,
+            topThreeBusinesses,
+            goToSlide,
+            nextSlide,
+            prevSlide,
+            getPrevIndex,
+            getNextIndex,
+            getRankClass,
+            getRankText,
+            updateTopThreeBusinesses,
+            startAutoPlay,
+            stopAutoPlay,
+            restartAutoPlay
         };
     },
     components: {
@@ -1367,6 +1546,8 @@ const getDisplayText = (location) => {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    z-index: 20; /* 确保搜索框在轮播图之上 */
 }
 
 .wrapper .search .search-fixed-top .search-box {
@@ -1496,40 +1677,246 @@ const getDisplayText = (location) => {
     color: #666;
 }
 
-/****************** 横幅广告部分 ******************/
-.wrapper .banner {
-    /**
-             * 设置容器宽度95%，然后水平居中，这样两边留白; 
-             * 这里不能用padding，因为背景图片也会覆盖padding
-             */
+/****************** 销量冠军3D轮播图部分 ******************/
+.wrapper .top-businesses-carousel {
     width: 95%;
-    margin: 0 auto;
-    height: 29vw;
-
-    /*此三个样式组合，可以保证背景图片充满整个容器*/
-    background-image: url(../assets/index_banner.png);
-    background-repeat: no-repeat;
-    background-size: cover;
-
-    box-sizing: border-box;
-    padding: 2vw 6vw;
+    margin: 3vw auto;
+    background: white;
+    border-radius: 2vw;
+    padding: 3vw 2vw;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10; /* 确保在搜索框之下 */
 }
 
-.wrapper .banner h3 {
-    font-size: 4.2vw;
-    margin-bottom: 1.2vw;
+.wrapper .top-businesses-carousel .carousel-header {
+    text-align: center;
+    margin-bottom: 3vw;
+    color: #333;
 }
 
-.wrapper .banner p {
-    font-size: 3.4vw;
-    color: #666;
-    margin-bottom: 2.4vw;
-}
-
-.wrapper .banner a {
-    font-size: 3vw;
-    color: #C79060;
+.wrapper .top-businesses-carousel .carousel-header h3 {
+    font-size: 4vw;
+    margin: 0 0 1vw 0;
     font-weight: 700;
+    text-shadow: none;
+}
+
+.wrapper .top-businesses-carousel .carousel-header p {
+    font-size: 2.8vw;
+    margin: 0;
+    opacity: 0.7;
+    color: #666;
+}
+
+.wrapper .top-businesses-carousel .carousel-3d-container {
+    position: relative;
+    height: 40vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5vw 15vw; /* 扩大悬停区域 */
+    margin: -5vw -15vw; /* 负边距保持视觉位置不变 */
+}
+
+.wrapper .top-businesses-carousel .carousel-3d-item {
+    position: absolute;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    transform-style: preserve-3d;
+}
+
+/* 中间激活状态 */
+.wrapper .top-businesses-carousel .carousel-3d-item.active {
+    z-index: 13;
+    transform: translateX(0) scale(1);
+    opacity: 1;
+}
+
+/* 左边状态 */
+.wrapper .top-businesses-carousel .carousel-3d-item.left {
+    z-index: 12;
+    transform: translateX(-20vw) scale(0.75);
+    opacity: 0.6;
+}
+
+/* 右边状态 */
+.wrapper .top-businesses-carousel .carousel-3d-item.right {
+    z-index: 12;
+    transform: translateX(20vw) scale(0.75);
+    opacity: 0.6;
+}
+
+.wrapper .top-businesses-carousel .business-card-3d {
+    width: 45vw;
+    background: white;
+    border-radius: 2vw;
+    padding: 3vw;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.wrapper .top-businesses-carousel .carousel-3d-item:hover .business-card-3d {
+    transform: translateY(-0.5vw);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+}
+
+.wrapper .top-businesses-carousel .rank-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 1.5vw 3vw;
+    border-radius: 0 2vw 0 2vw;
+    color: white;
+    font-weight: 700;
+    font-size: 2.5vw;
+    z-index: 15;
+}
+
+.wrapper .top-businesses-carousel .rank-badge.champion {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.wrapper .top-businesses-carousel .rank-badge.runner-up {
+    background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+}
+
+.wrapper .top-businesses-carousel .rank-badge.third {
+    background: linear-gradient(135deg, #CD7F32, #B8860B);
+}
+
+.wrapper .top-businesses-carousel .business-image {
+    width: 100%;
+    height: 22vw;
+    border-radius: 1.5vw;
+    overflow: hidden;
+    margin-bottom: 2vw;
+}
+
+.wrapper .top-businesses-carousel .business-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.wrapper .top-businesses-carousel .carousel-3d-item:hover .business-image img {
+    transform: scale(1.05);
+}
+
+.wrapper .top-businesses-carousel .business-info {
+    text-align: center;
+}
+
+.wrapper .top-businesses-carousel .business-info h4 {
+    font-size: 3.5vw;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 1.5vw 0;
+    line-height: 1.2;
+}
+
+.wrapper .top-businesses-carousel .stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5vw;
+    gap: 1.5vw;
+}
+
+.wrapper .top-businesses-carousel .sales {
+    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+    color: white;
+    padding: 1vw 2vw;
+    border-radius: 1.5vw;
+    font-size: 2.5vw;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+}
+
+.wrapper .top-businesses-carousel .rating {
+    background: linear-gradient(135deg, #4ECDC4, #44A08D);
+    color: white;
+    padding: 1vw 2vw;
+    border-radius: 1.5vw;
+    font-size: 2.5vw;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+}
+
+.wrapper .top-businesses-carousel .delivery-info {
+    display: flex;
+    justify-content: space-around;
+    font-size: 2.5vw;
+    color: #666;
+    background: #f8f9fa;
+    padding: 1.5vw;
+    border-radius: 1.5vw;
+}
+
+/* 轮播箭头按钮 */
+.wrapper .top-businesses-carousel .carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8vw;
+    height: 8vw;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 3vw;
+    color: #333;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 16;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.wrapper .top-businesses-carousel:hover .carousel-arrow {
+    opacity: 1;
+    visibility: visible;
+}
+
+.wrapper .top-businesses-carousel .carousel-arrow:hover {
+    background: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.wrapper .top-businesses-carousel .carousel-arrow-left {
+    left: 8vw; /* 调整到扩大的悬停区域内 */
+}
+
+.wrapper .top-businesses-carousel .carousel-arrow-right {
+    right: 8vw; /* 调整到扩大的悬停区域内 */
+}
+
+.wrapper .top-businesses-carousel .carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 1.5vw;
+    margin-top: 3vw;
+}
+
+.wrapper .top-businesses-carousel .indicator {
+    width: 2.5vw;
+    height: 2.5vw;
+    border-radius: 50%;
+    background: #ddd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.wrapper .top-businesses-carousel .indicator.active {
+    background: #667eea;
+    transform: scale(1.2);
 }
 
 /****************** 超级会员部分 ******************/
