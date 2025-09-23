@@ -153,7 +153,14 @@
                 <p>最受欢迎的优质商家</p>
             </div>
             
-            <div class="carousel-3d-container" v-if="topThreeBusinesses.length > 0">
+            <div v-if="!topThreeBusinesses || topThreeBusinesses.length === 0" class="empty-carousel">
+                <div class="empty-state">
+                    <i class="fa fa-trophy"></i>
+                    <p>暂无销量冠军数据</p>
+                </div>
+            </div>
+            
+            <div class="carousel-3d-container" v-if="topThreeBusinesses && topThreeBusinesses.length > 0">
                 <!-- 左侧箭头按钮 -->
                 <div class="carousel-arrow carousel-arrow-left" @click="prevSlide">
                     <i class="fa fa-chevron-left"></i>
@@ -182,7 +189,7 @@
                         <!-- 商家图片 -->
                         <div class="business-image">
                             <img 
-                                :src="business.businessImg && business.businessImg !== 'string' ? business.businessImg : require('@/assets/default-business.png')" 
+                                :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')" 
                                 :alt="business.businessName"
                                 @error="handleImageError"
                             >
@@ -344,7 +351,15 @@
         </transition>
 
         <!-- 推荐商家列表部分 -->
-        <ul class="business-list">
+        <div v-if="!businessList || businessList.length === 0" class="empty-business-list">
+            <div class="empty-state">
+                <i class="fa fa-store"></i>
+                <p>暂无商家数据</p>
+                <p class="empty-hint">请稍后再试或检查网络连接</p>
+            </div>
+        </div>
+        
+        <ul class="business-list" v-if="businessList && businessList.length > 0">
             <li v-for="business in businessList" :key="business.id || business.businessId" @click="toBusinessInfo(business.id || business.businessId)">
                 <div class="business-info">
                     <img :src="business.businessImg === 'string' ? require('@/assets/default-business.png') : business.businessImg" @error="handleImageError" :alt="business.businessName">
@@ -453,8 +468,14 @@ export default {
         const getCurrentLocation = async () => {
             try {
                 // 使用高德地图IP定位API
-                const response = await request.get(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
-                if (response.data.status === '1' && response.data.city) {
+                console.log('🌍 开始获取位置信息...');
+                // 直接使用axios而不是request，避免拦截器干扰
+                const response = await axios.get(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
+                console.log('🌍 位置API响应:', response);
+                
+                // 高德地图API返回的数据在response.data中
+                if (response && response.data && response.data.status === '1' && response.data.city) {
+                    console.log('✅ 位置获取成功:', response.data.city);
                     currentLocation.value = response.data.city;
                     // 初始化选择位置
                     selectedLocation.value = {
@@ -463,11 +484,18 @@ export default {
                         district: ''
                     };
                 } else {
+                    console.log('⚠️ 位置API返回格式不正确，使用默认位置');
                     currentLocation.value = '天津大学北洋园校区';
                 }
             } catch (error) {
-                console.error('获取位置失败:', error);
+                console.error('❌ 获取位置失败:', error);
                 currentLocation.value = '天津大学北洋园校区';
+                // 设置默认位置信息
+                selectedLocation.value = {
+                    province: '天津市',
+                    city: '天津市',
+                    district: '津南区'
+                };
             }
         };
 
@@ -488,7 +516,7 @@ export default {
         const loadProvinces = async () => {
             loading.value = true;
             try {
-                const response = await request.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=中国&subdistrict=1`);
+                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=中国&subdistrict=1`);
                 if (response.data.status === '1') {
                     locationData.value = response.data.districts[0].districts;
                     currentLevel.value = 0;
@@ -504,7 +532,7 @@ export default {
         const loadCities = async (provinceCode, provinceName) => {
             loading.value = true;
             try {
-                const response = await request.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${provinceCode}&subdistrict=1`);
+                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${provinceCode}&subdistrict=1`);
                 if (response.data.status === '1' && response.data.districts[0].districts) {
                     locationData.value = response.data.districts[0].districts;
                     currentLevel.value = 1;
@@ -524,7 +552,7 @@ export default {
         const loadDistricts = async (cityCode, cityName) => {
             loading.value = true;
             try {
-                const response = await request.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${cityCode}&subdistrict=1`);
+                const response = await axios.get(`https://restapi.amap.com/v3/config/district?key=${AMAP_KEY}&keywords=${cityCode}&subdistrict=1`);
                 if (response.data.status === '1' && response.data.districts[0].districts) {
                     locationData.value = response.data.districts[0].districts;
                     currentLevel.value = 2;
@@ -735,7 +763,10 @@ const getDisplayText = (location) => {
 
         // 获取销量前三的商家
         const updateTopThreeBusinesses = () => {
-            if (originalBusinessList.value.length === 0) return;
+            if (originalBusinessList.value.length === 0) {
+                topThreeBusinesses.value = [];
+                return;
+            }
             
             const businesses = [...originalBusinessList.value];
             
@@ -753,11 +784,7 @@ const getDisplayText = (location) => {
                 .slice(0, 3);
             
             topThreeBusinesses.value = sortedBySales;
-            console.log('🏆 销量前三商家:', topThreeBusinesses.value.map(b => ({
-                name: b.businessName,
-                sales: b.salesCount || 0,
-                id: b.id
-            })));
+            console.log('🏆 轮播图更新:', topThreeBusinesses.value.map(b => `${b.businessName}(销量${b.salesCount || 0})`).join(', '));
             
             // 数据更新后启动自动轮播
             restartAutoPlay();
@@ -918,27 +945,36 @@ const getDisplayText = (location) => {
                 search.style.position = 'static';
             }
         };
-        // 测试search接口
-        const testSearchAPI = async () => {
-            console.log('🧪 === 直接测试search接口 ===');
+        // 测试API接口连通性
+        const testAPIConnection = async () => {
+            console.log('🧪 === 测试API连通性 ===');
+            
+            // 测试基础连接
             try {
-                const response = await request.get('/api/businesses/search', { 
-                    params: { keyword: '', isScore: 0, isSales: 0 } 
-                });
-                console.log('🔍 Search接口完整响应:', response);
-                console.log('🔍 响应数据类型:', typeof response);
-                console.log('🔍 响应是否有success字段:', 'success' in response);
-                console.log('🔍 响应是否有data字段:', 'data' in response);
+                console.log('🔄 测试基础连接...');
+                const healthResponse = await request.get('/api/businesses/search?keyword=&isScore=0&isSales=0');
+                console.log('✅ API连接成功');
+                console.log('响应类型:', typeof healthResponse);
+                console.log('响应内容:', healthResponse);
                 
-                if (response && response.success && response.data && Array.isArray(response.data)) {
-                    console.log('✅ Search接口数据格式正确');
-                    const withSales = response.data.filter(item => item.salesCount > 0);
-                    console.log('🏆 Search接口返回的有销量商家:', withSales);
-                } else {
-                    console.log('❌ Search接口数据格式不正确');
-                }
+                return healthResponse;
             } catch (error) {
-                console.error('🔥 Search接口调用失败:', error);
+                console.error('❌ API连接失败:', error);
+                console.error('- 错误类型:', error.name);
+                console.error('- 错误消息:', error.message);
+                console.error('- 响应状态:', error.response?.status);
+                console.error('- 响应数据:', error.response?.data);
+                
+                // 检查常见问题
+                if (error.code === 'ECONNREFUSED') {
+                    console.error('🚨 后端服务器未启动或端口不正确');
+                } else if (error.response?.status === 404) {
+                    console.error('🚨 API端点不存在');
+                } else if (error.response?.status === 500) {
+                    console.error('🚨 后端服务器内部错误');
+                }
+                
+                return null;
             }
         };
 
@@ -958,7 +994,7 @@ const getDisplayText = (location) => {
                 {
                     "id": 40,
                     "businessName": "螺狮粉",
-                    "businessImg": "",
+                    "businessImg": "https://sunnybigevent.oss-cn-beijing.aliyuncs.com/default-food.png",
                     "startPrice": 2.00,
                     "deliveryPrice": 10.00,
                     "score": 1.00,
@@ -976,7 +1012,7 @@ const getDisplayText = (location) => {
                 {
                     "id": 37,
                     "businessName": "面的传奇面馆",
-                    "businessImg": "",
+                    "businessImg": "https://sunnybigevent.oss-cn-beijing.aliyuncs.com/default-food.png",
                     "startPrice": 1.00,
                     "deliveryPrice": 1.00,
                     "score": 1.00,
@@ -1034,7 +1070,7 @@ const getDisplayText = (location) => {
             // console.log('🧪 启用硬编码数据测试');
             // testWithHardcodedData();
             
-            getBusinessList();
+            getBusinessList(); // 恢复API调用
         });
 
         onBeforeUnmount(() => {
@@ -1089,16 +1125,36 @@ const getDisplayText = (location) => {
                     console.log('222响应状态:', response?.status);
                     console.log('333响应数据:', response?.data);
 
-                    // 更新商家列表 - 根据API文档的响应格式处理
-                    if (response && response.success && response.data && Array.isArray(response.data)) {
-                        originalBusinessList.value = response.data; // 搜索结果也保存为原始数据
-                        computeRatings();
-                        updateTopThreeBusinesses(); // 更新轮播图数据
-                        applyFiltersAndSort(); // 应用筛选和排序
+                    // 统一处理搜索API响应数据
+                    console.log('🔍 搜索API响应数据结构分析:');
+                    console.log('- response类型:', typeof response);
+                    console.log('- response.success:', response?.success);
+                    console.log('- response.data存在:', !!response?.data);
+                    
+                    let searchData = null;
+                    
+                    if (response && response.success && Array.isArray(response.data)) {
+                        searchData = response.data;
+                        console.log('✅ 搜索使用标准响应格式');
+                    } else if (Array.isArray(response)) {
+                        searchData = response;
+                        console.log('✅ 搜索使用直接数组格式');
                     } else {
-                        console.warn('搜索响应格式不正确:', response);
+                        console.warn('❌ 搜索响应格式不正确:', response);
+                        searchData = [];
+                    }
+                    
+                    if (searchData && searchData.length > 0) {
+                        console.log('🔍 搜索到商家数据:', searchData.length, '个');
+                        originalBusinessList.value = searchData;
+                        computeRatings();
+                        updateTopThreeBusinesses();
+                        applyFiltersAndSort();
+                    } else {
+                        console.log('🔍 搜索无结果');
                         originalBusinessList.value = [];
                         businessList.value = [];
+                        topThreeBusinesses.value = [];
                     }
 
                 } catch (error) {
@@ -1142,9 +1198,9 @@ const getDisplayText = (location) => {
         };
 
         // 获取商家列表
-        const getBusinessList = () => {
+        const getBusinessList = async () => {
             console.log('=== 开始获取商家列表 ===');
-            console.log('🔄 改用search接口获取数据，因为/api/businesses接口返回的数据有问题');
+            console.log('🔄 使用search接口获取数据');
             console.log('请求URL: /api/businesses/search');
             console.log('请求参数:', { keyword: '', isScore: 0, isSales: 0 });
             // 使用search接口获取所有商家数据
@@ -1179,79 +1235,92 @@ const getDisplayText = (location) => {
                         })));
                     }
                     
-                    // 检查响应数据结构 - 注意：request拦截器返回response.data，所以response就是数据本身
-                    if (response && response.success && response.data && Array.isArray(response.data)) {
-                        console.log('✅ 响应数据格式正确');
+                    // 统一处理API响应数据
+                    console.log('🔍 API响应数据结构分析:');
+                    console.log('- response类型:', typeof response);
+                    console.log('- response.success:', response?.success);
+                    console.log('- response.data存在:', !!response?.data);
+                    console.log('- response.data是数组:', Array.isArray(response?.data));
+                    
+                    let businessData = null;
+                    
+                    // 处理不同的响应格式
+                    if (response && response.success && Array.isArray(response.data)) {
+                        // 标准格式: { success: true, data: [...] }
+                        businessData = response.data;
+                        console.log('✅ 使用标准响应格式 response.data');
+                    } else if (Array.isArray(response)) {
+                        // 直接返回数组格式
+                        businessData = response;
+                        console.log('✅ 使用直接数组格式 response');
+                    } else {
+                        console.warn('❌ 无法识别的响应格式:', response);
+                        businessData = [];
+                    }
+                    
+                    if (businessData && businessData.length > 0) {
+                        console.log('📊 获取到商家数据:', businessData.length, '个');
                         
-                        // 🔍 在赋值前检查原始响应数据
-                        console.log('🔍 赋值前 - 检查response.data中的销量数据:');
-                        const responseWithSales = response.data.filter(b => (b.salesCount || 0) > 0);
-                        responseWithSales.forEach(business => {
-                            console.log(`- ${business.businessName}: salesCount=${business.salesCount} (类型: ${typeof business.salesCount})`);
-                        });
-                        
-                        originalBusinessList.value = response.data; // 保存原始数据
-                        
-                        // 🔍 赋值后立即检查
-                        console.log('🔍 赋值后 - 检查originalBusinessList中的销量数据:');
-                        const assignedWithSales = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
-                        assignedWithSales.forEach(business => {
-                            console.log(`- ${business.businessName}: salesCount=${business.salesCount} (类型: ${typeof business.salesCount})`);
-                        });
-                        
-                        // 🔍 验证数据完整性
-                        console.log('🔍 数据完整性验证:');
-                        console.log('response.data === originalBusinessList.value:', response.data === originalBusinessList.value);
-                        console.log('JSON比较:', JSON.stringify(responseWithSales) === JSON.stringify(assignedWithSales));
-                        
-                        console.log('📊 原始商家数据总数:', originalBusinessList.value.length);
-                        
-                        // 详细显示前5个商家的完整数据
-                        console.log('🔍 前5个商家的完整数据:');
-                        originalBusinessList.value.slice(0, 5).forEach((business, index) => {
-                            console.log(`${index + 1}. ${business.businessName || '无名称'}:`, {
+                        // 显示前3个商家的基本信息
+                        console.log('🔍 前3个商家预览:');
+                        businessData.slice(0, 3).forEach((business, index) => {
+                            console.log(`${index + 1}. ${business.businessName}:`, {
                                 id: business.id,
                                 salesCount: business.salesCount,
-                                score: business.score,
-                                startPrice: business.startPrice,
-                                deliveryPrice: business.deliveryPrice
+                                score: business.score
                             });
                         });
                         
-                        // 显示所有有销量的商家
-                        const businessesWithSales = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
-                        console.log('🏆 有销量的商家数量:', businessesWithSales.length);
-                        businessesWithSales.forEach(business => {
-                            console.log(`- ${business.businessName}: 销量 ${business.salesCount}`);
+                        // 统计有销量的商家
+                        const businessesWithSales = businessData.filter(b => (b.salesCount || 0) > 0);
+                        console.log('🏆 有销量的商家:', businessesWithSales.length, '个');
+                        if (businessesWithSales.length > 0) {
+                            console.log('销量排行:');
+                            businessesWithSales
+                                .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0))
+                                .slice(0, 5)
+                                .forEach((business, index) => {
+                                    console.log(`  ${index + 1}. ${business.businessName}: ${business.salesCount}`);
+                                });
+                        }
+                        
+                        originalBusinessList.value = businessData;
+                        computeRatings();
+                        updateTopThreeBusinesses();
+                        applyFiltersAndSort();
+                        
+                        console.log('✅ 数据加载完成:', {
+                            总商家数: originalBusinessList.value.length,
+                            显示商家数: businessList.value.length,
+                            轮播图商家数: topThreeBusinesses.value.length
                         });
                         
-                        computeRatings();
-                        updateTopThreeBusinesses(); // 更新轮播图数据
-                        applyFiltersAndSort(); // 应用筛选和排序
-                    } else if (response && Array.isArray(response)) {
-                        // 如果直接返回数组
-                        originalBusinessList.value = response; // 保存原始数据
-                        console.log('商家列表数据:', originalBusinessList.value);
-                        console.log('前5个商家的销量数据:', originalBusinessList.value.slice(0, 5).map(b => ({
-                            name: b.businessName,
-                            id: b.id,
-                            salesCount: b.salesCount
-                        })));
-                        computeRatings();
-                        updateTopThreeBusinesses(); // 更新轮播图数据
-                        applyFiltersAndSort(); // 应用筛选和排序
                     } else {
-                        console.warn('响应数据为空或格式不正确:', response);
+                        console.warn('❌ 没有获取到商家数据');
                         originalBusinessList.value = [];
                         businessList.value = [];
+                        topThreeBusinesses.value = [];
                     }
                 })
                 .catch(error => {
-                    console.error('获取商家列表失败:', error);
+                    console.error('❌ 获取商家列表失败:', error);
                     console.error('错误详情:', error.response?.data);
                     console.error('错误状态:', error.response?.status);
+                    console.error('错误消息:', error.message);
+                    
+                    // 设置空数据
                     originalBusinessList.value = [];
                     businessList.value = [];
+                    topThreeBusinesses.value = [];
+                    
+                    // 如果是网络错误，可以考虑重试
+                    if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNREFUSED') {
+                        console.log('🔄 网络错误，3秒后自动重试...');
+                        setTimeout(() => {
+                            console.log('🔄 重试获取商家列表');
+                            getBusinessList();
+                        }, 3000);
+                    }
                 });
         };
 
@@ -1435,7 +1504,7 @@ const getDisplayText = (location) => {
             applyFiltersAndSort,
             sortBusinessList,
             testWithHardcodedData,
-            testSearchAPI,
+            testAPIConnection,
             // 轮播图相关
             currentSlide,
             topThreeBusinesses,
@@ -1711,7 +1780,8 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .carousel-3d-container {
     position: relative;
-    height: 40vw;
+    height: 50vw; /* 增加高度 */
+    min-height: 300px; /* 设置最小高度 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1749,6 +1819,7 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .business-card-3d {
     width: 45vw;
+    min-width: 280px; /* 设置最小宽度 */
     background: white;
     border-radius: 2vw;
     padding: 3vw;
@@ -2344,6 +2415,36 @@ const getDisplayText = (location) => {
 
 .fade-enter-from, .fade-leave-to {
     opacity: 0;
+}
+
+/* 空状态样式 */
+.empty-carousel, .empty-business-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    padding: 40px 20px;
+}
+
+.empty-carousel .empty-state, .empty-business-list .empty-state {
+    text-align: center;
+    color: #999;
+}
+
+.empty-carousel .empty-state i, .empty-business-list .empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-carousel .empty-state p, .empty-business-list .empty-state p {
+    font-size: 16px;
+    margin: 8px 0;
+}
+
+.empty-business-list .empty-state .empty-hint {
+    font-size: 14px;
+    color: #ccc;
 }
 
 /* 推荐方式样式 */
