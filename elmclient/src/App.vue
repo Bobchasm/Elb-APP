@@ -19,6 +19,7 @@ import BusinessFooter from './components/BusinessFooter.vue';
 import AdminFooter from './components/AdminFooter.vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { ro } from 'element-plus/es/locales.mjs';
 
 export default {
   components: {
@@ -45,7 +46,11 @@ export default {
     });
 
     const showBusinessFooter = computed(() => {
+     if(route.path=== '/merchant/businessinfo'){
+        return false;
+      }
       return route.path.startsWith('/merchant');
+      
     });
 
     const showAdminFooter = computed(() => {

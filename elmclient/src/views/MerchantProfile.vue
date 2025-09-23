@@ -64,14 +64,14 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { toast } from '../utils/toast'; // 假设有toast工具函数
-//import defaultAvatar from '@/assets/default-merchant-avatar.png'; // 默认头像
+import { toast } from '../utils/toast'; 
 import request from '../utils/request';
 
 export default {
   name: 'MerchantProfile',
   setup() {
     const router = useRouter();
+    const defaultAvatar = 'https://via.placeholder.com/100'; // 备用默认头像
 
     const merchant = ref(null);
     const merchantData = ref({
@@ -90,34 +90,54 @@ export default {
 
     onMounted(async () => {
       await loadMerchantData();
+      // 在获取到 merchant.id 后，再加载统计数据
+      if (merchant.value?.id) {
+        await loadMerchantStats(merchant.value.id);
+      }
     });
-const loadMerchantData = async () => {
-  loading.value = true;
-  try {
-    const response = await request.get('/api/person');
-    
-    // 检查 response 对象本身是否有效，并且包含 id 字段
-    if (response && response.id) {
-      // 直接使用 response 作为数据源
-      const data = response;
 
-      merchant.value = {
-        id: data.id,
-        name: data.username,
-        phone: data.phone,
-        avatar: data.photo,
-      };
-    } else {
-      // 这里的 else 分支用于处理 response 本身为 null/undefined 或缺少关键字段的情况
-      toast.error('获取商家信息失败：服务器返回数据为空或格式不正确！');
-    }
-  } catch (error) {
-    console.error('获取商家信息失败:', error);
-    toast.error('获取商家信息失败，请重试！');
-  } finally {
-    loading.value = false;
-  }
-};
+    // 加载商家基本信息
+    const loadMerchantData = async () => {
+      loading.value = true;
+      try {
+        const data = await request.get('/api/person');
+        
+        if (data && data.id) {
+          merchant.value = {
+            id: data.id,
+            name: data.username,
+            phone: data.phone,
+            avatar: data.photo,
+          };
+        } else {
+          toast.error('获取商家信息失败：服务器返回数据为空或格式不正确！');
+        }
+      } catch (error) {
+        console.error('获取商家信息失败:', error);
+        toast.error('获取商家信息失败，请重试！');
+      } finally {
+        loading.value = false;
+      }
+    };
+    
+    // 新增：加载商家统计数据
+    const loadMerchantStats = async (merchantId) => {
+      try {
+        const response = await request.get(`/api/merchant/interaction/stats/${merchantId}`);
+        
+        if (response && response.success && response.data) {
+          const stats = response.data;
+          merchantData.value.likes = stats.likeCount;
+          merchantData.value.favorites = stats.collectCount;
+          merchantData.value.rating = stats.rating;
+        } else {
+          toast.error('获取商家统计数据失败！');
+        }
+      } catch (error) {
+        console.error('获取商家统计数据失败:', error);
+        toast.error('获取商家统计数据失败，请重试！');
+      }
+    };
 
     const logout = () => {
       sessionStorage.removeItem('merchant');
@@ -134,7 +154,7 @@ const loadMerchantData = async () => {
       merchantData,
       formattedPhone,
       loading,
-      // defaultAvatar,
+      defaultAvatar,
       logout,
       switchToCustomer
     };
@@ -329,7 +349,7 @@ const loadMerchantData = async () => {
   width: 100%;
   padding: 14px;
   text-align: center;
-  background: linear-gradient(135deg, #8e2de2, #4a00e0);
+  background: linear-gradient(135deg,#8e2de2, #4a00e0);
   color: white;
   font-weight: 600;
   border-radius: 12px;

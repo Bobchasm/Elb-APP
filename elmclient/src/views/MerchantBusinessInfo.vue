@@ -118,6 +118,8 @@ export default {
         showCancelButton: true,
         confirmButtonText: '确认修改',
         cancelButtonText: '取消',
+        confirmButtonColor: '#0097ef',
+        cancelButtonColor: '#d33',
         preConfirm: () => {
           const name = document.getElementById('swal-input-name').value;
           const img = document.getElementById('swal-input-img').value;
@@ -160,6 +162,7 @@ export default {
         showCancelButton: true,
         confirmButtonText: '确认添加',
         cancelButtonText: '取消',
+        confirmButtonColor: '#0097ef', // 修改：将确认按钮颜色改为蓝色
         preConfirm: () => {
           const name = document.getElementById('swal-food-name').value;
           const img = document.getElementById('swal-food-img').value;
@@ -201,6 +204,7 @@ export default {
         showCancelButton: true,
         confirmButtonText: '确认修改',
         cancelButtonText: '取消',
+        confirmButtonColor: '#0097ef',
         preConfirm: () => {
           const name = document.getElementById('swal-food-name').value;
           const img = document.getElementById('swal-food-img').value;
@@ -234,7 +238,7 @@ export default {
         text: "删除后将无法恢复！",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#0097ef', // 修改：将确认按钮颜色改为蓝色
         cancelButtonColor: '#d33',
         confirmButtonText: '确定删除',
         cancelButtonText: '取消'

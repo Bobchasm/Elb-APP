@@ -156,7 +156,8 @@ export default {
     });
 
     onMounted(async () => {
-      await loadUserData();
+      // 临时注释掉这行，阻止在页面加载时请求数据
+     //await loadUserData();
       // 在这里调用获取未读消息数量的API
       await checkNewMessages();
     });

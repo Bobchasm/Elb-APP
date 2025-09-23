@@ -1,18 +1,18 @@
 <template>
-  <div class="shop-management-page">
-    <div class="header">
+  <div class="shop-management-page container-fluid">
+    <div class="top-background">
       <h1>我的商铺</h1>
     </div>
 
-    <div class="container wrapper">
+    <div class="main-content-wrapper">
       <ul class="business-list">
-        <li v-for="shop in shops" :key="shop.id">
+        <li v-for="shop in shops" :key="shop.id" class="business-card">
           <div class="business-info">
-            <img :src="shop.img" :alt="shop.name">
+            <img :src="shop.img" :alt="shop.name" class="business-img">
             <div class="business-info-detail">
-              <h3>{{ shop.name }}</h3>
+              <h3 class="business-name">{{ shop.name }}</h3>
               <div class="business-info-delivery">
-                <p>配送费{{ shop.deliveryFee }}元</p>
+                <p>配送费 {{ shop.deliveryFee }} 元</p>
               </div>
             </div>
           </div>
@@ -23,64 +23,43 @@
           </div>
         </li>
       </ul>
-    </div>
 
-    <div class="footer-button-container">
-      <button class="apply-button" @click="applyNewShop">申请新店</button>
-    </div>
-
-    <div class="footer-nav">
-      <router-link to="/merchant/business" class="nav-item active">
-        <i class="fa fa-store-alt"></i>
-        <span>商铺</span>
-      </router-link>
-      <router-link to="/merchant/orders" class="nav-item">
-        <i class="fa fa-clipboard-list"></i>
-        <span>订单</span>
-      </router-link>
-      <router-link to="/merchant/profile" class="nav-item">
-        <i class="fa fa-user"></i>
-        <span>我的</span>
-      </router-link>
+      <div class="footer-button-container">
+        <button class="apply-button" @click="applyNewShop">申请新店</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 
 export default {
   name: 'MerchantBusiness',
-  data() {
-    return {
-      shops: [
-        {
-          id: 1,
-          name: "万家饺子（软件园店）",
-          img: "https://via.placeholder.com/100",
-          deliveryFee: 4
-        },
-        {
-          id: 2,
-          name: "喜家德虾仁水饺（西安路店）",
-          img: "https://via.placeholder.com/100",
-          deliveryFee: 3
-        }
-      ]
-    };
-  },
-  methods: {
-    editShop(shopId) {
-      // 1. 点击编辑按钮后跳转到 /merchant/businessinfo 页面
-      // 假设你已经配置了 Vue Router
-      if (this.$router) {
-        this.$router.push(`/merchant/businessinfo?shopId=${shopId}`);
-      } else {
-        console.warn('Vue Router 未配置。将执行模拟跳转。');
-        alert(`跳转到 /merchant/businessinfo?shopId=${shopId}`);
+  setup() {
+    const router = useRouter();
+    const shops = ref([
+      {
+        id: 1,
+        name: "万家饺子（软件园店）",
+        img: "https://via.placeholder.com/100",
+        deliveryFee: 4
+      },
+      {
+        id: 2,
+        name: "喜家德虾仁水饺（西安路店）",
+        img: "https://via.placeholder.com/100",
+        deliveryFee: 3
       }
-    },
-    async deleteShop(shopId) {
+    ]);
+
+    const editShop = (shopId) => {
+      router.push(`/merchant/businessinfo?shopId=${shopId}`);
+    };
+
+    const deleteShop = async (shopId) => {
       const result = await Swal.fire({
         title: '确定删除此店铺？',
         text: "删除后将无法恢复！",
@@ -92,16 +71,15 @@ export default {
         cancelButtonText: '取消'
       });
       if (result.isConfirmed) {
-        console.log(`正在发送删除店铺请求，ID: ${shopId}`);
-        const shopIndex = this.shops.findIndex(shop => shop.id === shopId);
+        const shopIndex = shops.value.findIndex(shop => shop.id === shopId);
         if (shopIndex > -1) {
-          this.shops.splice(shopIndex, 1);
+          shops.value.splice(shopIndex, 1);
           Swal.fire('删除成功', '店铺已删除。', 'success');
         }
       }
-    },
-    async applyNewShop() {
-      // 2. 点击申请新店后弹出模态框表单
+    };
+
+    const applyNewShop = async () => {
       const { value: formValues } = await Swal.fire({
         title: '申请新店',
         html:
@@ -123,159 +101,201 @@ export default {
             Swal.showValidationMessage('请填写必填项');
             return false;
           }
-          
           return { merchantName, shopName, shopAddress, description };
         }
       });
       
       if (formValues) {
-        // 表单提交成功
-        console.log('新店申请提交成功：', formValues);
         Swal.fire('提交成功', '新店申请已提交，等待审核。', 'success');
-        // 在实际应用中，这里会发送 API 请求
-        // 例如: axios.post('/api/apply-shop', formValues);
       }
-    }
+    };
+
+    return {
+      shops,
+      editShop,
+      deleteShop,
+      applyNewShop
+    };
   }
 };
 </script>
 
 <style scoped>
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-
-/* ----------------------- 顶部标题栏 ----------------------- */
+/* ----------------------- 整体布局 ----------------------- */
 .shop-management-page {
-  font-family: Arial, sans-serif;
-  background-color: #f8f8f8;
+  /* 使用全局容器样式，并覆盖背景色和阴影 */
+  background-color: var(--background-light);
+  min-height: 100vh;
+  padding: 0;
   padding-bottom: 20vw;
+  box-shadow: none;
 }
-.header {
-  width: 100%;
-  height: 12vw;
-  background-color: #007bff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.header h1 {
-  font-size: 5vw;
-  color: #fff;
-  margin: 0;
-}
-
-/* ----------------------- 店铺列表 ----------------------- */
-.container {
+.main-content-wrapper {
   max-width: 600px;
   margin: 0 auto;
   padding: 0 4vw;
 }
-.wrapper .business-list {
+
+/* ----------------------- 顶部标题栏 - 样式已完全修改为与参考样式相同 ----------------------- */
+.top-background {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100px;
+  background: #0097ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 使用参考阴影 */
+  border-radius: 16px 16px 0 0; /* 添加圆角 */
+  margin-bottom: 50px; /* 添加底部外边距 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+  /* transform: rotate(30deg); */  /* 删除 transform */
+  /* animation: shine 6s infinite linear; */ /* 删除 animation */
+}
+/* @keyframes shine { */  /* 删除 keyframes */
+/*   0% { transform: rotate(30deg) translate(-10%, -10%); } */
+/*   100% { transform: rotate(30deg) translate(10%, 10%); } */
+/* } */
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem; /* 调整字体大小 */
+  font-weight: 600; /* 调整字体粗细 */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 添加文本阴影 */
+  letter-spacing: 1px; /* 调整字间距 */
+  margin: 0;
+  z-index: 1;
+}
+
+/* ----------------------- 店铺列表 ----------------------- */
+.business-list {
   width: 100%;
   padding: 0;
-  margin: 0;
+  margin: 20px 0;
   list-style: none;
 }
-.wrapper .business-list li {
-  padding: 3vw;
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.business-card {
+  /* 使用统一的卡片样式，圆角、阴影、背景色 */
+  background: white;
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-large);
+  margin-bottom: 15px;
+  padding: 15px;
+  transition: var(--transition-ease);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.wrapper .business-list li:hover {
-  background-color: #f9f9f9;
+.business-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
-.wrapper .business-list li .business-info {
+
+.business-info {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  gap: 15px;
 }
-.wrapper .business-list li .business-info img {
+.business-img {
   width: 20vw;
   height: 20vw;
+  max-width: 80px;
+  max-height: 80px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
+  box-shadow: var(--shadow-small);
 }
-.wrapper .business-list li .business-info .business-info-detail {
-  flex: 1;
-  margin-left: 3vw;
-}
-.wrapper .business-list li .business-info .business-info-detail h3 {
-  font-size: 4vw;
-  margin: 0 0 2vw 0;
-  color: #333;
-}
-.wrapper .business-list li .business-info .business-info-delivery {
+.business-info-detail {
   display: flex;
-  gap: 2vw;
-  font-size: 3vw;
-  color: #666;
+  flex-direction: column;
+  justify-content: center;
+}
+.business-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  margin: 0 0 5px 0;
+}
+.business-info-delivery p {
+  font-size: 0.95rem;
+  color: var(--text-medium);
   margin: 0;
 }
-.wrapper .business-list li .business-info-rating,
-.wrapper .business-list li .business-info-promotion {
-  display: none;
-}
+
 .action-buttons {
   display: flex;
-  gap: 2vw;
+  gap: 10px;
 }
 .action-buttons button {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 1.5vw 3vw;
+  background-color: transparent;
+  border-radius: 8px; /* 添加圆角 */
+  padding: 8px 16px;
   cursor: pointer;
-  font-size: 3vw;
-  transition: background-color 0.3s, color 0.3s;
+  font-size: 0.95rem;
+  transition: var(--transition-ease);
+  font-weight: 500;
+  box-shadow: var(--shadow-small);
 }
 .action-buttons button.edit-btn {
-  color: #007bff;
-  border-color: #007bff;
+  color: #0097ff;
+  border: 1px solid #0097ff;
+  background-color: #fff;
 }
 .action-buttons button.delete-btn {
   color: #dc3545;
-  border-color: #dc3545;
-}
-.action-buttons button:hover {
-  color: #fff;
+  border: 1px solid #dc3545;
+  background-color: #fff;
 }
 .action-buttons button.edit-btn:hover {
-  background-color: #007bff;
+  background-color: #0097ff;
+  color: white;
+  transform: translateY(-2px);
 }
 .action-buttons button.delete-btn:hover {
   background-color: #dc3545;
+  color: white;
+  transform: translateY(-2px);
 }
 
 /* ----------------------- 底部按钮 ----------------------- */
 .footer-button-container {
   position: fixed;
-  bottom: 12vw;
+  bottom: 14vw;
   left: 0;
   right: 0;
-  display: flex;
-  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
   padding: 0 4vw;
   box-sizing: border-box;
   z-index: 99;
 }
 .apply-button {
   width: 100%;
-  background-color: #007bff;
-  color: #fff;
-  padding: 4vw 0;
-  border-radius: 10px;
-  text-decoration: none;
-  font-size: 4vw;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  background-color: #0097ff;
+  color: white;
+  padding: 14px;
+  border-radius: 8px; /* 添加圆角 */
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-medium);
   border: none;
   cursor: pointer;
+  transition: var(--transition-ease);
+}
+.apply-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* ----------------------- 底部导航栏 ----------------------- */
@@ -288,25 +308,43 @@ export default {
   justify-content: space-around;
   align-items: center;
   height: 12vw;
-  background-color: #fff;
-  border-top: 1px solid #f0f0f0;
+  background-color: white;
+  border-top: 1px solid var(--border-color);
   z-index: 100;
+  box-shadow: var(--shadow-small);
 }
 .footer-nav .nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #666;
-  text-decoration: none;
-  font-size: 3vw;
-  flex-grow: 1;
-  text-align: center;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  transition: var(--transition-ease);
 }
 .footer-nav .nav-item i {
-  font-size: 5vw;
-  margin-bottom: 1vw;
+  font-size: 1.5rem;
+  margin-bottom: 0.5vw;
 }
 .footer-nav .nav-item.active {
-  color: #007bff;
+  color: #0097ff;
+}
+
+/* ----------------------- 媒体查询 ----------------------- */
+@media (max-width: 480px) {
+  .top-background {
+    height: 90px;
+    margin-bottom: 50px;
+    border-radius: 0;
+  }
+  .top-background h1 {
+    font-size: 1.5rem;
+  }
+  .business-name {
+    font-size: 1rem;
+  }
+  .business-info-delivery p {
+    font-size: 0.85rem;
+  }
+  .action-buttons button {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
 }
 </style>

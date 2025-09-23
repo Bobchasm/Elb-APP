@@ -65,7 +65,10 @@
 	  const setSessionStorage = (key, value) => {
       window.sessionStorage.setItem(key, JSON.stringify(value)); // 自定义会话存储函数
     };
-    const login = async () => {
+   // Login.vue 中修改后的 login 方法
+// Login.vue 中修改后的 login 方法
+const login = async () => {
+		console.log('执行了');
       // 1. 表单校验
       if (!userName.value.trim()) {
         alert('用户名不能为空！');
@@ -98,9 +101,24 @@
           return;
         }
 
+
         // 5. 根据“记住我”状态存储 token
         const storage = rememberMe.value ? localStorage : sessionStorage;
         storage.setItem('token', idToken); // 存储 token（key 为 token）
+		console.log(storage.getItem('token'));
+		let userRes;
+
+		// 获取用户信息
+        try {
+          userRes = await request.get('/api/user');
+          if (userRes) {
+            storage.setItem('userInfo', JSON.stringify(userRes));
+          }
+        } catch (error) {
+          console.error('获取用户信息失败:', error);
+        }
+		console.log(storage.getItem('userInfo'));
+
 
         // 6. 记住用户名（仅勾选时存localStorage）
         if (rememberMe.value) {
@@ -108,9 +126,18 @@
         } else {
           localStorage.removeItem('savedUserName'); // 未勾选则清除
         }
-
-        // 7. 跳转首页（首页会通过 /api/user 拉取用户信息）
-        router.push({ path: '/index' });
+		let targetPath = '/index'; // 默认跳转首页
+		if (userRes?.authorities && Array.isArray(userRes.authorities)) {
+			console.log('x');
+			console.log(userRes.authorities);
+		// 检查权限数组中是否包含ADMIN权限
+		const isAdmin = userRes.authorities.some(auth => auth.name === 'ADMIN');
+		if (isAdmin) {
+			targetPath = '/admin/home'; // 管理员跳转管理员首页
+		}
+		}
+		router.push({ path: targetPath });
+		
       } catch (error) {
         // 捕获网络错误或后端500等异常
         const errorMsg = error.response?.data?.message || '网络异常，登录失败！';
@@ -118,7 +145,6 @@
         console.error('登录错误:', error);
       }
     };
-
   
 	  return {
         userName,

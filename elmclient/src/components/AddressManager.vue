@@ -2,17 +2,20 @@
   <div class="menu-section address-section">
     <div class="section-title">我的收货地址</div>
     <div class="menu-list">
-      <div v-if="addresses.length === 0" class="empty-state">
+      <div v-if="addresses.length === 0 && !isLoading" class="empty-state">
         暂无收货地址，请添加。
       </div>
-      <div v-for="address in addresses" :key="address.daId" class="address-item">
+      <div v-if="isLoading" class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i> 正在加载...
+      </div>
+      <div v-for="address in addresses" :key="address.id" class="address-item">
         <div class="address-details">
           <span class="contact-info">{{ address.contactName }} ({{ address.contactTel }})</span>
-          <span class="full-address">{{ address.region }} {{ address.fullAddress }}</span>
+          <span class="full-address">{{ address.address }}</span>
         </div>
         <div class="address-actions">
           <i class="fas fa-edit edit-icon" @click="openAddressModal(address)"></i>
-          <i class="fas fa-trash-alt delete-icon" @click="deleteAddress(address.daId)"></i>
+          <i class="fas fa-trash-alt delete-icon" @click="deleteAddress(address.id)"></i>
         </div>
       </div>
       <div class="add-new-item" @click="openAddressModal()">
@@ -21,7 +24,6 @@
       </div>
     </div>
 
-    <!-- 使用Teleport将模态框渲染到body根部 -->
     <Teleport to="body">
       <div v-if="showAddressModal" class="modal-overlay" @click.self="closeAddressModal">
         <div class="modal-content">
@@ -39,45 +41,13 @@
             <input v-model="addressForm.contactSex" placeholder="1男/2女" />
           </div>
           <div class="modal-item">
-            <label>省 / 市（州） / 区（县）</label>
-            <input v-model="addressForm.region" placeholder="点击选择省市区" @click="openAddressPicker" readonly />
-          </div>
-          <div class="modal-item">
             <label>详细地址</label>
-            <textarea v-model="addressForm.fullAddress" placeholder="输入详细地址"></textarea>
+            <textarea v-model="addressForm.address" placeholder="输入详细地址"></textarea>
           </div>
-          
+
           <div class="modal-buttons">
             <button @click="submitAddress">提交</button>
             <button @click="closeAddressModal">取消</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <Teleport to="body">
-      <div v-if="showAddressPickerModal" class="modal-overlay modal-picker" @click.self="closeAddressPicker">
-        <div class="address-modal">
-          <div class="modal-header">
-            <h4>选择省市区</h4>
-            <span class="close-btn" @click="closeAddressPicker">×</span>
-          </div>
-          <div class="picker-container">
-            <div class="picker-column">
-              <div v-for="p in provinces" :key="p" class="picker-item" :class="{ selected: p === selectedProvince }" @click="selectProvince(p)">
-                {{ p }}
-              </div>
-            </div>
-            <div class="picker-column">
-              <div v-for="c in cities" :key="c" class="picker-item" :class="{ selected: c === selectedCity }" @click="selectCity(c)">
-                {{ c }}
-              </div>
-            </div>
-            <div class="picker-column">
-              <div v-for="d in districts" :key="d" class="picker-item" :class="{ selected: d === selectedDistrict }" @click="selectDistrict(d)">
-                {{ d }}
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -88,42 +58,25 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { toast } from '../utils/toast';
-import { useAddressPicker } from '../composables/useAddressPicker';
+// 导入你指定的 request 工具
+import request from '../utils/request';
 
-// 定义 props 和 emits
 const props = defineProps({
   userId: String
 });
 
 const addresses = ref([]);
+const isLoading = ref(false);
 const showAddressModal = ref(false);
 const isEditing = ref(false);
 const addressForm = ref({
-  daId: null,
+  id: null,
   contactName: '',
   contactTel: '',
   contactSex: null,
-  region: '',
-  fullAddress: '',
+  address: '',
   userId: props.userId
 });
-
-// 使用可组合函数 useAddressPicker
-const {
-  showAddressPickerModal,
-  provinces,
-  cities,
-  districts,
-  selectedProvince,
-  selectedCity,
-  selectedDistrict,
-  openAddressPicker,
-  closeAddressPicker,
-  selectProvince,
-  selectCity,
-  selectDistrict
-} = useAddressPicker(addressForm);
-
 
 onMounted(() => {
   loadAddresses();
@@ -131,78 +84,81 @@ onMounted(() => {
 
 // 加载地址列表的方法
 const loadAddresses = async () => {
-  try {
-    if (!props.userId) {
-      toast.warning('用户未登录，无法获取地址列表');
-      return;
-    }
-    
-    // 模拟数据加载
-    addresses.value = [
-      { daId: 1, contactName: '张三', contactTel: '13812345678', contactSex: 1, region: '广东省 深圳市 南山区', fullAddress: '高新园科技南路1号' },
-      { daId: 2, contactName: '李四', contactTel: '13987654321', contactSex: 2, region: '四川省 成都市 锦江区', fullAddress: '春熙路步行街88号' }
-    ];
+  if (!props.userId) {
+    toast.warning('用户未登录，无法获取地址列表');
+    return;
+  }
 
+  isLoading.value = true;
+  try {
+    // 使用 request.get 方法来发送 GET 请求
+    // 假设你的 request 工具支持 params 选项
+    const response = await request.get('/api/addresses', { params: { userId: props.userId } });
+    addresses.value = response.data;
+    // 如果接口返回的数据中包含了省市区和详细地址的组合，这里不需要再进行处理
+    // addresses.value = addresses.value.map(addr => ({
+    //   ...addr,
+    //   address: `${addr.address}`
+    // }));
   } catch (error) {
     console.error('获取地址列表失败:', error);
     toast.error('获取地址列表失败，请重试！');
+  } finally {
+    isLoading.value = false;
   }
 };
 
 const openAddressModal = (address = null) => {
-  // 阻止背景滚动
   document.body.style.overflow = 'hidden';
-  
+
   if (address) {
     isEditing.value = true;
     addressForm.value = { ...address };
-    const parts = address.region.split(' ');
-    // 在打开编辑窗口时，同步地址选择器的数据
-    selectedProvince.value = parts[0] || '';
-    selectedCity.value = parts[1] || '';
-    selectedDistrict.value = parts[2] || '';
   } else {
     isEditing.value = false;
     addressForm.value = {
-      daId: null,
+      id: null,
       contactName: '',
       contactTel: '',
       contactSex: null,
-      region: '',
-      fullAddress: '',
+      address: '',
       userId: props.userId
     };
-    // 新增时清空选择器数据
-    selectedProvince.value = '';
-    selectedCity.value = '';
-    selectedDistrict.value = '';
   }
   showAddressModal.value = true;
 };
 
 const closeAddressModal = () => {
-  // 恢复背景滚动
   document.body.style.overflow = '';
   showAddressModal.value = false;
 };
 
 const submitAddress = async () => {
-  if (!addressForm.value.contactName || !addressForm.value.contactTel || !addressForm.value.region || !addressForm.value.fullAddress) {
+  const form = addressForm.value;
+  if (!form.contactName || !form.contactTel || !form.address) {
     toast.warning('请填写完整的地址信息！');
     return;
   }
-  
+
   try {
     if (isEditing.value) {
-      // 模拟API调用
+      // 使用 request.post 方法发送 POST 请求
+      await request.post('/api/addresses/updateDeliveryAddress', { ...form });
       toast.success('地址修改成功！');
     } else {
-      // 模拟API调用
+      await request.post('/api/address', {
+        contactName: form.contactName,
+        contactTel: form.contactTel,
+        contactSex: form.contactSex,
+        address: form.address,
+        customer: { id: form.userId }
+      });
       toast.success('地址添加成功！');
     }
     closeAddressModal();
     loadAddresses();
   } catch (error) {
+    console.error('操作失败:', error);
     toast.error('操作失败，请重试！');
   }
 };
@@ -210,15 +166,16 @@ const submitAddress = async () => {
 const deleteAddress = async (id) => {
   if (confirm('确定要删除此地址吗？')) {
     try {
-      // 模拟API调用
+      // 使用 request.post 方法发送 POST 请求
+      await request.post('/api/addresses/removeDeliveryAddress', null, { params: { id: id } });
       toast.success('地址删除成功！');
       loadAddresses();
     } catch (error) {
+      console.error('删除失败:', error);
       toast.error('删除失败，请重试！');
     }
   }
 };
-
 </script>
 
 <style scoped>
@@ -310,11 +267,14 @@ const deleteAddress = async (id) => {
   font-size: 1rem;
   color: #3498db;
 }
-.empty-state {
+.empty-state, .loading-state {
   text-align: center;
   padding: 20px;
   color: #7f8c8d;
   font-size: 0.9rem;
+}
+.loading-state .fa-spinner {
+  margin-right: 5px;
 }
 </style>
 
@@ -409,21 +369,6 @@ const deleteAddress = async (id) => {
   transform: translateY(-1px);
 }
 
-.modal-overlay.modal-picker {
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 10001;
-  align-items: flex-end;
-}
-.address-modal {
-  background-color: #fff;
-  width: 100%;
-  max-width: 600px;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  padding: 20px;
-  animation: slide-up 0.3s ease-out forwards;
-}
-
 @keyframes modalSlideIn {
   from {
     opacity: 0;
@@ -433,68 +378,5 @@ const deleteAddress = async (id) => {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
-}
-
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.address-modal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-}
-.address-modal .modal-header h4 {
-  margin: 0;
-  font-weight: 500;
-  font-size: 1.2rem;
-  color: #2c3e50;
-}
-.address-modal .modal-header .close-btn {
-  font-size: 28px;
-  font-weight: bold;
-  color: #999;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-.address-modal .modal-header .close-btn:hover {
-  color: #333;
-}
-.picker-container {
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
-  height: 250px;
-  overflow: hidden;
-}
-.picker-column {
-  flex: 1;
-  height: 100%;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.picker-column::-webkit-scrollbar {
-  display: none;
-}
-.picker-item {
-  padding: 12px 0;
-  font-size: 16px;
-  color: #666;
-  transition: all 0.3s;
-  cursor: pointer;
-}
-.picker-item:hover {
-  background-color: #f5f5f5;
-}
-.picker-item.selected {
-  color: #1e88e5;
-  font-size: 18px;
-  font-weight: bold;
-  background-color: #e3f2fd;
 }
 </style>
