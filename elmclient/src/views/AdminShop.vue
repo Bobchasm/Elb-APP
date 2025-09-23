@@ -1,6 +1,10 @@
 <template>
 	<div class="wrapper">
-	  <header class="topbar"><p>商铺管理 - {{ businessName || '商家' }}</p></header>
+    <BackButton />  
+	  <!-- <header class="topbar"><p>商铺管理 - {{ businessName || '商家' }}</p></header> -->
+    <div class="header">
+            <h1 class="title">商铺管理 - {{ businessName || '商家' }}</h1>
+        </div>
 	  <div class="content">
 		<ul class="store-list">
 		  <li v-for="s in storeList" :key="s.id" class="store-item">
@@ -112,9 +116,11 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
+import BackButton from '../components/BackButton.vue';
 
 export default {
   name: 'ManageShop',
+  components: { BackButton },
   setup() {
     const route = useRoute();
     const router = useRouter();
@@ -472,7 +478,24 @@ export default {
 	justify-content: center; 
 	align-items: center; 
 }
-.content { margin-top: 15vw; padding: 4vw; }
+.wrapper header {
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.wrapper title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
+}
+.content { margin-top: 0vw; padding: 4vw; }
 .toolbar { display: flex; gap: 2vw; margin-bottom: 2vw; }
 .back { 
 	background: #eee; 

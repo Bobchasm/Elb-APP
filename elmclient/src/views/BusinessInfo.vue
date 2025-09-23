@@ -1,10 +1,11 @@
 <template>
     <div class="wrapper">
+        <BackButton :show-back-button="true" />
         <!-- header部分 -->
         <!-- 首页点进去后展示的内容 -->
-        <header>
-            <p>商家信息</p>
-        </header>
+        <div class="header">
+            <h1 class="title">商家信息</h1>
+        </div>
         <!-- 商家logo部分 -->
         <div class="business-logo">
             <img :src="business.businessImg || require('@/assets/default-business.png')" />
@@ -99,9 +100,10 @@
 import { ref, onMounted, computed, watch, onErrorCaptured } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import request from "@/utils/request";
-
+import BackButton from "@/components/BackButton.vue";
 export default {
     name: "BusinessInfo",
+    components: { BackButton },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -186,53 +188,53 @@ export default {
 
         // 加载用户互动状态（使用新的查询接口）
         const loadReactions = async () => {
-    try {
-        // 确保有有效的businessId
-        if (!businessId.value) {
-            console.error("缺少businessId");
-            return;
-        }
+            try {
+                // 确保有有效的businessId
+                if (!businessId.value) {
+                    console.error("缺少businessId");
+                    return;
+                }
 
-        // 等待用户信息加载（最多等待2秒）
-        let retry = 0;
-        while (!userInfo.value?.id && retry < 4) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            retry++;
-        }
+                // 等待用户信息加载（最多等待2秒）
+                let retry = 0;
+                while (!userInfo.value?.id && retry < 4) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retry++;
+                }
 
-        const userId = userInfo.value?.id;
-        if (!userId) {
-            console.log("用户未登录，不加载互动状态");
-            isLiked.value = false;
-            isFavorited.value = false;
-            return;
-        }
+                const userId = userInfo.value?.id;
+                if (!userId) {
+                    console.log("用户未登录，不加载互动状态");
+                    isLiked.value = false;
+                    isFavorited.value = false;
+                    return;
+                }
 
-        console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
-        
-        const response = await request.get('/api/merchant/interaction/status', {
-            params: { userId, merchantId: businessId.value },
-            headers: { 'Cache-Control': 'no-cache' } // 防止缓存
-        });
+                console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
 
-        console.log("互动状态API响应:", response);
+                const response = await request.get('/api/merchant/interaction/status', {
+                    params: { userId, merchantId: businessId.value },
+                    headers: { 'Cache-Control': 'no-cache' } // 防止缓存
+                });
 
-        // 根据实际API响应结构调整
-        if (response?.success) {
-            isLiked.value = Boolean(response.data?.liked);
-            isFavorited.value = Boolean(response.data?.collected);
-            console.log(`设置互动状态 - 点赞: ${isLiked.value}, 收藏: ${isFavorited.value}`);
-        } else {
-            console.error("API返回失败:", response?.message);
-            isLiked.value = false;
-            isFavorited.value = false;
-        }
-    } catch (error) {
-        console.error("加载互动状态异常:", error);
-        isLiked.value = false;
-        isFavorited.value = false;
-    }
-};
+                console.log("互动状态API响应:", response);
+
+                // 根据实际API响应结构调整
+                if (response?.success) {
+                    isLiked.value = Boolean(response.data?.liked);
+                    isFavorited.value = Boolean(response.data?.collected);
+                    console.log(`设置互动状态 - 点赞: ${isLiked.value}, 收藏: ${isFavorited.value}`);
+                } else {
+                    console.error("API返回失败:", response?.message);
+                    isLiked.value = false;
+                    isFavorited.value = false;
+                }
+            } catch (error) {
+                console.error("加载互动状态异常:", error);
+                isLiked.value = false;
+                isFavorited.value = false;
+            }
+        };
         // 更新互动状态到后端
         const updateInteraction = async (type, newValue) => {
             try {
@@ -492,29 +494,29 @@ export default {
         });
 
         // 初始化
-    
-// 修改 onMounted 部分
-onMounted(async () => {
-    console.log("组件挂载完成");
-    businessId.value = parseInt(route.query.businessId);
-    
-    if (!businessId.value) {
-        console.error("无效的商家ID:", route.query.businessId);
-        router.push("/");
-        return;
-    }
 
-    // 先加载用户信息
-    await fetchUserInfo();
-    
-    // 然后加载其他数据
-    initLocalCart();
-    await fetchBusinessInfo();
-    await fetchFoodList();
-    
-    // 最后加载互动状态（确保有用户ID）
-    await loadReactions();
-});
+        // 修改 onMounted 部分
+        onMounted(async () => {
+            console.log("组件挂载完成");
+            businessId.value = parseInt(route.query.businessId);
+
+            if (!businessId.value) {
+                console.error("无效的商家ID:", route.query.businessId);
+                router.push("/");
+                return;
+            }
+
+            // 先加载用户信息
+            await fetchUserInfo();
+
+            // 然后加载其他数据
+            initLocalCart();
+            await fetchBusinessInfo();
+            await fetchFoodList();
+
+            // 最后加载互动状态（确保有用户ID）
+            await loadReactions();
+        });
         // 监听businessId变化
         watch(() => route.query.businessId, (newId) => {
             console.log("路由businessId变化:", newId);
@@ -557,228 +559,242 @@ onMounted(async () => {
 <style scoped>
 /****************** 总容器 ******************/
 .wrapper {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 /****************** header部分 ******************/
+/* .wrapper header {
+    width: 100%;
+    height: 12vw;
+    background-color: #0097ff;
+    color: #fff;
+    font-size: 4.8vw;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+} */
 .wrapper header {
-	width: 100%;
-	height: 12vw;
-	background-color: #0097ff;
-	color: #fff;
-	font-size: 4.8vw;
-	position: fixed;
-	left: 0;
-	top: 0;
-	z-index: 1000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
 }
-
+.wrapper title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color:white;
+}
 /****************** 商家logo部分 ******************/
 .wrapper .business-logo {
-	width: 100%;
-	height: 50vw;
-	/*使用上外边距避开header部分*/
-	margin-top: 12vw;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+    width: 100%;
+    height: 50vw;
+    /*使用上外边距避开header部分*/
+    margin-top: 12vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .wrapper .business-logo img {
-	width: 40vw;
-	height: 40vw;
-	border-radius: 5px;
+    width: 40vw;
+    height: 40vw;
+    border-radius: 5px;
 }
 
 /****************** 商家信息部分 ******************/
 .wrapper .business-info {
-	width: 100%;
-	height: 20vw;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	position: relative;
+    width: 100%;
+    height: 20vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
 .wrapper .business-info h1 {
-	font-size: 5vw;
+    font-size: 5vw;
 }
 
 .wrapper .business-info .reactions {
-	position: absolute;
-	right: 3vw;
-	bottom: -2vw;
-	display: flex;
-	gap: 4vw;
+    position: absolute;
+    right: 3vw;
+    bottom: -2vw;
+    display: flex;
+    gap: 4vw;
 }
 
 .wrapper .business-info .reactions .reaction {
-	display: flex;
-	align-items: center;
-	gap: 1vw;
-	cursor: pointer;
-	user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    cursor: pointer;
+    user-select: none;
 }
 
 .wrapper .business-info .reactions .reaction i {
-	font-size: 5vw;
-	color: #bbb;
+    font-size: 5vw;
+    color: #bbb;
 }
 
 .wrapper .business-info p {
-	font-size: 3vw;
-	color: #666;
-	margin-top: 1vw;
+    font-size: 3vw;
+    color: #666;
+    margin-top: 1vw;
 }
 
 /****************** 食品列表部分 ******************/
 .wrapper .food {
-	width: 100%;
-	/*使用下外边距避开footer部分*/
-	margin-bottom: 14vw;
+    width: 100%;
+    /*使用下外边距避开footer部分*/
+    margin-bottom: 14vw;
 }
 
 .wrapper .food li {
-	width: 100%;
-	box-sizing: border-box;
-	padding: 2.5vw;
-	user-select: none;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2.5vw;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .wrapper .food li .food-left {
-	display: flex;
-	align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .wrapper .food li .food-left img {
-	width: 20vw;
-	height: 20vw;
+    width: 20vw;
+    height: 20vw;
 }
 
 .wrapper .food li .food-left .food-left-info {
-	margin-left: 3vw;
+    margin-left: 3vw;
 }
 
 .wrapper .food li .food-left .food-left-info h3 {
-	font-size: 3.8vw;
-	color: #555;
+    font-size: 3.8vw;
+    color: #555;
 }
 
 .wrapper .food li .food-left .food-left-info p {
-	font-size: 3vw;
-	color: #888;
-	margin-top: 2vw;
+    font-size: 3vw;
+    color: #888;
+    margin-top: 2vw;
 }
 
 .wrapper .food li .food-right {
-	width: 16vw;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+    width: 16vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .wrapper .food li .food-right .fa-minus-circle {
-	font-size: 5.5vw;
-	color: #999;
-	cursor: pointer;
+    font-size: 5.5vw;
+    color: #999;
+    cursor: pointer;
 }
 
 .wrapper .food li .food-right p {
-	font-size: 3.6vw;
-	color: #333;
+    font-size: 3.6vw;
+    color: #333;
 }
 
 .wrapper .food li .food-right .fa-plus-circle {
-	font-size: 5.5vw;
-	color: #0097ef;
-	cursor: pointer;
+    font-size: 5.5vw;
+    color: #0097ef;
+    cursor: pointer;
 }
 
 /****************** 购物车部分 ******************/
 .wrapper .cart {
-	width: 100%;
-	height: 14vw;
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	display: flex;
+    width: 100%;
+    height: 14vw;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    display: flex;
 }
 
 .wrapper .cart .cart-left {
-	flex: 2;
-	background-color: #505051;
-	display: flex;
+    flex: 2;
+    background-color: #505051;
+    display: flex;
 }
 
 .wrapper .cart .cart-left .cart-left-icon {
-	width: 16vw;
-	height: 16vw;
-	box-sizing: border-box;
-	border: solid 1.6vw #444;
-	border-radius: 8vw;
-	background-color: #3190e8;
-	font-size: 7vw;
-	color: #fff;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	margin-top: -4vw;
-	margin-left: 3vw;
-	position: relative;
+    width: 16vw;
+    height: 16vw;
+    box-sizing: border-box;
+    border: solid 1.6vw #444;
+    border-radius: 8vw;
+    background-color: #3190e8;
+    font-size: 7vw;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -4vw;
+    margin-left: 3vw;
+    position: relative;
 }
 
 .wrapper .cart .cart-left .cart-left-icon-quantity {
-	width: 5vw;
-	height: 5vw;
-	border-radius: 2.5vw;
-	background-color: red;
-	color: #fff;
-	font-size: 3.6vw;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	position: absolute;
-	right: -1.5vw;
-	top: -1.5vw;
+    width: 5vw;
+    height: 5vw;
+    border-radius: 2.5vw;
+    background-color: red;
+    color: #fff;
+    font-size: 3.6vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    right: -1.5vw;
+    top: -1.5vw;
 }
 
 .wrapper .cart .cart-left .cart-left-info p:first-child {
-	font-size: 4.5vw;
-	color: #fff;
-	margin-top: 1vw;
+    font-size: 4.5vw;
+    color: #fff;
+    margin-top: 1vw;
 }
 
 .wrapper .cart .cart-left .cart-left-info p:last-child {
-	font-size: 2.8vw;
-	color: #aaa;
+    font-size: 2.8vw;
+    color: #aaa;
 }
 
 .wrapper .cart .cart-right {
-	flex: 1;
+    flex: 1;
 }
 
 /*达到起送费时的样式*/
 .wrapper .cart .cart-right .cart-right-item {
-	width: 100%;
-	height: 100%;
-	background-color: #38ca73;
-	color: #fff;
-	font-size: 4.5vw;
-	font-weight: 700;
-	user-select: none;
-	cursor: pointer;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #38ca73;
+    color: #fff;
+    font-size: 4.5vw;
+    font-weight: 700;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 </style>
-
-

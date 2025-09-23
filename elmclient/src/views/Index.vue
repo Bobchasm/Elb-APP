@@ -1127,7 +1127,7 @@ const getDisplayText = (location) => {
 .wrapper .foodtype {
     width: 100%;
     height: 48vw;
-
+    background-color: white;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
