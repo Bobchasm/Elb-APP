@@ -558,6 +558,8 @@ export default {
   border-radius: 1vw;
   font-size: 3.2vw;
   font-weight: 500;
+  position: relative;
+  z-index: 10; /* 确保在最上层 */
 }
 
 .status-badge.unpaid {

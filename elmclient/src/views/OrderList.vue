@@ -419,10 +419,12 @@ export default {
 }
 
 .status-badge {
-	padding: 1vw 2vw;
-	border-radius: 1vw;
-	font-size: 3.2vw;
-	font-weight: 500;
+  padding: 1vw 2vw;
+  border-radius: 1vw;
+  font-size: 3.2vw;
+  font-weight: 500;
+  position: relative;
+  z-index: 10; /* 确保在最上层 */
 }
 
 .status-badge.unpaid {
@@ -435,7 +437,7 @@ export default {
 }
 .status-badge.accepted {
 	background: #f6ffed;
-	color: #63b83c;
+	color: #52c41a;
 }
 .status-badge.done {
 	background: #fdf4de;
