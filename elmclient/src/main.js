@@ -5,7 +5,6 @@ import { toast } from './utils/toast';
 //import { getToken,removeToken} from './utils/auth';
 
 import 'font-awesome/css/font-awesome.min.css';
-import axios from 'axios';
 import qs from 'qs';
 import request from './utils/request';
 import {

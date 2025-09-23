@@ -10,16 +10,17 @@
 
       <div class="user-card">
         <div class="avatar">
-          <i class="fas fa-user"></i>
+          <img src="@/assets/default-avatar.png" alt="用户头像" class="avatar-img">
         </div>
         <div class="user-details">
           <div class="user-name">
-            <i class="fas fa-user-tag full-name-icon"></i>
-            <span>张管理员</span>
+            <!-- <i class="fas fa-user-tag full-name-icon"></i> -->
+            <i class="fas fa-user full-name-icon"></i>
+            <span>{{ currentUser?.username || '管理员' }}</span>
           </div>
           <div class="user-full-name">
             <i class="fas fa-id-card full-name-icon"></i>
-            <span>ID: ADMIN20240520001</span>
+            <span>ID: ADMIN{{ currentUser?.id || '00' }}</span>
           </div>
         </div>
       </div>
@@ -28,19 +29,19 @@
         <div class="stat-card users">
           <i class="fas fa-users"></i>
           <h3>总用户人数</h3>
-          <div class="number">12,584</div>
+          <div class="number">{{ userCount !== null ? userCount.toLocaleString() : '加载中...' }}</div>
         </div>
 
         <div class="stat-card shops">
           <i class="fas fa-store"></i>
           <h3>总店铺数</h3>
-          <div class="number">3,267</div>
+          <div class="number">{{ shopCount !== null ? shopCount.toLocaleString() : '加载中...' }}</div>
         </div>
 
         <div class="stat-card revenue">
           <i class="fas fa-yen-sign"></i>
           <h3>总营业额</h3>
-          <div class="number">¥865万</div>
+          <div class="number">¥{{ totalRevenue !== null ? totalRevenue.toLocaleString() : '0' }}</div>
         </div>
       </div>
 
@@ -51,144 +52,541 @@
             :class="{ active: activeTab === 'user-review' }"
             @click="activeTab = 'user-review'"
           >
-            用户审核
+            用户审核（{{ merchantApplications.length }}）
           </div>
           <div
             class="review-tab"
             :class="{ active: activeTab === 'shop-review' }"
             @click="activeTab = 'shop-review'"
           >
-            商铺审核
+            商铺审核（{{ shopApplications.length }}）
           </div>
         </div>
 
+        <!-- 用户审核列表 -->
         <div class="review-content" :class="{ active: activeTab === 'user-review' }">
-          <div v-for="(user, index) in userReviews" :key="'user-' + index" class="review-item">
+          <div v-if="merchantApplications.length === 0 && !loadingMerchant" class="empty-tip">暂无待审核的商家申请</div>
+          <div v-if="loadingMerchant" class="loading-tip">加载中...</div>
+          <div 
+            v-for="app in merchantApplications" 
+            :key="'merchant-' + app.id" 
+            class="review-item"
+          >
             <div class="review-info">
-              <h3>{{ user.name }}</h3>
-              <p>{{ user.description }} · {{ user.date }}</p>
+              <h3>用户ID: {{ app.userId }}</h3>
+              <p>用户名: {{ app.username }} </p>
+              <p>申请时间: {{ formatTime(app.createTime) }}</p>
             </div>
-            <button class="review-btn" @click="reviewItem('user', index)">审核</button>
+            <button class="review-btn" @click="handleMerchantReview(app)">审核</button>
           </div>
         </div>
 
+        <!-- 商铺审核列表 -->
         <div class="review-content" :class="{ active: activeTab === 'shop-review' }">
-          <div v-for="(shop, index) in shopReviews" :key="'shop-' + index" class="review-item">
+          <div v-if="shopApplications.length === 0 && !loadingShop" class="empty-tip">暂无待审核的店铺申请</div>
+          <div v-if="loadingShop" class="loading-tip">加载中...</div>
+          <div 
+            v-for="app in shopApplications" 
+            :key="'shop-' + app.id" 
+            class="review-item"
+          >
             <div class="review-info">
-              <h3>{{ shop.name }}</h3>
-              <p>{{ shop.description }} · {{ shop.date }}</p>
+              <h3>{{ app.businessName }}</h3>
+              <p>店铺类型: {{ getShopTypeName(app.orderTypeId) }} </p>
+              <p> 申请时间: {{ formatTime(app.createTime) }}</p>
             </div>
-            <button class="review-btn" @click="reviewItem('shop', index)">审核</button>
+            <button class="review-btn" @click="handleShopReview(app)">审核</button>
           </div>
         </div>
       </div>
-
-      <div class="bottom-nav">
-        <router-link to="/admin/home" class="nav-item" :class="{ active: activeNav === 'home' }" @click.native="setActiveNav('home')">
-          <i class="fas fa-home"></i>
-          <span>首页</span>
-        </router-link>
-        <router-link to="/admin/manage-user" class="nav-item" :class="{ active: activeNav === 'users' }" @click.native="setActiveNav('users')">
-          <i class="fas fa-user-friends"></i>
-          <span>用户管理</span>
-        </router-link>
-        <router-link to="/admin/business" class="nav-item" :class="{ active: activeNav === 'shops' }" @click.native="setActiveNav('shops')">
-          <i class="fas fa-store"></i>
-          <span>商铺管理</span>
-        </router-link>
-      </div>
-
-      <div v-if="showReviewModal" class="modal-overlay" @click.self="showReviewModal = false">
+      
+  <!-- 审核弹窗 -->
+  <div v-if="showReviewModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
           <div class="modal-header">
             <h3>{{ modalTitle }}</h3>
-            <span class="close-btn" @click="showReviewModal = false">&times;</span>
+            <span class="close-btn" @click="closeModal">&times;</span>
           </div>
           <div class="modal-body">
-            <div v-for="(value, key) in modalData" :key="key" class="modal-item">
-              <label>{{ keyMap[key] || key }}:</label>
-              <span>{{ value }}</span>
+            <!-- 商家申请审核内容 -->
+            <div v-if="modalType === 'merchant'">
+  <div v-if="loadingPersonInfo" class="loading-tip">加载用户信息中...</div>
+  
+  <div v-else-if="currentPersonInfo" class="person-info-container">
+    <div class="modal-item">
+      <label>用户名:</label>
+      <span>{{ currentMerchantApp?.username }}</span>
+    </div>
+    <div class="modal-item">
+      <label>姓名:</label>
+      <span>{{ currentPersonInfo.firstName }} {{ currentPersonInfo.lastName }}</span>
+    </div>
+    <div class="modal-item">
+      <label>手机号:</label>
+      <span>{{ currentPersonInfo.phone || '未填写' }}</span>
+    </div>
+    <div class="modal-item">
+      <label>邮箱:</label>
+      <span>{{ currentPersonInfo.email || '未填写' }}</span>
+    </div>
+    <div class="modal-item">
+      <label>性别:</label>
+      <span>
+        {{ currentPersonInfo.gender === 'MALE' ? '男' : 
+          currentPersonInfo.gender === 'FEMALE' ? '女' : '未设置' }}
+      </span>
+    </div>
+    <div class="modal-item">
+      <label>申请ID:</label>
+      <span>{{ currentMerchantApp?.id }}</span>
+    </div>
+    <div class="modal-item">
+      <label>申请时间:</label>
+      <span>{{ formatTime(currentMerchantApp?.createTime) }}</span>
+    </div>
+  </div>
+  
+  <div v-else class="empty-tip">无法获取用户详细信息</div>
+</div>
+
+            <!-- 店铺申请审核内容 -->
+            <div v-if="modalType === 'shop'">
+              <div class="modal-item">
+                <label>申请ID:</label>
+                <span>{{ currentShopApp?.id }}</span>
+              </div>
+              <div class="modal-item">
+                <label>店铺名称:</label>
+                <span>{{ currentShopApp?.businessName }}</span>
+              </div>
+              <div class="modal-item">
+                <label>店铺地址:</label>
+                <span>{{ currentShopApp?.businessAddress }}</span>
+              </div>
+              <div class="modal-item">
+                <label>店铺介绍:</label>
+                <span>{{ currentShopApp?.businessExplain }}</span>
+              </div>
+              <div class="modal-item">
+                <label>起送价:</label>
+                <span>¥{{ currentShopApp?.startPrice }}</span>
+              </div>
+              <div class="modal-item">
+                <label>配送费:</label>
+                <span>¥{{ currentShopApp?.deliveryPrice }}</span>
+              </div>
+              <div class="modal-item">
+                <label>店铺类型:</label>
+                <span>{{ getShopTypeName(currentShopApp?.orderTypeId) }}</span>
+              </div>
+              <div class="modal-item">
+                <label>申请时间:</label>
+                <span>{{ formatTime(currentShopApp?.createTime) }}</span>
+              </div>
+              <div class="modal-item" v-if="currentShopApp?.businessImg">
+                <label>店铺图片:</label>
+                <img :src="currentShopApp?.businessImg" alt="店铺图片" class="shop-img">
+              </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="modal-btn approve-btn" @click="showReviewModal = false; alert('已批准');">批准</button>
-            <button class="modal-btn reject-btn" @click="showReviewModal = false; alert('已拒绝');">拒绝</button>
+            <button class="modal-btn approve-btn" @click="submitAudit(1)">批准</button>
+            <button class="modal-btn reject-btn" @click="submitAudit(2)">拒绝</button>
           </div>
         </div>
       </div>
+      <AdminFooter />
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'AdminPlatform',
-  data() {
-    return {
-      activeTab: 'user-review',
-      activeNav: 'home',
-      showReviewModal: false,
-      modalTitle: '',
-      modalData: {},
-      keyMap: {
-        username: '用户名',
-        fullName: '姓名',
-        phone: '手机号',
-        email: '邮箱',
-        gender: '性别',
-        merchantName: '商家名称',
-        shopName: '商铺名称',
-        shopType: '商铺类型',
-        address: '地址',
-        description: '简介',
-      },
-      userReviews: [
-        { name: '李明', description: '申请成为商家', date: '2023-05-20 14:30', username: 'liming123', fullName: '李明', phone: '13812345678', email: 'li.m@example.com', gender: '男' },
-        { name: '王小红', description: '申请成为商家', date: '2023-05-19 10:15', username: 'wangxh', fullName: '王小红', phone: '13987654321', email: 'wang.xh@example.com', gender: '女' },
-        { name: '赵四', description: '申请成为商家', date: '2023-05-18 16:45', username: 'zhaosi', fullName: '赵四', phone: '13555556666', email: 'zhao.si@example.com', gender: '男' }
-      ],
-      shopReviews: [
-        { name: '阳光餐厅', description: '申请开店', date: '2023-05-20 09:20', merchantName: '陈老板', shopName: '阳光餐厅', shopType: '中餐', address: '光明路123号', description: '专注于家常菜的温馨小馆' },
-        { name: '时尚服装店', description: '申请开店', date: '2023-05-19 15:40', merchantName: '张老板', shopName: '时尚服装店', shopType: '服装', address: '新华街45号', description: '最新潮流服饰，每日上新' },
-        { name: '数码科技馆', description: '申请开店', date: '2023-05-18 11:30', merchantName: '王老板', shopName: '数码科技馆', shopType: '电子产品', address: '解放西路88号', description: '提供最新款的手机、电脑等电子产品' }
-      ]
-    }
-  },
-  methods: {
-    reviewItem(type, index) {
-      if (type === 'user') {
-        const user = this.userReviews[index];
-        this.modalTitle = `用户审核 - ${user.name}`;
-        this.modalData = {
-          username: user.username,
-          fullName: user.fullName,
-          phone: user.phone,
-          email: user.email,
-          gender: user.gender,
-        };
-      } else if (type === 'shop') {
-        const shop = this.shopReviews[index];
-        this.modalTitle = `商铺审核 - ${shop.name}`;
-        this.modalData = {
-          merchantName: shop.merchantName,
-          shopName: shop.shopName,
-          shopType: shop.shopType,
-          address: shop.address,
-          description: shop.description,
-        };
+<script setup>
+import { ref, onMounted, onUnmounted, computed ,reactive} from 'vue';
+import { useRouter } from 'vue-router';
+import request from '../utils/request';
+import { toast } from '../utils/toast';
+import AdminFooter from '@/components/AdminFooter.vue';
+
+
+    // 路由实例
+    const router = useRouter();
+
+    // 状态管理
+    const currentUser = ref({}); // 当前管理员信息
+    const userCount = ref(null); // 总用户数
+    const shopCount = ref(null); // 总店铺数
+    const totalRevenue = ref(null); // 总营业额
+    const activeTab = ref('user-review'); // 活跃的审核标签
+    const showReviewModal = ref(false); // 审核弹窗显示状态
+    const modalTitle = ref(''); // 弹窗标题
+    const modalType = ref(''); // 弹窗类型（merchant/shop）
+    const currentMerchantApp = ref({}); // 当前待审核的商家申请
+    const currentShopApp = ref(null); // 当前待审核的店铺申请
+    const loadingMerchant = ref(false); // 商家申请加载状态
+    const loadingShop = ref(false); // 店铺申请加载状态
+
+    // 申请列表数据
+    const merchantApplications = ref([]); // 商家申请列表
+    const shopApplications = ref([]); // 店铺申请列表
+
+    // WebSocket实例
+    const webSocket = ref(null);
+    const currentPersonInfo = ref(null); // 存储用户详细信息
+    const loadingPersonInfo = ref(false); // 加载状态
+
+
+    // 店铺类型映射（根据实际业务补充）
+    const shopTypeMap = computed(() => ({
+      1: '美食',
+      2: '早餐',
+      3: '跑腿代购',
+      4: '汉堡披萨',
+      5: '甜品饮品',
+      6: '速食简餐',
+      7: '地方小吃',
+      8: '米粉面馆',
+      9: '包子粥铺',
+      10: '炸鸡炸串'
+    }));
+
+    // ====================== 初始化逻辑 ======================
+    onMounted(() => {
+      // 1. 获取当前管理员信息
+      getCurrentUserInfo();
+      // 2. 获取统计数据
+      getStatisticData();
+      // 3. 获取待审核列表
+      getMerchantApplications();
+      getShopApplications();
+      // 4. 初始化WebSocket
+      initWebSocket();
+    });
+
+    // 销毁WebSocket连接
+    onUnmounted(() => {
+      if (webSocket.value) {
+        webSocket.value.close();
       }
-      this.showReviewModal = true;
-    },
-    logout() {
-      if (confirm('确定要退出登录吗？')) {
-        alert('已成功退出登录');
+    });
+
+    // ====================== 接口请求 ======================
+    /**
+     * 获取当前管理员信息
+     */
+    const getCurrentUserInfo = async () => {
+      try {
+        const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
+        const savedUser = storage.getItem('userInfo');
+        if (savedUser) {
+          currentUser.value = JSON.parse(savedUser);
+        } else {
+          // 本地无数据时从接口获取
+          const res = await request.get('/api/user');
+          if (res.success && res.data) {
+            currentUser.value = res.data;
+            storage.setItem('userInfo', JSON.stringify(res.data));
+          }
+        }
+      } catch (error) {
+        console.error('获取管理员信息失败:', error);
+        toast.error('获取管理员信息失败，请刷新重试');
       }
-    },
-    setActiveNav(nav) {
-      this.activeNav = nav;
+    };
+
+    const getPersonInfo = async (userId) => {
+  if (!userId) return;
+  
+  loadingPersonInfo.value = true;
+  try {
+    // 调用接口，传入用户ID作为query参数
+    const res = await request.get('/api/personInfo', {
+      params: { id: userId }
+    });
+    
+    if (res.success && res.data) {
+      currentPersonInfo.value = res.data;
+    } else {
+      toast.warning('获取用户信息失败');
+      currentPersonInfo.value = null;
     }
+  } catch (error) {
+    console.error('获取用户详细信息失败:', error);
+    toast.error('获取用户信息失败，请重试');
+    currentPersonInfo.value = null;
+  } finally {
+    loadingPersonInfo.value = false;
   }
-}
+};
+
+    /**
+     * 获取统计数据（用户数、店铺数、营业额）
+     */
+    const getStatisticData = async () => {
+      try {
+        // 并行请求统计接口
+        const [userRes, shopRes, revenueRes] = await Promise.all([
+          request.get('/api/admin/countUser'),
+          request.get('/api/admin/countBusiness'),
+          request.get('/api/admin/countPrice')
+        ]);
+
+        if (userRes.success) userCount.value = userRes.data;
+        if (shopRes.success) shopCount.value = shopRes.data;
+        if (revenueRes.success) totalRevenue.value = revenueRes.data;
+      } catch (error) {
+        console.error('获取统计数据失败:', error);
+        toast.error('获取统计数据失败');
+      }
+    };
+
+    /**
+     * 获取商家申请待审核列表
+     */
+    const getMerchantApplications = async () => {
+      loadingMerchant.value = true;
+      try {
+        const res = await request.get('/api/permission/merchant-applications');
+        if (res.success && Array.isArray(res.data)) {
+          // 补充申请时间（若接口未返回，可根据实际调整）
+          merchantApplications.value = res.data.map(app => ({
+            ...app,
+            createTime: app.createTime || new Date().toISOString()
+          }));
+          console.log(merchantApplications.value);
+        }
+      } catch (error) {
+        console.error('获取商家申请列表失败:', error);
+        toast.error('获取商家申请列表失败');
+      } finally {
+        loadingMerchant.value = false;
+      }
+    };
+
+    /**
+     * 获取店铺申请待审核列表
+     */
+    const getShopApplications = async () => {
+      loadingShop.value = true;
+      try {
+        const res = await request.get('/api/permission/shop-applications');
+        if (res.success && Array.isArray(res.data)) {
+          shopApplications.value = res.data;
+        }
+      } catch (error) {
+        console.error('获取店铺申请列表失败:', error);
+        toast.error('获取店铺申请列表失败');
+      } finally {
+        loadingShop.value = false;
+      }
+    };
+
+    /**
+     * 提交商家审核结果
+     */
+    const submitMerchantAudit = async (id, auditResult) => {
+      try {
+        const res = await request.post('/api/permission/audit', {
+          id,
+          auditResult // 1-批准，2-拒绝
+        });
+        if (res.success) {
+          toast.success(auditResult === 1 ? '批准成功' : '拒绝成功');
+          // 重新获取申请列表
+          getMerchantApplications();
+          closeModal();
+        } else {
+          toast.error(res.message || '审核提交失败');
+        }
+      } catch (error) {
+        console.error('提交商家审核失败:', error);
+        toast.error('提交审核失败，请重试');
+      }
+    };
+
+    /**
+     * 提交店铺审核结果
+     */
+    const submitShopAudit = async (id, auditResult) => {
+      try {
+        const res = await request.post('/api/permission/audit-shop', {
+          id,
+          status: auditResult // 1-批准，2-拒绝（与接口字段匹配）
+        });
+        if (res.success) {
+          toast.success(auditResult === 1 ? '批准成功' : '拒绝成功');
+          // 重新获取申请列表
+          getShopApplications();
+          closeModal();
+        } else {
+          toast.error(res.message || '审核提交失败');
+        }
+      } catch (error) {
+        console.error('提交店铺审核失败:', error);
+        toast.error('提交审核失败，请重试');
+      }
+    };
+
+    // ====================== WebSocket相关 ======================
+    /**
+ * 初始化WebSocket连接
+ */
+const initWebSocket = () => {
+  // 1. 生成唯一的客户端标识sid（可以使用时间戳+随机数）
+  const sid = `admin-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  
+  // 2. 构造WebSocket连接地址（匹配后端的/ws/{sid}端点）
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  // 注意：这里的地址需要根据你的后端实际域名/端口修改
+  //const wsUrl = `${wsProtocol}//${window.location.host}/ws/${sid}`;
+  const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`;
+  
+  webSocket.value = new WebSocket(wsUrl);
+
+  // 3. 连接成功
+  webSocket.value.onopen = () => {
+    console.log(`WebSocket连接成功，客户端标识：${sid}`);
+    // 可以在这里存储sid，用于后续可能的单独消息发送
+    sessionStorage.setItem('websocket_sid', sid);
+  };
+
+  // 4. 接收消息（保持不变）
+  webSocket.value.onmessage = (event) => {
+    try {
+      const message = JSON.parse(event.data);
+      handleWebSocketMessage(message);
+    } catch (error) {
+      console.error('解析WebSocket消息失败:', error);
+    }
+  };
+
+  // 5. 连接关闭（保持不变，增加重连逻辑）
+  webSocket.value.onclose = (event) => {
+    console.log(`WebSocket连接关闭（sid: ${sid}），正在重连...`, event);
+    // 延迟重连，避免频繁尝试
+    setTimeout(initWebSocket, 3000);
+  };
+
+  // 6. 连接错误（保持不变）
+  webSocket.value.onerror = (error) => {
+    console.error(`WebSocket连接错误（sid: ${sid}）:`, error);
+  };
+};
+    
+
+    /**
+     * 处理WebSocket消息
+     */
+    const handleWebSocketMessage = (message) => {
+      const { applicationId, type, userId, username, content } = message;
+      // 提示消息
+      toast.info(content);
+
+      // 1. 商家申请通知（type=0）
+      if (type === 0) {
+        getMerchantApplications();
+      }
+
+      // 2. 店铺申请通知（根据后端实际type值调整，这里假设为1）
+      if (type === 1) {
+        // 触发重新获取列表或直接添加
+        getShopApplications();
+      }
+    };
+
+    // ====================== 事件处理 ======================
+    /**
+     * 处理商家审核点击
+     */
+    const handleMerchantReview = async(app) => {
+      modalType.value = 'merchant';
+      modalTitle.value = `商家申请审核 - ${app.username}`;
+      //currentMerchantApp.value = app;
+      currentMerchantApp.value = { ...app }; 
+  
+      console.log('currentMerchantApp.value.id:', currentMerchantApp.value.id); 
+      // 打开弹窗前先获取用户详细信息
+      await getPersonInfo(app.userId);
+      showReviewModal.value = true;
+    };
+
+    /**
+     * 处理店铺审核点击
+     */
+    const handleShopReview = (app) => {
+      modalType.value = 'shop';
+      modalTitle.value = `店铺申请审核 - ${app.businessName}`;
+      currentShopApp.value = app;
+      showReviewModal.value = true;
+    };
+
+    /**
+     * 提交审核结果
+     */
+    const submitAudit = (result) => {
+      if (modalType.value === 'merchant' && currentMerchantApp.value) {
+        submitMerchantAudit(currentMerchantApp.value.id, result);
+      }
+      if (modalType.value === 'shop' && currentShopApp.value) {
+        submitShopAudit(currentShopApp.value.id, result);
+      }
+    };
+
+    /**
+     * 关闭审核弹窗
+     */
+    const closeModal = () => {
+      showReviewModal.value = false;
+      currentMerchantApp.value = null;
+      currentShopApp.value = null;
+      modalType.value = '';
+      modalTitle.value = '';
+    };
+
+    /**
+     * 退出登录
+     */
+    const logout = () => {
+      if (confirm('确定要退出登录吗？')) {
+        // 清除存储的登录信息
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        sessionStorage.removeItem('userInfo');
+        // 关闭WebSocket连接
+        if (webSocket.value) {
+          webSocket.value.close();
+        }
+        // 跳转到登录页
+        router.push('/login');
+        toast.success('已成功退出登录');
+      }
+    };
+
+
+    /**
+     * 格式化时间
+     */
+    const formatTime = (timeStr) => {
+      if (!timeStr) return '';
+      const date = new Date(timeStr);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    /**
+     * 获取店铺类型名称
+     */
+    const getShopTypeName = (typeId) => {
+      return shopTypeMap.value[typeId] || `未知类型(${typeId})`;
+    };
+
+    
+
 </script>
 
 <style scoped>
@@ -215,14 +613,22 @@ export default {
   max-width: 600px;
   margin: 0 auto;
   background: #fff;
-  min-height: 100vh;
+  /* min-height: 100vh; */
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
+  padding-bottom: 65px;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+}
+/* 确保底部导航在最上层 */
+.admin-footer {
+  z-index: 1000; /* 提高 z-index */
+}
+.admin-container {
+  /* 确保容器有足够的内边距给底部导航留出空间 */
+  padding-bottom: 70px; /* 导航高度 + 一些间距 */
 }
 .top-background {
   width: 100%;
@@ -468,35 +874,6 @@ export default {
 .review-btn:hover {
   background: #0085e0;
 }
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 600px;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 12px 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-decoration: none;
-  color: #888;
-  font-size: 0.8rem;
-}
-.nav-item.active {
-  color: #0097ff;
-}
-.nav-item i {
-  font-size: 1.2rem;
-  margin-bottom: 4px;
-}
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -647,5 +1024,50 @@ export default {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+.empty-tip {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.loading-tip {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.shop-img {
+  max-width: 200px;
+  max-height: 150px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+.avatar {
+  /* 假设头像框是固定大小，根据你的实际情况调整 */
+  width: 80px;
+  height: 80px;
+  /* 可选：如果需要圆形头像框 */
+  border-radius: 50%;
+  /* 确保图片不会超出容器 */
+  overflow: hidden;
+  /* 可选：添加边框 */
+  border: 2px solid #fff;
+}
+
+.avatar-img {
+  /* 让图片填满容器 */
+  width: 100%;
+  height: 100%;
+  /* 关键属性：控制图片如何适应容器 */
+  object-fit: cover; /* 保持比例并裁剪以填满容器（常用） */
+  /* 其他可选值：
+     - contain: 保持比例，完整显示图片（可能有留白）
+     - fill: 拉伸图片填满容器（可能变形）
+     - none: 保持原始大小，可能显示不全
+  */
+  /* 可选：图片居中显示 */
+  object-position: center;
 }
 </style>

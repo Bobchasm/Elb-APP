@@ -446,28 +446,10 @@ const getDisplayText = (location) => {
 
 
         const fetchUserInfo = async () => {
-    //   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    //   if (!token) return;
 
-    //   try {
-    //     const res = await request.get('/api/user');
-    //     if (res) {
-    //       userInfo.value = res;
-    //       console.log(userInfo.value);
-    //       // 保存用户信息到存储
-    //       const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
-    //       storage.setItem('userInfo', JSON.stringify(res));
-    //     } else {
-    //       console.error('获取用户信息失败');
-    //       userInfo.value = null;
-    //     }
-    //   } catch (error) {
-    //     console.error('获取用户信息异常:', error);
-    //     userInfo.value = null;
-    //   }
     const tokenFromLocal = localStorage.getItem('token');
-  const tokenFromSession = sessionStorage.getItem('token');
-  const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+    const tokenFromSession = sessionStorage.getItem('token');
+    const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
 
         if (storage) {
             const savedUserInfo = storage.getItem('userInfo');

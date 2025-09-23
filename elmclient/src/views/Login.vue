@@ -62,7 +62,9 @@
       return localStorage.getItem('savedUserName') || '';
     });
 
+    
     const login = async () => {
+		console.log('执行了');
       // 1. 表单校验
       if (!userName.value.trim()) {
         alert('用户名不能为空！');
@@ -100,10 +102,11 @@
         const storage = rememberMe.value ? localStorage : sessionStorage;
         storage.setItem('token', idToken); // 存储 token（key 为 token）
 		console.log(storage.getItem('token'));
+		let userRes;
 
 		// 获取用户信息
         try {
-          const userRes = await request.get('/api/user');
+          userRes = await request.get('/api/user');
           if (userRes) {
             storage.setItem('userInfo', JSON.stringify(userRes));
           }
@@ -119,9 +122,18 @@
         } else {
           localStorage.removeItem('savedUserName'); // 未勾选则清除
         }
+		let targetPath = '/index'; // 默认跳转首页
+		console.log(userRes.authorities);
+		if (userRes?.authorities && Array.isArray(userRes.authorities)) {
+			console.log(userRes.authorities);
+		// 检查权限数组中是否包含ADMIN权限
+		const isAdmin = userRes.authorities.some(auth => auth.name === 'ADMIN');
+		if (isAdmin) {
+			targetPath = '/admin/home'; // 管理员跳转管理员首页
+		}
+		}
+		router.push({ path: targetPath });
 		
-        // 7. 跳转首页（首页会通过 /api/user 拉取用户信息）
-        router.push({ path: '/index' });
       } catch (error) {
         // 捕获网络错误或后端500等异常
         const errorMsg = error.response?.data?.message || '网络异常，登录失败！';

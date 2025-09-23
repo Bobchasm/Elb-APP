@@ -38,51 +38,18 @@ request.interceptors.response.use(
     return response.data; // 直接返回响应体，简化后续处理
   },
   (error) => {
-//     // 示例：token 过期时跳转登录页
-//     if (error.response?.status === 401) {
-//       // 清除存储的 token 和用户信息
-//       localStorage.removeItem('token');
-//       sessionStorage.removeItem('token');
-//       localStorage.removeItem('userInfo');
-//       sessionStorage.removeItem('userInfo');
-//       // 跳转登录页（需确保 router 已全局引入或通过其他方式获取）
-//       window.location.href = '/login';
-//     }
-//     return Promise.reject(error);
-//   }
-// 迁移 main.js 中的模拟接口逻辑
-const url = error.config?.url || '';
-    
-// 模拟修改昵称接口
-if (url.includes('changeUserName')) {
-  console.log('🐛 [模拟] 修改昵称接口响应');
-  return Promise.resolve({
-    data: 1,
-    status: 200,
-    statusText: 'OK',
-    config: error.config,
-    headers: {}
-  });
-}
-
-// 模拟更新个人信息接口
-if (url.includes('updateUserInfo')) {
-  console.log('🐛 [模拟] 更新个人信息接口响应');
-  return Promise.resolve({
-    data: 1,
-    status: 200,
-    statusText: 'OK',
-    config: error.config,
-    headers: {}
-  });
-}
-
-// 原有错误处理
-if (error.response && error.response.status === 500) {
-  console.error('服务器错误:', error.response.data);
-}
-return Promise.reject(error);
-}
+    // 示例：token 过期时跳转登录页
+    if (error.response?.status === 401) {
+      // 清除存储的 token 和用户信息
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      sessionStorage.removeItem('userInfo');
+      // 跳转登录页（需确保 router 已全局引入或通过其他方式获取）
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default request;

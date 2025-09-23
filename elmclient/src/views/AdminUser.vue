@@ -3,9 +3,9 @@
     <div class="container">
       <div class="top-background">
         <h1>用户管理</h1>
-        <button class="top-back-btn" @click="goBack">
+        <!-- <button class="top-back-btn" @click="goBack">
           <i class="fas fa-arrow-left"></i> 返回
-        </button>
+        </button> -->
       </div>
 
       <div class="search-section">
@@ -87,7 +87,7 @@
         <p>暂无用户数据</p>
       </div>
 
-      <!-- 确认对话框 -->
+      <!-- 确认对话框 - 完全保留原始样式 -->
       <div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
         <div class="modal-content">
           <div class="modal-header">
@@ -103,169 +103,170 @@
           </div>
         </div>
       </div>
+      <AdminFooter />
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'AdminUser',
-  data() {
-    return {
-      searchKeyword: '',
-      activeFilter: 'all',
-      showConfirmModal: false,
-      selectedUser: null,
-      users: [
-        {
-          userId: 1001,
-          username: '张三',
-          phone: '13812345678',
-          email: 'zhangsan@example.com',
-          disabled: false,
-          registerDate: '2023-01-15'
-        },
-        {
-          userId: 1002,
-          username: '李四',
-          phone: '13987654321',
-          email: 'lisi@example.com',
-          disabled: true,
-          registerDate: '2023-02-20'
-        },
-        {
-          userId: 1003,
-          username: '王五',
-          phone: '13555556666',
-          email: 'wangwu@example.com',
-          disabled: false,
-          registerDate: '2023-03-10'
-        },
-        {
-          userId: 1004,
-          username: '赵六',
-          phone: '13666667777',
-          email: 'zhaoliu@example.com',
-          disabled: false,
-          registerDate: '2023-04-05'
-        },
-        {
-          userId: 1005,
-          username: '钱七',
-          phone: '13777778888',
-          email: 'qianqi@example.com',
-          disabled: true,
-          registerDate: '2023-05-12'
-        },
-        {
-          userId: 1006,
-          username: '孙八',
-          phone: '13888889999',
-          email: 'sunba@example.com',
-          disabled: false,
-          registerDate: '2023-06-18'
-        },
-        {
-          userId: 1007,
-          username: '周九',
-          phone: '13999990000',
-          email: 'zhoujiu@example.com',
-          disabled: true,
-          registerDate: '2023-07-25'
-        },
-        {
-          userId: 1008,
-          username: '吴十',
-          phone: '13000001111',
-          email: 'wushi@example.com',
-          disabled: false,
-          registerDate: '2023-08-30'
-        },
-        {
-          userId: 1009,
-          username: '郑十一',
-          phone: '13111112222',
-          email: 'zhengshiyi@example.com',
-          disabled: false,
-          registerDate: '2023-09-14'
-        },
-        {
-          userId: 1010,
-          username: '王十二',
-          phone: '13222223333',
-          email: 'wangshier@example.com',
-          disabled: true,
-          registerDate: '2023-10-08'
-        },
-        {
-          userId: 1011,
-          username: '刘十三',
-          phone: '13333334444',
-          email: 'liushisan@example.com',
-          disabled: false,
-          registerDate: '2023-11-22'
-        },
-        {
-          userId: 1012,
-          username: '陈十四',
-          phone: '13444445555',
-          email: 'chenshisi@example.com',
-          disabled: true,
-          registerDate: '2023-12-05'
-        }
-      ]
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import request from '../utils/request';
+import { toast } from '../utils/toast';
+import AdminFooter from '@/components/AdminFooter.vue';
+
+// 路由实例
+const router = useRouter();
+
+// 状态定义（完全对应原data）
+const searchKeyword = ref('');
+const activeFilter = ref('all');
+const showConfirmModal = ref(false);
+const selectedUser = ref(null);
+const users = ref([]);
+
+// 计算属性（保持原逻辑）
+const filteredUsers = computed(() => {
+  let filtered = users.value;
+  
+  // 按状态过滤
+  if (filterStatus.value === 1) {
+    filtered = filtered.filter(user => !user.disabled);
+  } else if (filterStatus.value === 2) {
+    filtered = filtered.filter(user => user.disabled);
+  }
+  
+  // 按关键词搜索
+  if (searchKeyword.value) {
+    const keyword = searchKeyword.value.toLowerCase();
+    filtered = filtered.filter(user => 
+      user.username.toLowerCase().includes(keyword) ||
+      user.phone.includes(keyword) ||
+      user.email.toLowerCase().includes(keyword)
+    );
+  }
+  
+  return filtered;
+});
+
+const filterStatus = computed(() => {
+  return activeFilter.value === 'all' ? 0 : 
+         activeFilter.value === 'enabled' ? 1 : 2;
+});
+
+const getPersonList = async () => {
+  try {
+    // 打印请求参数
+    console.log('请求状态：', filterStatus.value);
+    const res = await request.get('/api/persons', {
+      params: { status: filterStatus.value }
+    });
+    
+    // 打印接口返回结果
+    console.log('接口返回：', res);
+    
+    if (res.success) {
+      // 正确赋值给 Vue3 的响应式变量
+      users.value = res.data.map(item => ({
+        userId: item.id,
+        username: item.username,
+        phone: item.phone || '未填写',
+        email: item.email || '未填写',
+        disabled: !item.activated,
+        registerDate: formatDate(item.createTime),
+        photo: item.photo || ''
+      }));
+    } else {
+      toast.error(`获取失败：${res.message}`);
     }
-  },
-  computed: {
-    filteredUsers() {
-      let filtered = this.users;
-      
-      // 按状态过滤
-      if (this.activeFilter === 'enabled') {
-        filtered = filtered.filter(user => !user.disabled);
-      } else if (this.activeFilter === 'disabled') {
-        filtered = filtered.filter(user => user.disabled);
-      }
-      
-      // 按关键词搜索
-      if (this.searchKeyword) {
-        const keyword = this.searchKeyword.toLowerCase();
-        filtered = filtered.filter(user => 
-          user.username.toLowerCase().includes(keyword) ||
-          user.phone.includes(keyword) ||
-          user.email.toLowerCase().includes(keyword)
-        );
-      }
-      
-      return filtered;
-    }
-  },
-  methods: {
-    goBack() {
-      this.$router.go(-1);
-    },
-    handleSearch() {
-      // 搜索逻辑已在computed中处理
-    },
-    setFilter(filter) {
-      this.activeFilter = filter;
-    },
-    toggleUserStatus(user) {
-      this.selectedUser = user;
-      this.showConfirmModal = true;
-    },
-    confirmToggle() {
-      if (this.selectedUser) {
-        this.selectedUser.disabled = !this.selectedUser.disabled;
-        this.showConfirmModal = false;
-        this.$toast?.show(`用户已${this.selectedUser.disabled ? '禁用' : '启用'}`);
-      }
+  } catch (error) {
+    console.error('获取用户列表失败：', error);
+    // 区分网络错误和接口错误
+    if (error.response) {
+      toast.error(`接口错误：${error.response.status} ${error.response.statusText}`);
+    } else if (error.request) {
+      toast.error('网络错误，无法连接到服务器');
+    } else {
+      toast.error('请求失败：' + error.message);
     }
   }
-}
+};
+
+const handleSearch = async () => {
+  try {
+    const res = await request.post('/api/persons/search', {
+      keyword: searchKeyword.value,
+      status: filterStatus.value
+    });
+    if (res.success) {
+      users.value = res.data.map(item => ({
+        userId: item.id,
+        username: item.username,
+        phone: item.phone || '未填写',
+        email: item.email || '未填写',
+        disabled: !item.activated,
+        registerDate: formatDate(item.createTime),
+        photo: item.photo || ''
+      }));
+    }
+  } catch (error) {
+    console.error('搜索用户失败：', error);
+    toast.error('搜索失败，请重试');
+  }
+};
+
+const confirmToggle = async () => {
+  if (!selectedUser.value) return;
+
+  try {
+    const username = selectedUser.value.username;
+    const targetActivated = selectedUser.value.disabled;
+    
+    await request.put(`/api/${username}/status`, null, {
+      params: { activated: targetActivated }
+    });
+
+    selectedUser.value.disabled = !selectedUser.value.disabled;
+    showConfirmModal.value = false;
+    toast.success(`用户已${selectedUser.value.disabled ? '禁用' : '启用'}`);
+  } catch (error) {
+    console.error('切换用户状态失败：', error);
+    toast.error('操作失败，请重试');
+  }
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '未知时间';
+  const date = new Date(dateStr);
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+};
+
+const goBack = () => {
+  router.back();
+};
+
+const setFilter = (filter) => {
+  activeFilter.value = filter;
+  getPersonList();
+};
+
+const toggleUserStatus = (user) => {
+  selectedUser.value = user;
+  showConfirmModal.value = true;
+};
+
+const setActiveNav = (navKey) => {
+  activeNav.value = navKey;
+};
+
+// 页面挂载时执行
+onMounted(() => {
+  getPersonList();
+});
 </script>
 
 <style scoped>
+/* 完全保留原始样式代码，未做任何修改 */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
 
 * {
@@ -690,5 +691,11 @@ export default {
   .user-details {
     flex-direction: column;
   }
+}
+
+/* 适配底部导航：给容器添加底部内边距，避免内容被导航遮挡 */
+.container {
+  /* 在原有样式基础上添加 */
+  padding-bottom: 0; /* 导航高度55px + 10px间距 */
 }
 </style>

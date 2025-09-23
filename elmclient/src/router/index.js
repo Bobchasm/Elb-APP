@@ -15,7 +15,7 @@ import SuccessfulPayment from '../views/SuccessfulPayment.vue'
 import MyInformation from '@/views/MyInformation.vue'
 import Favorites from '@/views/Favorites.vue'
 import Notifications from '@/views/Notifications.vue'
-
+import AdminUser from '@/views/AdminUser.vue'
 import Search from '@/views/Search.vue'
 import Cart from '@/views/Cart.vue'
 //import Discover from '@/views/Discover.vue'
@@ -36,7 +36,6 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 
 //管理端路由配置
 import AdminHome from '../views/AdminHome.vue';
-import AdminUsers from '../views/AdminUsers.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
 import AdminShop from '@/views/AdminShop.vue'
 //import { pa } from 'element-plus/es/locale'
@@ -214,9 +213,9 @@ const routes = [
     component:AdminHome
   },
   {
-    path:'/admin/users',
-    name:'AdminUsers',
-    component:AdminUsers
+    path:'/admin/user',
+    name:'AdminUser',
+    component:AdminUser
   },
   {
     path:'/admin/business',
