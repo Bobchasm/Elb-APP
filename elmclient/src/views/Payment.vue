@@ -1,6 +1,7 @@
 <template>
 	<div class="wrapper">
 		<!-- header部分 -->
+		<BackButton />
 		<header>
 			<p>在线支付</p>
 		</header>
@@ -99,9 +100,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import BackButton from '../components/BackButton.vue';
 
 export default {
 	name: 'Payment',
+	components: {
+		BackButton
+	},
 	setup() {
 		const orderDetail = ref(null);
 		const isShowDetailet = ref(true);

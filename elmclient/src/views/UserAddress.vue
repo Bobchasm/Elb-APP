@@ -1,10 +1,11 @@
 <template>
 	<div class="wrapper">
 		<!-- header部分 -->
-		<header>
-			<p>订单配送地址</p>
-		</header>
-
+		<BackButton />
+    <div class="header">
+    
+      <h1 class="title">订单配送地址</h1>
+    </div>
 		<!-- 地址列表部分 -->
 		<ul class="addresslist">
 			<li v-for="item in deliveryAddressArr" :key="item.id">
@@ -15,10 +16,8 @@
 				<div class="addresslist-right">
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
-					<button class="select-btn"
-							:class="{ 'selected': addressSelectedId === item.id }"
-							@click="selectUserAddress(item.id)"
-							:disabled="addressSelectedId === item.id">
+					<button class="select-btn" :class="{ 'selected': addressSelectedId === item.id }"
+						@click="selectUserAddress(item.id)" :disabled="addressSelectedId === item.id">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
@@ -39,14 +38,18 @@
 
 	</div>
 </template>
-  
+
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import BackButton from '@/components/BackButton.vue';
 export default {
 	name: 'UserAddress',
+	components: {
+		BackButton
+		},
 	setup() {
 
 		const user = reactive({});
@@ -57,6 +60,10 @@ export default {
 		const orderId = ref();
 		const addressSelectedId = ref(0);
 
+		
+		const goBack = () => {
+      router.back();
+    };
 		onMounted(() => {
 			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
@@ -68,7 +75,7 @@ export default {
 		const listDeliveryAddressByUserId = () => {
 			// 查询送货地址
 			request.get('/api/addresses/listDeliveryAddressByUserId', {
-				params:{userId: user.value.id}
+				params: { userId: user.value.id }
 			}).then(response => {
 				deliveryAddressArr.value = response.data;
 			}).catch(error => {
@@ -105,17 +112,17 @@ export default {
 			}
 			else {
 				request.get("/api/orders/submit?businessId=" + businessId.value + "&addressId=" + addressSelectedId.value)
-				.then(response => {
-					if (response.success) {
-						orderId.value = response.data;
-						router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
-					} else {
-						alert('下单失败！');
-						router.push({path: '/orderList'})
-					}
-				}).catch(error => {
-					console.error('下单失败:', error);
-			});
+					.then(response => {
+						if (response.success) {
+							orderId.value = response.data;
+							router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
+						} else {
+							alert('下单失败！');
+							router.push({ path: '/orderList' })
+						}
+					}).catch(error => {
+						console.error('下单失败:', error);
+					});
 			}
 		};
 
@@ -161,7 +168,8 @@ export default {
 			sexFilter,
 			orderId,
 			addressSelectedId,
-			submitOrder
+			submitOrder,
+			goBack
 		};
 	},
 	components: {
@@ -169,13 +177,12 @@ export default {
 	}
 }
 </script>
-  
+
 <style scoped>
 /*************** 总容器 ***************/
 .wrapper {
 	width: 100%;
 	height: 100%;
-	background-color: #F5F5F5;
 }
 
 /*************** header ***************/
@@ -193,6 +200,20 @@ export default {
 	top: 0;
 	/*保证在最上层*/
 	z-index: 1000;
+}
+.wapper title {
+ font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin: 0;
+}
+.back-icon {
+  position: absolute;
+  left: 15px; /* 调整左边距以更好地对齐 */
+  font-size: 1.2rem;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 5px;
 }
 
 /*************** addresslist ***************/
@@ -274,36 +295,36 @@ export default {
 } */
 
 .wrapper .addresslist .addresslist-right .select-btn {
-    background-color: #0097ef;
-    color: #fff;
-    border: none;
-    padding: 2vw 3.5vw;
-    border-radius: 5px;
-    font-size: 3vw;
-    cursor: pointer;
-    margin-left: 2vw;
-    transition: all 0.3s;
+	background-color: #0097ef;
+	color: #fff;
+	border: none;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
+	transition: all 0.3s;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn.selected {
-    background-color: #f25858;
-    color: #fcfafa;
-    /* cursor: not-allowed; */
+	background-color: #f25858;
+	color: #fcfafa;
+	/* cursor: not-allowed; */
 	border: none;
-    padding: 2vw 3.5vw;
-    border-radius: 5px;
-    font-size: 3vw;
-    cursor: pointer;
-    margin-left: 2vw;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn:not(.selected):hover {
-    background-color: #0081e6;
+	background-color: #0081e6;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
+	cursor: not-allowed;
+	opacity: 0.8;
 }
 
 
@@ -340,5 +361,4 @@ export default {
 	transform: translateY(0);
 	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
 }
-
 </style>
