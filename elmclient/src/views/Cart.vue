@@ -1,4 +1,5 @@
 <template>
+	<BackButton :show-back-button="true" />
 	<div class="wrapper">
 		<!-- header部分 -->
 		<header>
@@ -54,12 +55,14 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import BackButton from '../components/BackButton.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 
 export default {
 	name: 'Cart',
+	components: { BackButton },
 	setup() {
 		const cartItems = ref([]);
 		const userInfo = ref(null);
@@ -76,7 +79,7 @@ export default {
 			if (userInfo.value) {
 				listCart();
 			} else {
-				alert('用户未登录，请先登录！');
+				toast.error("用户未登录，请先登录！");
 				router.push({ path: '/login' });
 			}
 		});

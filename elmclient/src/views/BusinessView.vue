@@ -63,6 +63,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
 import qs from 'qs';
 import { useRoute, useRouter } from 'vue-router';
+import { toast } from '@/utils/toast';
 
 export default {
     name: 'BusinessView',
@@ -92,7 +93,7 @@ export default {
         const goToCompleteInfo = () => {
             const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
             if (!businessUser) {
-                alert('登录已过期，请重新登录！');
+                toast.error("登录已过期，请重新登录！");
                 router.push('/businessLogin');
                 return;
             }
@@ -115,7 +116,7 @@ export default {
             const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
             
             if (!businessUser || !businessUser.isBusiness) {
-                alert('请先登录商家账号！');
+                toast.error("请先登录商家账号！");
                 router.push('/businessLogin');
                 return;
             }
@@ -150,7 +151,7 @@ export default {
 
         const handleError = (error) => {
             console.error('Failed to fetch data:', error);
-            alert('请求失败，请稍后重试！');
+            toast.error("请求失败，请稍后重试！");
         };
         const listCart = () => {
             axios.post('CartController/listCart', {
@@ -168,7 +169,7 @@ export default {
         const handleAddProduct = () => {
             const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
             if (!businessUser || !businessUser.isBusiness) {
-                alert('登录已过期，请重新登录！');
+                toast.error("登录已过期，请重新登录！");
                 router.push('/businessLogin');
                 return;
             }
@@ -181,7 +182,7 @@ export default {
         const handleEditInfo = () => {
             const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
             if (!businessUser || !businessUser.isBusiness) {
-                alert('登录已过期，请重新登录！');
+                toast.error("登录已过期，请重新登录！");
                 router.push('/businessLogin');
                 return;
             }

@@ -59,6 +59,7 @@ import Footer from '../components/Footer.vue';
 import qs from 'qs';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
+import { toast } from '../utils/toast';
 
 export default {
     name: 'SubimitItems',
@@ -97,20 +98,20 @@ export default {
 
         const register = async () => {
             if (!user.foodName) {
-                alert('食品名称不能为空！');
+                toast.error("食品名称不能为空！");
                 return;
             }
             if (!user.foodExplain) {
-                alert('商户简介不能为空！');
+                toast.error("商户简介不能为空！");
                 return;
             }
 
             if (!user.foodImg) {
-                alert('食品图片不能为空！');
+                toast.error("食品图片不能为空！");
                 return;
             }
             if (user.foodPrice === null || user.foodPrice === undefined || user.foodPrice < 0) {
-                alert('食品价格不能为空且必须为非负数！');
+                toast.error("食品价格不能为空且必须为非负数！");
                 return;
             }
 

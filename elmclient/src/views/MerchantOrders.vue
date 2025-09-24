@@ -6,11 +6,9 @@
     </header>
 
     <!-- 商铺选择栏 -->
-    <div class="merchant-selector" v-if="merchantList.length > 0">
-      <!-- <div class="merchant-header">
-        <span class="merchant-title">选择店铺</span>
-      </div> -->
+    <div class="merchant-selector">
       <ul class="merchant-tabs">
+        <div class="merchant-no-business" v-if="merchantList.length === 0">您还没有商铺哦</div>
         <li
           v-for="merchant in merchantList"
           :key="merchant.merchantId"
@@ -94,6 +92,57 @@
     </ul>
 
     <BusinessFooter />
+
+    <!-- 接单确认弹窗 -->
+    <div v-if="showAcceptModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>确认操作</h3>
+          <span class="close-btn" @click="closeModal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>确定要接单吗？</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn confirm-btn" @click="confirmAccept">确认</button>
+          <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 拒单确认弹窗 -->
+    <div v-if="showRejectModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>确认操作</h3>
+          <span class="close-btn" @click="closeModal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>确定要拒单吗？</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn confirm-btn" @click="confirmReject">确认</button>
+          <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 完成订单确认弹窗 -->
+    <div v-if="showCompleteModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>确认操作</h3>
+          <span class="close-btn" @click="closeModal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>确定要完成订单吗？</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn confirm-btn" @click="confirmComplete">确认</button>
+          <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -102,6 +151,7 @@ import { ref, onMounted, computed,onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import request from '../utils/request';
 import BusinessFooter from '@/components/BusinessFooter.vue';
+import { toast } from '../utils/toast';
 
 export default {
   name: 'BusinessOrderManage',
@@ -121,6 +171,12 @@ export default {
     // 订单状态标签
     const statusTabs = ref(['全部', '待接单', '已接单', '已完成', '已取消']);
     const activeStatusTab = ref(0);
+
+    // 弹窗相关状态
+    const showAcceptModal = ref(false);
+    const showRejectModal = ref(false);
+    const showCompleteModal = ref(false);
+    const selectId = ref(0);
 
     // 订单状态映射
     const statusMap = {
@@ -178,14 +234,11 @@ export default {
 
         if (response.success) {
           orders.value = response.data || [];
-          console.log("获取商家订单成功:", orders.value);
         } else {
-          console.error('获取商家订单失败:', response.data.message);
-          alert('获取订单列表失败: ' + response.data.message);
+          toast.error("获取订单列表失败");
         }
       } catch (error) {
-        console.error("请求商家订单失败:", error);
-        alert("获取订单列表失败，请稍后重试！");
+        toast.error("获取订单列表失败");
       } finally {
         loading.value = false;
       }
@@ -255,55 +308,86 @@ export default {
     };
 
     // 接单
-    const acceptOrder = async (id) => {
-      if (!confirm("确定要接单吗？")) return;
+    const acceptOrder = (id) => {
+      selectId.value = id;
+      showAcceptModal.value = true;
+    };
+
+    // 确认接单
+    const confirmAccept = async () => {
+      if (selectId.value === 0) return;
 
       try {
-        const response = await request.put("/api/orders/status?orderState=2&orderId=" + id);
+        const response = await request.put("/api/orders/status?orderState=2&orderId=" + selectId.value);
         if (response.success) {
-          alert("接单成功");
+          toast.success("接单成功");
           fetchOrders(); // 重新加载订单
         } else {
-          alert("接单失败: " + response.message);
+          toast.error("接单失败: " + response.message);
         }
       } catch (error) {
-        console.error(error);
-        alert("接单失败，请稍后重试");
+        toast.error("接单失败，请稍后重试");
+      } finally {
+        closeModal();
       }
     };
 
     // 拒单
-    const rejectOrder = async (id) => {
-      if (!confirm("确定要拒单吗？")) return;
+    const rejectOrder = (id) => {
+      selectId.value = id;
+      showRejectModal.value = true;
+    };
+
+    // 确认拒单
+    const confirmReject = async () => {
+      if (selectId.value === 0) return;
 
       try {
-        const response = await request.put("/api/orders/status?orderState=4&orderId=" + id);
+        const response = await request.put("/api/orders/status?orderState=4&orderId=" + selectId.value);
         if (response.success) {
-          alert("拒绝成功");
+          toast.success("拒绝成功");
           fetchOrders(); // 重新加载订单
         } else {
-          alert(response.message);
+          toast.error(response.message);
         }
       } catch (error) {
-        console.error(error);
-        alert("拒绝失败，请稍后重试");
+        toast.error("拒绝失败，请重试");
+      } finally {
+        closeModal();
       }
     };
 
     // 完成订单
-    const completeOrder = async (id) => {
+    const completeOrder = (id) => {
+      selectId.value = id;
+      showCompleteModal.value = true;
+    };
+
+    // 确认完成订单
+    const confirmComplete = async () => {
+      if (selectId.value === 0) return;
+
       try {
-        const response = await request.put("/api/orders/status?orderState=3&orderId=" + id);
+        const response = await request.put("/api/orders/status?orderState=3&orderId=" + selectId.value);
         if (response.success) {
-          alert("确认完成成功");
+          toast.success(确认成功);
           fetchOrders();
         } else {
-          alert(response.message);
+          toast.error(response.message);
         }
       } catch (error) {
-        console.error(error);
-        alert("确认失败,请稍后重试");
+        toast.error("确认失败,请稍后重试");
+      } finally {
+        closeModal();
       }
+    };
+
+    // 关闭弹窗
+    const closeModal = () => {
+      showAcceptModal.value = false;
+      showRejectModal.value = false;
+      showCompleteModal.value = false;
+      selectId.value = 0;
     };
 
     // 查看订单详情
@@ -391,7 +475,14 @@ export default {
       acceptOrder,
       rejectOrder,
       completeOrder,
-      goDetail
+      goDetail,
+      showAcceptModal,
+      showRejectModal,
+      showCompleteModal,
+      closeModal,
+      confirmAccept,
+      confirmReject,
+      confirmComplete
     };
   }
 };
@@ -407,9 +498,10 @@ export default {
 .topbar {
   width: 100%;
   height: 12vw;
-  background-color: #409eff;
+  background-color: #0097ff;
   color: #fff;
-  font-size: 4.8vw;
+  font-size: clamp(18px, 5vw, 24px);
+  font-weight: 600; /* 这里设置了粗体 */
   position: fixed;
   left: 0;
   top: 0;
@@ -464,6 +556,18 @@ export default {
   display: none;
 }
 
+.merchant-no-business {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 4vw;
+  color: #a7a6a6;
+  font-weight: 500;
+  text-align: center;
+}
+
 .merchant-tabs li {
   margin-right: 4vw;
   padding: 2.5vw 4vw;
@@ -480,7 +584,7 @@ export default {
 }
 
 .merchant-tabs li.active {
-  background: #3f72af;
+  background: #0097ff;
   color: #ffffff;
   font-weight: 600;
   transform: translateY(-0.5vw);
@@ -526,7 +630,7 @@ export default {
   margin-right: 6vw;
   padding: 3vw 0;
   font-size: 3.8vw;
-  color: #262424;
+  color: #666;
   position: relative;
   cursor: pointer;
   flex: 0 0 auto;
@@ -557,6 +661,7 @@ export default {
 .order-list {
   padding: 4vw;
   margin-top: 41vw; /* 顶部栏12vw + 商铺栏17vw + 状态栏12vw */
+  margin-bottom: 15vw;
 }
 
 /* 调整空状态和加载状态的上边距 */
@@ -724,7 +829,6 @@ export default {
 .cancel-btn {
   background: #fff;
   color: #ff4d4f;
-  border: 1px solid #ff4d4f !important;
 }
 
 .confirm-btn {
@@ -740,5 +844,111 @@ export default {
 .detail-btn {
   background: #f5f5f5;
   color: #666;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 </style>

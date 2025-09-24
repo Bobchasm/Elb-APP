@@ -16,22 +16,35 @@
 				<div class="addresslist-right">
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
-					<button class="select-btn"
-							:class="{ 'selected': addressSelectedId === item.id }"
-							@click="toggleUserAddress(item.id)">
+					<button class="select-btn" :class="{ 'selected': addressSelectedId === item.id }"
+						@click="selectUserAddress(item.id)" :disabled="addressSelectedId === item.id">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
 			</li>
 		</ul>
 
-
 		<!-- 新增地址部分 -->
 		<div class="addbtn" @click="toAddUserAddress">
 			<i class="fa fa-plus-circle"></i>
 			<p>新增收货地址</p>
 		</div>
-
+		<!-- 确认对话框 - 完全保留原始样式 -->
+		<div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>确认操作</h3>
+            <span class="close-btn" @click="showConfirmModal = false">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>确定要删除地址吗？</p>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
+            <button class="modal-btn confirm-btn" @click="confirmRemove">确认</button>
+          </div>
+        </div>
+      </div>
 		<!-- 底部结算栏 -->
 		<div class="order-bar">
 			<button class="checkout-order-btn" @click="submitOrder">确认下单</button>
@@ -56,7 +69,7 @@
 
 	</div>
 </template>
-  
+
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
@@ -80,8 +93,6 @@ export default {
 		const addressSelectedId = ref(0);
 		const showConfirmModal = ref(false);
 		const addressDeleteSelectId = ref(0);
-
-
 
 		const goBack = () => {
       router.back();
@@ -208,12 +219,12 @@ export default {
 			showConfirmModal,
 			closeModal,
 			confirmDelete,
-      goBack
+			goBack
 		};
 	},
-	components: {
-		Footer
-	}
+	// components: {
+	// 	Footer
+	// }
 }
 </script>
 
@@ -234,6 +245,7 @@ export default {
 	align-items: center;
 	color: #fff;
 	font-size: 4.8vw;
+	font-weight: 600;
 	position: fixed;
 	left: 0;
 	top: 0;
@@ -298,7 +310,103 @@ export default {
 	align-items: center;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
 
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
+}
 
 /*************** 新增地址部分 ***************/
 .wrapper .addbtn {
@@ -334,49 +442,54 @@ export default {
 } */
 
 .wrapper .addresslist .addresslist-right .select-btn {
-    background-color: #0097ef;
-    color: #fff;
-    border: none;
-    padding: 2vw 3.5vw;
-    border-radius: 5px;
-    font-size: 3vw;
-    cursor: pointer;
-    margin-left: 2vw;
-    transition: all 0.3s;
+	background-color: #0097ef;
+	color: #fff;
+	border: none;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
+	transition: all 0.3s;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn.selected {
-    background-color: #f25858;
+    background-color: #0081e6;
     color: #fcfafa;
     /* cursor: not-allowed; */
 	border: none;
-    padding: 2vw 3.5vw;
-    border-radius: 5px;
-    font-size: 3vw;
-    cursor: pointer;
-    margin-left: 2vw;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn:not(.selected):hover {
-    background-color: #0081e6;
+	background-color: #0081e6;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
+	cursor: not-allowed;
+	opacity: 0.8;
 }
 
 
 /*************** 底部结算栏 ***************/
+ /* 底部结算栏 */
 .wrapper .order-bar {
-	position: fixed;
-	right: 10vw;
-	bottom: 25vw;
-	z-index: 1000;
+  position: fixed;
+  left: 0;   /* 左右设为0，让容器撑满宽度 */
+  right: 0;
+  bottom: 0; /* 固定在底部 */
+  z-index: 1000;
+  background-color: #fff; /* 加背景色，与页面区分 */
+  padding: 3vw; /* 内边距，让按钮不贴边 */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); /* 底部阴影，增强层次感 */
 }
 
 .wrapper .order-bar .checkout-order-btn {
-	background-color: #d91212;
+	background-color: #0097FF;
 	color: #fff;
 	border: none;
 	padding: 3vw 6vw;
@@ -391,14 +504,14 @@ export default {
 }
 
 .wrapper .order-bar .checkout-order-btn:hover {
-	background-color: #0081e6;
-	transform: translateY(-0.5vw);
-	box-shadow: 0 3vw 6vw rgba(0, 151, 255, 0.4);
+  background-color: #0081e6; /*  hover 时加深蓝色 */
+  transform: translateY(-1px); /* 轻微上浮，增强交互感 */
+  box-shadow: 0 4px 12px rgba(0, 151, 255, 0.3);
 }
 
 .wrapper .order-bar .checkout-order-btn:active {
-	transform: translateY(0);
-	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
+  transform: translateY(1px); /* 点击时轻微下沉 */
+  box-shadow: 0 2px 6px rgba(0, 151, 255, 0.2);
 }
 
 .modal-overlay {
@@ -457,6 +570,7 @@ export default {
   color: #666;
 }
 
+
 .modal-body {
   display: flex;
   flex-direction: column;
@@ -505,5 +619,4 @@ export default {
   background-color: #0085e0;
   box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
-
 </style>

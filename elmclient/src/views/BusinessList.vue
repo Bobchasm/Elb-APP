@@ -44,7 +44,6 @@
   import { useRoute, useRouter } from "vue-router";
   import request from "@/utils/request";
   import BackButton from "@/components/BackButton.vue";
-  import toast from "@/utils/toast";
   export default {
 	name: "BusinessList",
 	components: { BackButton },

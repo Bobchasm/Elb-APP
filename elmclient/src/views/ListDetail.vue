@@ -85,11 +85,11 @@
 					</div>
 				</div>
 
-				<!-- 操作按钮 -->
+				<!-- 操作按钮
 				<div v-if="orderDetail.orderState === 0" class="action-buttons">
 					<button class="btn cancel-btn" @click="cancelOrder">取消订单</button>
 					<button class="btn pay-btn" @click="payOrder">立即支付</button>
-				</div>
+				</div> -->
 			</div>
 		</div>
 	</div>

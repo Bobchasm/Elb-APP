@@ -22,7 +22,7 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-
+                        
                         <div class="modal-content">
                             <!-- 位置层级导航 -->
                             <div class="location-nav">
@@ -39,12 +39,12 @@
                                     <i class="fa fa-spinner fa-spin"></i>
                                     <span>加载中...</span>
                                 </div>
-
+                                
                                 <div v-else-if="locationData.length === 0" class="empty-state">
                                     <i class="fa fa-map-marker"></i>
                                     <span>暂无数据</span>
                                 </div>
-
+                                
                                 <div v-else class="location-items">
                                     <div v-for="item in locationData" :key="item.id"
                                         :class="['location-item', { selected: isSelected(item) }]"
@@ -79,7 +79,9 @@
                 </template>
                 <template v-else>
                     <div class="user-info">
-                        <p>{{ userInfo.username }} ，您好！</p>
+                       <div class="scroll-text">
+                            <span>{{ userInfo.username }} ，您好！</span>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -174,33 +176,45 @@
                         <div class="rank-badge" :class="getRankClass(index)">
                             <span>{{ getRankText(index) }}</span>
                         </div>
-
+                        
                         <!-- 商家图片 -->
                         <div class="business-image">
                             <img :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')"
-                                :alt="business.businessName" @error="handleImageError">
+                                :alt="business.businessName" @error="handleImageError"  @click="toBusinessInfo(business.id)">
                         </div>
 
                         <!-- 商家信息 -->
                         <div class="business-info">
                             <h4>{{ business.businessName || '商家名称' }}</h4>
                             <div class="stats">
-                                <span class="sales">🔥 {{ business.salesCount || 0 }}</span>
-                                <span class="rating">⭐ {{ business.score || getBusinessRating(business.id) }}</span>
+                                <div class="stat-item rating-stat">
+                                    <i class="fa fa-star"></i>
+                                    <span>{{ business.score || getBusinessRating(business.id) }}</span>
+                                </div>
+                                <div class="stat-item sales-stat">
+                                    <i class="fa fa-fire"></i>
+                                    <span>{{ business.salesCount || 0 }}</span>
+                                </div>
                             </div>
                             <div class="delivery-info">
-                                <span>起送 ¥{{ business.startPrice || business.starPrice || 0 }}</span>
-                                <span>配送 ¥{{ business.deliveryPrice || 0 }}</span>
+                                <div class="delivery-tag">
+                                    <span class="tag-label">起送</span>
+                                    <span class="tag-price">¥{{ business.startPrice || business.starPrice || 0 }}</span>
+                                </div>
+                                <div class="delivery-tag">
+                                    <span class="tag-label">配送</span>
+                                    <span class="tag-price">¥{{ business.deliveryPrice || 0 }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- 右侧箭头按钮 -->
                 <div class="carousel-arrow carousel-arrow-right" @click="nextSlide">
                     <i class="fa fa-chevron-right"></i>
                 </div>
-
+                
                 <!-- 指示器 -->
                 <div class="carousel-indicators">
                     <span v-for="(business, index) in topThreeBusinesses" :key="index"
@@ -208,8 +222,7 @@
                 </div>
             </div>
         </div>
-      <!-- AI客服组件 -->
-      <AiChatbot />
+
         <!-- 超级会员部分 -->
         <div class="supermember">
             <div class="left">
@@ -318,13 +331,14 @@
                     <div class="business-info-detail">
                         <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
                         <div class="business-info-rating">
-                            <span class="rating-number">评分：{{ business.score || getBusinessRating(business.id ||
-                                business.businessId) }}</span>
-                            <span class="sales-number">销量：{{ business.salesCount || 0 }}</span>
+                            <span class="rating-score">{{ business.score || getBusinessRating(business.id || business.businessId) }}分</span>
+                            <span class="monthly-sales">月售 {{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
-                            <span>起送 ¥{{ business.startPrice || business.starPrice }}</span>
-                            <span>配送 ¥{{ business.deliveryPrice }}</span>
+                            <span class="start-price">起送 ¥{{ business.startPrice || business.starPrice }}</span>
+                            <span class="delivery-fee" :class="{ 'free-delivery': (business.deliveryPrice || 0) === 0 }">
+                                {{ (business.deliveryPrice || 0) === 0 ? '免配送费' : `配送 ¥${business.deliveryPrice}` }}
+                            </span>
                         </div>
                         <div class="business-info-promotion">
                             <div class="business-info-promotion-left">
@@ -335,11 +349,7 @@
             </li>
         </ul>
 
-  
-
         <!-- 底部菜单部分 -->
-
-        
 
     </div>
 </template>
@@ -352,6 +362,7 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '../utils/request';
 import AMapLoader from '@amap/amap-jsapi-loader';
+import { toast } from '../utils/toast';
 // 高德地图API key（请替换为你的实际key）
 const AMAP_KEY = '24cce1eb31aec79422f44af47428fc8a';
 
@@ -558,15 +569,15 @@ export default {
             const { province, city, district } = tempSelectedLocation.value; // 校验临时变量
             // 1. 严格校验：必须完整选择省、市、区
             if (!province) {
-                alert('请先选择省份');
+                toast.error("请先选择省份");
                 return;
             }
             if (!city) {
-                alert('请先选择城市');
+                toast.error("请先选择城市");
                 return;
             }
             if (!district) {
-                alert('请先选择区域');
+                toast.error("请先选择区域");
                 return;
             }
 
@@ -1380,7 +1391,7 @@ export default {
                         销量类型: typeof business.salesCount
                     });
                 });
-
+                
                 // 特别检查模板绑定的数据
                 console.log('🎭 模板显示检查 - 前5个商家的销量显示值:');
                 businessList.value.slice(0, 5).forEach((business, index) => {
@@ -1485,25 +1496,27 @@ export default {
     width: 100%;
     height: 12vw;
     background-color: #0097ff;
-
     display: flex;
     align-items: center;
-
-    /* 让location和login-register两端对齐 */
-    padding: 0 3vw;
-    /* 添加两边的内边距，使内容不要紧贴屏幕边缘 */
+    justify-content: space-between;
+    padding: 0 4vw;
+    box-sizing: border-box;
 }
 
+/* 确保位置信息不会被挤压 */
 .wrapper header .icon-location-box {
     width: 3.5vw;
     height: 3.5vw;
     margin-right: 1vw;
+    flex-shrink: 0;
 }
 
 .wrapper header .location-text {
     font-size: 4.5vw;
     font-weight: 700;
     color: #fff;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .wrapper header .icon-location-box i {
@@ -1515,39 +1528,78 @@ export default {
     margin-left: 1vw;
 }
 
+.user-info {
+  width: 150px; /* 你可以根据右上角区域宽度调整 */
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.scroll-text {
+  display: inline-block;
+  padding-left: 100%; /* 给动画留出空白 */
+  animation: scroll-text 10s linear infinite;
+}
+
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+
 /****************** 登录、注册部分 ******************/
 .wrapper .login-register {
     display: flex;
     gap: 2vw;
     align-items: center;
     margin-left: 5vw;
+    flex-grow: 1;
+    justify-content: flex-end;
+    /* 关键修改：此属性是解决 Flexbox 布局中子元素溢出问题的关键 */
+    min-width: 0;
 }
 
 .wrapper .login-register .user-info {
+    /* 删除 max-width: 100%，以确保容器可以根据内容宽度进行溢出 */
     font-size: 4vw;
-    /* 增加字体大小 */
     font-weight: 500;
     color: #fff;
+    white-space: nowrap; /* 强制文本不换行 */
+
+    /* 核心修改：允许水平滚动 */
+    overflow-x: auto; /* 在水平方向上允许滚动 */
+    overflow-y: hidden; /* 隐藏垂直方向的滚动条 */
+    -webkit-overflow-scrolling: touch; /* 针对 iOS 设备实现更流畅的滚动 */
+
+    /* 隐藏滚动条但保留滚动功能，让界面更美观 */
+    scrollbar-width: none; /* 针对 Firefox */
+    -ms-overflow-style: none; /* 针对 Internet Explorer 和 Edge */
+}
+
+/* 针对 Chrome, Safari 等 Webkit 内核浏览器隐藏滚动条 */
+.wrapper .login-register .user-info::-webkit-scrollbar {
+    display: none;
 }
 
 .wrapper .login-register button {
     padding: 1.5vw 3vw;
-    /* 增加按钮的内边距，变大 */
     border: none;
     background-color: white;
     color: #0097ff;
     cursor: pointer;
     border-radius: 1vw;
-    /* 加大圆角 */
     transition: background-color 0.3s;
     font-size: 3.5vw;
-    /* 增加按钮文字的大小 */
+    flex-shrink: 0;
 }
 
 .wrapper .login-register button:hover {
     background-color: #f0f0f0;
 }
-
 /****************** search ******************/
 .wrapper .search {
     width: 100%;
@@ -1856,42 +1908,67 @@ export default {
 .wrapper .top-businesses-carousel .stats {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1vw;
-    /* 减少底部间距 */
-    gap: 1vw;
-    /* 减少间隙 */
+    margin-bottom: 1.5vw;
+    gap: 1.5vw;
 }
 
-.wrapper .top-businesses-carousel .sales {
+.wrapper .top-businesses-carousel .stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8vw;
+    padding: 1.2vw 2vw;
+    border-radius: 2vw;
+    font-size: 2.5vw;
+    font-weight: 600;
+    flex: 1;
+    color: white;
+}
+
+.wrapper .top-businesses-carousel .rating-stat {
     background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-    color: white;
-    padding: 1vw 2vw;
-    border-radius: 1.5vw;
-    font-size: 2.5vw;
-    font-weight: 600;
-    flex: 1;
-    text-align: center;
 }
 
-.wrapper .top-businesses-carousel .rating {
+.wrapper .top-businesses-carousel .rating-stat .fa-star {
+    color: #FFD700;
+}
+
+.wrapper .top-businesses-carousel .sales-stat {
     background: linear-gradient(135deg, #4ECDC4, #44A08D);
-    color: white;
-    padding: 1vw 2vw;
-    border-radius: 1.5vw;
-    font-size: 2.5vw;
-    font-weight: 600;
-    flex: 1;
-    text-align: center;
+}
+
+.wrapper .top-businesses-carousel .sales-stat .fa-fire {
+    color: #FF6B35;
 }
 
 .wrapper .top-businesses-carousel .delivery-info {
     display: flex;
-    justify-content: space-around;
-    font-size: 2.5vw;
-    color: #666;
+    justify-content: space-between;
+    gap: 1vw;
+}
+
+.wrapper .top-businesses-carousel .delivery-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5vw;
     background: #f8f9fa;
-    padding: 1.5vw;
+    padding: 1vw 1.5vw;
     border-radius: 1.5vw;
+    border: 1px solid #e9ecef;
+    flex: 1;
+    justify-content: center;
+}
+
+.wrapper .top-businesses-carousel .delivery-tag .tag-label {
+    font-size: 2.2vw;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.wrapper .top-businesses-carousel .delivery-tag .tag-price {
+    font-size: 2.4vw;
+    color: #007bff;
+    font-weight: 600;
 }
 
 /* 轮播箭头按钮 */
@@ -2086,46 +2163,40 @@ export default {
 .wrapper .business-list li .business-info .business-info-rating {
     display: flex;
     align-items: center;
+    gap: 3vw;
     margin-bottom: 2vw;
-    justify-content: flex-end;
 }
 
-.wrapper .business-list li .business-info .business-info-rating .rating {
-    display: flex;
+.wrapper .business-list li .business-info .business-info-rating .rating-score {
+    font-size: 3.2vw;
+    color: #FF6600;
+    font-weight: 600;
 }
 
-.wrapper .business-list li .business-info .business-info-rating .rating .fa-star {
-    color: #999;
-    font-size: 3vw;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .rating .fa-star.active {
-    color: #ffd700;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .rating-number {
+.wrapper .business-list li .business-info .business-info-rating .monthly-sales {
     font-size: 2.8vw;
     color: #999;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .sales-number {
-    font-size: 2.8vw;
-    color: #999;
-    margin-left: 2vw;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .sales {
-    margin-left: 2vw;
-    font-size: 3vw;
-    color: #666;
 }
 
 .wrapper .business-list li .business-info .business-info-delivery {
     display: flex;
     gap: 2vw;
-    font-size: 3vw;
-    color: #666;
     margin-bottom: 2vw;
+}
+
+.wrapper .business-list li .business-info .business-info-delivery .start-price {
+    font-size: 2.8vw;
+    color: #666;
+}
+
+.wrapper .business-list li .business-info .business-info-delivery .delivery-fee {
+    font-size: 2.8vw;
+    color: #666;
+}
+
+.wrapper .business-list li .business-info .business-info-delivery .delivery-fee.free-delivery {
+    color: #FF6600;
+    font-weight: 500;
 }
 
 .wrapper .business-list li .business-info .business-info-promotion {
@@ -2232,8 +2303,12 @@ export default {
 }
 
 .modal-content {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
+    margin-left:27px;
+    margin-top:10px;
+    margin-bottom: 10px;
     overflow-y: auto;
 }
 

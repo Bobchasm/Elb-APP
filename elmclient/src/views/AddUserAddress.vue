@@ -6,50 +6,47 @@
       <h1 class="title">新增送货地址</h1>
     </div>
 
-		<!-- 表单部分 -->
-		<ul class="form-box">
-			<li>
-				<div class="title">
-					联系人：
-				</div>
-				<div class="content">
-					<input type="text" v-model="deliveryAddress.contactName" placeholder="联系人姓名">
-				</div>
-			</li>
-			<li>
-				<div class="title">
-					性别：
-				</div>
-				<div class="content" style="font-size: 3vw;">
-					<input type="radio" v-model="deliveryAddress.contactSex" value="1" style="width:6vw;height:3.2vw;">男
-					<input type="radio" v-model="deliveryAddress.contactSex" value="0" style="width:6vw;height:3.2vw;">女
-				</div>
-			</li>
-			<li>
-				<div class="title">
-					电话：
-				</div>
-				<div class="content">
-					<input type="tel" v-model="deliveryAddress.contactTel" placeholder="电话">
-				</div>
-			</li>
-			<li>
-				<div class="title">
-					收货地址：
-				</div>
-				<div class="content">
-					<input type="text" v-model="deliveryAddress.address" placeholder="收货地址">
-				</div>
-			</li>
-		</ul>
+    <!-- 表单部分 -->
+    <ul class="form-box">
+      <li>
+        <div class="title">联系人：</div>
+        <div class="content">
+          <input type="text" v-model="deliveryAddress.contactName" placeholder="联系人姓名">
+        </div>
+      </li>
+      <li>
+        <div class="title">性别：</div>
+        <div class="content gender-select">
+          <div class="gender-option">
+            <input type="radio" v-model="deliveryAddress.contactSex" value="1" id="male">
+            <label for="male">男</label>
+          </div>
+          <div class="gender-option">
+            <input type="radio" v-model="deliveryAddress.contactSex" value="0" id="female">
+            <label for="female">女</label>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="title">电话：</div>
+        <div class="content">
+          <input type="tel" v-model="deliveryAddress.contactTel" placeholder="电话">
+        </div>
+      </li>
+      <li>
+        <div class="title">收货地址：</div>
+        <div class="content">
+          <input type="text" v-model="deliveryAddress.address" placeholder="收货地址">
+        </div>
+      </li>
+    </ul>
 
-		<div class="button-add">
-			<button @click="addUserAddress">保存</button>
-		</div>
+    <div class="button-add">
+      <button @click="addUserAddress">保存</button>
+    </div>
 
-		<!-- 底部菜单部分 -->
-	
-	</div>
+    <!-- 底部菜单部分 (如果需要，请自行添加) -->
+  </div>
 </template>
 
 <script>
@@ -138,76 +135,134 @@ export default {
 </script>
 
 <style scoped>
+/* 引入 Font Awesome (如果需要，请在你的 index.html 中引入) */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css");
+
 /*************** 总容器 ***************/
 .wrapper {
-	width: 100%;
-	height: 100%;
+  width: 100%;
+  height: 100vh;
+  background-color: #f7f7f7;
+  display: flex;
+  flex-direction: column;
 }
 
 /*************** header ***************/
-.wrapper header {
-	width: 100%;
-	height: 12vw;
-	background-color: #0097FF;
-	display: flex;
-	justify-content: space-around;
-	align-items: center;
-	color: #fff;
-	font-size: 4.8vw;
-	position: fixed;
-	left: 0;
-	top: 0;
-	/*保证在最上层*/
-	z-index: 1000;
+.header {
+  width: 100%;
+  height: 12vw;
+  background-color: #0097FF;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/*************** （表单信息） ***************/
-.wrapper .form-box {
-	width: 100%;
-	margin-top: 12vw;
+.header .back-btn {
+  position: absolute;
+  left: 3vw;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: 5.5vw;
 }
 
-.wrapper .form-box li {
-	box-sizing: border-box;
-	padding: 4vw 3vw 0vw 3vw;
-	display: flex;
+/*************** 表单信息 ***************/
+.form-box {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 4vw;
+  margin-top: 12vw;
+  background-color: #fff;
 }
 
-.wrapper .form-box li .title {
-	flex: 0 0 18vw;
-	font-size: 3vw;
-	font-weight: 700;
-	color: #666;
+.form-box li {
+  padding: 4vw 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
 }
 
-.wrapper .form-box li .content {
-	flex: 1;
-	display: flex;
-	align-items: center;
+.form-box li:last-child {
+  border-bottom: none;
 }
 
-.wrapper .form-box li .content input {
-	border: none;
-	outline: none;
-	width: 100%;
-	height: 4vw;
-	font-size: 3vw;
+.form-box li .title {
+  flex: 0 0 20vw;
+  font-size: 3.5vw;
+  font-weight: 600;
+  color: #333;
 }
 
-.wrapper .button-add {
-	box-sizing: border-box;
-	padding: 4vw 3vw 0vw 3vw;
+.form-box li .content {
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
-.wrapper .button-add button {
-	width: 100%;
-	height: 10vw;
-	font-size: 3.8vw;
-	font-weight: 700;
-	border: none;
-	outline: none;
-	border-radius: 4px;
-	color: #fff;
-	background-color: #38CA73;
+.form-box li .content input {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  width: 100%;
+  height: 9vw;
+  font-size: 3.5vw;
+  padding: 0 4vw;
+  box-sizing: border-box;
+}
+
+.form-box li .content input::placeholder {
+  color: #ccc;
+}
+
+.form-box li .gender-select {
+  /* 调整性别选项的对齐方式和间距 */
+  justify-content: flex-start;
+  gap: 6vw;
+}
+
+.form-box li .gender-select .gender-option {
+  display: flex;
+  align-items: center;
+}
+
+.form-box li .gender-select input[type="radio"] {
+  /* 恢复为默认的圆形单选框 */
+  appearance: auto;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  width: 5vw;
+  height: 5vw;
+  margin-right: 2vw;
+}
+
+.form-box li .gender-select label {
+  font-size: 3.5vw;
+  color: #666;
+  cursor: pointer;
+}
+
+/*************** 按钮部分 ***************/
+.button-add {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4vw 3vw 0 3vw;
+}
+
+.button-add button {
+  width: 100%;
+  height: 10vw;
+  font-size: 3.8vw;
+  font-weight: 700;
+  color: #fff;
+  background-color: #0097ff;
+  border-radius: 4px;
+  border: none;
+  outline: none;
 }
 </style>

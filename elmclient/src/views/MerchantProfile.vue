@@ -245,6 +245,7 @@ export default {
   box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
   background: #f8f9fa;
+  margin-left: 15px;
 }
 .avatar img {
   width: 100%;
@@ -438,7 +439,7 @@ export default {
 
 /* 房子阴影效果 */
 .store-card {
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.12),
     0 2px 8px rgba(255, 107, 107, 0.2);
   transition: all 0.3s ease;
@@ -446,7 +447,7 @@ export default {
 
 .store-card:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.15),
     0 4px 12px rgba(255, 107, 107, 0.3);
 }
@@ -464,6 +465,7 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-bottom: 10px;
 }
 .switch-btn:hover {
   transform: translateY(-2px);
@@ -547,7 +549,7 @@ export default {
     margin-bottom: 50px;
     border-radius: 0;
   }
-  
+
   .user-card {
     padding: 20px 15px;
     margin-top: 0;
