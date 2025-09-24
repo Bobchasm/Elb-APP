@@ -178,7 +178,7 @@
                         <!-- 商家图片 -->
                         <div class="business-image">
                             <img :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')"
-                                :alt="business.businessName" @error="handleImageError">
+                                :alt="business.businessName" @error="handleImageError"  @click="toBusinessInfo(business.id)">
                         </div>
 
                         <!-- 商家信息 -->
