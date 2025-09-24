@@ -85,7 +85,7 @@
 </template>
   
 <script>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed,onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import request from "../utils/request";
 import Footer from '../components/Footer.vue';
@@ -100,6 +100,9 @@ export default {
     const userInfo = ref({});
     const router = useRouter();
     const loading = ref(false);
+	// --- WebSocket 相关 ---
+    const socket = ref(null);
+    const userId = ref(null); // 存储当前用户ID
     
     // 标签定义 - 与API状态对应
     const tabs = ["全部", "待支付", "待接单", "已接单", "已完成", "已取消"];
@@ -272,7 +275,52 @@ export default {
       });
     };
 
-    onMounted(() => {
+	// 初始化WebSocket
+    const initWebSocket = () => {
+	// const tokenFromLocal = localStorage.getItem('token');
+	// const tokenFromSession = sessionStorage.getItem('token');
+	// const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+    //   const userData = storage.getItem("userInfo");
+    //   if (userData) {
+    //     userInfo.value = JSON.parse(userData);
+    //     userId.value = userInfo.value.id;
+    //   }
+	  userId.value = userInfo.value.id;
+      if (!userId.value) return;
+
+      // 连接WebSocket（假设后端地址是 ws://localhost:8080/ws/{userId}）
+      socket.value = new WebSocket(`ws://localhost:8080/ws/${userId.value}`);
+
+      socket.value.onopen = () => {
+        console.log("WebSocket 连接成功");
+      };
+
+      socket.value.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log("收到WebSocket消息:", message);
+        // 收到消息后，刷新订单列表
+        fetchOrders();
+      };
+
+      socket.value.onclose = () => {
+        console.log("WebSocket 连接关闭");
+        // 断线重连（可选，视需求添加）
+        setTimeout(initWebSocket, 2000);
+      };
+
+      socket.value.onerror = (err) => {
+        console.error("WebSocket 错误:", err);
+      };
+    };
+
+    // 关闭WebSocket（组件销毁时调用）
+    const closeWebSocket = () => {
+      if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+        socket.value.close();
+      }
+    };
+
+	onMounted(() => {
       // 获取用户信息
       const userData = sessionStorage.getItem("userInfo") || localStorage.getItem("userInfo");
       userInfo.value = userData ? JSON.parse(userData) : null;
@@ -282,11 +330,14 @@ export default {
         router.push({ path: "/login" });
         return;
       }
-
+	  initWebSocket();
       // 初始加载全部订单
       fetchOrders();
     });
-
+	onUnmounted(() => {
+      // 组件销毁时关闭WebSocket
+      closeWebSocket();
+    });
 
 
     return {
