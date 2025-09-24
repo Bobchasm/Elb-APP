@@ -226,7 +226,8 @@
                 </div>
             </div>
         </div>
-
+      <!-- AI客服组件 -->
+      <AiChatbot />
         <!-- 超级会员部分 -->
         <div class="supermember">
             <div class="left">
@@ -382,10 +383,11 @@
             </li>
         </ul>
 
+  
+
         <!-- 底部菜单部分 -->
 
-        <!-- AI助手组件 -->
-        <AIAssistant />
+        
 
     </div>
 </template>
@@ -393,7 +395,7 @@
 <script>
 import { ref, onMounted, onBeforeUnmount,computed } from 'vue';
 import Footer from '../components/Footer.vue';
-import AIAssistant from '../components/AIAssistant.vue';
+import AiChatbot from '../components/AiChatbot.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '../utils/request';
@@ -1527,7 +1529,7 @@ const getDisplayText = (location) => {
     },
     components: {
         Footer,
-        AIAssistant
+        AiChatbot
     }
 }
 </script>

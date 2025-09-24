@@ -309,9 +309,10 @@ export default {
 /****************** 容器与顶部 ******************/
 .wrapper {
 	width: 100%;
-	height: 100%;
+	height: 90%;
 	background: #f5f7fa;
 	min-height: 100vh;
+	padding-bottom: 30px;
 }
 
 .topbar {
