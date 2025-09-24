@@ -137,7 +137,7 @@ const initWebSocket = () => {
       isConnected.value = true;
       error.value = '';
       loading.value = false;
-      toast.success('已连接消息通知');
+      //toast.success('已连接消息通知');
     };
 
     // 接收消息

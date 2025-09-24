@@ -3,7 +3,7 @@ import App from './App.vue';
 import router from './router';
 import { toast } from './utils/toast';
 //import { getToken,removeToken} from './utils/auth';
-
+import BackButton from '@/components/BackButton.vue';
 import 'font-awesome/css/font-awesome.min.css';
 import qs from 'qs';
 import request from './utils/request';
@@ -20,7 +20,7 @@ import {
 
 // 创建 Vue 应用实例
 const app = createApp(App);
-
+app.component('BackButton', BackButton);
 // 将 axios 挂载到 Vue 实例上
 app.config.globalProperties.$axios = request;
 app.config.globalProperties.$qs = qs;

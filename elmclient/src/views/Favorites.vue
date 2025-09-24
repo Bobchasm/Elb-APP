@@ -1,5 +1,5 @@
 <template>
-  <div>
+
     <BackButton />
     <div class="header">
       <!-- <i class="fas fa-chevron-left back-icon" @click="goBack"></i> -->
@@ -22,8 +22,10 @@
       <div v-else class="business-list">
         <div v-for="business in favoriteList" :key="business.businessId" class="business-item"
           @click="goToBusinessInfo(business.businessId)">
-          <img :src="business.businessImg" :alt="business.businessName" class="business-img">
-          <div class="business-details">
+          <img :src="business.businessImg || require('@/assets/default-business.png')"
+     :alt="business.businessName"
+     class="business-img"
+     @error="handleImageError"><div class="business-details">
             <div class="business-name">{{ business.businessName }}</div>
             <div class="business-info-row">
               <span class="star-rating">
@@ -50,16 +52,7 @@ import request from '@/utils/request';
 import { Back } from '@element-plus/icons-vue';
 export default {
   name: 'Favorites',
-  components: {
-    BackButton: {
-      components: { Back },
-      template: `
-        <div class="header">
-          <i class="fas fa-chevron-left back-icon" @click="$emit('go-back')"></i>
-        </div>
-      `
-    }
-  },
+  components: { BackButton },
   setup() {
     const router = useRouter();
     const favoriteList = ref([]);
@@ -77,8 +70,10 @@ export default {
           return;
         }
 
+        // 调用后端API获取收藏列表
         const response = await request.get(`/api/merchant/interaction/collections/${userInfo.id}`);
 
+        // 将后端返回的数据映射到前端需要的格式
         favoriteList.value = response.data.map(business => ({
           businessId: business.id,
           businessName: business.businessName,
@@ -105,9 +100,9 @@ export default {
       });
     };
 
-    // const goBack = () => {
-    //   router.back();
-    // };
+    const goBack = () => {
+      router.back();
+    };
 
     onMounted(() => {
       fetchFavorites();
@@ -118,7 +113,7 @@ export default {
       loading,
       errorMessage,
       goToBusinessInfo,
-      // goBack
+      goBack
     };
   }
 };
@@ -148,8 +143,9 @@ body {
 
 /* 主内容容器，保持居中和最大宽度 */
 .container {
-  max-width: 600px;
-  margin: 0 auto;
+  /* max-width: 600px; */
+  width:100%;
+  /* margin: 0 auto; */
   padding-bottom: 40px;
   background-color: #f0f2f5;
   min-height: 100vh;
@@ -162,7 +158,7 @@ body {
   font-size: 1.1rem;
   color: #ffffff;
   font-weight: 600;
-  margin: 0;
+  color:white;
 }
 
 .back-icon {

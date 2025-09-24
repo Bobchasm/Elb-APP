@@ -68,7 +68,7 @@
                 <div class="cart-left-icon" :style="totalQuantity == 0
                     ? 'background-color:#505051;'
                     : 'background-color:#3190E8;'
-                    " @click="goToCart(businessId)">
+                    " @click="goToCart()">
                     <i class="fa fa-shopping-cart"></i>
                     <div class="cart-left-icon-quantity" v-show="totalQuantity != 0">
                         {{ totalQuantity }}
@@ -104,6 +104,7 @@ import { ref, onMounted, computed, watch, onErrorCaptured } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import request from "@/utils/request";
 import BackButton from "@/components/BackButton.vue";
+import { toast } from '@/utils/toast';
 export default {
     name: "BusinessInfo",
     components: { BackButton },
@@ -208,7 +209,7 @@ export default {
 
             // 检查用户是否登录
             if (!userInfo.value?.id) {
-                alert('请先登录');
+                toast.error('请先登录');
                 return;
             }
 
@@ -231,7 +232,7 @@ export default {
                 console.log('添加商品成功');
             } catch (error) {
                 console.error('添加商品到购物车失败:', error);
-                alert('添加商品失败，请重试');
+                toast.error('添加商品失败，请重试');
             }
         };
 
@@ -295,7 +296,7 @@ export default {
 
             // 检查用户是否登录
             if (!userInfo.value?.id) {
-                alert('请先登录');
+                toast.error('请先登录');
                 return;
             }
 
@@ -321,7 +322,7 @@ export default {
                 console.log('移除商品成功');
             } catch (error) {
                 console.error('从购物车移除商品失败:', error);
-                alert('移除商品失败，请重试');
+                toast.error('移除商品失败，请重试');
             }
         };
 
@@ -377,8 +378,7 @@ export default {
                 console.log(`加载互动状态，userId: ${userId}, merchantId: ${businessId.value}`);
 
                 const response = await request.get('/api/merchant/interaction/status', {
-                    params: { userId, merchantId: businessId.value },
-                    headers: { 'Cache-Control': 'no-cache' }
+                    params: { userId: userId, merchantId: businessId.value },
                 });
 
                 console.log("互动状态API响应:", response);
@@ -412,7 +412,7 @@ export default {
                 interactionLoading.value = true;
                 const userId = userInfo.value?.id;
                 if (!userId) {
-                    alert('请先登录');
+                    toast.error('请先登录');
                     return;
                 }
 
@@ -436,11 +436,11 @@ export default {
                     console.log(`${type}状态更新成功: ${newValue}`);
                 } else {
                     console.error(`${type}状态更新失败:`, response.message);
-                    alert('操作失败，请重试');
+                    toast.error('操作失败，请重试');
                 }
             } catch (error) {
                 console.error(`${type}状态更新异常:`, error);
-                alert('操作异常，请检查网络');
+                toast.error('操作异常，请检查网络');
             } finally {
                 interactionLoading.value = false;
             }
@@ -451,7 +451,7 @@ export default {
         const toggleLike = async () => {
             if (interactionLoading.value) return;
             if (!userInfo.value?.id) {
-                alert('请先登录');
+                toast.error('请先登录');
                 return;
             }
             await updateInteraction('like', !isLiked.value);
@@ -460,7 +460,7 @@ export default {
         const toggleFavorite = async () => {
             if (interactionLoading.value) return;
             if (!userInfo.value?.id) {
-                alert('请先登录');
+                toast.error('请先登录');
                 return;
             }
             await updateInteraction('favorite', !isFavorited.value);
@@ -565,16 +565,16 @@ export default {
         };
 
         // 跳转到购物车页面
-        const goToCart = (id) => {
+        const goToCart = () => {
             console.log("跳转到订单页面，当前购物车商品数量:", totalQuantity.value);
             if (totalQuantity.value === 0) {
-                alert("请先添加商品到购物车");
+                toast.error("请先添加商品到购物车");
                 return;
             }
             router.push({
                 path: "/cart",
                 query: {
-                    businessId: id
+                    businessId: businessId.value
                 }
             });
         };
@@ -583,7 +583,7 @@ export default {
         const toOrder = () => {
             console.log("跳转到购物车页面，当前购物车商品数量:", totalQuantity.value);
             if (totalQuantity.value === 0) {
-                alert("购物车为空");
+                toast.error("购物车为空");
                 return;
             }
             // 跳转到结算页面

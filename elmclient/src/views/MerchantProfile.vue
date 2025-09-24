@@ -451,7 +451,7 @@ export default {
     border-radius: 0;
     padding: 0;
   }
-  
+
   .top-background {
     height: 90px;
     margin-bottom: 50px;

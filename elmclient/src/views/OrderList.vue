@@ -5,73 +5,79 @@
 			<p>订单</p>
 		</header>
 
-		<!-- 页面标题 -->
-		<div class="page-title">订单中心</div>
+		<!-- 固定标题和筛选栏 -->
+		<div class="fixed-header">
+			<!-- 页面标题 -->
+			<div class="page-title">订单中心</div>
 
-		<!-- 筛选标签栏 -->
-		<ul class="tabs">
-			<li
-				v-for="(t, idx) in tabs"
-				:key="t"
-				:class="{ active: activeTab === idx }"
-				@click="changeTab(idx)"
-			>
-				{{ t }} <span v-if="orderCounts[idx] > 0">({{ orderCounts[idx] }})</span>
-			</li>
-		</ul>
-
-		<!-- 加载提示 -->
-		<div v-if="loading" class="loading">
-			<p>加载中...</p>
+			<!-- 筛选标签栏 -->
+			<ul class="tabs">
+				<li
+					v-for="(t, idx) in tabs"
+					:key="t"
+					:class="{ active: activeTab === idx }"
+					@click="changeTab(idx)"
+				>
+					{{ t }} <span v-if="orderCounts[idx] > 0">({{ orderCounts[idx] }})</span>
+				</li>
+			</ul>
 		</div>
 
-		<!-- 空状态提示 -->
-		<div v-else-if="displayedOrders.length === 0" class="empty-state">
-			<img src="../assets/empty-order.png" alt="暂无订单">
-			<p>暂无订单</p>
-		</div>
+		<!-- 内容区域 -->
+		<div class="content-area">
+			<!-- 加载提示 -->
+			<div v-if="loading" class="loading">
+				<p>加载中...</p>
+			</div>
 
-		<!-- 订单列表 -->
-		<ul v-else class="order-list">
-			<li v-for="item in displayedOrders" :key="item.id" class="order-item" @click="goDetail(item.id)" title="查看详情">
-				<div class="order-header">
-					<span class="order-id">订单号: {{ item.id }}</span>
-					<span class="status-badge" :class="getStatusClass(item.orderState)">{{ getStatusText(item.orderState) }}</span>
-				</div>
-				
-				<div class="order-content">
-					<img class="thumb" :src="item.businessImg" alt="商家图片">
-					<div class="meta">
-						<p class="name">{{ item.businessName || '未知商家' }}</p>
-						<p class="price">¥ {{ Number(item.orderTotal).toFixed(2) }}</p><br>
-						<p class="time">下单时间: {{ item.orderDate }}</p>
+			<!-- 空状态提示 -->
+			<div v-else-if="displayedOrders.length === 0" class="empty-state">
+				<img src="../assets/empty-order.png" alt="暂无订单">
+				<p>暂无订单</p>
+			</div>
+
+			<!-- 订单列表 -->
+			<ul v-else class="order-list">
+				<li v-for="item in displayedOrders" :key="item.id" class="order-item" @click="goDetail(item.id)" title="查看详情">
+					<div class="order-header">
+						<span class="order-id">订单号: {{ item.id }}</span>
+						<span class="status-badge" :class="getStatusClass(item.orderState)">{{ getStatusText(item.orderState) }}</span>
 					</div>
-				</div>
-				
-				<div class="actions">
-					<!-- 待支付：取消 + 付款 -->
-					<template v-if="item.orderState === 0">
-						<button class="cancel-btn" @click.stop="cancelOrder(item.id)">取消订单</button>
-						<button class="pay-btn" @click.stop="payOrder(item.id)">立即支付</button>
-					</template>
 					
-					<!-- 待接单：取消订单 -->
-					<template v-else-if="item.orderState === 1">
-						<button class="cancel-btn" @click="cancelOrder(item.id)">取消订单</button>
-					</template>
+					<div class="order-content">
+						<img class="thumb" :src="item.businessImg" alt="商家图片">
+						<div class="meta">
+							<p class="name">{{ item.businessName || '未知商家' }}</p>
+							<p class="price">¥ {{ Number(item.orderTotal).toFixed(2) }}</p><br>
+							<p class="time">下单时间: {{ item.orderDate }}</p>
+						</div>
+					</div>
 					
-					<!-- 已接单：确认收货 -->
-					<template v-else-if="item.orderState === 2">
-						<button class="confirm-btn" @click.stop="confirmOrder(item.id)">确认收货</button>
-					</template>
-					
-					<!-- 已完成/已取消：查看详情 -->
-					<template v-else>
-						<button class="detail-btn" @click="goDetail(item.id)">查看详情</button>
-					</template>
-				</div>
-			</li>
-		</ul>
+					<div class="actions">
+						<!-- 待支付：取消 + 付款 -->
+						<template v-if="item.orderState === 0">
+							<button class="cancel-btn" @click.stop="cancelOrder(item.id)">取消订单</button>
+							<button class="pay-btn" @click.stop="payOrder(item.id)">立即支付</button>
+						</template>
+						
+						<!-- 待接单：取消订单 -->
+						<template v-else-if="item.orderState === 1">
+							<button class="cancel-btn" @click="cancelOrder(item.id)">取消订单</button>
+						</template>
+						
+						<!-- 已接单：确认收货 -->
+						<template v-else-if="item.orderState === 2">
+							<button class="confirm-btn" @click.stop="confirmOrder(item.id)">确认收货</button>
+						</template>
+						
+						<!-- 已完成/已取消：查看详情 -->
+						<template v-else>
+							<button class="detail-btn" @click="goDetail(item.id)">查看详情</button>
+						</template>
+					</div>
+				</li>
+			</ul>
+		</div>
 
 		<!-- 底部导航 -->
 		<Footer />
@@ -79,7 +85,7 @@
 </template>
   
 <script>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed,onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import request from "../utils/request";
 import Footer from '../components/Footer.vue';
@@ -94,6 +100,9 @@ export default {
     const userInfo = ref({});
     const router = useRouter();
     const loading = ref(false);
+	// --- WebSocket 相关 ---
+    const socket = ref(null);
+    const userId = ref(null); // 存储当前用户ID
     
     // 标签定义 - 与API状态对应
     const tabs = ["全部", "待支付", "待接单", "已接单", "已完成", "已取消"];
@@ -266,7 +275,52 @@ export default {
       });
     };
 
-    onMounted(() => {
+	// 初始化WebSocket
+    const initWebSocket = () => {
+	// const tokenFromLocal = localStorage.getItem('token');
+	// const tokenFromSession = sessionStorage.getItem('token');
+	// const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+    //   const userData = storage.getItem("userInfo");
+    //   if (userData) {
+    //     userInfo.value = JSON.parse(userData);
+    //     userId.value = userInfo.value.id;
+    //   }
+	  userId.value = userInfo.value.id;
+      if (!userId.value) return;
+
+      // 连接WebSocket（假设后端地址是 ws://localhost:8080/ws/{userId}）
+      socket.value = new WebSocket(`ws://localhost:8080/ws/${userId.value}`);
+
+      socket.value.onopen = () => {
+        console.log("WebSocket 连接成功");
+      };
+
+      socket.value.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log("收到WebSocket消息:", message);
+        // 收到消息后，刷新订单列表
+        fetchOrders();
+      };
+
+      socket.value.onclose = () => {
+        console.log("WebSocket 连接关闭");
+        // 断线重连（可选，视需求添加）
+        setTimeout(initWebSocket, 2000);
+      };
+
+      socket.value.onerror = (err) => {
+        console.error("WebSocket 错误:", err);
+      };
+    };
+
+    // 关闭WebSocket（组件销毁时调用）
+    const closeWebSocket = () => {
+      if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+        socket.value.close();
+      }
+    };
+
+	onMounted(() => {
       // 获取用户信息
       const userData = sessionStorage.getItem("userInfo") || localStorage.getItem("userInfo");
       userInfo.value = userData ? JSON.parse(userData) : null;
@@ -276,11 +330,14 @@ export default {
         router.push({ path: "/login" });
         return;
       }
-
+	  initWebSocket();
       // 初始加载全部订单
       fetchOrders();
     });
-
+	onUnmounted(() => {
+      // 组件销毁时关闭WebSocket
+      closeWebSocket();
+    });
 
 
     return {
@@ -309,9 +366,10 @@ export default {
 /****************** 容器与顶部 ******************/
 .wrapper {
 	width: 100%;
-	height: 100%;
+	height: 90%;
 	background: #f5f7fa;
 	min-height: 100vh;
+	padding-bottom: 30px;
 }
 
 .topbar {
@@ -330,8 +388,17 @@ export default {
 	align-items: center;
 }
 
+/****************** 固定标题和筛选栏 ******************/
+.fixed-header {
+	position: fixed;
+	top: 12vw; /* 在顶部蓝色栏下方 */
+	left: 0;
+	width: 100%;
+	z-index: 999;
+	background: white;
+}
+
 .page-title {
-	margin-top: 12vw;
 	padding: 4vw;
 	font-size: 4.5vw;
 	color: #333;
@@ -372,6 +439,12 @@ export default {
 	border-radius: 0.4vw;
 }
 
+/****************** 内容区域 ******************/
+.content-area {
+	margin-top: calc(20vw + 18vw); /* 顶部蓝色栏高度 + 固定标题和筛选栏高度 */
+	padding: 0 4vw;
+}
+
 /****************** 加载和空状态 ******************/
 .loading, .empty-state {
 	display: flex;
@@ -394,7 +467,7 @@ export default {
 
 /****************** 订单列表 ******************/
 .order-list {
-	padding: 4vw;
+	padding: 4vw 0; /* 调整内边距 */
 }
 
 .order-item {

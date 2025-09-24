@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单查询调试工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 订单查询调试工具</h1>
+        
+        <div class="highlight">
+            <strong>🎯 调试目标：</strong> 找出为什么AI客服只能查询到一个订单的原因
+        </div>
+
+        <div class="test-section">
+            <h3>1. 📊 查看用户订单统计</h3>
+            <div class="input-group">
+                <label>用户ID (默认33，有多个订单):</label>
+                <input type="number" id="userId" value="33" min="1">
+            </div>
+            <button onclick="debugUserOrders()">查看用户订单详情</button>
+            <div id="debugResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 🤖 测试AI客服查询</h3>
+            <div class="input-group">
+                <label>测试消息:</label>
+                <input type="text" id="testMessage" value="查询我的订单状态" placeholder="输入测试消息">
+            </div>
+            <button onclick="testAiQuery('查询我的订单状态')">测试通用查询</button>
+            <button onclick="testAiQuery('查询6号订单')">测试特定订单查询</button>
+            <button onclick="testAiQuery(document.getElementById('testMessage').value)">测试自定义消息</button>
+            <div id="aiResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 📋 测试结果分析</h3>
+            <div id="analysis" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080';
+        
+        async function debugUserOrders() {
+            const userId = document.getElementById('userId').value || 33;
+            const resultDiv = document.getElementById('debugResult');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = '正在查询用户订单数据...';
+                
+                const response = await fetch(`${baseUrl}/api/ai/chat/debug/orders/${userId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    
+                    let analysisText = `=== 用户${userId}订单调试结果 ===\n\n`;
+                    
+                    // 用户信息
+                    if (data.data.user) {
+                        analysisText += `👤 用户信息:\n`;
+                        analysisText += `   ID: ${data.data.user.id}\n`;
+                        analysisText += `   用户名: ${data.data.user.username}\n\n`;
+                    }
+                    
+                    // 订单统计
+                    analysisText += `📊 订单统计:\n`;
+                    analysisText += `   该用户总订单数: ${data.data.allOrdersCount}\n`;
+                    analysisText += `   最近5个订单数: ${data.data.recentOrdersCount}\n`;
+                    analysisText += `   数据库总订单数: ${data.data.totalOrdersInDB || 'N/A'}\n\n`;
+                    
+                    // 用户订单分布
+                    if (data.data.userOrderCount) {
+                        analysisText += `📈 各用户订单分布:\n`;
+                        for (const [uid, count] of Object.entries(data.data.userOrderCount)) {
+                            analysisText += `   用户${uid}: ${count}个订单\n`;
+                        }
+                        analysisText += `\n`;
+                    }
+                    
+                    // 特定订单检查
+                    analysisText += `🔍 特定订单检查:\n`;
+                    analysisText += `   订单6: ${data.data.order6 ? `存在 (客户ID: ${data.data.order6.customerId})` : '不存在'}\n`;
+                    analysisText += `   订单11: ${data.data.order11 ? `存在 (客户ID: ${data.data.order11.customerId})` : '不存在'}\n\n`;
+                    
+                    // 详细订单列表
+                    if (data.data.allOrders && data.data.allOrders.length > 0) {
+                        analysisText += `📋 用户${userId}的所有订单:\n`;
+                        data.data.allOrders.forEach(order => {
+                            analysisText += `   订单${order.id}: 状态${order.orderState}, 金额${order.orderTotal}, 商家${order.businessId}, 时间${order.orderDate}\n`;
+                        });
+                    } else {
+                        analysisText += `❌ 用户${userId}没有任何订单记录！\n`;
+                    }
+                    
+                    resultDiv.textContent = analysisText;
+                    
+                    // 更新分析结果
+                    updateAnalysis(data.data);
+                    
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `查询失败: ${data.message || '未知错误'}`;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `请求失败: ${error.message}`;
+            }
+        }
+        
+        async function testAiQuery(message) {
+            const userId = document.getElementById('userId').value || 33;
+            const resultDiv = document.getElementById('aiResult');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = `正在测试AI查询: "${message}"...`;
+                
+                const response = await fetch(`${baseUrl}/api/ai/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        message: message,
+                        chatType: 'CUSTOMER_SERVICE'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success || data.code === 'OK') {
+                    resultDiv.className = 'result success';
+                    const aiData = data.data || data;
+                    resultDiv.textContent = `AI回复: ${aiData.message || aiData.content || JSON.stringify(aiData)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `AI查询失败: ${data.message || JSON.stringify(data)}`;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `AI请求失败: ${error.message}`;
+            }
+        }
+        
+        function updateAnalysis(debugData) {
+            const analysisDiv = document.getElementById('analysis');
+            analysisDiv.style.display = 'block';
+            
+            let analysis = `🔍 问题分析:\n\n`;
+            
+            // 分析订单数量问题
+            if (debugData.allOrdersCount === 0) {
+                analysis += `❌ 问题发现: 用户没有任何订单记录\n`;
+                analysis += `   - 可能原因: 数据库中customer_id字段与用户ID不匹配\n`;
+                analysis += `   - 建议: 检查订单表中的customer_id字段\n\n`;
+            } else if (debugData.allOrdersCount === 1) {
+                analysis += `⚠️ 问题发现: 用户只有1个订单\n`;
+                analysis += `   - 这解释了为什么总是返回同一个订单\n`;
+                analysis += `   - 需要检查是否有其他订单属于其他用户\n\n`;
+            } else {
+                analysis += `✅ 订单数量正常: 用户有${debugData.allOrdersCount}个订单\n`;
+                analysis += `   - 问题可能在AI查询逻辑中\n\n`;
+            }
+            
+            // 分析特定订单
+            if (debugData.order6 && debugData.order11) {
+                if (debugData.order6.customerId === debugData.order11.customerId) {
+                    analysis += `🤔 发现: 订单6和订单11属于同一用户 (${debugData.order6.customerId})\n`;
+                } else {
+                    analysis += `📊 发现: 订单6属于用户${debugData.order6.customerId}, 订单11属于用户${debugData.order11.customerId}\n`;
+                }
+            }
+            
+            // 提供解决建议
+            analysis += `\n💡 调试建议:\n`;
+            analysis += `1. 检查当前测试的用户ID是否正确\n`;
+            analysis += `2. 确认订单表中customer_id字段的数据\n`;
+            analysis += `3. 验证AI查询时使用的用户ID是否与订单匹配\n`;
+            analysis += `4. 查看后端日志中的详细调试信息\n`;
+            
+            analysisDiv.textContent = analysis;
+        }
+        
+        // 页面加载时自动执行一次调试
+        window.onload = function() {
+            setTimeout(debugUserOrders, 1000);
+        };
+    </script>
+</body>
+</html>

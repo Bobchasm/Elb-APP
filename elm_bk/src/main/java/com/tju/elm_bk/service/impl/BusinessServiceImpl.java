@@ -24,9 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -236,6 +238,34 @@ public class BusinessServiceImpl implements BusinessService {
         }
 //        System.out.println(businesses);
         return businesses;
+    }
+
+    //搜索与筛选商铺信息
+    @Override
+    public List<BusinessSearchVO> getBusinessesInCarousel() {
+        List<BusinessSearchVO> businesses = businessMapper.searchBusinesses(null);
+        // 为每个店铺计算评分与销量
+        for (BusinessSearchVO business : businesses) {
+            Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
+            int salesCount = businessMapper.getSalesCount(business.getId());
+            Integer likeCount = interactionMapper.countLikesByMerchantId(business.getId());
+            Integer collectCount = interactionMapper.countCollectionsByMerchantId(business.getId());
+            // 计算评分 (点赞权重0.6，收藏权重0.4，归一化到1-5分)
+            double normalizedRating = 1 + 4 * (0.6 * likeCount / (likeCount + 10.0) + 0.4 * collectCount / (collectCount + 10.0));
+            BigDecimal rating = BigDecimal.valueOf(normalizedRating).setScale(2, RoundingMode.HALF_UP);
+            business.setScore(rating);
+            business.setSalesCount(salesCount);
+        }
+
+        // 使用 Comparator 进行排序
+        Comparator<BusinessSearchVO> comparator = null;
+        comparator = Comparator.comparing(BusinessSearchVO::getScore, Comparator.reverseOrder())
+                .thenComparing(BusinessSearchVO::getSalesCount, Comparator.reverseOrder());
+
+        businesses.sort(comparator);
+
+
+        return businesses.subList(0, 3);
     }
 
     private User getCurrentUser() {

@@ -1,88 +1,95 @@
 <template>
 	<div class="wrapper">
-		<header class="topbar">
-			<p>订单详情</p>
-		</header>
-		
-		<!-- 加载提示 -->
-		<div v-if="loading" class="loading">
-			<p>加载中...</p>
+		<!-- 固定顶部栏 -->
+		<div class="fixed-top">
+			<BackButton :show-back-button="true" />
+			<div class="header">
+				<h1 class="title">订单详情</h1>
+			</div>
 		</div>
 		
-		<!-- 错误提示 -->
-		<div v-else-if="error" class="error">
-			<p>{{ error }}</p>
-			<button @click="retry">重新加载</button>
-		</div>
-		
-		<!-- 订单详情内容 -->
-		<div v-else class="content">
-			<!-- 订单状态和基本信息 -->
-			<div class="order-status">
-				<div class="status-icon" :class="getStatusClass(orderDetail.orderState)">
-					<i class="fa" :class="getStatusIcon(orderDetail.orderState)"></i>
-				</div>
-				<div class="status-info">
-					<h3>{{ getStatusText(orderDetail.orderState) }}</h3>
-					<p>订单号: {{ orderDetail.id || '-' }}</p>
-					<p>下单时间: {{ formatTime(orderDetail.orderDate) }}</p>
-				</div>
+		<!-- 内容区域 -->
+		<div class="content-area">
+			<!-- 加载提示 -->
+			<div v-if="loading" class="loading">
+				<p>加载中...</p>
 			</div>
-
-			<!-- 收货人信息 -->
-			<div class="info-section">
-				<h3 class="section-title">收货信息</h3>
-				<div class="info-content">
-					<p><span>收货人:</span> {{ orderDetail.contactName || '-' }} {{ getGenderText(orderDetail.contactSex) }}</p>
-					<p><span>联系电话:</span> {{ orderDetail.contactTel || '-' }}</p>
-					<p><span>配送地址:</span> {{ orderDetail.address || '-' }}</p>
-				</div>
+			
+			<!-- 错误提示 -->
+			<div v-else-if="error" class="error">
+				<p>{{ error }}</p>
+				<button @click="retry">重新加载</button>
 			</div>
-
-			<!-- 商家信息 -->
-			<div class="info-section">
-				<h3 class="section-title">商家信息</h3>
-				<div class="info-content">
-					<p><span>商家名称:</span> {{ orderDetail.businessName || '-' }}</p>
+			
+			<!-- 订单详情内容 -->
+			<div v-else class="content">
+				<!-- 订单状态和基本信息 -->
+				<div class="order-status">
+					<div class="status-icon" :class="getStatusClass(orderDetail.orderState)">
+						<i class="fa" :class="getStatusIcon(orderDetail.orderState)"></i>
+					</div>
+					<div class="status-info">
+						<h3>{{ getStatusText(orderDetail.orderState) }}</h3>
+						<p>订单号: {{ orderDetail.id || '-' }}</p>
+						<p>下单时间: {{ formatTime(orderDetail.orderDate) }}</p>
+					</div>
 				</div>
-			</div>
 
-			<!-- 商品明细 -->
-			<div class="info-section">
-				<h3 class="section-title">商品明细</h3>
-				<div class="items-list">
-					<div v-for="(item, index) in orderDetail.foodList" :key="index" class="item-row">
-						<div class="item-info">
-							<span class="item-name">{{ item.foodName || '未知商品' }} &#165;{{ item.foodPrice }} &nbsp; × {{ item.quantity || 0 }}</span>
+				<!-- 收货人信息 -->
+				<div class="info-section">
+					<h3 class="section-title">收货信息</h3>
+					<div class="info-content">
+						<p><span>收货人:</span> {{ orderDetail.contactName || '-' }} {{ getGenderText(orderDetail.contactSex) }}</p>
+						<p><span>联系电话:</span> {{ orderDetail.contactTel || '-' }}</p>
+						<p><span>配送地址:</span> {{ orderDetail.address || '-' }}</p>
+					</div>
+				</div>
+
+				<!-- 商家信息 -->
+				<div class="info-section">
+					<h3 class="section-title">商家信息</h3>
+					<div class="info-content">
+						<p><span>商家名称:</span> {{ orderDetail.businessName || '-' }}</p>
+					</div>
+				</div>
+
+				<!-- 商品明细 -->
+				<div class="info-section">
+					<h3 class="section-title">商品明细</h3>
+					<div class="items-list">
+						<div v-for="(item, index) in orderDetail.foodList" :key="index" class="item-row">
+							<div class="item-info">
+								<span class="item-name">{{ item.foodName || '未知商品' }} &#165;{{ item.foodPrice }} &nbsp; × {{ item.quantity || 0 }}</span>
+							</div>
+							<div class="item-price">¥ {{ (item.foodPrice * item.quantity).toFixed(2) }}</div>
 						</div>
-						<div class="item-price">¥ {{ (item.foodPrice * item.quantity).toFixed(2) }}</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- 费用汇总 -->
-			<div class="info-section">
-				<h3 class="section-title">费用明细</h3>
-				<div class="price-details">
-					<div class="price-row">
-						<span>商品金额</span>
-						<span>¥ {{ itemsTotal.toFixed(2) }}</span>
-					</div>
-					<div class="price-row">
-						<span>配送费</span>
-						<span>&#165;{{ orderDetail.deliveryPrice || '0.00' }}</span>
-					</div>
-					<div class="price-row total">
-						<span>实付款</span>
-						<span>¥ {{ orderDetail.orderTotal.toFixed(2) }}</span>
+				<!-- 费用汇总 -->
+				<div class="info-section">
+					<h3 class="section-title">费用明细</h3>
+					<div class="price-details">
+						<div class="price-row">
+							<span>商品金额</span>
+							<span>¥ {{ itemsTotal.toFixed(2) }}</span>
+						</div>
+						<div class="price-row">
+							<span>配送费</span>
+							<span>&#165;{{ orderDetail.deliveryPrice || '0.00' }}</span>
+						</div>
+						<div class="price-row total">
+							<span>实付款</span>
+							<span>¥ {{ orderDetail.orderTotal.toFixed(2) }}</span>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- 操作按钮 -->
-			<div v-if="orderDetail.orderState === 0" class="action-buttons">
-				<button class="btn cancel-btn" @click="cancelOrder">取消订单</button>
-				<button class="btn pay-btn" @click="payOrder">立即支付</button>
+				<!-- 操作按钮
+				<div v-if="orderDetail.orderState === 0" class="action-buttons">
+					<button class="btn cancel-btn" @click="cancelOrder">取消订单</button>
+					<button class="btn pay-btn" @click="payOrder">立即支付</button>
+				</div> -->
 			</div>
 		</div>
 	</div>
@@ -93,8 +100,10 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
 
+import BackButton from '../components/BackButton.vue';
 export default {
 	name: 'ListDetail',
+	components: { BackButton },
 	setup() {
 		const route = useRoute();
 		const router = useRouter();
@@ -266,23 +275,37 @@ export default {
 	background: #f5f7fa;
 }
 
-.topbar {
-	width: 100%;
-	height: 12vw;
-	background-color: #409eff;
-	color: #fff;
-	font-size: 4.8vw;
+/****************** 固定顶部栏 ******************/
+.fixed-top {
 	position: fixed;
-	left: 0;
 	top: 0;
+	left: 0;
+	width: 100%;
 	z-index: 1000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	background: white;
 }
 
-.content {
-	padding-top: 12vw;
+.header {
+	padding: 20px;
+	text-align: center;
+	background: linear-gradient(to right, #3a7bd5, #00d2ff);
+	color: white;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	border-radius: 0;
+	position: relative;
+	overflow: hidden;
+}
+
+.title {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 600;
+	color: white;
+}
+
+/****************** 内容区域 ******************/
+.content-area {
+	margin-top: 50px; /* 固定顶部栏的高度 */
 	padding-bottom: 20vw;
 }
 

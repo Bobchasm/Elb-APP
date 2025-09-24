@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 
@@ -29,6 +31,8 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String uri = request.getRequestURI();//请求后缀 协议://域名"/xxx/xxx"
+        log.info("收到请求 " + uri);
         try {
             String jwt = resolveToken(request);
             String requestURI = request.getRequestURI();

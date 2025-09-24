@@ -1,7 +1,10 @@
 <template>
   <div class="container">
-    <div class="top-background">
-      <h1>个人信息</h1>
+    <!-- 固定顶部栏 -->
+    <div class="fixed-top">
+      <div class="top-background">
+        <h1>个人信息</h1>
+      </div>
     </div>
 
     <div class="user-card">
@@ -42,47 +45,49 @@
       </div>
     </div>
 
-    <input
-      type="file"
-      ref="fileInput"
-      style="display: none"
-      accept="image/*"
-      @change="handleFileUpload"
-    >
+      <!-- 隐藏的文件输入框 -->
+      <input
+        type="file"
+        ref="fileInput"
+        style="display: none"
+        accept="image/*"
+        @change="handleFileUpload"
+      >
 
-    <div class="menu-section">
-      <div class="section-title">常用功能</div>
-      <div class="menu-list">
-        <div class="menu-item" @click="showAddressSection = !showAddressSection">
-          <div class="menu-icon">
-            <i class="fas fa-map-marker-alt"></i>
+      <div class="menu-section">
+        <div class="section-title">常用功能</div>
+        <div class="menu-list">
+          <div class="menu-item" @click="showAddressSection = !showAddressSection">
+            <div class="menu-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <span class="menu-text">收货地址</span>
+            <i class="fas fa-chevron-right menu-arrow"></i>
           </div>
-          <span class="menu-text">收货地址</span>
-          <i class="fas fa-chevron-right menu-arrow"></i>
-        </div>
-        <div class="menu-item" @click="myfavorite">
-          <div class="menu-icon">
-            <i class="fas fa-heart"></i>
+          <div class="menu-item" @click="myfavorite">
+            <div class="menu-icon">
+              <i class="fas fa-heart"></i>
+            </div>
+            <span class="menu-text">我的收藏</span>
+            <i class="fas fa-chevron-right menu-arrow"></i>
           </div>
-          <span class="menu-text">我的收藏</span>
-          <i class="fas fa-chevron-right menu-arrow"></i>
-        </div>
-        <div class="menu-item message-item" @click="navigateTo('notifications')">
-          <div class="menu-icon">
-            <i class="fas fa-bell"></i>
+          <div class="menu-item message-item" @click="navigateTo('notifications')">
+            <div class="menu-icon">
+              <i class="fas fa-bell"></i>
+            </div>
+            <span class="menu-text">消息与通知</span>
+            <div class="notification-badge" v-if="unreadMessageCount > 0">
+              {{ unreadMessageCount }}
+            </div>
+            <i class="fas fa-chevron-right menu-arrow"></i>
           </div>
-          <span class="menu-text">消息与通知</span>
-          <div class="notification-badge" v-if="unreadMessageCount > 0">
-            {{ unreadMessageCount }}
-          </div>
-          <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
       </div>
-    </div>
 
-    <div v-if="uploading" class="upload-loading">
-      <i class="fas fa-spinner fa-spin"></i> 上传中...
-    </div>
+      <!-- 加载状态 -->
+      <div v-if="uploading" class="upload-loading">
+        <i class="fas fa-spinner fa-spin"></i> 上传中...
+      </div>
 
     <AddressManager v-if="showAddressSection" :id="userInfo?.id" />
     
@@ -90,48 +95,49 @@
       <i class="fas fa-spinner fa-spin"></i> 加载中...
     </div>
 
-    <div class="error-message" v-if="errorMessage">
-      <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
-    </div>
+      <div class="error-message" v-if="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
 
-    <Footer />
+      <Footer />
 
-    <div v-if="showEditModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3>编辑个人信息</h3>
-        <div class="modal-item">
-          <label>姓氏</label>
-          <input v-model="editFormData.firstName" placeholder="输入姓氏" />
-        </div>
-        <div class="modal-item">
-          <label>名字</label>
-          <input v-model="editFormData.lastName" placeholder="输入名字" />
-        </div>
-        <div class="modal-item">
-          <label>手机号</label>
-          <input v-model="editFormData.phone" placeholder="输入手机号" />
-        </div>
-        <div class="modal-item">
-          <label>邮箱</label>
-          <input v-model="editFormData.email" placeholder="输入邮箱" type="email" />
-        </div>
-        <div class="modal-buttons">
-          <button @click="submitEdits">提交</button>
-          <button @click="closeEditModal">取消</button>
+      <div v-if="showEditModal" class="modal-overlay">
+        <div class="modal-content">
+          <h3>编辑个人信息</h3>
+          <div class="modal-item">
+            <label>姓氏</label>
+            <input v-model="editFormData.firstName" placeholder="输入姓氏" />
+          </div>
+          <div class="modal-item">
+            <label>名字</label>
+            <input v-model="editFormData.lastName" placeholder="输入名字" />
+          </div>
+          <div class="modal-item">
+            <label>手机号</label>
+            <input v-model="editFormData.phone" placeholder="输入手机号" />
+          </div>
+          <div class="modal-item">
+            <label>邮箱</label>
+            <input v-model="editFormData.email" placeholder="输入邮箱" type="email" />
+          </div>
+          <div class="modal-buttons">
+            <button @click="submitEdits">提交</button>
+            <button @click="closeEditModal">取消</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="showMerchantApplyModal" class="modal-overlay">
-      <div class="modal-content merchant-apply-modal">
-        <div class="modal-icon">
-          <i class="fas fa-store"></i>
-        </div>
-        <h3>申请成为商家</h3>
-        <p class="modal-message">当前无商家权限，是否申请成为商家？</p>
-        <div class="modal-buttons">
-          <button class="apply-btn" @click="applyForMerchant">申请</button>
-          <button class="cancel-btn" @click="closeMerchantApplyModal">否</button>
+      <div v-if="showMerchantApplyModal" class="modal-overlay">
+        <div class="modal-content merchant-apply-modal">
+          <div class="modal-icon">
+            <i class="fas fa-store"></i>
+          </div>
+          <h3>申请成为商家</h3>
+          <p class="modal-message">当前无商家权限，是否申请成为商家？</p>
+          <div class="modal-buttons">
+            <button class="apply-btn" @click="applyForMerchant">申请</button>
+            <button class="cancel-btn" @click="closeMerchantApplyModal">否</button>
+          </div>
         </div>
       </div>
     </div>
@@ -184,42 +190,51 @@ export default {
     });
 
     const initWebSocket = () => {
-      if (webSocket.value) {
-        webSocket.value.close();
-      }
+  // 清除之前的连接
+  if (webSocket.value) {
+    webSocket.value.close();
+  }
+
+  try {
+    const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+
+    webSocket.value = new WebSocket(wsUrl);
+
+    webSocket.value.onopen = () => {
+      console.log('WebSocket 连接成功');
+      isConnected.value = true;
+      //toast.success('已连接消息通知');
+    };
+
+    webSocket.value.onmessage = (event) => {
       try {
-        const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`;
-        webSocket.value = new WebSocket(wsUrl);
-        webSocket.value.onopen = () => {
-          console.log('WebSocket 连接成功');
-          isConnected.value = true;
-          toast.success('已连接消息通知');
-        };
-        webSocket.value.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-            handleNewMessage(message);
-          } catch (err) {
-            console.error('解析消息失败:', err);
-          }
-        };
-        webSocket.value.onclose = (event) => {
-          console.log('WebSocket 连接关闭，代码:', event.code);
-          isConnected.value = false;
-          if (event.code !== 1000) {
-            setTimeout(initWebSocket, 3000);
-          }
-        };
-        webSocket.value.onerror = (err) => {
-          console.error('WebSocket 错误:', err);
-          isConnected.value = false;
-        };
+        const message = JSON.parse(event.data);
+        handleNewMessage(message);
       } catch (err) {
-        console.error('初始化 WebSocket 失败:', err);
+        console.error('解析消息失败:', err);
       }
     };
+
+    webSocket.value.onclose = (event) => {
+      console.log('WebSocket 连接关闭，代码:', event.code);
+      isConnected.value = false;
+      if (event.code !== 1000) {
+        setTimeout(initWebSocket, 3000);
+      }
+    };
+
+    webSocket.value.onerror = (err) => {
+      console.error('WebSocket 错误:', err);
+      isConnected.value = false;
+    };
+  } catch (err) {
+    console.error('初始化 WebSocket 失败:', err);
+  }
+};
+
+
     onMounted(async () => {
       const token = getToken();
       if (!token) {
@@ -504,17 +519,28 @@ export default {
 /* 保持原有的样式，只修改或新增以下部分 */
 .container {
   max-width: 600px;
-  margin: 0 auto;
   background: #fff;
   min-height: 100vh;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
+  padding-bottom: 20vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
 }
+
+/****************** 固定顶部栏 ******************/
+.fixed-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 .top-background {
   width: 100%;
   height: 100px;
@@ -526,8 +552,8 @@ export default {
   border-radius: 16px 16px 0 0;
   position: relative;
   overflow: hidden;
-  margin-bottom: 50px;
 }
+
 .top-background::before {
   content: '';
   position: absolute;
@@ -539,10 +565,12 @@ export default {
   transform: rotate(30deg);
   animation: shine 6s infinite linear;
 }
+
 @keyframes shine {
   0% { transform: rotate(30deg) translate(-10%, -10%); }
   100% { transform: rotate(30deg) translate(10%, 10%); }
 }
+
 .top-background h1 {
   color: white;
   font-size: 1.8rem;
@@ -552,6 +580,16 @@ export default {
   margin: 0;
   z-index: 1;
 }
+
+/****************** 内容区域 ******************/
+.content-area {
+  margin-top: 100px; /* 固定顶部栏的高度 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .user-card {
   width: 92%;
   max-width: 500px;
@@ -591,12 +629,14 @@ export default {
   background: #f8f9fa;
   margin-left: 15px;
 }
+
 .avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
+
 .user-details {
   flex: 1;
   background-color: #f8f9fa;
@@ -609,6 +649,7 @@ export default {
   gap: 10px;
   margin-right: 15px;
 }
+
 .user-name, .user-full-name, .user-phone, .user-email {
   font-size: 0.95rem;
   color: #495057;
@@ -619,34 +660,40 @@ export default {
   display: flex;
   align-items: center;
 }
+
 .user-name {
   font-size: 1.1rem;
   font-weight: 500;
   color: #333;
   margin-bottom: 8px;
 }
+
 .user-full-name .first-name {
   margin-right: 5px;
 }
-.user-name .edit-icon, 
+
+.user-name .edit-icon,
 .user-full-name .full-name-icon,
 .user-phone .phone-icon,
 .user-email .email-icon {
   margin-right: 8px;
   color: #3498db;
 }
+
 .edit-icon {
   margin-left: auto;
   color: #3498db;
   font-size: 16px;
   cursor: pointer;
 }
+
 .menu-section {
   width: 92%;
   max-width: 500px;
   margin: 20px auto;
   transform: translateY(-50px);
 }
+
 .section-title {
   font-size: 1.1rem;
   color: #2c3e50;
@@ -655,12 +702,14 @@ export default {
   font-weight: 600;
   border-left: 4px solid #3498db;
 }
+
 .menu-list {
   background: white;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
+
 .menu-item {
   display: flex;
   align-items: center;
@@ -669,14 +718,17 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
 .menu-item:hover {
   background-color: #f1f8ff;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
+
 .menu-item:last-child {
   border-bottom: none;
 }
+
 .menu-icon {
   width: 22px;
   height: 22px;
@@ -686,12 +738,14 @@ export default {
   justify-content: center;
   align-items: center;
 }
+
 .menu-text {
   flex: 1;
   font-size: 0.95rem;
   color: #34495e;
   font-weight: 500;
 }
+
 .menu-arrow {
   color: #bdc3c7;
   font-size: 14px;
@@ -704,6 +758,7 @@ export default {
   font-size: 1rem;
   transform: translateY(-50px);
 }
+
 .error-message {
   text-align: center;
   padding: 10px;
@@ -714,6 +769,7 @@ export default {
   font-size: 0.9rem;
   transform: translateY(-50px);
 }
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -726,6 +782,7 @@ export default {
   align-items: center;
   z-index: 1000;
 }
+
 .modal-content {
   background: white;
   padding: 20px;
@@ -735,21 +792,25 @@ export default {
   box-sizing: border-box;
   text-align: center;
 }
+
 .modal-content h3 {
   margin-top: 0;
   color: #2c3e50;
   margin-bottom: 20px;
 }
+
 .modal-item {
   margin-bottom: 15px;
   text-align: left;
 }
+
 .modal-item label {
   display: block;
   font-weight: 500;
   color: #555;
   margin-bottom: 5px;
 }
+
 .modal-content input, .modal-content textarea {
   width: 100%;
   padding: 10px;
@@ -758,12 +819,14 @@ export default {
   font-size: 16px;
   box-sizing: border-box;
 }
+
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
 }
+
 .modal-buttons button {
   padding: 8px 16px;
   border: none;
@@ -771,19 +834,23 @@ export default {
   cursor: pointer;
   font-size: 1rem;
 }
+
 .modal-buttons button:first-child {
   background: #3498db;
   color: white;
   transition: background-color 0.3s;
 }
+
 .modal-buttons button:first-child:hover {
   background: #2980b9;
 }
+
 .modal-buttons button:last-child {
   background: #e0e0e0;
   color: #333;
   transition: background-color 0.3s;
 }
+
 .modal-buttons button:last-child:hover {
   background: #c7c7c7;
 }
@@ -862,17 +929,18 @@ export default {
     border-radius: 0;
     padding: 0;
   }
+  
   .top-background {
     height: 90px;
-    margin-bottom: 50px;
     border-radius: 0;
   }
+
   .user-card {
     flex-direction: column;
     align-items: center;
     gap: 10px;
     padding: 20px 0;
-    margin-top: 0;
+    margin-top: 15vw;
     transform: translateY(-50px);
     width: 90%;
   }

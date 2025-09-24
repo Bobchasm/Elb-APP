@@ -175,4 +175,13 @@ public class BusinessController {
     }
 
 
+
+    @GetMapping("/carousel")
+    @Operation(summary = "获取轮播图商家")
+    public HttpResult<List<BusinessSearchVO>> searchBusiness(){
+        return HttpResult.success(businessService.getBusinessesInCarousel());
+
+    }
+
+
 }

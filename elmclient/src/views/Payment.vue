@@ -1,4 +1,7 @@
 <template>
+	<div class="back-btn-container">
+    <BackButton />
+  </div>
 	<div class="wrapper">
 		<!-- header部分 -->
 		<header>
@@ -99,9 +102,14 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
+import BackButton from '../components/BackButton.vue';
 
 export default {
 	name: 'Payment',
+	components: {
+		BackButton
+	},
 	setup() {
 		const orderDetail = ref(null);
 		const isShowDetailet = ref(true);
@@ -128,12 +136,12 @@ export default {
 					orderDetail.value = response.data;
 				} else {
 					console.error('获取订单详情失败:', response.data?.message);
-					alert('获取订单信息失败，请重试！');
+					toast.error("获取订单信息失败，请重试！");
 					router.push({ path: '/userAddress' });
 				}
 			} catch (error) {
 				console.error('请求错误:', error);
-				alert('获取订单信息失败，请重试！');
+				toast.error("获取订单信息失败，请重试！");
 				router.push({ path: '/userAddress' });
 			} finally {
 				loading.value = false;
@@ -151,11 +159,11 @@ export default {
 						query: { orderId: orderId.value }
 					});
 				} else {
-					alert('支付失败: ' + response.data.message);
+					toast.error("支付失败" + response.data.message);
 				}
 			} catch (error) {
 				console.error('支付失败:', error);
-				alert('支付失败，请重试！');
+				toast.error("支付失败，请重试！");
 			} finally {
 				paying.value = false;
 			}
@@ -172,12 +180,6 @@ export default {
 		onMounted(() => {
 			orderId.value = route.query.orderId;
 			console.log("获取到的orderId:", orderId.value);
-			// if (!orderId.value) {
-			// 	alert('订单信息有误，请重试！');
-			// 	router.push({ path: '/cart' });
-			// 	return;
-			// }
-			
 			fetchOrderDetails();
 		});
 
@@ -413,5 +415,20 @@ export default {
 	align-items: center;
 	font-size: 4vw;
 	color: #666;
+}
+/* 1. 给 BackButton 父容器加固定定位，与 header 对齐 */
+.back-btn-container {
+  position: fixed; /* 固定定位，不随滚动移动 */
+  left: 0vw; /* 距离左侧的距离，可根据需求调整 */
+  top: 0vw; /* 距离顶部的距离，与 header 高度（12vw）适配，确保垂直居中 */
+  z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
+}
+
+/* 2. 样式穿透：确保 BackButton 内部图标/文字正常显示（可选，根据组件内部结构调整） */
+::v-deep .back-button { /* 这里的 .back-button 是 BackButton 组件根元素的类名，需与组件内部一致 */
+  width: 8vw; /* 调整按钮大小，按需修改 */
+  height: 8vw;
+  color: #fff; /* 按钮颜色，与 header 白色文字匹配 */
+  /* 如果组件内部是图标，可加图标大小控制 */
 }
 </style>

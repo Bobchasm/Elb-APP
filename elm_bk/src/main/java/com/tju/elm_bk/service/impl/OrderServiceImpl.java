@@ -11,6 +11,7 @@ import com.tju.elm_bk.vo.CartItemVO;
 import com.tju.elm_bk.vo.OrderItemDetailVO;
 import com.tju.elm_bk.vo.OrderItemVO;
 import com.tju.elm_bk.vo.OrderVO;
+import com.tju.elm_bk.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,8 @@ public class OrderServiceImpl implements OrderService {
     private OrderDetailetMapper orderDetailetMapper;
     @Autowired
     private DeliveryAddressMapper deliveryAddressMapper;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     // 订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
@@ -187,6 +190,22 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         ordersMapper.setOrderState(orderId, orderState);
+        // 订单状态更新后，推送消息给相关用户
+        Order order1 = ordersMapper.getOrderById(orderId);
+        // 1. 推送给商家（如果订单关联了商家）
+        if (order1.getBusinessId() != null) {
+            Business business1 = businessMapper.selectBusinessById(order1.getBusinessId());
+            if (business1 != null && business1.getUserId() != null) {
+                webSocketServer.sendToClient(business1.getUserId().toString(),
+                        "{\"type\": \"order_update\", \"orderId\": " + orderId + "}");
+            }
+        }
+        // 2. 推送给顾客（订单的customerId）
+        if (order1.getCustomerId() != null) {
+            webSocketServer.sendToClient(order1.getCustomerId().toString(),
+                    "{\"type\": \"order_update\", \"orderId\": " + orderId + "}");
+        }
+
         return order.getId();
     }
 

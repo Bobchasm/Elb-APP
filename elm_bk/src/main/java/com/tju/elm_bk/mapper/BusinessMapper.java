@@ -120,4 +120,21 @@ public interface BusinessMapper {
     @Select("select id as merchantId, business_name as merchantName from business where user_id = #{userId} and is_deleted = 0 and status = 1")
     List<MerchantStatsVO> selectBusinessIdListByUserId(Long userId);
 
+    // AI服务相关查询方法
+    @Select("SELECT * FROM business WHERE id = #{id} AND is_deleted = 0")
+    Business selectById(Long id);
+
+    @Select("<script>" +
+            "SELECT * FROM business " +
+            "WHERE is_deleted = 0 AND status = 1 " +
+            "<if test='keyword != null and keyword != \"\"'>" +
+            "   AND (business_name LIKE CONCAT('%', #{keyword}, '%') " +
+            "   OR business_address LIKE CONCAT('%', #{keyword}, '%') " +
+            "   OR business_explain LIKE CONCAT('%', #{keyword}, '%'))" +
+            "</if>" +
+            "ORDER BY create_time DESC " +
+            "LIMIT #{limit}" +
+            "</script>")
+    List<Business> searchByKeyword(@Param("keyword") String keyword, @Param("limit") Integer limit);
+
 }

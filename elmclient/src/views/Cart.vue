@@ -1,4 +1,5 @@
 <template>
+	<BackButton :show-back-button="true" />
 	<div class="wrapper">
 		<!-- header部分 -->
 		<header>
@@ -54,29 +55,31 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import BackButton from '../components/BackButton.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 
 export default {
 	name: 'Cart',
+	components: { BackButton },
 	setup() {
 		const cartItems = ref([]);
 		const userInfo = ref(null);
 		const route = useRoute();
 		const router = useRouter();
-		//const businessId = route.query.businessId;
 		const businessId = ref(null);
+		// const businessId = ref(null);
 		const businessName = ref('');
 
 		onMounted(() => {
-			businessId.value = parseInt(1);
+			businessId.value = parseInt(route.query.businessId);
 			userInfo.value = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
 
 			if (userInfo.value) {
 				listCart();
 			} else {
-				alert('用户未登录，请先登录！');
+				toast.error("用户未登录，请先登录！");
 				router.push({ path: '/login' });
 			}
 		});
@@ -119,6 +122,7 @@ export default {
 			totalPrice,
 			checkout,
 			goBack,
+			businessId
 		};
 	}
 }

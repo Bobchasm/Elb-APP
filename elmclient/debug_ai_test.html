@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI客服调试测试</title>
+</head>
+<body>
+    <h1>AI客服接口调试</h1>
+    <div>
+        <input type="text" id="messageInput" placeholder="输入消息" style="width: 300px;">
+        <button onclick="testAI()">发送测试</button>
+    </div>
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+    <script>
+        async function testAI() {
+            const message = document.getElementById('messageInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!message.trim()) {
+                resultDiv.innerHTML = '请输入消息';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '发送中...';
+                
+                const response = await fetch('http://localhost:8080/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        userId: 1,
+                        chatType: 'general'
+                    })
+                });
+                
+                console.log('响应状态:', response.status);
+                console.log('响应头:', response.headers);
+                
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                resultDiv.innerHTML = `
+                    <h3>响应结果:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('请求失败:', error);
+                resultDiv.innerHTML = `
+                    <h3>错误:</h3>
+                    <p style="color: red;">${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

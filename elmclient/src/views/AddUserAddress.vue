@@ -1,12 +1,10 @@
 <template>
-  <div class="wrapper">
-    <!-- header部分 -->
-    <header class="header">
-      <div @click="goBack" class="back-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-      </div>
-      <p>新增收货地址</p>
-    </header>
+	<div class="wrapper">
+		<!-- header部分 -->
+		<BackButton />
+    <div class="header">
+      <h1 class="title">新增送货地址</h1>
+    </div>
 
     <!-- 表单部分 -->
     <ul class="form-box">
@@ -53,83 +51,87 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-// 假设你已经有了这两个工具类
-// import { toast } from '../utils/toast';
-// import request from '../utils/request';
-
+// import Footer from '../components/Footer.vue';
+import { useRouter,useRoute } from 'vue-router';
+import { toast } from '../utils/toast';
+import request from '../utils/request';
+import BackButton from '../components/BackButton.vue';
 export default {
-  name: 'AddUserAddress',
-  setup() {
-    const deliveryAddress = ref({
-      contactName: '',
-      contactSex: 1,
-      contactTel: '',
-      address: '',
-      customer: {
-        id: 0,
-        username: ''
-      }
-    });
+	name: 'AddUserAddress',
+	components: {
+		// Footer,
+		BackButton
+	},
+	setup() {
+		const deliveryAddress = ref({
+			contactName: '',
+			contactSex: 1,
+			contactTel: '',
+			address: '',
+			customer: {
+				id: 0,
+				username: ''
+			}
+		});
 
-    const user = ref(null);
-    const router = useRouter();
-    const reg = /^1[3456789]\d{9}$/;
-    
-    onMounted(() => {
-      const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
-      const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
-      user.value = userFromLocal || userFromSession;
-      if (user.value) {
-        deliveryAddress.value.customer.id = user.value.id;
-        deliveryAddress.value.customer.username = user.value.username;
-      }
-    });
-
-    const addUserAddress = () => {
-      if (!(deliveryAddress.value.contactName.trim())) {
-        // toast.warning('联系人姓名不能为空！');
-        console.log('联系人姓名不能为空！'); // 调试用
-        return;
-      }
-      if (!reg.test(deliveryAddress.value.contactTel)) {
-        // toast.warning('请输入正确的手机号码！');
-        console.log('请输入正确的手机号码！'); // 调试用
-        return;
-      }
-      if (!(deliveryAddress.value.address.trim())) {
-        // toast.warning('联系人地址不能为空！');
-        console.log('联系人地址不能为空！'); // 调试用
-        return;
-      }
-
-      // 以下为模拟数据请求，请根据你的实际后端接口进行调整
-      console.log('正在保存地址:', deliveryAddress.value);
-      setTimeout(() => {
-        const response = { success: true }; // 模拟成功响应
-        if (response.success) {
-          // toast.success('添加地址成功！');
-          console.log('添加地址成功！'); // 调试用
-          router.push({ path: '/userAddress' });
-        } else {
-          // toast.error('新增地址失败！原因：' + response.message);
-          console.log('新增地址失败！'); // 调试用
-        }
-      }, 500);
+		const route = useRoute();
+		const businessId = ref(route.query.businessId);
+		const user = ref(null);
+		const router = useRouter();
+		const reg = /^1[3456789]\d{9}$/;
+		const goBack = () => {
+      router.back();
     };
 
-    const goBack = () => {
-        router.back();
-    };
+		onMounted(() => {
+			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
+			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
+			user.value = userFromLocal || userFromSession;
+			if (user.value) {
+			deliveryAddress.value.customer.id = user.value.id; 
+			deliveryAddress.value.customer.username = user.value.username; 
+          }
+			businessId.value = route.query.businessId;
+		});
+		
+		const addUserAddress = () => {
+			if (!(deliveryAddress.value.contactName.trim())) {
+				toast.warning('联系人姓名不能为空！');
+				return;
+			}
+			if (!reg.test(deliveryAddress.value.contactTel)) {
+				toast.warning('请输入正确的手机号码！');
+				return;
+			}
+			if (!(deliveryAddress.value.address.trim())) {
+				toast.warning('联系人地址不能为空！');
+				return;
+			}
+			
+			request.post('/api/addresses', deliveryAddress.value)
+				.then(response => {
+					if (response.success) {
+							toast.success('添加地址成功！');
+							router.push({ path: '/userAddress' , query: { businessId: businessId.value }});
+						} else {
+							toast.error('新增地址失败！原因：' + response.message);
+						}
+				})
+				.catch(error => {
+					console.error(error);
+					toast.error('新增地址失败，请重试！');
+				});
+		};
 
-    return {
-      deliveryAddress,
-      user,
-      addUserAddress,
-      goBack
-    };
-  }
-};
+		return {
+			deliveryAddress,
+			businessId,
+			user,
+			addUserAddress,
+			goBack
+		};
+	}
+}
 </script>
 
 <style scoped>

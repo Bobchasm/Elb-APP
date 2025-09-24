@@ -98,8 +98,8 @@
             <p>确定要{{ selectedUser?.disabled ? '启用' : '禁用' }}用户 "{{ selectedUser?.username }}" 吗？</p>
           </div>
           <div class="modal-footer">
-            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
             <button class="modal-btn confirm-btn" @click="confirmToggle">确认</button>
+            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
           </div>
         </div>
       </div>
@@ -293,12 +293,14 @@ onMounted(() => {
   min-height: 100vh;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
+  padding-bottom: 5vh;
+  padding-left: 0;
+  padding-right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  padding:0;
+ 
 }
 
 .top-background {
@@ -561,18 +563,8 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
+
+
 
 .modal-content {
   background: white;

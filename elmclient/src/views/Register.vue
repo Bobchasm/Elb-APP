@@ -103,6 +103,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 
 export default {
   name: 'Register',
@@ -153,10 +154,19 @@ export default {
         };
         reader.readAsDataURL(file);
       } else {
-        uploadedFile.value = null;
-        avatar.value = null;
+        throw new Error(result.message || '上传失败，后端返回异常');
       }
-    };
+    } catch (error) {
+      console.error('头像上传出错:', error.message || '网络请求失败');
+      // 错误提示（可替换为项目中的提示组件）
+      toast.error("头像上传失败，请重试");
+    }
+  } else {
+    // 未选择文件时清空
+    avatar.value = null;
+    user.photo = null;
+  }
+};
 
     // 注册函数，包含所有校验和注册请求
     const register = async () => {
@@ -171,7 +181,7 @@ export default {
         showMessageBox('用户名过长，请勿超过20个字符！');
         return;
       }
-      
+
       if (!user.firstname) {
         showMessageBox('姓不能为空！');
         return;
@@ -241,7 +251,7 @@ export default {
       try {
         const response = await request.post('/api/register', registerPayload);
         console.log('注册请求成功，服务器响应数据:', response);
-        
+
         if (response && response.success) {
           showMessageBox('注册成功！');
           setTimeout(() => {
