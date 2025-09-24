@@ -45,6 +45,14 @@ public class AiKnowledgeBaseUtil {
                 - 回答要简洁明了，避免过于冗长
                 - 可以适当使用emoji让对话更生动
                 
+                特别重要的订单查询处理原则：
+                - 如果用户询问具体订单（如"查6号订单"），而我提供了具体的订单信息，请基于这些信息直接回答
+                - 如果用户询问"我的订单"或"订单状态"而我提供了多个订单信息，请逐一介绍每个订单的状态
+                - 优先使用我提供的实际订单数据，而不是给出通用的操作指导
+                - 如果我提供了订单号、状态、金额等具体信息，请直接告诉用户这些信息
+                - 当显示多个订单时，可以按状态分类介绍（如：进行中的订单、已完成的订单）
+                - 只有在没有提供具体订单信息时，才给出查询方法的指导
+                
                 当前平台信息：
                 - 平台名称：饿了吧外卖平台
                 - 服务时间：7:00-23:00
@@ -114,10 +122,33 @@ public class AiKnowledgeBaseUtil {
      */
     public Order getOrderById(Long orderId) {
         try {
-            return ordersMapper.selectById(orderId);
+            log.info("正在查询订单ID: {}", orderId);
+            Order order = ordersMapper.selectById(orderId);
+            log.info("查询订单结果: orderId={}, order={}", orderId, order);
+            return order;
         } catch (Exception e) {
             log.error("获取订单详情失败: orderId={}", orderId, e);
             return null;
+        }
+    }
+    
+    /**
+     * 根据用户ID获取最近的订单列表
+     */
+    public List<Order> getRecentOrdersByUserId(Long userId, int limit) {
+        try {
+            log.info("正在查询用户ID: {} 的最近 {} 个订单", userId, limit);
+            List<Order> orders = ordersMapper.selectRecentOrdersByUserId(userId, limit);
+            log.info("查询到用户{}的订单数量: {}", userId, orders.size());
+            for (Order order : orders) {
+                log.info("订单详情: ID={}, 状态={}, 总金额={}, 客户ID={}, 商家ID={}, 下单时间={}", 
+                    order.getId(), order.getOrderState(), order.getOrderTotal(), 
+                    order.getCustomerId(), order.getBusinessId(), order.getOrderDate());
+            }
+            return orders;
+        } catch (Exception e) {
+            log.error("获取用户订单列表失败: userId={}, limit={}", userId, limit, e);
+            return List.of();
         }
     }
     
@@ -154,18 +185,34 @@ public class AiKnowledgeBaseUtil {
         if (order == null) return "";
         
         String stateText = switch (order.getOrderState()) {
-            case 0 -> "待支付";
-            case 1 -> "已支付";
-            case 2 -> "配送中";
-            case 3 -> "已完成";
-            case 4 -> "已取消";
-            default -> "未知状态";
+            case 0 -> "待支付 💰";
+            case 1 -> "已支付 ✅";
+            case 2 -> "配送中 🚚";
+            case 3 -> "已完成 ✨";
+            case 4 -> "已取消 ❌";
+            default -> "未知状态 ❓";
         };
         
-        return String.format("订单号：%d，状态：%s，总金额：%.2f元，下单时间：%s",
-                order.getId(),
-                stateText,
-                order.getOrderTotal(),
-                order.getOrderDate());
+        StringBuilder info = new StringBuilder();
+        info.append(String.format("订单号：%d，状态：%s，总金额：%.2f元", 
+                order.getId(), stateText, order.getOrderTotal().doubleValue()));
+        
+        if (order.getOrderDate() != null) {
+            info.append(String.format("，下单时间：%s", order.getOrderDate()));
+        }
+        
+        // 如果有商家信息，也显示出来
+        if (order.getBusinessId() != null) {
+            try {
+                var business = businessMapper.selectById(order.getBusinessId());
+                if (business != null) {
+                    info.append(String.format("，商家：%s", business.getBusinessName()));
+                }
+            } catch (Exception e) {
+                log.debug("获取订单商家信息失败: businessId={}", order.getBusinessId());
+            }
+        }
+        
+        return info.toString();
     }
 }
