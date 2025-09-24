@@ -185,12 +185,24 @@
                         <div class="business-info">
                             <h4>{{ business.businessName || '商家名称' }}</h4>
                             <div class="stats">
-                                <span class="sales">🔥 {{ business.salesCount || 0 }}</span>
-                                <span class="rating">⭐ {{ business.score || getBusinessRating(business.id) }}</span>
+                                <div class="stat-item rating-stat">
+                                    <i class="fa fa-star"></i>
+                                    <span>{{ business.score || getBusinessRating(business.id) }}</span>
+                                </div>
+                                <div class="stat-item sales-stat">
+                                    <i class="fa fa-fire"></i>
+                                    <span>{{ business.salesCount || 0 }}</span>
+                                </div>
                             </div>
                             <div class="delivery-info">
-                                <span>起送 ¥{{ business.startPrice || business.starPrice || 0 }}</span>
-                                <span>配送 ¥{{ business.deliveryPrice || 0 }}</span>
+                                <div class="delivery-tag">
+                                    <span class="tag-label">起送</span>
+                                    <span class="tag-price">¥{{ business.startPrice || business.starPrice || 0 }}</span>
+                                </div>
+                                <div class="delivery-tag">
+                                    <span class="tag-label">配送</span>
+                                    <span class="tag-price">¥{{ business.deliveryPrice || 0 }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -318,13 +330,14 @@
                     <div class="business-info-detail">
                         <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
                         <div class="business-info-rating">
-                            <span class="rating-number">评分：{{ business.score || getBusinessRating(business.id ||
-                                business.businessId) }}</span>
-                            <span class="sales-number">销量：{{ business.salesCount || 0 }}</span>
+                            <span class="rating-score">{{ business.score || getBusinessRating(business.id || business.businessId) }}分</span>
+                            <span class="monthly-sales">月售 {{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
-                            <span>起送 ¥{{ business.startPrice || business.starPrice }}</span>
-                            <span>配送 ¥{{ business.deliveryPrice }}</span>
+                            <span class="start-price">起送 ¥{{ business.startPrice || business.starPrice }}</span>
+                            <span class="delivery-fee" :class="{ 'free-delivery': (business.deliveryPrice || 0) === 0 }">
+                                {{ (business.deliveryPrice || 0) === 0 ? '免配送费' : `配送 ¥${business.deliveryPrice}` }}
+                            </span>
                         </div>
                         <div class="business-info-promotion">
                             <div class="business-info-promotion-left">
@@ -1857,42 +1870,67 @@ export default {
 .wrapper .top-businesses-carousel .stats {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1vw;
-    /* 减少底部间距 */
-    gap: 1vw;
-    /* 减少间隙 */
+    margin-bottom: 1.5vw;
+    gap: 1.5vw;
 }
 
-.wrapper .top-businesses-carousel .sales {
+.wrapper .top-businesses-carousel .stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8vw;
+    padding: 1.2vw 2vw;
+    border-radius: 2vw;
+    font-size: 2.5vw;
+    font-weight: 600;
+    flex: 1;
+    color: white;
+}
+
+.wrapper .top-businesses-carousel .rating-stat {
     background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-    color: white;
-    padding: 1vw 2vw;
-    border-radius: 1.5vw;
-    font-size: 2.5vw;
-    font-weight: 600;
-    flex: 1;
-    text-align: center;
 }
 
-.wrapper .top-businesses-carousel .rating {
+.wrapper .top-businesses-carousel .rating-stat .fa-star {
+    color: #FFD700;
+}
+
+.wrapper .top-businesses-carousel .sales-stat {
     background: linear-gradient(135deg, #4ECDC4, #44A08D);
-    color: white;
-    padding: 1vw 2vw;
-    border-radius: 1.5vw;
-    font-size: 2.5vw;
-    font-weight: 600;
-    flex: 1;
-    text-align: center;
+}
+
+.wrapper .top-businesses-carousel .sales-stat .fa-fire {
+    color: #FF6B35;
 }
 
 .wrapper .top-businesses-carousel .delivery-info {
     display: flex;
-    justify-content: space-around;
-    font-size: 2.5vw;
-    color: #666;
+    justify-content: space-between;
+    gap: 1vw;
+}
+
+.wrapper .top-businesses-carousel .delivery-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5vw;
     background: #f8f9fa;
-    padding: 1.5vw;
+    padding: 1vw 1.5vw;
     border-radius: 1.5vw;
+    border: 1px solid #e9ecef;
+    flex: 1;
+    justify-content: center;
+}
+
+.wrapper .top-businesses-carousel .delivery-tag .tag-label {
+    font-size: 2.2vw;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.wrapper .top-businesses-carousel .delivery-tag .tag-price {
+    font-size: 2.4vw;
+    color: #007bff;
+    font-weight: 600;
 }
 
 /* 轮播箭头按钮 */
@@ -2087,46 +2125,40 @@ export default {
 .wrapper .business-list li .business-info .business-info-rating {
     display: flex;
     align-items: center;
+    gap: 3vw;
     margin-bottom: 2vw;
-    justify-content: flex-end;
 }
 
-.wrapper .business-list li .business-info .business-info-rating .rating {
-    display: flex;
+.wrapper .business-list li .business-info .business-info-rating .rating-score {
+    font-size: 3.2vw;
+    color: #FF6600;
+    font-weight: 600;
 }
 
-.wrapper .business-list li .business-info .business-info-rating .rating .fa-star {
-    color: #999;
-    font-size: 3vw;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .rating .fa-star.active {
-    color: #ffd700;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .rating-number {
+.wrapper .business-list li .business-info .business-info-rating .monthly-sales {
     font-size: 2.8vw;
     color: #999;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .sales-number {
-    font-size: 2.8vw;
-    color: #999;
-    margin-left: 2vw;
-}
-
-.wrapper .business-list li .business-info .business-info-rating .sales {
-    margin-left: 2vw;
-    font-size: 3vw;
-    color: #666;
 }
 
 .wrapper .business-list li .business-info .business-info-delivery {
     display: flex;
     gap: 2vw;
-    font-size: 3vw;
-    color: #666;
     margin-bottom: 2vw;
+}
+
+.wrapper .business-list li .business-info .business-info-delivery .start-price {
+    font-size: 2.8vw;
+    color: #666;
+}
+
+.wrapper .business-list li .business-info .business-info-delivery .delivery-fee {
+    font-size: 2.8vw;
+    color: #666;
+}
+
+.wrapper .business-list li .business-info .business-info-delivery .delivery-fee.free-delivery {
+    color: #FF6600;
+    font-weight: 500;
 }
 
 .wrapper .business-list li .business-info .business-info-promotion {
