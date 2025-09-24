@@ -22,6 +22,7 @@ import Cart from '@/views/Cart.vue'
 import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
+import AiChat from '@/views/AiChat.vue'
 
 //商家端路由配置
 import MerchantProfile from '../views/MerchantProfile.vue';
@@ -213,6 +214,12 @@ const routes = [
     path:'/submitItems',
     name:'SubmitItems',
     component:SubmitItems
+  },
+  {
+    path: '/ai-chat',
+    name: 'AiChat',
+    component: AiChat,
+    meta: { title: 'AI智能客服' }
   },
  //
 //管理端

@@ -1,10 +1,11 @@
 <template>
 	<div class="wrapper">
 		<!-- header部分 -->
-		<header>
-			<p>订单配送地址</p>
-		</header>
-
+		<BackButton />
+    <div class="header">
+    
+      <h1 class="title">订单配送地址</h1>
+    </div>
 		<!-- 地址列表部分 -->
 		<ul class="addresslist">
 			<li v-for="item in deliveryAddressArr" :key="item.id">
@@ -15,10 +16,8 @@
 				<div class="addresslist-right">
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
-					<button class="select-btn"
-							:class="{ 'selected': addressSelectedId === item.id }"
-							@click="selectUserAddress(item.id)"
-							:disabled="addressSelectedId === item.id">
+					<button class="select-btn" :class="{ 'selected': addressSelectedId === item.id }"
+						@click="selectUserAddress(item.id)" :disabled="addressSelectedId === item.id">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
@@ -31,7 +30,22 @@
 			<i class="fa fa-plus-circle"></i>
 			<p>新增收货地址</p>
 		</div>
-
+		<!-- 确认对话框 - 完全保留原始样式 -->
+		<div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>确认操作</h3>
+            <span class="close-btn" @click="showConfirmModal = false">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>确定要删除地址吗？</p>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
+            <button class="modal-btn confirm-btn" @click="confirmRemove">确认</button>
+          </div>
+        </div>
+      </div>
 		<!-- 底部结算栏 -->
 		<div class="order-bar">
 			<button class="checkout-order-btn" @click="submitOrder">确认下单</button>
@@ -39,14 +53,18 @@
 
 	</div>
 </template>
-  
+
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import BackButton from '@/components/BackButton.vue';
 export default {
 	name: 'UserAddress',
+	components: {
+		BackButton
+		},
 	setup() {
 
 		const user = reactive({});
@@ -56,7 +74,11 @@ export default {
 		const businessId = ref(route.query.businessId);
 		const orderId = ref();
 		const addressSelectedId = ref(0);
-
+		const showConfirmModal = ref(false);
+		
+		const goBack = () => {
+      router.back();
+    };
 		onMounted(() => {
 			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
@@ -68,7 +90,7 @@ export default {
 		const listDeliveryAddressByUserId = () => {
 			// 查询送货地址
 			request.get('/api/addresses/listDeliveryAddressByUserId', {
-				params:{userId: user.value.id}
+				params: { userId: user.value.id }
 			}).then(response => {
 				deliveryAddressArr.value = response.data;
 			}).catch(error => {
@@ -105,17 +127,17 @@ export default {
 			}
 			else {
 				request.get("/api/orders/submit?businessId=" + businessId.value + "&addressId=" + addressSelectedId.value)
-				.then(response => {
-					if (response.success) {
-						orderId.value = response.data;
-						router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
-					} else {
-						alert('下单失败！');
-						router.push({path: '/orderList'})
-					}
-				}).catch(error => {
-					console.error('下单失败:', error);
-			});
+					.then(response => {
+						if (response.success) {
+							orderId.value = response.data;
+							router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
+						} else {
+							alert('下单失败！');
+							router.push({ path: '/orderList' })
+						}
+					}).catch(error => {
+						console.error('下单失败:', error);
+					});
 			}
 		};
 
@@ -124,10 +146,10 @@ export default {
 		};
 
 		const removeUserAddress = (id) => {
-			if (!confirm('确认要删除此送货地址吗？')) {
-				return;
-			}
-
+			// if (!confirm('确认要删除此送货地址吗？')) {
+			// 	return;
+			// }
+			showConfirmModal.value = true;
 			request.put('/api/addresses/removeDeliveryAddress', {
 				id: id
 			}).then(response => {
@@ -161,7 +183,8 @@ export default {
 			sexFilter,
 			orderId,
 			addressSelectedId,
-			submitOrder
+			submitOrder,
+			goBack
 		};
 	},
 	components: {
@@ -169,13 +192,12 @@ export default {
 	}
 }
 </script>
-  
+
 <style scoped>
 /*************** 总容器 ***************/
 .wrapper {
 	width: 100%;
 	height: 100%;
-	background-color: #F5F5F5;
 }
 
 /*************** header ***************/
@@ -193,6 +215,20 @@ export default {
 	top: 0;
 	/*保证在最上层*/
 	z-index: 1000;
+}
+.wapper title {
+ font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin: 0;
+}
+.back-icon {
+  position: absolute;
+  left: 15px; /* 调整左边距以更好地对齐 */
+  font-size: 1.2rem;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 5px;
 }
 
 /*************** addresslist ***************/
@@ -238,7 +274,103 @@ export default {
 	align-items: center;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
 
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
+}
 
 /*************** 新增地址部分 ***************/
 .wrapper .addbtn {
@@ -274,36 +406,36 @@ export default {
 } */
 
 .wrapper .addresslist .addresslist-right .select-btn {
-    background-color: #0097ef;
-    color: #fff;
-    border: none;
-    padding: 2vw 3.5vw;
-    border-radius: 5px;
-    font-size: 3vw;
-    cursor: pointer;
-    margin-left: 2vw;
-    transition: all 0.3s;
+	background-color: #0097ef;
+	color: #fff;
+	border: none;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
+	transition: all 0.3s;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn.selected {
-    background-color: #f25858;
-    color: #fcfafa;
-    /* cursor: not-allowed; */
+	background-color: #f25858;
+	color: #fcfafa;
+	/* cursor: not-allowed; */
 	border: none;
-    padding: 2vw 3.5vw;
-    border-radius: 5px;
-    font-size: 3vw;
-    cursor: pointer;
-    margin-left: 2vw;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn:not(.selected):hover {
-    background-color: #0081e6;
+	background-color: #0081e6;
 }
 
 .wrapper .addresslist .addresslist-right .select-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
+	cursor: not-allowed;
+	opacity: 0.8;
 }
 
 
@@ -340,5 +472,4 @@ export default {
 	transform: translateY(0);
 	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
 }
-
 </style>

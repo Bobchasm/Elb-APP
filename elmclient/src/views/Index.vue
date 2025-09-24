@@ -208,7 +208,8 @@
                 </div>
             </div>
         </div>
-
+      <!-- AI客服组件 -->
+      <AiChatbot />
         <!-- 超级会员部分 -->
         <div class="supermember">
             <div class="left">
@@ -334,7 +335,11 @@
             </li>
         </ul>
 
+  
+
         <!-- 底部菜单部分 -->
+
+        
 
     </div>
 </template>
@@ -342,6 +347,7 @@
 <script>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import Footer from '../components/Footer.vue';
+import AiChatbot from '../components/AiChatbot.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '../utils/request';
@@ -1461,7 +1467,8 @@ export default {
         };
     },
     components: {
-        Footer
+        Footer,
+        AiChatbot
     }
 }
 </script>

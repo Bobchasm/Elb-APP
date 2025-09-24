@@ -1,9 +1,10 @@
 <template>
 	<div class="wrapper">
 		<!-- header部分 -->
-		<header>
-			<p>新增送货地址</p>
-		</header>
+		<BackButton />
+    <div class="header">
+      <h1 class="title">新增送货地址</h1>
+    </div>
 
 		<!-- 表单部分 -->
 		<ul class="form-box">
@@ -53,15 +54,16 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import Footer from '../components/Footer.vue';
+// import Footer from '../components/Footer.vue';
 import { useRouter,useRoute } from 'vue-router';
 import { toast } from '../utils/toast';
 import request from '../utils/request';
-
+import BackButton from '../components/BackButton.vue';
 export default {
 	name: 'AddUserAddress',
 	components: {
-		Footer
+		// Footer,
+		BackButton
 	},
 	setup() {
 		const deliveryAddress = ref({
@@ -80,6 +82,10 @@ export default {
 		const user = ref(null);
 		const router = useRouter();
 		const reg = /^1[3456789]\d{9}$/;
+		const goBack = () => {
+      router.back();
+    };
+
 		onMounted(() => {
 			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 			const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
@@ -124,7 +130,8 @@ export default {
 			deliveryAddress,
 			businessId,
 			user,
-			addUserAddress
+			addUserAddress,
+			goBack
 		};
 	}
 }
