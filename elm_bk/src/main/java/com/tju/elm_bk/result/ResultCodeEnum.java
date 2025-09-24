@@ -41,7 +41,7 @@ public enum ResultCodeEnum {
     QUANTITY_ILLEGAL("QUANTITY_ILLEGAL","数量不合法"),
 
     BUSINESS_MISSED("BUSINESS_MISSED","商家不存在"),
-
+    UNAUTHORIZED("UNAUTHORIZED","无权限")
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 
     // 1000～1999 区间表示用户模块错误
