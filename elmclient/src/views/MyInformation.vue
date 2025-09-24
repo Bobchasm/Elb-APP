@@ -442,7 +442,7 @@ export default {
       }
       try {
         const token = getToken();
-        const response = await request.put('/api/person', {
+        const response = await request.put('/api/person/info', {
           id: userInfo.value.id,
           firstName: editFormData.value.firstName,
           lastName: editFormData.value.lastName,

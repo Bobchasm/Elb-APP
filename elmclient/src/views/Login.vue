@@ -1,4 +1,7 @@
 <template>
+  <div class="back-btn-container">
+    <BackButton />
+  </div>
 	<div class="wrapper">
 	  <!-- header部分 -->
 	  <header>
@@ -50,6 +53,7 @@
   import Footer from '../components/Footer.vue';
   import request from '../utils/request';
   import { toast } from '../utils/toast';
+  import BackButton from '../components/BackButton.vue';
 
   export default {
 	name: 'Login',
@@ -150,7 +154,8 @@
 	  };
 	},
 	components: {
-	  Footer
+	  Footer,
+    BackButton
 	}
   }
   </script>

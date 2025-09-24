@@ -1,4 +1,7 @@
 <template>
+  <div class="back-btn-container">
+    <BackButton />
+  </div>
   <div class="wrapper">
     <header>
       <p>用户注册</p>
@@ -104,9 +107,13 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
+import BackButton from '../components/BackButton.vue';
 
 export default {
   name: 'Register',
+  components:{
+    BackButton
+  },
   setup() {
     const router = useRouter();
     const user = reactive({

@@ -142,7 +142,7 @@ export default {
       // 清空所有本地存储，确保完全退出
       localStorage.clear();
       sessionStorage.clear();
-      router.push({ path: '/login' });
+      router.push({ path: '/index' });
     };
 
     const switchToCustomer = () => {
