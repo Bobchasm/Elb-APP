@@ -335,7 +335,7 @@ header {
 
 .form-item {
   display: flex;
-  align-items: flex-start; /* 调整对齐方式 */
+  align-items: center; /* 确保所有表单项内容垂直居中 */
   margin-bottom: 20px;
 }
 
@@ -345,7 +345,7 @@ header {
   color: #444;
   flex-basis: 90px;
   flex-shrink: 0;
-  line-height: 48px; /* 与输入框高度保持一致 */
+  padding-right: 10px; /* 标题与内容间距 */
 }
 
 .form-item-content {
@@ -367,6 +367,12 @@ header {
 .form-item-content input[type='password']:focus {
   outline: none;
   border-color: #0097FF;
+}
+
+/* 添加一个额外的 li 来实现空格 */
+.form-box .gender-item {
+  margin-top: 20px; /* 在性别选项上方增加外边距 */
+  margin-bottom: 20px; /* 保持与下方按钮的距离 */
 }
 
 .form-item.gender-item .form-item-content {
