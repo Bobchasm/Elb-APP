@@ -72,6 +72,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import BusinessFooter from '@/components/BusinessFooter.vue';
+import { toast } from '@/utils/toast';
 
 export default {
   name: 'BusinessOrderManage',
@@ -125,7 +126,7 @@ export default {
     const ensureBusinessLogin = () => {
       const bu = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
       if (!bu || !bu.isBusiness) {
-        alert('请先登录商家账号！');
+        toast.error("请先登录商家账号！");
         router.push('/businessLogin');
         return null;
       }

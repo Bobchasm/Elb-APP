@@ -238,7 +238,7 @@ export default {
         router.push(`/merchant/businessinfo?businessId=${shopId}`);
       } else {
         console.warn('Vue Router 未配置。将执行模拟跳转。');
-        alert(`跳转到 /merchant/businessinfo?businessId=${shopId}`);
+        toast.error("跳转到 /merchant/businessinfo?businessId=${shopId}");
       }
     };
 

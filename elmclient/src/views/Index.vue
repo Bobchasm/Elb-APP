@@ -178,7 +178,7 @@
                         <!-- 商家图片 -->
                         <div class="business-image">
                             <img :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')"
-                                :alt="business.businessName" @error="handleImageError">
+                                :alt="business.businessName" @error="handleImageError"  @click="toBusinessInfo(business.id)">
                         </div>
 
                         <!-- 商家信息 -->
@@ -352,6 +352,7 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import request from '../utils/request';
 import AMapLoader from '@amap/amap-jsapi-loader';
+import { toast } from '../utils/toast';
 // 高德地图API key（请替换为你的实际key）
 const AMAP_KEY = '24cce1eb31aec79422f44af47428fc8a';
 
@@ -558,15 +559,15 @@ export default {
             const { province, city, district } = tempSelectedLocation.value; // 校验临时变量
             // 1. 严格校验：必须完整选择省、市、区
             if (!province) {
-                alert('请先选择省份');
+                toast.error("请先选择省份");
                 return;
             }
             if (!city) {
-                alert('请先选择城市');
+                toast.error("请先选择城市");
                 return;
             }
             if (!district) {
-                alert('请先选择区域');
+                toast.error("请先选择区域");
                 return;
             }
 
@@ -2232,8 +2233,12 @@ export default {
 }
 
 .modal-content {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
+    margin-left:27px;
+    margin-top:10px;
+    margin-bottom: 10px;
     overflow-y: auto;
 }
 

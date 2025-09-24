@@ -49,6 +49,7 @@
   import { useRouter } from 'vue-router';
   import Footer from '../components/Footer.vue';
   import request from '../utils/request';
+  import { toast } from '../utils/toast';
 
   export default {
 	name: 'Login',
@@ -65,11 +66,11 @@
     const login = async () => {
       // 1. 表单校验
       if (!userName.value.trim()) {
-        alert('用户名不能为空！');
+		toast.error("用户名不能为空！");
         return;
       }
       if (!password.value.trim()) {
-        alert('密码不能为空！');
+		toast.error("密码不能为空！");
         return;
       }
 
@@ -83,7 +84,7 @@
 
         // 3. 解析后端返回
         if (!res) {
-          alert('登录失败');
+		  toast.error("登录失败");
           return;
         }
 
@@ -91,7 +92,7 @@
         const idToken = res?.id_token;
 		console.log(idToken);
         if (!idToken) {
-          alert('登录失败，未获取到token！');
+			toast.error("登录失败，未获取到token！");
           return;
         }
 
@@ -134,7 +135,7 @@
       } catch (error) {
         // 捕获网络错误或后端500等异常
         const errorMsg = error.response?.data?.message || '网络异常，登录失败！';
-        alert(errorMsg);
+		toast.error(errorMsg);
         console.error('登录错误:', error);
       }
     };

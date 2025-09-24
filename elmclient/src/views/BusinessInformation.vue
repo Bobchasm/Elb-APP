@@ -106,6 +106,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
+import { toast } from '@/utils/toast';
 
 export default {
     name: 'BusinessInformation',
@@ -122,7 +123,7 @@ export default {
             const businessUser = sessionStorage.getItem('businessUser') ? JSON.parse(sessionStorage.getItem('businessUser')) : null;
             
             if (!businessUser || !businessUser.isBusiness) {
-                alert('请先登录商家账号！');
+                toast.error("请先登录商家账号！");
                 router.push('/businessLogin');
                 return;
             }
@@ -149,7 +150,7 @@ export default {
     }
 }).catch(error => {
     console.error('获取商家信息失败:', error);
-    alert('获取商家信息失败，请稍后重试！');
+    toast.error('获取商家信息失败，请稍后重试！');
 });
         });
 
@@ -174,13 +175,13 @@ export default {
             if (file) {
                 // 验证文件类型
                 if (!file.type.includes('image')) {
-                    alert('请选择图片文件！');
+                    toast.error('请选择图片文件！');
                     event.target.value = '';
                     return;
                 }
                 // 验证文件大小（10MB）
                 if (file.size > 10 * 1024 * 1024) {
-                    alert('图片大小不能超过10MB！');
+                    toast.error('图片大小不能超过10MB！');
                     event.target.value = '';
                     return;
                 }
@@ -193,13 +194,13 @@ export default {
                         user.userImg = base64;
                     } catch (error) {
                         console.error('处理图片失败:', error);
-                        alert('处理图片失败，请重试！');
+                        toast.error('处理图片失败，请重试！');
                     }
                 };
 
                 reader.onerror = (error) => {
                     console.error('读取文件失败:', error);
-                    alert('读取文件失败，请重试！');
+                    toast.error('读取文件失败，请重试！');
                 };
 
                 reader.readAsDataURL(file);
@@ -213,27 +214,27 @@ export default {
             try {
                 // 验证所有必填字段
                 if (!user.userName) {
-                    alert('商户名称不能为空！');
+                    toast.error('商户名称不能为空！');
                     return;
                 }
                 if (!user.userAddress) {
-                    alert('商户地址不能为空！');
+                    toast.error('商户地址不能为空！');
                     return;
                 }
                 if (!user.userExplain) {
-                    alert('商家简介不能为空！');
+                    toast.error('商家简介不能为空！');
                     return;
                 }
                 if (user.userqi === null || user.userqi === undefined || user.userqi < 0) {
-                    alert('起送费不能为空且必须为非负数！');
+                    toast.error('起送费不能为空且必须为非负数！');
                     return;
                 }
                 if (user.userpei === null || user.userpei === undefined || user.userpei < 0) {
-                    alert('配送费不能为空且必须为非负数！');
+                    toast.error('配送费不能为空且必须为非负数！');
                     return;
                 }
                 if (!user.usertype) {
-                    alert('请选择店铺类型！');
+                    toast.error('请选择店铺类型！');
                     return;
                 }
                 
@@ -252,7 +253,7 @@ export default {
                 });
 
                 if (response.data > 0) {
-                    alert('商家信息提交成功！');
+                    toast.error('商家信息提交成功！');
                     // 更新商家信息完整标志
                     businessUser.infoCompleted = true;
                     businessUser.isNewRegistered = false;
@@ -268,11 +269,11 @@ export default {
                         });
                     }
                 } else {
-                    alert('商家信息提交失败，请重试！');
+                    toast.error('商家信息提交失败，请重试！');
                 }
             } catch (error) {
                 console.error('提交商家信息时发生错误:', error);
-                alert('提交商家信息失败，请检查网络连接后重试！');
+                toast.error('提交商家信息失败，请检查网络连接后重试！');
             }
         };
 
