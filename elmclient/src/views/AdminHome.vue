@@ -617,6 +617,7 @@ const getShopTypeName = (typeId) => {
   /* min-height: 100vh; */
   /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); */
   border-radius: 16px;
+  padding-top: 150px;
   padding-bottom: 65px;
   display: flex;
   flex-direction: column;
@@ -643,9 +644,14 @@ const getShopTypeName = (typeId) => {
   align-items: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 16px 16px 0 0;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
   overflow: hidden;
   margin-bottom: 50px;
+  max-width: 600px;
 }
 .top-background::before {
   content: '';
@@ -1030,7 +1036,13 @@ const getShopTypeName = (typeId) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 @media (max-width: 480px) {
-  .container,
+  .container {
+    max-width: 100vw;
+    width: 100vw;
+    border-radius: 0;
+    padding-top: 150px;
+    padding-bottom: 65px;
+  }
   .user-card,
   .stats-container,
   .review-section {
@@ -1043,6 +1055,7 @@ const getShopTypeName = (typeId) => {
     height: 90px;
     margin-bottom: 50px;
     border-radius: 0;
+    max-width: 100vw;
   }
   .user-card {
     flex-direction: column;

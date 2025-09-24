@@ -19,7 +19,7 @@
                     business.deliveryPrice
                 }}配送
             </p>
-            <p>{{ business.businessExplain }}</p>
+            <p class="explain-info">{{ business.businessExplain }}</p>
             <div class="reactions">
                 <div class="reaction" @click.stop="toggleLike"
                     :class="{ 'active': isLiked, 'disabled': interactionLoading }" :title="isLiked ? '已点赞' : '点赞'">
@@ -755,7 +755,7 @@ export default {
 .wrapper .business-info .reactions {
     position: absolute;
     right: 3vw;
-    bottom: -2vw;
+    bottom: 7vw;
     display: flex;
     gap: 4vw;
 }

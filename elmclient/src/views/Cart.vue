@@ -136,6 +136,7 @@ export default {
 	width: 100%;
 	height: 100%;
 	position: relative;
+	top: -4vw;
 }
 
 /****************** header部分 ******************/

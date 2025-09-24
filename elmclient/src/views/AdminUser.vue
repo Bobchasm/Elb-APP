@@ -3,9 +3,6 @@
     <div class="container">
       <div class="top-background">
         <h1>用户管理</h1>
-        <!-- <button class="top-back-btn" @click="goBack">
-          <i class="fas fa-arrow-left"></i> 返回
-        </button> -->
       </div>
 
       <div class="search-section">
@@ -313,18 +310,39 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 16px 16px 0 0;
   position: fixed;
-  overflow: hidden;
   top: 0;
-  left: 0;
-  /* 确保标题栏在最上层，不被其他内容遮挡 */
-  z-index: 9999;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
 }
 
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
 .top-background h1 {
   color: white;
   font-size: 1.8rem;
   font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   letter-spacing: 1px;
   margin: 0;
   z-index: 1;
@@ -355,8 +373,10 @@ onMounted(() => {
 .search-section {
   width: 92%;
   max-width: 500px;
-  margin-bottom: 25px;
+  margin-top: -4.7vw;
   transform: translateY(-40px);
+  position: fixed;
+  z-index:999;
 }
 
 .search-box {
@@ -390,8 +410,10 @@ onMounted(() => {
 .filter-section {
   width: 92%;
   max-width: 500px;
-  margin-bottom: 25px;
+  margin-top: 22px;
   transform: translateY(-40px);
+  position: fixed;
+  z-index:999;
 }
 
 .filter-tabs {
@@ -426,6 +448,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 15px;
   transform: translateY(-40px);
+  margin-top:22vw;
 }
 
 .user-item {
@@ -666,11 +689,14 @@ onMounted(() => {
     max-width: 100vw;
     width: 100vw;
     border-radius: 0;
+    padding-top: 150px;
+    padding-bottom: 65px;
   }
   
   .top-background {
     height: 90px;
     border-radius: 0;
+    max-width: 100vw;
   }
   
   .user-item {

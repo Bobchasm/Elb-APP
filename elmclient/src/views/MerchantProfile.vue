@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div class="header">
+    <div class="top-background">
       <h1>商家信息</h1>
     </div>
 
@@ -182,31 +182,59 @@ export default {
   padding-bottom: 40rpx;
 }
 /* ----------------------- 顶部标题栏 ----------------------- */
-.header {
+.top-background {
   width: 100%;
-  height: 12vw;
-  max-height: 60px;
-  background-color: #0097ff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
 }
 
-.header h1 {
-  font-size: clamp(18px, 5vw, 24px);
-  color: #fff;
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
   margin: 0;
+  z-index: 1;
 }
 .user-card {
   width: 92%;
   max-width: 500px;
-  margin: 80px auto 20px; /* 为固定头部留出空间 */
+  margin: 120px auto 20px; /* 为固定头部留出空间 */
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -533,14 +561,15 @@ export default {
     padding:0 0 80px 0;
   }
 
-  .header {
-    height: 60px;
+  .top-background {
+    height: 90px;
     border-radius: 0;
+    max-width: 100vw;
   }
 
   .user-card {
     padding: 20px 15px;
-    margin-top: 80px;
+    margin-top: 110px;
     width: 90%;
     gap: 15px;
   }

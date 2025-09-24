@@ -1,6 +1,6 @@
 <template>
   <div class="shop-management-page">
-    <div class="header">
+    <div class="top-background">
       <h1>我的商铺</h1>
     </div>
 
@@ -172,7 +172,7 @@ export default {
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: '确定删除',
+        confirmButtonText: '确定',
         cancelButtonText: '取消'
       });
       if (result.isConfirmed) {
@@ -476,26 +476,54 @@ body {
   }
 
 /* ----------------------- 顶部标题栏 ----------------------- */
-.header {
+.top-background {
   width: 100%;
-  height: 12vw;
-  max-height: 60px;
-  background-color: #0097ff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
 }
 
-.header h1 {
-  font-size: clamp(18px, 5vw, 24px);
-  color: #fff;
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
   margin: 0;
+  z-index: 1;
 }
 
 /* ----------------------- 状态标签栏 ----------------------- */
@@ -506,10 +534,12 @@ body {
   background-color: #fff;
   border-bottom: 1px solid #eee;
   position: fixed;
-  top: 45px;
-  left: 0;
-  right: 0;
-  z-index: 99;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 999;
 }
 
 .status-tabs button {
@@ -538,7 +568,7 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 0 4vw;
-  padding-top: 120px; /* 为固定的头部和标签栏留出空间 */
+  padding-top: 150px; /* 为固定的头部和标签栏留出空间 */
   padding-bottom: 140px;
 }
 
@@ -1027,6 +1057,33 @@ body {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+/* ----------------------- 移动端响应式样式 ----------------------- */
+@media (max-width: 480px) {
+  .shop-management-page {
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  .top-background {
+    height: 90px;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  
+  .status-tabs {
+    top: 90px;
+    max-width: 100vw;
+    transform: none;
+    left: 0;
+  }
+  
+  .container {
+    max-width: 100vw;
+    width: 100vw;
+    padding-top: 140px;
   }
 }
 </style>

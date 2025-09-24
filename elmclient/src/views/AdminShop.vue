@@ -1,6 +1,6 @@
 <template>
 	<div class="wrapper">
-    <BackButton />  
+    <BackButton style="margin-top: -10vw;"/>  
 	  <!-- <header class="topbar"><p>商铺管理 - {{ businessName || '商家' }}</p></header> -->
     <div class="header">
             <h1 class="title">商铺管理 - {{ businessName || '商家' }}</h1>
@@ -495,7 +495,7 @@ export default {
   font-weight: 600;
   color:white;
 }
-.content { margin-top: 0vw; padding: 4vw; }
+.content { margin-top: 50px; padding: 4vw; }
 .toolbar { display: flex; gap: 2vw; margin-bottom: 2vw; }
 .back { 
 	background: #eee; 

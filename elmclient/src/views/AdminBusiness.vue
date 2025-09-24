@@ -1,6 +1,8 @@
 <template>
 	<div class="wrapper">
-		<header class="topbar"><p>商铺管理</p></header>
+		<div class="top-background">
+			<h1>商铺管理</h1>
+		</div>
 		<div class="content">
 			<!-- 所有商家列表 -->
 			<!-- <h2 class="section-title">商家列表</h2> -->
@@ -169,10 +171,71 @@ export default {
 </script>
 
 <style scoped>
-/* 样式保持不变 */
-.wrapper { width: 100%; min-height: 100vh; background: #fff; }
-.topbar { width: 100%; height: 12vw; background: #409eff; color: #fff; font-size: 4.8vw; position: fixed; left: 0; top: 0; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-.content { margin-top: 12vw; padding: 4vw; }
+.wrapper { 
+  width: 100%; 
+  min-height: 100vh; 
+  background: #fff; 
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.top-background {
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
+}
+
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+  margin: 0;
+  z-index: 1;
+}
+
+.content { 
+  margin-top: 10px; 
+  padding: 4vw; 
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 70px;
+}
 .section-title { font-size: 4.2vw; margin: 2vw 0; }
 
 .business-list, .store-list { list-style: none; padding: 0; margin: 0; }
@@ -200,4 +263,23 @@ export default {
 .editor-actions { display: flex; justify-content: flex-end; gap: 2vw; }
 .editor-actions .cancel { background: #eee; color: #333; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
 .editor-actions .save { background: #1e80ff; color: #fff; border: none; border-radius: 1.2vw; padding: 1.6vw 3vw; font-size: 3.6vw; }
+
+@media (max-width: 480px) {
+  .wrapper {
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  .top-background {
+    height: 90px;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  
+  .content {
+    margin-top: 90px;
+    max-width: 100vw;
+    width: 100vw;
+  }
+}
 </style>

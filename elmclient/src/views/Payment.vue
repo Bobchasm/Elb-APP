@@ -1,6 +1,6 @@
 <template>
 	<div class="back-btn-container">
-    <BackButton />
+    <BackButton style="margin-top: 2vw;"/>
   </div>
 	<div class="wrapper">
 		<!-- header部分 -->

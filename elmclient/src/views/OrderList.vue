@@ -141,6 +141,7 @@ export default {
       } catch (error) {
         console.error("请求订单列表失败:", error);
         toast.error("获取订单列表失败，请稍后重试！");
+        toast.error("获取订单列表失败，请稍后重试！");
       } finally {
         loading.value = false;
       }
@@ -327,6 +328,7 @@ export default {
       userInfo.value = userData ? JSON.parse(userData) : null;
 
       if (!userInfo.value) {
+        toast.error("用户未登录，请先登录！");
         toast.error("用户未登录，请先登录！");
         router.push({ path: "/login" });
         return;
