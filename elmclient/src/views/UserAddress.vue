@@ -440,36 +440,39 @@ export default {
 
 
 /*************** 底部结算栏 ***************/
+ /* 底部结算栏 */
 .wrapper .order-bar {
-	position: fixed;
-	right: 10vw;
-	bottom: 25vw;
-	z-index: 1000;
+  position: fixed;
+  left: 0;   /* 左右设为0，让容器撑满宽度 */
+  right: 0;
+  bottom: 0; /* 固定在底部 */
+  z-index: 1000;
+  background-color: #fff; /* 加背景色，与页面区分 */
+  padding: 3vw; /* 内边距，让按钮不贴边 */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); /* 底部阴影，增强层次感 */
 }
 
 .wrapper .order-bar .checkout-order-btn {
-	background-color: #d91212;
-	color: #fff;
-	border: none;
-	padding: 3vw 6vw;
-	border-radius: 8vw;
-	font-size: 4.5vw;
-	font-weight: bold;
-	cursor: pointer;
-	box-shadow: 0 2vw 4vw rgba(0, 151, 255, 0.3);
-	transition: all 0.3s ease;
-	min-width: 25vw;
-	text-align: center;
+  width: 100%; /* 撑满容器宽度 */
+  background-color: #0097FF; /* 换成蓝色，更柔和 */
+  color: #fff;
+  border: none;
+  padding: 4vw; /* 增加内边距，按钮更饱满 */
+  border-radius: 8vw;
+  font-size: 4.5vw;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .wrapper .order-bar .checkout-order-btn:hover {
-	background-color: #0081e6;
-	transform: translateY(-0.5vw);
-	box-shadow: 0 3vw 6vw rgba(0, 151, 255, 0.4);
+  background-color: #0081e6; /*  hover 时加深蓝色 */
+  transform: translateY(-1px); /* 轻微上浮，增强交互感 */
+  box-shadow: 0 4px 12px rgba(0, 151, 255, 0.3);
 }
 
 .wrapper .order-bar .checkout-order-btn:active {
-	transform: translateY(0);
-	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
+  transform: translateY(1px); /* 点击时轻微下沉 */
+  box-shadow: 0 2px 6px rgba(0, 151, 255, 0.2);
 }
 </style>
