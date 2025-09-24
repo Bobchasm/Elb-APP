@@ -2,7 +2,7 @@
 	<div class="wrapper">
 		<!-- 固定顶部栏 -->
 		<div class="fixed-top">
-			<BackButton :show-back-button="true" />
+			<BackButton :show-back-button="true" style="margin-top: 2vw;"/>
 			<div class="header">
 				<h1 class="title">订单详情</h1>
 			</div>
@@ -288,7 +288,7 @@ export default {
 .header {
 	padding: 20px;
 	text-align: center;
-	background: linear-gradient(to right, #3a7bd5, #00d2ff);
+	background: #0097ff;
 	color: white;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	border-radius: 0;

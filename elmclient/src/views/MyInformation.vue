@@ -1105,7 +1105,7 @@ export default {
 }
 
 .address-manager {
-  margin-top: -80px; /* 向上移动 */
+  margin-top: -120px; /* 向上移动 */
   transform: translateY(-20px); /* 进一步调整位置 */
 }
 </style>

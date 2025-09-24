@@ -10,7 +10,7 @@
         </div>
       </div>
       <div class="details">
-        <p>商家名称：{{ paymentDetails.business?.name || '未知商家' }}</p>
+        <p>商家名称：{{ paymentDetails.business?.businessName || '未知商家' }}</p>
         <p>支付金额：¥{{ paymentDetails.orderTotal }}</p>
         <p>支付时间：{{ paymentDetails.orderDate }}</p>
       </div>
@@ -95,7 +95,7 @@ html, body {
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   padding: 2rem;
-  width: 90%;
+  width: 100%;
   max-width: 400px;
   text-align: center;
   display: flex;
@@ -131,7 +131,8 @@ html, body {
 /* 标题和详情 */
 .logo {
   display: flex;
-  align-items: center;
+  align-items:center;
+  width: 50px;
 }
 
 .title {

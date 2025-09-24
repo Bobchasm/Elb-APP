@@ -1,6 +1,6 @@
 <template>
   <div class="notifications-container">
-    <BackButton style="margin-top: 2vw;"/>
+    <BackButton style="margin-top: -13vw;"/>
     <div class="header">
       <h1 class="title">消息与通知</h1>
       <div v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</div>
@@ -266,7 +266,7 @@ const formatTime = (timeStr) => {
 }
 
 .header {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -310,7 +310,7 @@ const formatTime = (timeStr) => {
 
 .notification-list {
   padding: 0;
-  margin: 0;
+  margin: 15vw;
 }
 
 .notification-item {

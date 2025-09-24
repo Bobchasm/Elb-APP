@@ -1,7 +1,7 @@
 <template>
 	<div class="wrapper">
 		<!-- header部分 -->
-		<BackButton />
+		<BackButton style="margin-top: 2vw;"/>
     <div class="header">
       <h1 class="title">新增送货地址</h1>
     </div>

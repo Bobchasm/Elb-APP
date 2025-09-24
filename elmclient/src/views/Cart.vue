@@ -1,5 +1,5 @@
 <template>
-	<BackButton :show-back-button="true" />
+	<BackButton :show-back-button="true" style="margin-top: 2vw;"/>
 	<div class="wrapper">
 		<!-- header部分 -->
 		<header>
@@ -134,6 +134,7 @@ export default {
 	width: 100%;
 	height: 100%;
 	position: relative;
+	top: -4vw;
 }
 
 /****************** header部分 ******************/
