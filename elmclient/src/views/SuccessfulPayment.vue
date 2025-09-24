@@ -3,16 +3,35 @@
     <div class="card">
       <div class="header-section">
         <div class="icon-section">
-          <img :src='myimage' class="goutu">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="check-icon"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-8.82"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
         </div>
-        <div class="logo">
-          <h2 class="title">支付成功</h2>
-        </div>
+        <h2 class="title">支付成功</h2>
       </div>
       <div class="details">
-        <p>商家名称：{{ paymentDetails.business?.name || '未知商家' }}</p>
-        <p>支付金额：¥{{ paymentDetails.orderTotal }}</p>
-        <p>支付时间：{{ paymentDetails.orderDate }}</p>
+        <div class="detail-item">
+          <span class="label">商家名称</span>
+          <span class="value">{{ paymentDetails.business?.name || '未知商家' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">支付金额</span>
+          <span class="value amount">¥{{ paymentDetails.orderTotal }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">支付时间</span>
+          <span class="value">{{ paymentDetails.orderDate }}</span>
+        </div>
       </div>
       <div class="actions">
         <button @click="goBack" class="btn-back">返回首页</button>
@@ -25,14 +44,13 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '@/utils/request';
-import myimage from '/src/assets/R-C.png';
 
 export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
     const paymentDetails = ref({});
-
+    
     const orderId = ref(route.query.orderId);
 
     onMounted(async () => {
@@ -63,7 +81,6 @@ export default {
 
     return {
       paymentDetails,
-      myimage,
       goBack,
     };
   }
@@ -71,13 +88,23 @@ export default {
 </script>
 
 <style scoped>
-/* 全局样式和容器 */
+/* 全局和基础容器 */
+:root {
+  --primary-color: #2e7d32;
+  --secondary-color: #f5f7fa;
+  --text-color-primary: #1a202c;
+  --text-color-secondary: #4a5568;
+  --card-bg-color: #ffffff;
+  --button-color: #2563eb;
+  --button-hover-color: #1e40af;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f5f7fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background-color: var(--secondary-color);
 }
 
 .container {
@@ -85,106 +112,156 @@ html, body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 2rem;
+  padding: 1.5rem;
   box-sizing: border-box;
 }
 
 /* 核心卡片样式 */
 .card {
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  padding: 2rem;
-  width: 90%;
-  max-width: 400px;
+  background-color: var(--card-bg-color);
+  border-radius: 20px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
-/* 头部部分，包含图标和标题 */
+/* 头部：图标和标题 */
 .header-section {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
+  gap: 1.25rem;
 }
 
-/* 图标部分 */
+/* 修改后的图标样式 */
 .icon-section {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.goutu {
-  width: 60px;
-  height: 60px;
+  width: 90px; /* 增大外框尺寸 */
+  height: 90px; /* 增大外框尺寸 */
   border-radius: 50%;
-  background-color: #4CAF50;
-  padding: 10px;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  background-color: #e6f6e8;
+  animation: scale-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-/* 标题和详情 */
-.logo {
-  display: flex;
-  align-items: center;
+.check-icon {
+  width: 55px; /* 增大图标尺寸 */
+  height: 55px; /* 增大图标尺寸 */
+  color: #2e7d32;
+  animation: fade-in 0.8s ease-out 0.2s both;
 }
 
 .title {
-  /* 优化：使用vw作为基础单位，并限制最大尺寸 */
-  font-size: 5vw;
+  font-size: 2rem;
   font-weight: 700;
-  color: #333333;
+  color: var(--text-color-primary);
   margin: 0;
+  white-space: nowrap;
+  animation: slide-up 0.6s ease-out 0.3s both;
 }
 
-.details p {
-  /* 优化：使用相对单位rem */
+/* 交易详情 */
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 1rem;
-  color: #666666;
-  line-height: 1.5;
-  margin: 0;
+}
+
+.label {
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.value {
+  color: var(--text-color-primary);
+  font-weight: 600;
+}
+
+.value.amount {
+  font-size: 1.25rem;
+  color: var(--primary-color);
+  font-weight: 700;
 }
 
 /* 按钮 */
 .actions {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .btn-back {
   width: 100%;
   padding: 1rem;
-  background-color: #2196F3;
-  color: white;
+  background-color: #0493f2da;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .btn-back:hover {
-  background-color: #1976D2;
-  transform: translateY(-2px);
+  background-color: var(--button-hover-color);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
-/* 媒体查询：在大屏幕设备上调整字体大小 */
+/* 动画效果 */
+@keyframes scale-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 媒体查询：适配大屏幕设备 */
 @media (min-width: 600px) {
+  .card {
+    padding: 3rem;
+  }
   .title {
-    font-size: 2rem; /* 在大屏幕上固定字体大小，避免过大 */
-  }
-
-  .details p {
-    font-size: 1.2rem;
-  }
-
-  .btn-back {
-    font-size: 1.1rem;
+    font-size: 2.5rem;
   }
 }
 </style>
