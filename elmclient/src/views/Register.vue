@@ -110,6 +110,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 
 export default {
   name: 'Register',
@@ -174,7 +175,7 @@ const handleFileUpload = async (event) => {
     } catch (error) {
       console.error('头像上传出错:', error.message || '网络请求失败');
       // 错误提示（可替换为项目中的提示组件）
-      // alert('头像上传失败，请重试');
+      toast.error("头像上传失败，请重试");
     }
   } else {
     // 未选择文件时清空

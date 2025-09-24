@@ -56,6 +56,7 @@
   import Footer from '../components/Footer.vue';
   import request from '../utils/request';
   import { useRoute,useRouter } from 'vue-router';
+  import { toast } from '../utils/toast';
 
   export default {
 	name: 'EditUserAddress',
@@ -90,15 +91,15 @@
   
 	  const editUserAddress = () => {
 		if (!(deliveryAddress.value.contactName.trim())) {
-				alert('联系人姓名不能为空！');
+				toast.error("联系人姓名不能为空！");
 				return;
 			}
 			if (!reg.test(deliveryAddress.value.contactTel)) {
-				alert('联系人电话不能为空！');
+				toast.error("联系人电话不能为空！");
 				return;
 			}
 			if (!(deliveryAddress.value.address.trim())) {
-				alert('联系人地址不能为空！');
+				toast.error("联系人地址不能为空！");
 				return;
 			}
   
@@ -112,7 +113,7 @@
 				}
 			  });
 			} else {
-			  alert('更新地址失败！');
+			  toast.error("更新地址失败！");
 			}
 		  }).catch(error => {
 			console.error(error);

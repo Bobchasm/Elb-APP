@@ -6,8 +6,9 @@
     </header>
 
     <!-- 商铺选择栏 -->
-    <div class="merchant-selector" v-if="merchantList.length > 0">
+    <div class="merchant-selector">
       <ul class="merchant-tabs">
+        <div class="merchant-no-business" v-if="merchantList.length === 0">您还没有商铺哦</div>
         <li
           v-for="merchant in merchantList"
           :key="merchant.merchantId"
@@ -552,6 +553,18 @@ export default {
 
 .merchant-tabs::-webkit-scrollbar {
   display: none;
+}
+
+.merchant-no-business {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 4vw;
+  color: #a7a6a6;
+  font-weight: 500;
+  text-align: center;
 }
 
 .merchant-tabs li {

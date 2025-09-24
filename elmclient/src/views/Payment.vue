@@ -99,6 +99,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 
 export default {
 	name: 'Payment',
@@ -128,12 +129,12 @@ export default {
 					orderDetail.value = response.data;
 				} else {
 					console.error('获取订单详情失败:', response.data?.message);
-					alert('获取订单信息失败，请重试！');
+					toast.error("获取订单信息失败，请重试！");
 					router.push({ path: '/userAddress' });
 				}
 			} catch (error) {
 				console.error('请求错误:', error);
-				alert('获取订单信息失败，请重试！');
+				toast.error("获取订单信息失败，请重试！");
 				router.push({ path: '/userAddress' });
 			} finally {
 				loading.value = false;
@@ -151,11 +152,11 @@ export default {
 						query: { orderId: orderId.value }
 					});
 				} else {
-					alert('支付失败: ' + response.data.message);
+					toast.error("支付失败" + response.data.message);
 				}
 			} catch (error) {
 				console.error('支付失败:', error);
-				alert('支付失败，请重试！');
+				toast.error("支付失败，请重试！");
 			} finally {
 				paying.value = false;
 			}
@@ -172,12 +173,6 @@ export default {
 		onMounted(() => {
 			orderId.value = route.query.orderId;
 			console.log("获取到的orderId:", orderId.value);
-			// if (!orderId.value) {
-			// 	alert('订单信息有误，请重试！');
-			// 	router.push({ path: '/cart' });
-			// 	return;
-			// }
-			
 			fetchOrderDetails();
 		});
 

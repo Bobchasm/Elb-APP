@@ -57,6 +57,7 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 
 export default {
 	name: 'Cart',
@@ -76,7 +77,7 @@ export default {
 			if (userInfo.value) {
 				listCart();
 			} else {
-				alert('用户未登录，请先登录！');
+				toast.error("用户未登录，请先登录！");
 				router.push({ path: '/login' });
 			}
 		});
