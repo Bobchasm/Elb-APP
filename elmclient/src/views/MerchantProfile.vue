@@ -5,27 +5,29 @@
     </div>
 
     <div class="user-card">
-      <div class="avatar">
-        <img :src="merchant?.avatar || defaultAvatar" alt="商家头像">
-      </div>
-      <div class="user-details">
-        <div class="user-name">
-          <i class="fas fa-user-circle user-icon"></i>
-          <span>{{ merchant?.name || '未设置商家名称' }}</span>
+      <div class="user-info-row">
+        <div class="avatar">
+          <img :src="merchant?.avatar || defaultAvatar" alt="商家头像">
         </div>
-        <div class="user-phone">
-          <i class="fas fa-phone phone-icon"></i>
-          <span>{{ formattedPhone }}</span>
+        <div class="user-details">
+          <div class="user-name">
+            <i class="fas fa-user-circle user-icon"></i>
+            <span>{{ merchant?.name || '未设置商家名称' }}</span>
+          </div>
+          <div class="user-phone">
+            <i class="fas fa-phone phone-icon"></i>
+            <span>{{ formattedPhone }}</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="button-section">
-      <button class="switch-btn" @click="switchToCustomer">
-        <i class="fas fa-user"></i> 切换为顾客
-      </button>
-      <button class="logout-btn" @click="logout">
-        <i class="fas fa-sign-out-alt"></i> 退出登录
-      </button>
+      <div class="user-actions">
+        <button class="switch-btn" @click="switchToCustomer">
+          <i class="fas fa-user"></i> 切换为顾客
+        </button>
+        <button class="logout-btn" @click="logout">
+          <i class="fas fa-sign-out-alt"></i> 退出登录
+        </button>
+      </div>
     </div>
     <!-- 修改为显示商铺列表 -->
     <div class="stores-container">
@@ -220,13 +222,19 @@ export default {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  padding: 20px 0;
+  padding: 20px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 20px;
   position: relative;
   z-index: 2;
   transform: translateY(-50px);
+}
+
+.user-card .user-info-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 .avatar {
   width: 100px;
@@ -237,7 +245,6 @@ export default {
   box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
   background: #f8f9fa;
-  margin-left: 15px;
 }
 .avatar img {
   width: 100%;
@@ -255,7 +262,12 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-right: 15px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 15px;
+  width: 100%;
 }
 .user-name, .user-phone {
   font-size: 0.95rem;
@@ -279,108 +291,205 @@ export default {
   color: #3498db;
 }
 
-/* 新增商铺列表样式 */
+/* 新增商铺列表样式 - 房子造型 */
 .stores-container {
   width: 92%;
   max-width: 500px;
   margin: 20px auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
   transform: translateY(-50px);
 }
 
 .store-card {
+  position: relative;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  padding: 15px;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 30px 15px 15px;
+  margin-top: 30px;
+  overflow: visible;
+}
+
+/* 房子屋顶 - 更大的屋檐 */
+.store-card::before {
+  content: '';
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 80px solid transparent;
+  border-right: 80px solid transparent;
+  border-bottom: 40px solid #ff6b6b;
+  z-index: 1;
+}
+
+/* 房子主体装饰 - 更宽的横梁 */
+.store-card::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 25px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-radius: 0 0 12px 12px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+/* 门的装饰 */
+.store-card .store-name::before {
+  content: '🏪';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  z-index: 3;
 }
 
 .store-name {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 15px;
   text-align: center;
+  padding-top: 8px;
+  position: relative;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 12px;
 }
 
-/* 店铺数据栏样式 */
+/* 店铺数据栏样式 - 窗户效果 */
 .store-data-bar {
   display: flex;
   justify-content: space-around;
   width: 100%;
-  padding: 15px 0;
+  padding: 20px 10px 15px;
   border-radius: 12px;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border: 2px solid #dee2e6;
+  position: relative;
+  margin-top: 10px;
+}
+
+/* 窗户框架装饰 */
+.store-data-bar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 33.33%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: #ced4da;
+}
+
+.store-data-bar::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 33.33%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: #ced4da;
 }
 
 .data-item {
   text-align: center;
   flex: 1;
+  position: relative;
 }
 
 .data-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
-  color: #333;
-  margin-bottom: 4px;
+  color: #2c3e50;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .data-label {
-  font-size: 14px;
-  color: #777;
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.button-section {
-  width: 92%;
-  max-width: 500px;
-  margin: 20px auto;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  transform: translateY(-50px);
+/* 特殊数据项颜色 */
+.data-item:nth-child(1) .data-value {
+  color: #e74c3c; /* 点赞 - 红色 */
 }
+
+.data-item:nth-child(2) .data-value {
+  color: #f39c12; /* 收藏 - 橙色 */
+}
+
+.data-item:nth-child(3) .data-value {
+  color: #27ae60; /* 评分 - 绿色 */
+}
+
+/* 房子阴影效果 */
+.store-card {
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(255, 107, 107, 0.2);
+  transition: all 0.3s ease;
+}
+
+.store-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
 .switch-btn {
-  width: 100%;
-  padding: 14px;
+  flex: 1;
+  padding: 12px;
   text-align: center;
   background: linear-gradient(135deg, #ff9a9e, #fad0c4);
   color: white;
   font-weight: 600;
   border-radius: 12px;
   border: none;
-  font-size: 0.95rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 10px;
 }
 .switch-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 .logout-btn {
-  width: 100%;
-  padding: 14px;
+  flex: 1;
+  padding: 12px;
   text-align: center;
-  background: linear-gradient(135deg,#8e2de2, #4a00e0);
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
   color: white;
   font-weight: 600;
   border-radius: 12px;
   border: none;
-  font-size: 0.95rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 .logout-btn:hover {
-  background: #ffeaea;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
+.switch-btn i,
 .logout-btn i {
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
 /* 底部导航栏样式 */
@@ -423,10 +532,13 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .container, .user-card, .button-section {
+  .container, .user-card {
     max-width: 100vw;
     width: 100vw;
     border-radius: 0;
+  }
+
+  .container {
     padding: 0;
   }
 
@@ -435,27 +547,42 @@ export default {
     margin-bottom: 50px;
     border-radius: 0;
   }
+  
   .user-card {
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 20px 0;
+    padding: 20px 15px;
     margin-top: 0;
     transform: translateY(-50px);
     width: 90%;
+    gap: 15px;
+  }
+
+  .user-info-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
   }
 
   .avatar {
     width: 80px;
     height: 80px;
-    margin-left: 0;
   }
 
   .user-details {
-    width: 85%;
+    width: 100%;
     padding: 10px;
     gap: 6px;
-    margin-right: 0;
+  }
+
+  .user-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .switch-btn,
+  .logout-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
   }
 
   .bottom-nav {
