@@ -1,13 +1,21 @@
 <template>
   <div class="wrapper">
-    <!-- header部分 -->
     <header>
       <p>用户注册</p>
     </header>
 
-    <!-- 表单部分 -->
     <ul class="form-box">
-      <!-- 用户名 -->
+      <li class="form-item avatar-item">
+        <label for="avatarFile" class="form-item-title">用户头像：</label>
+        <div class="form-item-content">
+          <div id="image-upload-area" class="image-upload-area" @click="triggerFileInput">
+            <span v-if="!avatar" class="upload-icon">+</span>
+            <span v-if="!avatar" class="upload-text">上传头像</span>
+            <img v-if="avatar" :src="avatar" class="image-preview" alt="用户头像预览" />
+            <input id="avatarFile" type="file" accept="image/*" class="file-input" @change="handleFileChange" ref="fileInput" />
+          </div>
+        </div>
+      </li>
       <li class="form-item">
         <label for="username" class="form-item-title">用户名称：</label>
         <div class="form-item-content">
@@ -16,7 +24,9 @@
             type="text"
             v-model="user.username"
             placeholder="用户名称"
+            maxlength="20"
           />
+          <p class="word-count">{{ user.username.length }}/20</p>
         </div>
       </li>
       <li class="form-item">
@@ -41,45 +51,30 @@
           />
         </div>
       </li>
-      <!-- 手机号码 -->
       <li class="form-item">
         <label for="phone" class="form-item-title">手机号码：</label>
         <div class="form-item-content">
           <input id="phone" type="text" v-model="user.phone" placeholder="手机号码" />
         </div>
       </li>
-      <!-- 密码 -->
       <li class="form-item">
         <label for="password" class="form-item-title">密码：</label>
         <div class="form-item-content">
           <input id="password" type="password" v-model="user.password" placeholder="密码" />
         </div>
       </li>
-      <!-- 确认密码 -->
       <li class="form-item">
         <label for="confirmPassword" class="form-item-title">确认密码：</label>
         <div class="form-item-content">
           <input id="confirmPassword" type="password" v-model="confirmPassword" placeholder="确认密码" />
         </div>
       </li>
-      <!-- 邮箱 -->
       <li class="form-item">
         <label for="useremail" class="form-item-title">邮箱：</label>
         <div class="form-item-content">
           <input id="useremail" type="text" v-model="user.useremail" placeholder="请输入邮箱" />
         </div>
       </li>
-      <!-- 头像 -->
-      <li class="form-item avatar-item">
-        <label for="avatarFile" class="form-item-title">头像：</label>
-        <div class="form-item-content avatar-upload-container">
-          <input id="avatarFile" type="file" @change="handleFileUpload" />
-          <div v-if="avatar" class="avatar-preview">
-            <img :src="avatar" alt="用户头像预览" />
-          </div>
-        </div>
-      </li>
-      <!-- 性别 -->
       <li class="form-item gender-item">
         <div class="form-item-title">性别：</div>
         <div class="form-item-content">
@@ -91,12 +86,10 @@
       </li>
     </ul>
 
-    <!-- 注册按钮 -->
     <div class="button-register">
       <button @click="register">注册</button>
     </div>
 
-    <!-- 自定义消息框 -->
     <div v-if="messageBoxVisible" class="message-box-overlay">
       <div class="message-box">
         <p>{{ messageBoxMessage }}</p>
@@ -127,6 +120,7 @@ export default {
     });
     const confirmPassword = ref('');
     const avatar = ref(null);
+    const uploadedFile = ref(null);
 
     // 消息框状态
     const messageBoxVisible = ref(false);
@@ -143,64 +137,47 @@ export default {
       messageBoxVisible.value = false;
     };
 
-    // 处理头像文件上传
-    const handleFileUpload = async (event) => {
+    // 触发文件选择框
+    const triggerFileInput = () => {
+      document.getElementById('avatarFile').click();
+    };
+
+    // 处理头像文件选择
+    const handleFileChange = (event) => {
       const file = event.target.files[0];
       if (file) {
-        // 1. 先预览头像
+        uploadedFile.value = file;
         const reader = new FileReader();
         reader.onload = (e) => {
-          avatar.value = e.target.result; // 显示本地预览
+          avatar.value = e.target.result;
         };
         reader.readAsDataURL(file);
-
-        // 2. 使用request请求实例上传到后端
-        try {
-          // 创建FormData对象，用于文件上传
-          const formData = new FormData();
-          formData.append('file', file); // 键名'file'与后端MultipartFile参数名保持一致
-
-          // 发送POST请求到后端接口（使用项目中的request实例）
-          const result = await request.post('/upload', formData);
-
-          // 处理响应（假设后端返回格式为{success: boolean, data: string}）
-          if (result.success) {
-            // 将后端返回的URL赋值给user.photo
-            user.photo = result.data;
-            console.log('头像上传成功，URL已保存:', user.photo);
-          } else {
-            throw new Error(result.message || '上传失败，后端返回异常');
-          }
-        } catch (error) {
-          console.error('头像上传出错:', error.message || '网络请求失败');
-          // 错误提示（可替换为项目中的提示组件）
-          showMessageBox('头像上传失败，请重试');
-        }
       } else {
-        // 未选择文件时清空
+        uploadedFile.value = null;
         avatar.value = null;
-        user.photo = null;
       }
     };
 
     // 注册函数，包含所有校验和注册请求
-    const register = () => {
+    const register = async () => {
       // 客户端校验
       user.username = user.username.trim();
       if (!user.username) {
         showMessageBox('用户名不能为空！');
         return;
       }
+      // 根据API文档，用户名长度应在1到20个字符之间
+      if (user.username.length > 20) {
+        showMessageBox('用户名过长，请勿超过20个字符！');
+        return;
+      }
+      
       if (!user.firstname) {
         showMessageBox('姓不能为空！');
         return;
       }
       if (!user.lastname) {
         showMessageBox('名不能为空！');
-        return;
-      }
-      if (user.username.length > 8) {
-        showMessageBox('用户名过长！');
         return;
       }
 
@@ -220,13 +197,36 @@ export default {
         return;
       }
 
-      // 检查头像是否已上传成功
-      if (!user.photo) {
+      // 检查头像文件是否已选择
+      if (!uploadedFile.value) {
         showMessageBox('请先上传头像！');
         return;
       }
 
-      // 构建符合API规范的请求体
+      // 1. 先上传头像
+      try {
+        const formData = new FormData();
+        formData.append('file', uploadedFile.value);
+        const uploadResponse = await request.post('/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        if (uploadResponse && uploadResponse.success && uploadResponse.data) {
+          user.photo = uploadResponse.data;
+          console.log('头像上传成功，URL已保存:', user.photo);
+        } else {
+          showMessageBox(uploadResponse?.message || '图片上传失败，请重试');
+          return;
+        }
+      } catch (error) {
+        console.error('头像上传出错:', error.response?.data?.message || error.message);
+        showMessageBox('头像上传出错，请检查网络！');
+        return;
+      }
+
+      // 2. 构建注册请求体并发送请求
       const registerPayload = {
         username: user.username,
         password: user.password,
@@ -238,42 +238,39 @@ export default {
         gender: user.usersex
       };
       
-      request.post('/api/register', registerPayload)
-        .then(response => {
-          console.log('注册请求成功，服务器响应数据:', response);
-          
-          // 检查服务器响应中的 success 字段
-          if (response && response.success) {
-            showMessageBox('注册成功！');
-            // 注册成功后跳转
-            setTimeout(() => {
-              router.push({ path: '/index' });
-            }, 1500); // 1.5秒后跳转
-          } else {
-            // success 为 false 或字段不存在的情况
-            let errorMessage = '注册失败！服务器返回了无效数据。';
-            if (response && response.message) {
-              errorMessage = `注册失败！原因：${response.message}`;
-            }
-            showMessageBox(errorMessage);
+      try {
+        const response = await request.post('/api/register', registerPayload);
+        console.log('注册请求成功，服务器响应数据:', response);
+        
+        if (response && response.success) {
+          showMessageBox('注册成功！');
+          setTimeout(() => {
+            router.push({ path: '/index' });
+          }, 1500);
+        } else {
+          let errorMessage = '注册失败！服务器返回了无效数据。';
+          if (response && response.message) {
+            errorMessage = `注册失败！原因：${response.message}`;
           }
-        })
-        .catch(error => {
-          console.error('注册请求发生错误:', error.response || error.message);
-          
-          if (error.response?.status === 409) { // 假设409是用户名冲突的错误码
-            showMessageBox('此用户名已存在！');
-          } else {
-            showMessageBox('请求失败，请检查网络或服务器！');
-          }
-        });
+          showMessageBox(errorMessage);
+        }
+      } catch (error) {
+        console.error('注册请求发生错误:', error.response || error.message);
+        if (error.response?.status === 409) {
+          showMessageBox('此用户名已存在！');
+        } else {
+          showMessageBox('请求失败，请检查网络或服务器！');
+        }
+      }
     };
 
     return {
       user,
       confirmPassword,
       avatar,
-      handleFileUpload,
+      uploadedFile,
+      triggerFileInput,
+      handleFileChange,
       register,
       messageBoxVisible,
       messageBoxMessage,
@@ -338,7 +335,7 @@ header {
 
 .form-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* 调整对齐方式 */
   margin-bottom: 20px;
 }
 
@@ -348,6 +345,7 @@ header {
   color: #444;
   flex-basis: 90px;
   flex-shrink: 0;
+  line-height: 48px; /* 与输入框高度保持一致 */
 }
 
 .form-item-content {
@@ -355,8 +353,7 @@ header {
 }
 
 .form-item-content input[type='text'],
-.form-item-content input[type='password'],
-.form-item-content input[type='file'] {
+.form-item-content input[type='password'] {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
@@ -367,8 +364,7 @@ header {
 }
 
 .form-item-content input[type='text']:focus,
-.form-item-content input[type='password']:focus,
-.form-item-content input[type='file']:focus {
+.form-item-content input[type='password']:focus {
   outline: none;
   border-color: #0097FF;
 }
@@ -393,25 +389,55 @@ header {
   cursor: pointer;
 }
 
-.avatar-upload-container {
+/* -------------------- 新的头像上传样式 -------------------- */
+.image-upload-area {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border: 2px dashed #ccc;
+  border-radius: 50%; /* 圆形 */
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 15px;
-}
-
-.avatar-preview {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
   overflow: hidden;
-  border: 2px solid #ddd;
-  flex-shrink: 0;
 }
 
-.avatar-preview img {
+.image-upload-area:hover {
+  border-color: #0097ff;
+  background-color: #f9f9f9;
+}
+
+.upload-icon {
+  font-size: 30px;
+  color: #999;
+}
+
+.upload-text {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.image-preview {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+.file-input {
+  display: none; /* 隐藏原始文件输入框 */
+}
+
+/* -------------------- 字数提示样式 -------------------- */
+.word-count {
+  font-size: 12px;
+  color: #999;
+  text-align: right;
+  margin-top: 4px;
 }
 
 /* -------------------- 注册按钮部分 -------------------- */
@@ -427,8 +453,8 @@ header {
   font-size: 18px;
   font-weight: 700;
   color: #fff;
-  background-color: #0097FF; /* 更改为蓝色 */
-  border-radius: 8px; /* 8px圆角 */
+  background-color: #0097FF;
+  border-radius: 8px;
   border: none;
   outline: none;
   cursor: pointer;
@@ -437,7 +463,7 @@ header {
 }
 
 .button-register button:hover {
-  background-color: #007acc;
+  background-color: #0097ff;
 }
 
 .button-register button:active {
