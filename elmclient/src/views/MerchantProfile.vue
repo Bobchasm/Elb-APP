@@ -143,7 +143,10 @@ export default {
     const logout = () => {
       sessionStorage.removeItem('merchant');
       sessionStorage.removeItem('user');
-      router.push({ path: '/login' });
+      // 清空所有本地存储，确保完全退出
+      localStorage.clear();
+      sessionStorage.clear();
+      router.push({ path: '/index' });
     };
 
     const switchToCustomer = () => {

@@ -300,7 +300,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   position: relative;
- 
+  padding-top: 150px;
 }
 
 .top-background {
@@ -312,9 +312,12 @@ onMounted(() => {
   align-items: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 16px 16px 0 0;
-  position: relative;
+  position: fixed;
   overflow: hidden;
-  margin-bottom: 50px;
+  top: 0;
+  left: 0;
+  /* 确保标题栏在最上层，不被其他内容遮挡 */
+  z-index: 9999;
 }
 
 .top-background h1 {
