@@ -1,6 +1,6 @@
 <template>
   <div class="notifications-container">
-    <BackButton/>
+    <BackButton style="margin-top: 2vw;"/>
     <div class="header">
       <h1 class="title">消息与通知</h1>
       <div v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</div>

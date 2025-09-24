@@ -1,4 +1,7 @@
 <template>
+  <div class="back-btn-container">
+    <BackButton />
+  </div>
 	<div class="wrapper">
 	  <!-- header部分 -->
 	  <header>
@@ -50,6 +53,7 @@
   import Footer from '../components/Footer.vue';
   import request from '../utils/request';
   import { toast } from '../utils/toast';
+  import BackButton from '../components/BackButton.vue';
 
   export default {
 	name: 'Login',
@@ -150,7 +154,8 @@
 	  };
 	},
 	components: {
-	  Footer
+	  Footer,
+    BackButton
 	}
   }
   </script>
@@ -307,5 +312,12 @@ header {
   border-radius: 4px;
   border: none;
   outline: none;
+}
+
+.back-btn-container {
+  position: fixed; /* 固定定位，不随滚动移动 */
+  left: 0vw; /* 距离左侧的距离，可根据需求调整 */
+  top: 2vw; /* 距离顶部的距离，与 header 高度（12vw）适配，确保垂直居中 */
+  z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 </style>

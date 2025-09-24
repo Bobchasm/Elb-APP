@@ -1,7 +1,7 @@
 <template>
 	<div class="wrapper">
 		<!-- header部分 -->
-		<BackButton />
+		<BackButton style="margin-top: -12vw;"/>
     <div class="header">
 
       <h1 class="title">订单配送地址</h1>
@@ -10,14 +10,14 @@
 		<ul class="addresslist">
 			<li v-for="item in deliveryAddressArr" :key="item.id">
 				<div class="addresslist-left" @click="setDeliveryAddress(item)">
-					<h3>{{ item.contactName }}{{ sexFilter(item.contactSex) }} {{ item.contactTel }}</h3>
+					<h3 style="color: black;">{{ item.contactName }}{{ sexFilter(item.contactSex) }} {{ item.contactTel }}</h3>
 					<p>{{ item.address }}</p>
 				</div>
 				<div class="addresslist-right">
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
 					<button class="select-btn" :class="{ 'selected': addressSelectedId === item.id }"
-						@click="selectUserAddress(item.id)" :disabled="addressSelectedId === item.id">
+					@click="toggleUserAddress(item.id)">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
@@ -270,7 +270,7 @@ export default {
 /*************** addresslist ***************/
 .wrapper .addresslist {
 	width: 100%;
-	margin-top: 12vw;
+	margin-top: 14vw;
 	background-color: #fff;
 }
 
@@ -492,7 +492,7 @@ export default {
 	background-color: #0097FF;
 	color: #fff;
 	border: none;
-	padding: 3vw 6vw;
+	padding: 3vw 10vw;
 	border-radius: 8vw;
 	font-size: 4.5vw;
 	font-weight: bold;
@@ -501,6 +501,7 @@ export default {
 	transition: all 0.3s ease;
 	min-width: 25vw;
 	text-align: center;
+	margin-left: 220px;
 }
 
 .wrapper .order-bar .checkout-order-btn:hover {

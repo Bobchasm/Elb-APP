@@ -22,7 +22,7 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-                        
+
                         <div class="modal-content">
                             <!-- 位置层级导航 -->
                             <div class="location-nav">
@@ -39,12 +39,12 @@
                                     <i class="fa fa-spinner fa-spin"></i>
                                     <span>加载中...</span>
                                 </div>
-                                
+
                                 <div v-else-if="locationData.length === 0" class="empty-state">
                                     <i class="fa fa-map-marker"></i>
                                     <span>暂无数据</span>
                                 </div>
-                                
+
                                 <div v-else class="location-items">
                                     <div v-for="item in locationData" :key="item.id"
                                         :class="['location-item', { selected: isSelected(item) }]"
@@ -79,7 +79,7 @@
                 </template>
                 <template v-else>
                     <div class="user-info">
-                       <div class="scroll-text">
+                        <div class="scroll-text">
                             <span>{{ userInfo.username }} ，您好！</span>
                         </div>
                     </div>
@@ -176,11 +176,11 @@
                         <div class="rank-badge" :class="getRankClass(index)">
                             <span>{{ getRankText(index) }}</span>
                         </div>
-                        
+
                         <!-- 商家图片 -->
                         <div class="business-image">
                             <img :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')"
-                                :alt="business.businessName" @error="handleImageError"  @click="toBusinessInfo(business.id)">
+                                :alt="business.businessName" @error="handleImageError" @click="toBusinessInfo(business.id)">
                         </div>
 
                         <!-- 商家信息 -->
@@ -209,12 +209,12 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 右侧箭头按钮 -->
                 <div class="carousel-arrow carousel-arrow-right" @click="nextSlide">
                     <i class="fa fa-chevron-right"></i>
                 </div>
-                
+
                 <!-- 指示器 -->
                 <div class="carousel-indicators">
                     <span v-for="(business, index) in topThreeBusinesses" :key="index"
@@ -331,7 +331,8 @@
                     <div class="business-info-detail">
                         <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
                         <div class="business-info-rating">
-                            <span class="rating-score">{{ business.score || getBusinessRating(business.id || business.businessId) }}分</span>
+                            <span class="rating-score">{{ business.score || getBusinessRating(business.id ||
+                                business.businessId) }}分</span>
                             <span class="monthly-sales">月售 {{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
@@ -732,18 +733,21 @@ export default {
 
         // 获取销量前三的商家
         const updateTopThreeBusinesses = () => {
-
             request.get("/api/businesses/carousel")
                 .then(response => {
                     if (response.success) {
                         topThreeBusinesses.value = response.data;
+                        console.log('🏆 轮播图更新:', topThreeBusinesses.value.map(b => `${b.businessName}(销量${b.salesCount || 0})`).join(', '));
+
+                        // 关键修改：数据更新后重启自动播放
+                        restartAutoPlay();
                     }
+                })
+                .catch(error => {
+                    console.error('获取轮播图数据失败:', error);
+                    // 即使失败也要确保有自动播放
+                    restartAutoPlay();
                 });
-
-            console.log('🏆 轮播图更新:', topThreeBusinesses.value.map(b => `${b.businessName}(销量${b.salesCount || 0})`).join(', '));
-
-            // 数据更新后启动自动轮播
-            restartAutoPlay();
         };
 
         // 轮播控制函数
@@ -1027,6 +1031,7 @@ export default {
             // testWithHardcodedData();
 
             getBusinessList(); // 恢复API调用
+            startAutoPlay();
         });
 
         onBeforeUnmount(() => {
@@ -1391,7 +1396,7 @@ export default {
                         销量类型: typeof business.salesCount
                     });
                 });
-                
+
                 // 特别检查模板绑定的数据
                 console.log('🎭 模板显示检查 - 前5个商家的销量显示值:');
                 businessList.value.slice(0, 5).forEach((business, index) => {
@@ -1529,25 +1534,28 @@ export default {
 }
 
 .user-info {
-  width: 150px; /* 你可以根据右上角区域宽度调整 */
-  overflow: hidden;
-  white-space: nowrap;
-  position: relative;
+    width: 150px;
+    /* 你可以根据右上角区域宽度调整 */
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
 }
 
 .scroll-text {
-  display: inline-block;
-  padding-left: 100%; /* 给动画留出空白 */
-  animation: scroll-text 10s linear infinite;
+    display: inline-block;
+    padding-left: 100%;
+    /* 给动画留出空白 */
+    animation: scroll-text 10s linear infinite;
 }
 
 @keyframes scroll-text {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
 }
 
 
@@ -1568,16 +1576,22 @@ export default {
     font-size: 4vw;
     font-weight: 500;
     color: #fff;
-    white-space: nowrap; /* 强制文本不换行 */
+    white-space: nowrap;
+    /* 强制文本不换行 */
 
     /* 核心修改：允许水平滚动 */
-    overflow-x: auto; /* 在水平方向上允许滚动 */
-    overflow-y: hidden; /* 隐藏垂直方向的滚动条 */
-    -webkit-overflow-scrolling: touch; /* 针对 iOS 设备实现更流畅的滚动 */
+    overflow-x: auto;
+    /* 在水平方向上允许滚动 */
+    overflow-y: hidden;
+    /* 隐藏垂直方向的滚动条 */
+    -webkit-overflow-scrolling: touch;
+    /* 针对 iOS 设备实现更流畅的滚动 */
 
     /* 隐藏滚动条但保留滚动功能，让界面更美观 */
-    scrollbar-width: none; /* 针对 Firefox */
-    -ms-overflow-style: none; /* 针对 Internet Explorer 和 Edge */
+    scrollbar-width: none;
+    /* 针对 Firefox */
+    -ms-overflow-style: none;
+    /* 针对 Internet Explorer 和 Edge */
 }
 
 /* 针对 Chrome, Safari 等 Webkit 内核浏览器隐藏滚动条 */
@@ -1600,6 +1614,7 @@ export default {
 .wrapper .login-register button:hover {
     background-color: #f0f0f0;
 }
+
 /****************** search ******************/
 .wrapper .search {
     width: 100%;
@@ -2306,8 +2321,8 @@ export default {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    margin-left:27px;
-    margin-top:10px;
+    margin-left: 27px;
+    margin-top: 10px;
     margin-bottom: 10px;
     overflow-y: auto;
 }

@@ -1,6 +1,6 @@
 <template>
     <div class="wrapper">
-        <BackButton :show-back-button="true" />
+        <BackButton :show-back-button="true" style="margin-top: -10vw;"/>
         <!-- header部分 -->
         <!-- 首页点进去后展示的内容 -->
         <div class="header">

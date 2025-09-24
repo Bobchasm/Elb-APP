@@ -1,24 +1,26 @@
 <template>
   <div class="container">
-    <div class="top-background">
+    <div class="header">
       <h1>商家信息</h1>
     </div>
 
     <div class="user-card">
-      <div class="avatar">
-        <img :src="merchant?.avatar || defaultAvatar" alt="商家头像">
-      </div>
-      <div class="user-details">
-        <div class="user-name">
-          <i class="fas fa-user-circle user-icon"></i>
-          <span>{{ merchant?.name || '未设置商家名称' }}</span>
+      <div class="user-info-row">
+        <div class="avatar">
+          <img :src="merchant?.avatar || defaultAvatar" alt="商家头像">
         </div>
-        <div class="user-phone">
-          <i class="fas fa-phone phone-icon"></i>
-          <span>{{ formattedPhone }}</span>
+        <div class="user-details">
+          <div class="user-name">
+            <i class="fas fa-user-circle user-icon"></i>
+            <span>{{ merchant?.name || '未设置商家名称' }}</span>
+          </div>
+          <div class="user-phone">
+            <i class="fas fa-phone phone-icon"></i>
+            <span>{{ formattedPhone }}</span>
+          </div>
         </div>
       </div>
-      <div class="card-button-section">
+      <div class="user-actions">
         <button class="switch-btn" @click="switchToCustomer">
           <i class="fas fa-user"></i> 切换为顾客
         </button>
@@ -27,7 +29,7 @@
         </button>
       </div>
     </div>
-
+    <!-- 修改为显示商铺列表 -->
     <div class="stores-container">
       <div class="store-card" v-for="store in stores" :key="store.merchantId">
         <div class="store-name">{{ store.merchantName }}</div>
@@ -47,6 +49,8 @@
         </div>
       </div>
     </div>
+
+    
 
     <div class="bottom-nav">
       <router-link to="/merchant/business" class="nav-item">
@@ -68,7 +72,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { toast } from '../utils/toast';
+import { toast } from '../utils/toast'; 
 import request from '../utils/request';
 
 export default {
@@ -79,7 +83,7 @@ export default {
 
     const merchant = ref(null);
     const stores = ref([]); // 存储商铺列表
-
+    
     const loading = ref(false);
 
     // 格式化手机号显示
@@ -101,7 +105,7 @@ export default {
       loading.value = true;
       try {
         const data = await request.get('/api/person');
-
+        
         if (data && data.id) {
           merchant.value = {
             id: data.id,
@@ -119,12 +123,12 @@ export default {
         loading.value = false;
       }
     };
-
+    
     // 修改：加载商家统计数据，现在获取的是商铺列表
     const loadMerchantStats = async (userId) => {
       try {
         const response = await request.get(`http://localhost:8080/api/merchant/interaction/statsByUserId/${userId}`);
-
+        
         if (response && response.success && response.data) {
           stores.value = response.data;
         } else {
@@ -142,7 +146,7 @@ export default {
       // 清空所有本地存储，确保完全退出
       localStorage.clear();
       sessionStorage.clear();
-      router.push({ path: '/login' });
+      router.push({ path: '/index' });
     };
 
     const switchToCustomer = () => {
@@ -171,75 +175,54 @@ export default {
   min-height: 100vh;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  padding-bottom: 40rpx;
 }
-
-.top-background {
+/* ----------------------- 顶部标题栏 ----------------------- */
+.header {
   width: 100%;
-  height: 100px;
-  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  height: 12vw;
+  max-height: 60px;
+  background-color: #0097ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
-  justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 50px;
+  justify-content: center;
 }
 
-.top-background::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
-  transform: rotate(30deg);
-  animation: shine 6s infinite linear;
-}
-
-@keyframes shine {
-  0% {
-    transform: rotate(30deg) translate(-10%, -10%);
-  }
-  100% {
-    transform: rotate(30deg) translate(10%, 10%);
-  }
-}
-
-.top-background h1 {
-  color: white;
-  font-size: 1.8rem;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  letter-spacing: 1px;
+.header h1 {
+  font-size: clamp(18px, 5vw, 24px);
+  color: #fff;
   margin: 0;
-  z-index: 1;
 }
-
 .user-card {
   width: 92%;
   max-width: 500px;
-  margin: 0 auto 20px;
+  margin: 80px auto 20px; /* 为固定头部留出空间 */
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  padding: 20px 0;
+  padding: 20px;
   display: flex;
-  flex-direction: column; /* 调整为列布局 */
-  align-items: center;
-  gap: 15px; /* 增加卡片内元素间距 */
+  flex-direction: column;
+  gap: 20px;
   position: relative;
   z-index: 2;
-  transform: translateY(-50px);
 }
 
+.user-card .user-info-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
 .avatar {
   width: 100px;
   height: 100px;
@@ -249,17 +232,16 @@ export default {
   box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
   background: #f8f9fa;
+  margin-left: 15px;
 }
-
 .avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-
 .user-details {
-  width: 90%; /* 调整宽度以适应新布局 */
+  flex: 1;
   background-color: #f8f9fa;
   padding: 15px;
   border-radius: 12px;
@@ -270,8 +252,12 @@ export default {
   gap: 10px;
 }
 
-.user-name,
-.user-phone {
+.user-actions {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+.user-name, .user-phone {
   font-size: 0.95rem;
   color: #495057;
   background: #fff;
@@ -281,126 +267,220 @@ export default {
   display: flex;
   align-items: center;
 }
-
 .user-name {
   font-size: 1.1rem;
   font-weight: 500;
   color: #333;
   margin-bottom: 8px;
 }
-
-.user-name .user-icon,
+.user-name .user-icon, 
 .user-phone .phone-icon {
   margin-right: 8px;
   color: #3498db;
 }
 
-/* 新增卡片内部的按钮区域样式 */
-.card-button-section {
-  width: 90%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 10px;
-}
-
+/* 新增商铺列表样式 - 房子造型 */
 .stores-container {
   width: 92%;
   max-width: 500px;
   margin: 20px auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  transform: translateY(-50px);
+  gap: 20px;
+  /* 添加 overflow: hidden 来隐藏超出的部分 */
+  overflow: hidden;
 }
 
 .store-card {
+  position: relative;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  padding: 15px;
+  border-radius: 16px 16px 16px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 50px 15px 15px;
+  margin-top: 10px;
+  /* 改为 hidden 来隐藏超出的屋顶部分 */
+  overflow: hidden;
+}
+
+/* 房子屋顶 - 在卡片内部显示 */
+.store-card::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-bottom: 30px solid #ff6b6b;
+  z-index: 1;
+}
+
+/* 房子主体装饰 - 在卡片内部的横梁 */
+.store-card::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 20px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+/* 门的装饰 */
+.store-card .store-name::before {
+  content: '🏪';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  z-index: 3;
 }
 
 .store-name {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 15px;
   text-align: center;
+  padding-top: 8px;
+  position: relative;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 12px;
 }
 
+/* 店铺数据栏样式 - 窗户效果 */
 .store-data-bar {
   display: flex;
   justify-content: space-around;
   width: 100%;
-  padding: 15px 0;
+  padding: 20px 10px 15px;
   border-radius: 12px;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border: 2px solid #dee2e6;
+  position: relative;
+  margin-top: 10px;
+}
+
+/* 窗户框架装饰 */
+.store-data-bar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 33.33%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: #ced4da;
+}
+
+.store-data-bar::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 33.33%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: #ced4da;
 }
 
 .data-item {
   text-align: center;
   flex: 1;
+  position: relative;
 }
 
 .data-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
-  color: #333;
-  margin-bottom: 4px;
+  color: #2c3e50;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .data-label {
-  font-size: 14px;
-  color: #777;
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* 删除原有的 .button-section 样式，因为按钮已移动 */
+/* 特殊数据项颜色 */
+.data-item:nth-child(1) .data-value {
+  color: #e74c3c; /* 点赞 - 红色 */
+}
 
-/* 按钮样式（保持不变） */
+.data-item:nth-child(2) .data-value {
+  color: #f39c12; /* 收藏 - 橙色 */
+}
+
+.data-item:nth-child(3) .data-value {
+  color: #27ae60; /* 评分 - 绿色 */
+}
+
+/* 房子阴影效果 */
+.store-card {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(255, 107, 107, 0.2);
+  transition: all 0.3s ease;
+}
+
+.store-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
 .switch-btn {
-  width: 100%;
-  padding: 14px;
+  flex: 1;
+  padding: 12px;
   text-align: center;
-  background: linear-gradient(135deg, #2782dd, #61c8f4);
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
   color: white;
   font-weight: 600;
   border-radius: 12px;
   border: none;
-  font-size: 0.95rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-bottom: 10px;
 }
-
 .switch-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
-
 .logout-btn {
-  width: 100%;
-  padding: 14px;
+  flex: 1;
+  padding: 12px;
   text-align: center;
-  background: linear-gradient(135deg, #3258cc, #71a3ff);
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
   color: white;
   font-weight: 600;
   border-radius: 12px;
   border: none;
-  font-size: 0.95rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .logout-btn:hover {
-  background: #ffeaea;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
-
+.switch-btn i,
 .logout-btn i {
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
 /* 底部导航栏样式 */
@@ -443,46 +523,59 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .container,
-  .user-card,
-  .stores-container {
+  .container, .user-card {
     max-width: 100vw;
     width: 100vw;
     border-radius: 0;
-    padding: 0;
   }
 
-  .top-background {
-    height: 90px;
-    margin-bottom: 50px;
+  .container {
+    padding:0 0 80px 0;
+  }
+
+  .header {
+    height: 60px;
     border-radius: 0;
   }
+
   .user-card {
+    padding: 20px 15px;
+    margin-top: 80px;
+    width: 90%;
+    gap: 15px;
+  }
+
+  .user-info-row {
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 20px 0;
-    margin-top: 0;
-    transform: translateY(-50px);
-    width: 90%;
+    gap: 15px;
   }
+
   .avatar {
     width: 80px;
     height: 80px;
-    margin-left: 0;
   }
+
   .user-details {
-    width: 85%;
+    width: 100%;
     padding: 10px;
     gap: 6px;
-    margin-right: 0;
   }
+
+  .user-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .switch-btn,
+  .logout-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+
   .bottom-nav {
     border-radius: 0;
-  }
-  .card-button-section {
-    width: 85%;
-    margin-top: 5px;
   }
 }
 </style>

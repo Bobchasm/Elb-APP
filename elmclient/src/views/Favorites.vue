@@ -1,6 +1,6 @@
 <template>
 
-    <BackButton />
+    <BackButton style="margin-top: 2vw;"/>
     <div class="header">
       <!-- <i class="fas fa-chevron-left back-icon" @click="goBack"></i> -->
       <h1>我的收藏</h1>
@@ -127,7 +127,7 @@ body {
 
 /* 顶部栏，不受 container 限制，贴近边缘 */
 .header {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -151,6 +151,7 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  margin-top: calc(-13vw);
 }
 
 .header h1 {
