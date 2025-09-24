@@ -98,8 +98,8 @@
             <p>确定要{{ selectedUser?.disabled ? '启用' : '禁用' }}用户 "{{ selectedUser?.username }}" 吗？</p>
           </div>
           <div class="modal-footer">
-            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
             <button class="modal-btn confirm-btn" @click="confirmToggle">确认</button>
+            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
           </div>
         </div>
       </div>

@@ -17,14 +17,12 @@
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
 					<button class="select-btn"
 							:class="{ 'selected': addressSelectedId === item.id }"
-							@click="selectUserAddress(item.id)"
-							:disabled="addressSelectedId === item.id">
+							@click="toggleUserAddress(item.id)">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
 			</li>
 		</ul>
-
 
 		<!-- 新增地址部分 -->
 		<div class="addbtn" @click="toAddUserAddress">
@@ -37,6 +35,23 @@
 			<button class="checkout-order-btn" @click="submitOrder">确认下单</button>
 		</div>
 
+		<!-- 确认删除弹窗 -->
+		<div v-if="showConfirmModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>确认操作</h3>
+            <span class="close-btn" @click="closeModal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>确认要删除此送货地址吗？</p>
+          </div>
+          <div class="modal-footer">
+			<button class="modal-btn confirm-btn" @click="confirmDelete">确认</button>
+            <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+          </div>
+        </div>
+      </div>
+
 	</div>
 </template>
   
@@ -45,6 +60,7 @@ import { ref, reactive, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
+import { toast } from '../utils/toast';
 export default {
 	name: 'UserAddress',
 	setup() {
@@ -56,6 +72,8 @@ export default {
 		const businessId = ref(route.query.businessId);
 		const orderId = ref();
 		const addressSelectedId = ref(0);
+		const showConfirmModal = ref(false);
+		const addressDeleteSelectId = ref(0);
 
 		onMounted(() => {
 			const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
@@ -73,8 +91,6 @@ export default {
 				deliveryAddressArr.value = response.data;
 			}).catch(error => {
 				console.error('获取送货地址列表失败:', error);
-				// 可以添加错误提示，例如：
-				// toast.error('获取送货地址失败');
 			});
 		};
 
@@ -88,19 +104,20 @@ export default {
 			router.push({ path: '/addUserAddress', query: { businessId: businessId.value } });
 		};
 
-
-		const selectUserAddress = (id) => {
-			addressSelectedId.value = id;
+		// 修改：切换地址选择状态
+		const toggleUserAddress = (id) => {
+			if (addressSelectedId.value === id) {
+				// 如果点击已选中的地址，则取消选择
+				addressSelectedId.value = 0;
+			} else {
+				// 否则选择该地址
+				addressSelectedId.value = id;
+			}
 		};
 
 		const submitOrder = () => {
 			if (addressSelectedId.value === 0) {
-				alert('请选择配送地址');
-				// uni.showToast({
-				// 	title: '请选择配送地址',//提示内容
-				// 	icon: 'none',//图标
-				// 	duration: 2000//持续时间
-				// });
+				toast.error("请选择配送地址");
 				return;
 			}
 			else {
@@ -110,7 +127,7 @@ export default {
 						orderId.value = response.data;
 						router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
 					} else {
-						alert('下单失败！');
+						toast.error("下单失败，请重试");
 						router.push({path: '/orderList'})
 					}
 				}).catch(error => {
@@ -124,25 +141,40 @@ export default {
 		};
 
 		const removeUserAddress = (id) => {
-			if (!confirm('确认要删除此送货地址吗？')) {
-				return;
-			}
+			addressDeleteSelectId.value = id;
+			showConfirmModal.value = true;
+		};
 
+		// 关闭弹窗
+		const closeModal = () => {
+			showConfirmModal.value = false;
+			addressDeleteSelectId.value = 0;
+		};
+
+		// 确认删除
+		const confirmDelete = () => {
+			if (addressDeleteSelectId.value === 0) return;
+			
 			request.put('/api/addresses/removeDeliveryAddress', {
-				id: id
+				id: addressDeleteSelectId.value
 			}).then(response => {
 				console.log(response.data);
 				if (response.success) {
+					// 修复：使用 addressDeleteSelectId.value 而不是未定义的 id
 					let deliveryAddress = JSON.parse(localStorage.getItem(user.value.id.toString()));
-					if (deliveryAddress && deliveryAddress.id === id) {
+					if (deliveryAddress && deliveryAddress.id === addressDeleteSelectId.value) {
 						localStorage.removeItem(user.value.id.toString());
 					}
+					toast.success("删除地址成功");
 					listDeliveryAddressByUserId();
 				} else {
-					alert('删除地址失败！');
+					toast.error("删除地址失败！");
 				}
 			}).catch(error => {
 				console.error(error);
+				toast.error("删除地址失败！");
+			}).finally(() => {
+				closeModal(); // 无论成功失败都关闭弹窗
 			});
 		};
 
@@ -157,11 +189,14 @@ export default {
 			toAddUserAddress,
 			editUserAddress,
 			removeUserAddress,
-			selectUserAddress,
+			toggleUserAddress, // 修改：使用切换函数
 			sexFilter,
 			orderId,
 			addressSelectedId,
-			submitOrder
+			submitOrder,
+			showConfirmModal,
+			closeModal,
+			confirmDelete
 		};
 	},
 	components: {
@@ -339,6 +374,111 @@ export default {
 .wrapper .order-bar .checkout-order-btn:active {
 	transform: translateY(0);
 	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 
 </style>
