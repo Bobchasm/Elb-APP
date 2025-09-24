@@ -705,6 +705,7 @@ export default {
 .wrapper header {
   padding: 20px;
   text-align: center;
+  font-weight: 600;
   background: linear-gradient(to right, #3a7bd5, #00d2ff);
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -816,6 +817,7 @@ export default {
 
 .wrapper .food li .food-left .food-left-info p {
     font-size: 3vw;
+     font-weight: 600;
     color: #888;
     margin-top: 2vw;
 }

@@ -188,6 +188,7 @@ export default {
 	align-items: center;
 	color: #fff;
 	font-size: 4.8vw;
+	font-weight: 600;
 	position: fixed;
 	left: 0;
 	top: 0;
