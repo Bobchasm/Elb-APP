@@ -355,7 +355,8 @@ export default {
   height: 12vw;
   background-color: #0097ff;
   color: #fff;
-  font-size: 4.8vw;
+  font-size: clamp(18px, 5vw, 24px);
+  font-weight: 600; /* 这里设置了粗体 */
   position: fixed;
   left: 0;
   top: 0;
@@ -426,7 +427,7 @@ export default {
 }
 
 .merchant-tabs li.active {
-  background: #3490de;
+  background: #0097ff;
   color: #ffffff;
   font-weight: 600;
   transform: translateY(-0.5vw);
@@ -472,7 +473,7 @@ export default {
   margin-right: 6vw;
   padding: 3vw 0;
   font-size: 3.8vw;
-  color: #262424;
+  color: #666;
   position: relative;
   cursor: pointer;
   flex: 0 0 auto;
@@ -484,7 +485,7 @@ export default {
 }
 
 .tabs li.active {
-  color: #3490de;
+  color: #4599e2;
   font-weight: 600;
 }
 
@@ -495,7 +496,7 @@ export default {
   bottom: 0;
   width: 100%;
   height: 0.8vw;
-  background: #409eff;
+  background: #6eaeef;
   border-radius: 0.4vw;
 }
 

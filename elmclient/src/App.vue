@@ -39,10 +39,11 @@ export default {
 
 
     const showFooter = computed(() => {
-      if (route.path.startsWith('/merchant') || route.path.startsWith('/admin')) {
-        return false;
+    if(route.path==='/index'||route.path==='/OrderList'||
+       route.path==='/MyInformation'){
+        return true;
       }
-      return !['BusinessInfo', 'Payment', 'SuccessfulPayment', 'Orders', 'Cart','Favorites','Notifications','Register','Login'].includes(route.name);
+      return false;
     });
 
     const showBusinessFooter = computed(() => {
