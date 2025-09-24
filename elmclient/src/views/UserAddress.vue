@@ -17,7 +17,7 @@
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
 					<button class="select-btn" :class="{ 'selected': addressSelectedId === item.id }"
-						@click="selectUserAddress(item.id)" :disabled="addressSelectedId === item.id">
+					@click="toggleUserAddress(item.id)">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
@@ -270,7 +270,7 @@ export default {
 /*************** addresslist ***************/
 .wrapper .addresslist {
 	width: 100%;
-	margin-top: 12vw;
+	margin-top: 2vw;
 	background-color: #fff;
 }
 
