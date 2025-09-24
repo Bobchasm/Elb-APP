@@ -65,12 +65,12 @@ export default {
 		const userInfo = ref(null);
 		const route = useRoute();
 		const router = useRouter();
-		//const businessId = route.query.businessId;
 		const businessId = ref(null);
+		// const businessId = ref(null);
 		const businessName = ref('');
 
 		onMounted(() => {
-			businessId.value = parseInt(1);
+			businessId.value = parseInt(route.query.businessId);
 			userInfo.value = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
 
 			if (userInfo.value) {
@@ -119,6 +119,7 @@ export default {
 			totalPrice,
 			checkout,
 			goBack,
+			businessId
 		};
 	}
 }

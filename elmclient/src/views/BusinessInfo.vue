@@ -68,7 +68,7 @@
                 <div class="cart-left-icon" :style="totalQuantity == 0
                     ? 'background-color:#505051;'
                     : 'background-color:#3190E8;'
-                    " @click="goToCart(businessId)">
+                    " @click="goToCart()">
                     <i class="fa fa-shopping-cart"></i>
                     <div class="cart-left-icon-quantity" v-show="totalQuantity != 0">
                         {{ totalQuantity }}
@@ -564,7 +564,7 @@ export default {
         };
 
         // 跳转到购物车页面
-        const goToCart = (id) => {
+        const goToCart = () => {
             console.log("跳转到订单页面，当前购物车商品数量:", totalQuantity.value);
             if (totalQuantity.value === 0) {
                 alert("请先添加商品到购物车");
@@ -573,7 +573,7 @@ export default {
             router.push({
                 path: "/cart",
                 query: {
-                    businessId: id
+                    businessId: businessId.value
                 }
             });
         };
