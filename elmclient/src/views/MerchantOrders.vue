@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed,onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import request from '../utils/request';
 import BusinessFooter from '@/components/BusinessFooter.vue';
@@ -130,6 +130,10 @@ export default {
       3: "已完成",
       4: "已取消"
     };
+
+    // --- WebSocket 相关 ---
+    const socket = ref(null);
+    const userId = ref(null); // 存储当前商家用户ID
 
     // 获取商铺列表
     const fetchMerchantList = async () => {
@@ -310,13 +314,63 @@ export default {
       });
     };
 
+    // 初始化WebSocket
+    const initWebSocket = () => {
+      const tokenFromLocal = localStorage.getItem('token');
+      const tokenFromSession = sessionStorage.getItem('token');
+      const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+      // 从sessionStorage获取商家用户ID（需确保登录后存储了userId）
+      const userData = storage.getItem("userInfo");
+      if (userData) {
+        const user = JSON.parse(userData);
+        userId.value = user.id;
+      }
+      if (!userId.value) return;
+
+      // 连接WebSocket（假设后端地址是 ws://localhost:8080/ws/{userId}）
+      socket.value = new WebSocket(`ws://localhost:8080/ws/${userId.value}`);
+
+      socket.value.onopen = () => {
+        console.log("WebSocket 连接成功");
+      };
+
+      socket.value.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log("收到WebSocket消息:", message);
+        // 收到消息后，刷新当前商铺的订单列表
+        fetchOrders();
+      };
+
+      socket.value.onclose = () => {
+        console.log("WebSocket 连接关闭");
+        // 断线重连（可选）
+        setTimeout(initWebSocket, 2000);
+      };
+
+      socket.value.onerror = (err) => {
+        console.error("WebSocket 错误:", err);
+      };
+    };
+
+    // 关闭WebSocket（组件销毁时调用）
+    const closeWebSocket = () => {
+      if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+        socket.value.close();
+      }
+    };
+
     onMounted(() => {
+      initWebSocket();
       // 先获取商铺列表，然后自动加载第一个商铺的订单
       fetchMerchantList().then(() => {
         if (selectedMerchantId.value) {
           fetchOrders();
         }
       });
+    });
+    onUnmounted(() => {
+      // 组件销毁时关闭WebSocket
+      closeWebSocket();
     });
 
     return {

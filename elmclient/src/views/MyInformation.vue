@@ -213,7 +213,7 @@ export default {
     webSocket.value.onopen = () => {
       console.log('WebSocket 连接成功');
       isConnected.value = true;
-      toast.success('已连接消息通知');
+      //toast.success('已连接消息通知');
     };
 
     webSocket.value.onmessage = (event) => {

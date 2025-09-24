@@ -72,4 +72,21 @@ public class WebSocketServer {
             lock.unlock(); // 释放锁
         }
     }
+
+    /**
+     * 给指定用户发送消息
+     */
+    public void sendToClient(String sid, String message) {
+        lock.lock();
+        try {
+            Session session = sessionMap.get(sid);
+            if (session != null && session.isOpen()) {
+                session.getBasicRemote().sendText(message);
+            }
+        } catch (Exception e) {
+            System.err.println("WebSocket单发消息失败：" + e.getMessage());
+        } finally {
+            lock.unlock();
+        }
+    }
 }
