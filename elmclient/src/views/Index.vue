@@ -85,7 +85,9 @@
                 </template>
                 <template v-else>
                     <div class="user-info">
-                        <p>{{ userInfo.username }} ，您好！</p>
+                       <div class="scroll-text">
+                            <span>{{ userInfo.username }} ，您好！</span>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -1470,25 +1472,27 @@ const getDisplayText = (location) => {
     width: 100%;
     height: 12vw;
     background-color: #0097ff;
-
     display: flex;
     align-items: center;
- 
-    /* 让location和login-register两端对齐 */
-    padding: 0 3vw;
-    /* 添加两边的内边距，使内容不要紧贴屏幕边缘 */
+    justify-content: space-between;
+    padding: 0 4vw;
+    box-sizing: border-box;
 }
 
+/* 确保位置信息不会被挤压 */
 .wrapper header .icon-location-box {
     width: 3.5vw;
     height: 3.5vw;
     margin-right: 1vw;
+    flex-shrink: 0;
 }
 
 .wrapper header .location-text {
     font-size: 4.5vw;
     font-weight: 700;
     color: #fff;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .wrapper header .icon-location-box i {
@@ -1500,39 +1504,78 @@ const getDisplayText = (location) => {
     margin-left: 1vw;
 }
 
+.user-info {
+  width: 150px; /* 你可以根据右上角区域宽度调整 */
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.scroll-text {
+  display: inline-block;
+  padding-left: 100%; /* 给动画留出空白 */
+  animation: scroll-text 10s linear infinite;
+}
+
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+
 /****************** 登录、注册部分 ******************/
 .wrapper .login-register {
     display: flex;
     gap: 2vw;
     align-items: center;
     margin-left: 5vw;
+    flex-grow: 1;
+    justify-content: flex-end;
+    /* 关键修改：此属性是解决 Flexbox 布局中子元素溢出问题的关键 */
+    min-width: 0;
 }
 
 .wrapper .login-register .user-info {
+    /* 删除 max-width: 100%，以确保容器可以根据内容宽度进行溢出 */
     font-size: 4vw;
-    /* 增加字体大小 */
     font-weight: 500;
     color: #fff;
+    white-space: nowrap; /* 强制文本不换行 */
+    
+    /* 核心修改：允许水平滚动 */
+    overflow-x: auto; /* 在水平方向上允许滚动 */
+    overflow-y: hidden; /* 隐藏垂直方向的滚动条 */
+    -webkit-overflow-scrolling: touch; /* 针对 iOS 设备实现更流畅的滚动 */
+    
+    /* 隐藏滚动条但保留滚动功能，让界面更美观 */
+    scrollbar-width: none; /* 针对 Firefox */
+    -ms-overflow-style: none; /* 针对 Internet Explorer 和 Edge */
+}
+
+/* 针对 Chrome, Safari 等 Webkit 内核浏览器隐藏滚动条 */
+.wrapper .login-register .user-info::-webkit-scrollbar {
+    display: none;
 }
 
 .wrapper .login-register button {
     padding: 1.5vw 3vw;
-    /* 增加按钮的内边距，变大 */
     border: none;
     background-color: white;
     color: #0097ff;
     cursor: pointer;
     border-radius: 1vw;
-    /* 加大圆角 */
     transition: background-color 0.3s;
     font-size: 3.5vw;
-    /* 增加按钮文字的大小 */
+    flex-shrink: 0;
 }
 
 .wrapper .login-register button:hover {
     background-color: #f0f0f0;
 }
-
 /****************** search ******************/
 .wrapper .search {
     width: 100%;
