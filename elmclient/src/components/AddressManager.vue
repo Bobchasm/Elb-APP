@@ -34,7 +34,14 @@
           </div>
           <div class="modal-item">
             <label>手机号</label>
-            <input v-model="addressForm.contactTel" placeholder="输入手机号" />
+            <input 
+              v-model="addressForm.contactTel" 
+              placeholder="输入手机号" 
+              :class="{ 'input-error': addressForm.contactTel && !validatePhoneNumber(addressForm.contactTel) }"
+            />
+            <div v-if="addressForm.contactTel && !validatePhoneNumber(addressForm.contactTel)" class="error-message">
+              请输入正确的手机号码格式（11位数字，以1开头）
+            </div>
           </div>
           <div class="modal-item">
             <div class="title">
@@ -85,6 +92,13 @@ const addressForm = ref({
 const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
 const user = userFromLocal || userFromSession;
+
+// 手机号码格式校验函数
+const validatePhoneNumber = (phone) => {
+  // 中国大陆手机号码正则：11位数字，以1开头，第二位是3-9
+  const phoneRegex = /^1[3-9]\d{9}$/;
+  return phoneRegex.test(phone);
+};
 
 onMounted(() => {
   loadAddresses();
@@ -141,8 +155,16 @@ const closeAddressModal = () => {
 
 const submitAddress = async () => {
   const form = addressForm.value;
+  
+  // 基础字段校验
   if (!form.contactName || !form.contactTel || !form.address) {
     toast.warning('请填写完整的地址信息！');
+    return;
+  }
+
+  // 手机号格式校验
+  if (!validatePhoneNumber(form.contactTel)) {
+    toast.warning('请输入正确的手机号码格式（11位数字，以1开头）！');
     return;
   }
 
@@ -165,7 +187,12 @@ const submitAddress = async () => {
     loadAddresses();
   } catch (error) {
     console.error('操作失败:', error);
-    toast.error('操作失.$attrs败，请重试！');
+    // 根据错误信息提供更具体的提示
+    if (error.response && error.response.data && error.response.data.message) {
+      toast.error(`操作失败：${error.response.data.message}`);
+    } else {
+      toast.error('操作失败，请重试！');
+    }
   }
 };
 
@@ -194,7 +221,8 @@ const deleteAddress = async (id) => {
 .section-title {
   font-size: 1.1rem;
   color: #2c3e50;
-  margin-bottom: 15px;
+  margin-top: 30px;
+  margin-bottom:10px;
   padding-left: 10px;
   font-weight: 600;
   border-left: 4px solid #3498db;
@@ -342,6 +370,16 @@ const deleteAddress = async (id) => {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+.input-error {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2) !important;
+}
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  display: block;
 }
 .modal-buttons {
   display: flex;

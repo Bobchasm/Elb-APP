@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div class="top-background">
+    <div class="header">
       <h1>商家信息</h1>
     </div>
 
@@ -172,53 +172,38 @@ export default {
   min-height: 100vh;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-radius: 16px;
-  padding-bottom: 8vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  padding-bottom: 40rpx;
 }
-.top-background {
+/* ----------------------- 顶部标题栏 ----------------------- */
+.header {
   width: 100%;
-  height: 100px;
-  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  height: 12vw;
+  max-height: 60px;
+  background-color: #0097ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
-  justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 50px;
+  justify-content: center;
 }
-.top-background::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
-  transform: rotate(30deg);
-  animation: shine 6s infinite linear;
-}
-@keyframes shine {
-  0% { transform: rotate(30deg) translate(-10%, -10%); }
-  100% { transform: rotate(30deg) translate(10%, 10%); }
-}
-.top-background h1 {
-  color: white;
-  font-size: 1.8rem;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  letter-spacing: 1px;
+
+.header h1 {
+  font-size: clamp(18px, 5vw, 24px);
+  color: #fff;
   margin: 0;
-  z-index: 1;
 }
 .user-card {
   width: 92%;
   max-width: 500px;
-  margin: 0 auto 20px;
+  margin: 80px auto 20px; /* 为固定头部留出空间 */
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -228,7 +213,6 @@ export default {
   gap: 20px;
   position: relative;
   z-index: 2;
-  transform: translateY(-50px);
 }
 
 .user-card .user-info-row {
@@ -300,45 +284,47 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  transform: translateY(-50px);
+  /* 添加 overflow: hidden 来隐藏超出的部分 */
+  overflow: hidden;
 }
 
 .store-card {
   position: relative;
   background: #fff;
-  border-radius: 0 0 16px 16px;
+  border-radius: 16px 16px 16px 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  padding: 30px 15px 15px;
-  margin-top: 30px;
-  overflow: visible;
+  padding: 50px 15px 15px;
+  margin-top: 10px;
+  /* 改为 hidden 来隐藏超出的屋顶部分 */
+  overflow: hidden;
 }
 
-/* 房子屋顶 - 更大的屋檐 */
+/* 房子屋顶 - 在卡片内部显示 */
 .store-card::before {
-  content: '';
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 80px solid transparent;
-  border-right: 80px solid transparent;
-  border-bottom: 40px solid #ff6b6b;
-  z-index: 1;
-}
-
-/* 房子主体装饰 - 更宽的横梁 */
-.store-card::after {
   content: '';
   position: absolute;
   top: -20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 25px;
+  width: 0;
+  height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-bottom: 30px solid #ff6b6b;
+  z-index: 1;
+}
+
+/* 房子主体装饰 - 在卡片内部的横梁 */
+.store-card::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 20px;
   background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 10px 10px;
   z-index: 2;
   box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
 }
@@ -541,19 +527,17 @@ export default {
   }
 
   .container {
-    padding: 0;
+    padding:0 0 80px 0;
   }
 
-  .top-background {
-    height: 90px;
-    margin-bottom: 50px;
+  .header {
+    height: 60px;
     border-radius: 0;
   }
 
   .user-card {
     padding: 20px 15px;
-    margin-top: 0;
-    transform: translateY(-50px);
+    margin-top: 80px;
     width: 90%;
     gap: 15px;
   }
