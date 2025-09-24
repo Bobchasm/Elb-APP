@@ -143,23 +143,25 @@ export default {
       document.getElementById('avatarFile').click();
     };
 
-    // 处理头像文件选择
-    const handleFileChange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        uploadedFile.value = file;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          avatar.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        throw new Error(result.message || '上传失败，后端返回异常');
-      }
+// 处理头像文件选择
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  
+  if (file) {
+    // 有选择文件时处理
+    uploadedFile.value = file;
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      avatar.value = e.target.result;
+    };
+    
+    // 读取文件可能出错，用try/catch包裹
+    try {
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error('头像上传出错:', error.message || '网络请求失败');
-      // 错误提示（可替换为项目中的提示组件）
-      toast.error("头像上传失败，请重试");
+      console.error('头像读取出错:', error.message || '文件读取失败');
+      toast.error("头像预览失败，请重试");
     }
   } else {
     // 未选择文件时清空
@@ -167,6 +169,7 @@ export default {
     user.photo = null;
   }
 };
+
 
     // 注册函数，包含所有校验和注册请求
     const register = async () => {

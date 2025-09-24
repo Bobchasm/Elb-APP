@@ -41,7 +41,6 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script>
@@ -49,7 +48,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { toast } from '@/utils/toast';
 import request from '@/utils/request';
-import { Back } from '@element-plus/icons-vue';
+import BackButton from '@/components/BackButton.vue';
 export default {
   name: 'Favorites',
   components: { BackButton },
