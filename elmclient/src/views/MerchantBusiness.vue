@@ -18,9 +18,9 @@
     <div class="container wrapper">
       <ul class="business-list">
         <li v-for="shop in filteredShops" :key="shop?.id || index">
-          <div class="status-badge" :class="getStatusClass(shop.status)">
+          <!-- <div class="status-badge" :class="getStatusClass(shop.status)">
             {{ getStatusText(shop.status) }}
-          </div>
+          </div> -->
           <img
             :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'"
             :alt="shop?.businessName || '未命名商铺'" class="logo" @error="handleImageError">
@@ -232,11 +232,18 @@ export default {
               </div>
             </div>
           `,
+          width: '90%',
+          maxWidth: '450px',
+          padding: '1rem',
           focusConfirm: false,
           showCancelButton: true,
           confirmButtonText: '提交申请',
           confirmButtonColor: '#0097ff',
           cancelButtonText: '取消',
+          customClass: {
+            popup: 'compact-popup',
+            content: 'compact-content'
+          },
           didOpen: () => {
             const fileInput = document.getElementById('businessImg');
             const imagePreview = document.getElementById('image-preview');
@@ -264,8 +271,10 @@ export default {
               }
             });
 
-            // 点击选择按钮，弹出新的 SweetAlert2 弹窗选择类型
-            selectTypeBtn.addEventListener('click', async () => {
+            // 点击选择按钮，弹出类型选择弹窗
+            selectTypeBtn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              
               const typeOptions = [
                 { id: 1, label: '美食' },
                 { id: 2, label: '早餐' },
@@ -283,28 +292,55 @@ export default {
                 <div class="type-option" data-id="${option.id}">${option.label}</div>
               `).join('');
 
-              const { dismiss, value: selectedId } = await Swal.fire({
-                title: '选择商铺类型',
-                html: `<div class="type-options-container">${optionsHtml}</div>`,
-                showConfirmButton: false,
-                showCancelButton: false,
-                focusConfirm: false,
-                customClass: {
-                  container: 'type-select-popup'
-                },
-                didOpen: () => {
-                  const options = document.querySelectorAll('.type-option');
-                  options.forEach(option => {
-                    option.addEventListener('click', () => {
-                      const id = option.getAttribute('data-id');
-                      const label = option.textContent;
-                      orderTypeInput.value = label;
-                      selectedOrderType = { id: parseInt(id), label: label };
-                      Swal.close();
-                    });
+              // 创建一个新的弹窗，但不关闭原弹窗
+              const typeSelectResult = await new Promise((resolve) => {
+                // 创建覆盖层和弹窗
+                const overlay = document.createElement('div');
+                overlay.className = 'type-select-overlay';
+                overlay.innerHTML = `
+                  <div class="type-select-popup">
+                    <div class="type-select-popup-header">
+                      <h3>选择商铺类型</h3>
+                      <button class="type-select-close">×</button>
+                    </div>
+                    <div class="type-options-container">${optionsHtml}</div>
+                  </div>
+                `;
+                
+                document.body.appendChild(overlay);
+
+                // 添加事件监听
+                const closeBtn = overlay.querySelector('.type-select-close');
+                const options = overlay.querySelectorAll('.type-option');
+                
+                closeBtn.addEventListener('click', () => {
+                  overlay.remove();
+                  resolve(null);
+                });
+
+                options.forEach(option => {
+                  option.addEventListener('click', () => {
+                    const id = option.getAttribute('data-id');
+                    const label = option.textContent;
+                    overlay.remove();
+                    resolve({ id: parseInt(id), label: label });
                   });
-                }
+                });
+
+                // 点击覆盖层关闭
+                overlay.addEventListener('click', (e) => {
+                  if (e.target === overlay) {
+                    overlay.remove();
+                    resolve(null);
+                  }
+                });
               });
+
+              // 如果用户选择了类型，更新输入框
+              if (typeSelectResult) {
+                orderTypeInput.value = typeSelectResult.label;
+                selectedOrderType = typeSelectResult;
+              }
             });
           },
           preConfirm: async () => {
@@ -428,8 +464,8 @@ body {
   .image-upload-area,
   .input-with-button-container {
     width: 90%; /* 确保它们有足够的宽度，但不至于撑满容器 */
-    max-width: 400px; /* 设置一个最大宽度，使其在较大屏幕上看起来更好 */
-    margin: 10px 0; /* 增加上下间距 */
+    max-width: 350px; /* 减小最大宽度 */
+    margin: 8px 0; /* 减小上下间距 */
   }
 
   /* 可选：为选择按钮容器添加居中样式 */
@@ -446,8 +482,10 @@ body {
   max-height: 60px;
   background-color: #0097ff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   display: flex;
   align-items: center;
@@ -467,8 +505,10 @@ body {
   padding: 10px 0;
   background-color: #fff;
   border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 60px;
+  position: fixed;
+  top: 45px;
+  left: 0;
+  right: 0;
   z-index: 99;
 }
 
@@ -498,6 +538,7 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 0 4vw;
+  padding-top: 120px; /* 为固定的头部和标签栏留出空间 */
   padding-bottom: 140px;
 }
 
@@ -727,22 +768,36 @@ body {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* 增加表单项之间的间距 */
+  gap: 2px; /* 减小表单项之间的间距 */
+}
+
+/* 紧凑型弹窗样式 */
+.compact-popup {
+  font-size: 14px !important;
+}
+
+.compact-popup .swal2-title {
+  font-size: 20px !important;
+  margin-bottom: 15px !important;
+}
+
+.compact-content {
+  padding: 0 !important;
 }
 
 .image-upload-area {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 120px;
+  height: 120px;
   border: 2px dashed #0097ff;
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: border-color 0.3s, background-color 0.3s;
-  margin: 0 auto 20px;
+  margin: 0 auto 15px;
   background-color: #f7f7f7; /* 增加背景色 */
 }
 
@@ -752,14 +807,14 @@ body {
 }
 
 .upload-icon {
-  font-size: 50px;
+  font-size: 40px;
   color: #0097ff;
   font-weight: 300;
   transition: all 0.3s;
 }
 
 .upload-text {
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
   margin-top: 5px;
   transition: all 0.3s;
@@ -786,12 +841,12 @@ body {
 
 .modern-input, .modern-textarea {
   border: 1px solid #e0e0e0 !important;
-  border-radius: 8px !important;
-  padding: 12px 16px !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
   transition: border-color 0.2s, box-shadow 0.2s !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
   color: #333 !important;
 }
 
@@ -821,12 +876,12 @@ body {
 }
 
 .select-type-btn {
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: 1px solid #0097ff;
   background-color: #0097ff;
   color: #fff;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
   white-space: nowrap; /* 防止按钮文字换行 */
@@ -866,5 +921,112 @@ body {
 
 .type-option:hover {
   background-color: #f0f0f0;
+}
+
+/* ----------------------- 类型选择覆盖层弹窗样式 ----------------------- */
+.type-select-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.type-select-popup {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 320px;
+  max-height: 70vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+.type-select-popup-header {
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.type-select-popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.type-select-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.type-select-close:hover {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+.type-options-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.type-option {
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 16px;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.type-option:last-child {
+  border-bottom: none;
+}
+
+.type-option:hover {
+  background-color: #f8f9fa;
+  color: #0097ff;
+}
+
+.type-option:active {
+  background-color: #e6f2ff;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>
