@@ -142,29 +142,34 @@ export default {
     const triggerFileInput = () => {
       document.getElementById('avatarFile').click();
     };
-
-    // 处理头像文件选择
-    const handleFileChange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        uploadedFile.value = file;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          avatar.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        throw new Error(result.message || '上传失败，后端返回异常');
-      }
-    } catch (error) {
-      console.error('头像上传出错:', error.message || '网络请求失败');
-      // 错误提示（可替换为项目中的提示组件）
-      toast.error("头像上传失败，请重试");
+// 处理头像文件选择
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      showMessageBox('请选择图片文件！');
+      event.target.value = ''; // 清空文件选择
+      return;
     }
+    
+    // 验证文件大小（限制为5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      showMessageBox('图片大小不能超过5MB！');
+      event.target.value = ''; // 清空文件选择
+      return;
+    }
+    
+    uploadedFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatar.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
   } else {
     // 未选择文件时清空
     avatar.value = null;
-    user.photo = null;
+    uploadedFile.value = null;
   }
 };
 
