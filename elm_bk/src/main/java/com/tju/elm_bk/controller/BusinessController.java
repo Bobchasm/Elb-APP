@@ -110,9 +110,31 @@ public class BusinessController {
 
 
      @PostMapping
-     @Operation(summary = "添加新店铺——牙膏版本")
-    public HttpResult<BusinessVO> addBusiness(@RequestBody BusinessDTO businessDTO) {
+     @Operation(summary = "添加新店铺", description = "创建新的商铺信息，管理员可为任何用户创建商铺，普通商家只能为自己创建商铺")
+    public HttpResult<BusinessVO> addBusiness(@Valid @RequestBody BusinessDTO businessDTO) {
+        // 基础参数验证
+        if (businessDTO == null) {
+            log.warn("添加店铺请求参数为空");
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+        
+        if (businessDTO.getBusinessName() == null || businessDTO.getBusinessName().trim().isEmpty()) {
+            log.warn("添加店铺请求缺少店铺名称");
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+        
+        if (businessDTO.getBusinessOwner() == null || businessDTO.getBusinessOwner().getId() == null) {
+            log.warn("添加店铺请求缺少店铺所有者信息");
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+        
+        log.info("开始创建新店铺: {}, 所有者ID: {}", 
+                businessDTO.getBusinessName(), 
+                businessDTO.getBusinessOwner().getId());
+        
         BusinessVO businessVo = businessService.addBusiness(businessDTO);
+        
+        log.info("成功创建店铺: ID={}, 名称={}", businessVo.getId(), businessVo.getBusinessName());
         return HttpResult.success(businessVo);
     }
 

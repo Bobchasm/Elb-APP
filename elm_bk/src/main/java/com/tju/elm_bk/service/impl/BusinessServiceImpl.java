@@ -24,11 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -177,13 +175,65 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public BusinessVO addBusiness(BusinessDTO businessDTO) {
-        //先查id是否在users表里面
-        //-----------------------需要调用user的接口------------------!!!
+        // 获取当前用户信息
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
 
-        int result =businessMapper.insertBusiness(businessDTO);
-        if (result == 0) {
-            throw new RuntimeException("添加商户信息失败");
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new APIException("无法获取当前用户信息");
         }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new APIException("权限不足，需要商家或管理员权限");
+        }
+
+        // 验证输入参数
+        if (businessDTO == null) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+        if (businessDTO.getBusinessOwner() == null || businessDTO.getBusinessOwner().getId() == null) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+
+        // 检查用户是否存在
+        User businessOwner = userMapper.findById(businessDTO.getBusinessOwner().getId());
+        if (businessOwner == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        // 权限检查：普通商家只能为自己创建商铺，管理员可以为任何人创建
+        if (!isAdmin && !businessDTO.getBusinessOwner().getId().equals(currentUser.getId())) {
+            throw new APIException("普通商家只能为自己创建商铺");
+        }
+
+        // 设置创建者和时间信息
+        businessDTO.setCreator(Math.toIntExact(currentUser.getId()));
+        businessDTO.setUpdater(Math.toIntExact(currentUser.getId()));
+        businessDTO.setCreateTime(LocalDateTime.now());
+        businessDTO.setUpdateTime(LocalDateTime.now());
+        businessDTO.setDeleted(false);
+        
+        // 设置默认状态：管理员创建的商铺直接通过审核，普通商家创建的需要审核
+        if (businessDTO.getStatus() == null) {
+            businessDTO.setStatus(isAdmin ? 1 : 0);
+        }
+
+        // 执行插入操作
+        int result = businessMapper.insertBusiness(businessDTO);
+        if (result == 0) {
+            throw new APIException("添加商户信息失败");
+        }
+
+        // 返回创建的商户信息
         return businessMapper.getBusinessById(businessDTO.getId());
     }
 
