@@ -83,7 +83,7 @@
       <i class="fas fa-spinner fa-spin"></i> 上传中...
     </div>
 
-    <AddressManager v-if="showAddressSection" :id="userInfo?.id" />
+    <AddressManager v-if="showAddressSection" :id="userInfo?.id" class="address-manager" />
 
     <div class="loading" v-if="loading">
       <i class="fas fa-spinner fa-spin"></i> 加载中...
@@ -717,7 +717,7 @@ export default {
 }
 
 .menu-item {
-  display: flex;
+  display:flex;
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #f0f0f0;
@@ -1102,4 +1102,10 @@ export default {
 
 .logout-btn i {
   margin-right: 8px;
-}</style>
+}
+
+.address-manager {
+  margin-top: -80px; /* 向上移动 */
+  transform: translateY(-20px); /* 进一步调整位置 */
+}
+</style>
