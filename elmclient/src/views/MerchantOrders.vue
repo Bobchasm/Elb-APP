@@ -485,7 +485,7 @@ export default {
 }
 
 .tabs li.active {
-  color: #4599e2;
+  color: #3490de;
   font-weight: 600;
 }
 
@@ -496,7 +496,7 @@ export default {
   bottom: 0;
   width: 100%;
   height: 0.8vw;
-  background: #6eaeef;
+  background: #409eff;
   border-radius: 0.4vw;
 }
 
