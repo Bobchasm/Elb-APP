@@ -686,7 +686,7 @@ const getShopTypeName = (typeId) => {
   width: 92%;
   max-width: 500px;
   margin: 0 auto 20px;
-  background-color: #0097ff;
+  background-color: #0097ff; /* 红色系，与主题和谐 */
   color: white;
   border: none;
   border-radius: 12px;
@@ -699,13 +699,13 @@ const getShopTypeName = (typeId) => {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(54, 124, 244, 0.3);
+  box-shadow: 0 4px 12px rgba(60, 140, 238, 0.3);
   transform: translateY(-40px);
   z-index: 2;
 }
 .logout-btn:hover {
   background-color: #0085e0;
-  box-shadow: 0 6px 16px rgba(54, 114, 244, 0.4);
+  box-shadow: 0 6px 16px rgba(63, 95, 241, 0.4);
 }
 .logout-btn svg {
   color: white;
@@ -917,42 +917,30 @@ const getShopTypeName = (typeId) => {
 }
 .review-btn:hover {
   background: #0085e0;
-}.modal-overlay {
-  /* 固定定位，覆盖整个视口 */
+}
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* 半透明黑色背景，增加柔和感 */
-  background-color: rgba(0, 0, 0, 0.4);
-  /* 使用Flexbox居中内容 */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 确保在其他内容之上 */
   z-index: 2000;
-  /* 平滑过渡效果 */
-  transition: opacity 0.3s ease-out;
 }
-
 .modal-content {
-  /* 白色背景和圆角，与提供的表单样式一致 */
-  background: #fff;
+  background: white;
   border-radius: 12px;
-  /* 内部边距和最大宽度，与表单保持一致 */
-  padding: 24px;
+  padding: 20px;
   width: 90%;
   max-width: 400px;
-  /* 柔和的阴影，增加层次感 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  /* 内部内容垂直排列 */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
-  /* 元素间距 */
-  gap: 20px;
-  /* 动画效果 */
-  animation: fadeIn 0.4s ease-out, slideInUp 0.4s ease-out;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
 }
 @keyframes fadeIn {
   from {
@@ -1030,8 +1018,8 @@ const getShopTypeName = (typeId) => {
   color: white;
 }
 .approve-btn:hover {
-  background-color: #5b84d5ff;
-  box-shadow: 0 4px 12px rgba(87, 123, 201, 0.3);
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 .reject-btn {
   background-color: #e0e0e0;
