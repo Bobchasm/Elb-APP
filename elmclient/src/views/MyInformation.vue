@@ -45,107 +45,101 @@
       </div>
     </div>
 
-      <!-- 隐藏的文件输入框 -->
-      <input
-        type="file"
-        ref="fileInput"
-        style="display: none"
-        accept="image/*"
-        @change="handleFileUpload"
-      >
+    <!-- 隐藏的文件输入框 -->
+    <input type="file" ref="fileInput" style="display: none" accept="image/*" @change="handleFileUpload">
 
-      <div class="menu-section">
-        <div class="section-title">常用功能</div>
-        <div class="menu-list">
-          <div class="menu-item" @click="showAddressSection = !showAddressSection">
-            <div class="menu-icon">
-              <i class="fas fa-map-marker-alt"></i>
-            </div>
-            <span class="menu-text">收货地址</span>
-            <i class="fas fa-chevron-right menu-arrow"></i>
+    <div class="menu-section">
+      <div class="section-title">常用功能</div>
+      <div class="menu-list">
+        <div class="menu-item" @click="showAddressSection = !showAddressSection">
+          <div class="menu-icon">
+            <i class="fas fa-map-marker-alt"></i>
           </div>
-          <div class="menu-item" @click="myfavorite">
-            <div class="menu-icon">
-              <i class="fas fa-heart"></i>
-            </div>
-            <span class="menu-text">我的收藏</span>
-            <i class="fas fa-chevron-right menu-arrow"></i>
+          <span class="menu-text">收货地址</span>
+          <i class="fas fa-chevron-right menu-arrow"></i>
+        </div>
+        <div class="menu-item" @click="myfavorite">
+          <div class="menu-icon">
+            <i class="fas fa-heart"></i>
           </div>
-          <div class="menu-item message-item" @click="navigateTo('notifications')">
-            <div class="menu-icon">
-              <i class="fas fa-bell"></i>
-            </div>
-            <span class="menu-text">消息与通知</span>
-            <div class="notification-badge" v-if="unreadMessageCount > 0">
-              {{ unreadMessageCount }}
-            </div>
-            <i class="fas fa-chevron-right menu-arrow"></i>
+          <span class="menu-text">我的收藏</span>
+          <i class="fas fa-chevron-right menu-arrow"></i>
+        </div>
+        <div class="menu-item message-item" @click="navigateTo('notifications')">
+          <div class="menu-icon">
+            <i class="fas fa-bell"></i>
           </div>
+          <span class="menu-text">消息与通知</span>
+          <div class="notification-badge" v-if="unreadMessageCount > 0">
+            {{ unreadMessageCount }}
+          </div>
+          <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
       </div>
+    </div>
 
-      <!-- 加载状态 -->
-      <div v-if="uploading" class="upload-loading">
-        <i class="fas fa-spinner fa-spin"></i> 上传中...
-      </div>
+    <!-- 加载状态 -->
+    <div v-if="uploading" class="upload-loading">
+      <i class="fas fa-spinner fa-spin"></i> 上传中...
+    </div>
 
     <AddressManager v-if="showAddressSection" :id="userInfo?.id" />
-    
+
     <div class="loading" v-if="loading">
       <i class="fas fa-spinner fa-spin"></i> 加载中...
     </div>
 
-      <div class="error-message" v-if="errorMessage">
-        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
-      </div>
+    <div class="error-message" v-if="errorMessage">
+      <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+    </div>
 
-      <Footer />
+    <Footer />
 
-      <div v-if="showEditModal" class="modal-overlay">
-        <div class="modal-content">
-          <h3>编辑个人信息</h3>
-          <div class="modal-item">
-            <label>姓氏</label>
-            <input v-model="editFormData.firstName" placeholder="输入姓氏" />
-          </div>
-          <div class="modal-item">
-            <label>名字</label>
-            <input v-model="editFormData.lastName" placeholder="输入名字" />
-          </div>
-          <div class="modal-item">
-            <label>手机号</label>
-            <input v-model="editFormData.phone" placeholder="输入手机号" />
-          </div>
-          <div class="modal-item">
-            <label>邮箱</label>
-            <input v-model="editFormData.email" placeholder="输入邮箱" type="email" />
-          </div>
-          <div class="modal-buttons">
-            <button @click="submitEdits">提交</button>
-            <button @click="closeEditModal">取消</button>
-          </div>
+    <div v-if="showEditModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>编辑个人信息</h3>
+        <div class="modal-item">
+          <label>姓氏</label>
+          <input v-model="editFormData.firstName" placeholder="输入姓氏" />
         </div>
-      </div>
-
-      <div v-if="showMerchantApplyModal" class="modal-overlay">
-        <div class="modal-content merchant-apply-modal">
-          <div class="modal-icon">
-            <i class="fas fa-store"></i>
-          </div>
-          <h3>申请成为商家</h3>
-          <p class="modal-message">当前无商家权限，是否申请成为商家？</p>
-          <div class="modal-buttons">
-            <button class="apply-btn" @click="applyForMerchant">申请</button>
-            <button class="cancel-btn" @click="closeMerchantApplyModal">否</button>
-          </div>
+        <div class="modal-item">
+          <label>名字</label>
+          <input v-model="editFormData.lastName" placeholder="输入名字" />
+        </div>
+        <div class="modal-item">
+          <label>手机号</label>
+          <input v-model="editFormData.phone" placeholder="输入手机号" />
+        </div>
+        <div class="modal-item">
+          <label>邮箱</label>
+          <input v-model="editFormData.email" placeholder="输入邮箱" type="email" />
+        </div>
+        <div class="modal-buttons">
+          <button @click="submitEdits">提交</button>
+          <button @click="closeEditModal">取消</button>
         </div>
       </div>
     </div>
+
+    <div v-if="showMerchantApplyModal" class="modal-overlay">
+      <div class="modal-content merchant-apply-modal">
+        <div class="modal-icon">
+          <i class="fas fa-store"></i>
+        </div>
+        <h3>申请成为商家</h3>
+        <p class="modal-message">当前无商家权限，是否申请成为商家？</p>
+        <div class="modal-buttons">
+          <button class="apply-btn" @click="applyForMerchant">申请</button>
+          <button class="cancel-btn" @click="closeMerchantApplyModal">否</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 // (保持 script 部分不变)
-import { ref, computed, onMounted,onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import AddressManager from '../components/AddressManager.vue';
 import request from '../utils/request';
@@ -189,49 +183,49 @@ export default {
     });
 
     const initWebSocket = () => {
-  // 清除之前的连接
-  if (webSocket.value) {
-    webSocket.value.close();
-  }
+      // 清除之前的连接
+      if (webSocket.value) {
+        webSocket.value.close();
+      }
 
-  try {
-    const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
-
-    webSocket.value = new WebSocket(wsUrl);
-
-    webSocket.value.onopen = () => {
-      console.log('WebSocket 连接成功');
-      isConnected.value = true;
-      //toast.success('已连接消息通知');
-    };
-
-    webSocket.value.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data);
-        handleNewMessage(message);
+        const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+
+        webSocket.value = new WebSocket(wsUrl);
+
+        webSocket.value.onopen = () => {
+          console.log('WebSocket 连接成功');
+          isConnected.value = true;
+          //toast.success('已连接消息通知');
+        };
+
+        webSocket.value.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            handleNewMessage(message);
+          } catch (err) {
+            console.error('解析消息失败:', err);
+          }
+        };
+
+        webSocket.value.onclose = (event) => {
+          console.log('WebSocket 连接关闭，代码:', event.code);
+          isConnected.value = false;
+          if (event.code !== 1000) {
+            setTimeout(initWebSocket, 3000);
+          }
+        };
+
+        webSocket.value.onerror = (err) => {
+          console.error('WebSocket 错误:', err);
+          isConnected.value = false;
+        };
       } catch (err) {
-        console.error('解析消息失败:', err);
+        console.error('初始化 WebSocket 失败:', err);
       }
     };
-
-    webSocket.value.onclose = (event) => {
-      console.log('WebSocket 连接关闭，代码:', event.code);
-      isConnected.value = false;
-      if (event.code !== 1000) {
-        setTimeout(initWebSocket, 3000);
-      }
-    };
-
-    webSocket.value.onerror = (err) => {
-      console.error('WebSocket 错误:', err);
-      isConnected.value = false;
-    };
-  } catch (err) {
-    console.error('初始化 WebSocket 失败:', err);
-  }
-};
 
 
     onMounted(async () => {
@@ -442,7 +436,7 @@ export default {
       }
       try {
         const token = getToken();
-        const response = await request.put('/api/person', {
+        const response = await request.put('/api/person/info', {
           id: userInfo.value.id,
           firstName: editFormData.value.firstName,
           lastName: editFormData.value.lastName,
@@ -560,21 +554,26 @@ export default {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
   transform: rotate(30deg);
   animation: shine 6s infinite linear;
 }
 
 @keyframes shine {
-  0% { transform: rotate(30deg) translate(-10%, -10%); }
-  100% { transform: rotate(30deg) translate(10%, 10%); }
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
 }
 
 .top-background h1 {
   color: white;
   font-size: 1.8rem;
   font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   letter-spacing: 1px;
   margin: 0;
   z-index: 1;
@@ -582,7 +581,8 @@ export default {
 
 /****************** 内容区域 ******************/
 .content-area {
-  margin-top: 100px; /* 固定顶部栏的高度 */
+  margin-top: 100px;
+  /* 固定顶部栏的高度 */
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -603,8 +603,11 @@ export default {
   position: relative;
   z-index: 2;
   transform: translateY(-50px);
-  flex-wrap: wrap; /* 允许元素换行 */
-  justify-content: center; /* 居中对齐子元素 */
+  flex-wrap: wrap;
+  /* 允许元素换行 */
+  justify-content: center;
+  top:21vw;
+  /* 居中对齐子元素 */
 }
 
 /* 新增：卡片内的按钮区域 */
@@ -613,7 +616,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding: 0 20px 20px; /* 增加内边距，保持与卡片一致 */
+  padding: 0 20px 20px;
+  /* 增加内边距，保持与卡片一致 */
   box-sizing: border-box;
 }
 
@@ -649,7 +653,10 @@ export default {
   margin-right: 15px;
 }
 
-.user-name, .user-full-name, .user-phone, .user-email {
+.user-name,
+.user-full-name,
+.user-phone,
+.user-email {
   font-size: 0.95rem;
   color: #495057;
   background: #fff;
@@ -689,7 +696,7 @@ export default {
 .menu-section {
   width: 92%;
   max-width: 500px;
-  margin: 20px auto;
+  margin: 80px auto;
   transform: translateY(-50px);
 }
 
@@ -749,6 +756,7 @@ export default {
   color: #bdc3c7;
   font-size: 14px;
 }
+
 /* 移除 .button-section 样式，因为按钮已移动到 .user-card 中 */
 .loading {
   text-align: center;
@@ -810,7 +818,8 @@ export default {
   margin-bottom: 5px;
 }
 
-.modal-content input, .modal-content textarea {
+.modal-content input,
+.modal-content textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -853,29 +862,43 @@ export default {
 .modal-buttons button:last-child:hover {
   background: #c7c7c7;
 }
+
 .merchant-apply-modal {
   text-align: center;
   max-width: 350px;
 }
+
 .modal-icon {
   font-size: 3rem;
   color: #ff6b6b;
   margin-bottom: 15px;
 }
+
 .modal-icon i {
   animation: pulse 2s infinite;
 }
+
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
+
 .modal-message {
   color: #666;
   font-size: 1rem;
   margin: 15px 0 25px 0;
   line-height: 1.5;
 }
+
 .apply-btn {
   background: linear-gradient(135deg, #ff6b6b, #ff8e8e) !important;
   color: white !important;
@@ -884,11 +907,13 @@ export default {
   margin-right: 10px;
   transition: all 0.3s ease;
 }
+
 .apply-btn:hover {
   background: linear-gradient(135deg, #ff5252, #ff7979) !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
+
 .cancel-btn {
   background: #e0e0e0 !important;
   color: #666 !important;
@@ -896,13 +921,16 @@ export default {
   padding: 12px 24px !important;
   transition: all 0.3s ease;
 }
+
 .cancel-btn:hover {
   background: #d0d0d0 !important;
   transform: translateY(-2px);
 }
+
 .menu-item.message-item {
   position: relative;
 }
+
 .notification-badge {
   position: absolute;
   top: 5px;
@@ -921,14 +949,19 @@ export default {
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
 @media (max-width: 480px) {
-  .container, .user-card, .menu-section, .card-button-section {
+
+  .container,
+  .user-card,
+  .menu-section,
+  .card-button-section {
     max-width: 100vw;
     width: 100vw;
     border-radius: 0;
     padding: 0;
   }
-  
+
   .top-background {
     height: 90px;
     border-radius: 0;
@@ -943,34 +976,41 @@ export default {
     transform: translateY(-50px);
     width: 90%;
   }
+
   .avatar {
     width: 80px;
     height: 80px;
     margin-left: 0;
   }
+
   .user-details {
     width: 85%;
     padding: 10px;
     gap: 6px;
     margin-right: 0;
   }
+
   .menu-item {
     padding: 14px 16px;
   }
+
   .card-button-section {
     width: 85%;
     padding: 0;
     margin: 10px 0;
   }
 }
+
 .avatar {
   position: relative;
   cursor: pointer;
   transition: transform 0.3s ease;
 }
+
 .avatar:hover {
   transform: scale(1.05);
 }
+
 .avatar-overlay {
   position: absolute;
   top: 0;
@@ -987,17 +1027,21 @@ export default {
   transition: opacity 0.3s ease;
   border-radius: 50%;
 }
+
 .avatar:hover .avatar-overlay {
   opacity: 1;
 }
+
 .avatar-overlay i {
   font-size: 24px;
   margin-bottom: 5px;
 }
+
 .avatar-overlay span {
   font-size: 12px;
   text-align: center;
 }
+
 .upload-loading {
   position: fixed;
   top: 50%;
@@ -1015,7 +1059,8 @@ export default {
   width: 100%;
   padding: 14px;
   text-align: center;
-  background: linear-gradient(135deg, #2782dd, #61c8f4); /* 修改为蓝紫色渐变 */
+  background: linear-gradient(135deg, #2782dd, #61c8f4);
+  /* 修改为蓝紫色渐变 */
   color: white;
   font-weight: 600;
   border-radius: 12px;
@@ -1026,15 +1071,18 @@ export default {
   transition: all 0.3s ease;
   margin-bottom: 10px;
 }
+
 .switch-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
+
 .logout-btn {
   width: 100%;
   padding: 14px;
   text-align: center;
-  background: linear-gradient(135deg, #3258cc, #71a3ff); /* 修改为浅紫色渐变 */
+  background: linear-gradient(135deg, #3258cc, #71a3ff);
+  /* 修改为浅紫色渐变 */
   color: white;
   font-weight: 600;
   border-radius: 12px;
@@ -1044,13 +1092,14 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
 .logout-btn:hover {
-  background: linear-gradient(135deg, #8e80f0, #4c20a2); /* 调整hover效果的颜色 */
+  background: linear-gradient(135deg, #8e80f0, #4c20a2);
+  /* 调整hover效果的颜色 */
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
+
 .logout-btn i {
   margin-right: 8px;
-}
-
-</style>
+}</style>
