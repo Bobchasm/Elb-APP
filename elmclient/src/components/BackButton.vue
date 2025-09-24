@@ -32,7 +32,7 @@
   
   <style scoped>
 .back-button {
-  position: absolute;
+  position: fixed;
   height: 7.5vw; /* 使用相对单位，屏幕越大，按钮越大 */
   width: 7.5vw;
   cursor: pointer;
@@ -49,7 +49,7 @@
   align-items: center;
   font-size: 5vw ;/* 确保图标在大屏幕上变大，最小16px */
   margin-left: 2vw; 
-  margin-top: 2vw; 
+  margin-top: 1vw; 
 }
 
 
