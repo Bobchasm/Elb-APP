@@ -1,9 +1,9 @@
 <template>
   <div class="wrapper">
     <!-- 顶部蓝色栏 -->
-    <header class="topbar">
-      <p>商家订单管理</p>
-    </header>
+    <div class="top-background">
+      <h1>商家订单管理</h1>
+    </div>
 
     <!-- 商铺选择栏 -->
     <div class="merchant-selector">
@@ -370,7 +370,7 @@ export default {
       try {
         const response = await request.put("/api/orders/status?orderState=3&orderId=" + selectId.value);
         if (response.success) {
-          toast.success(确认成功);
+          toast.success("确认成功");
           fetchOrders();
         } else {
           toast.error(response.message);
@@ -495,34 +495,68 @@ export default {
   background: #f5f7fa;
 }
 
-.topbar {
+.top-background {
   width: 100%;
-  height: 12vw;
-  background-color: #0097ff;
-  color: #fff;
-  font-size: clamp(18px, 5vw, 24px);
-  font-weight: 600; /* 这里设置了粗体 */
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 1000;
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
   display: flex;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
+}
+
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+  margin: 0;
+  z-index: 1;
 }
 
 /* 商铺选择栏 */
 .merchant-selector {
   background:#f0f5f9;
-  margin-top: 12vw;
   box-shadow: 0 2vw 4vw rgba(102, 126, 234, 0.2);
   padding: 3vw 0 0 0;
   position: fixed;
-  top: 0vw;
-  left: 0;
-  right: 0;
-  z-index: 999;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
+  max-width: 600px;
+  z-index: 999;
   height: 17vw;
 }
 
@@ -606,18 +640,18 @@ export default {
   overflow-x: auto;
   white-space: nowrap;
   position: fixed;
-  top: 29vw; /* 顶部栏12vw + 商铺栏17vw */
-  left: 0;
-  right: 0;
-  z-index: 998;
+  top: calc(100px + 17vw); /* 顶部背景100px + 商铺栏17vw */
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
-  height: 12vw; /* 固定高度，确保滑动区域独立 */
+  max-width: 600px;
+  z-index: 998;
+  height: 14vw;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
   box-shadow: 0 1vw 2vw rgba(0, 0, 0, 0.1);
   border-radius: 0 0 3vw 3vw;
-  height: 14vw;
   scroll-behavior: auto; /* 禁用平滑滚动，更直接 */
   -webkit-overflow-scrolling: touch; /* 启用动量滚动 */
 }
@@ -660,8 +694,11 @@ export default {
 /* 调整订单列表的上边距，为固定栏留出空间 */
 .order-list {
   padding: 4vw;
-  margin-top: 41vw; /* 顶部栏12vw + 商铺栏17vw + 状态栏12vw */
+  margin-top: calc(100px + 17vw + 14vw + 4vw); /* 顶部背景100px + 商铺栏17vw + 状态栏14vw + 间距4vw */
   margin-bottom: 15vw;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 调整空状态和加载状态的上边距 */
@@ -673,9 +710,10 @@ export default {
   font-size: 4vw;
   color: #999;
   background: white;
-  margin: 3vw;
+  margin: 3vw auto;
   border-radius: 2vw;
-  margin-top: 44vw; /* 41vw + 3vw 边距 */
+  margin-top: calc(100px + 17vw + 14vw + 7vw); /* 顶部背景100px + 商铺栏17vw + 状态栏14vw + 间距7vw */
+  max-width: 600px;
 }
 
 /* 其他样式保持不变 */
@@ -950,5 +988,44 @@ export default {
 .confirm-btn:hover {
   background-color: #0085e0;
   box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
+}
+
+/* 移动端响应式样式 */
+@media (max-width: 480px) {
+  .wrapper {
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  .top-background {
+    height: 90px;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  
+  .merchant-selector {
+    top: 90px;
+    max-width: 100vw;
+    transform: none;
+    left: 0;
+  }
+  
+  .tabs {
+    top: calc(90px + 17vw);
+    max-width: 100vw;
+    transform: none;
+    left: 0;
+  }
+  
+  .order-list {
+    margin-top: calc(90px + 17vw + 14vw + 4vw);
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  .loading, .empty-state {
+    margin-top: calc(90px + 17vw + 14vw + 7vw);
+    max-width: 100vw;
+  }
 }
 </style>

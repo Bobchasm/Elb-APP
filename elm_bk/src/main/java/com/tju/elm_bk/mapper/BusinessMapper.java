@@ -137,4 +137,7 @@ public interface BusinessMapper {
             "</script>")
     List<Business> searchByKeyword(@Param("keyword") String keyword, @Param("limit") Integer limit);
 
+    @Select("SELECT id FROM business WHERE user_id = #{userId} AND is_deleted = 0 AND status = 1")
+    List<Long> getBusinessIdsByUserIds(@Param("userId") Long userId);
+
 }

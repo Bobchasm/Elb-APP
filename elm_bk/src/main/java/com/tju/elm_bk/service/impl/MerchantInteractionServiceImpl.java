@@ -199,12 +199,12 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
 
     @Override
     public List<MerchantStatsVO>getMerchantStatsByUserId(Long userId){
-        List<Long> businessIds =businessMapper.getBusinessIdsByUserId(userId);
+        List<Long> businessIds =businessMapper.getBusinessIdsByUserIds(userId);
         List<MerchantStatsVO> merchantStatsVOS=new ArrayList<>();
         for(Long businessId:businessIds){
             MerchantStatsVO merchantStatsVO=getMerchantStats(businessId);
             merchantStatsVOS.add(merchantStatsVO);
-            log.info("获取商铺{}的统计信息成功: 点赞数={}, 收藏数={}, 评分={}", businessId, merchantStatsVO.getLikeCount(), merchantStatsVO.getCollectCount(), merchantStatsVO.getRating());
+//            log.info("获取商铺{}的统计信息成功: 点赞数={}, 收藏数={}, 评分={}", businessId, merchantStatsVO.getLikeCount(), merchantStatsVO.getCollectCount(), merchantStatsVO.getRating());
 
         }
         return merchantStatsVOS;
