@@ -17,7 +17,10 @@
 
     <div class="container wrapper">
       <ul class="business-list">
-        <li v-for="(shop, index) in filteredShops" :key="shop?.id || index">
+        <li v-for="shop in filteredShops" :key="shop?.id || index">
+          <div class="status-badge" :class="getStatusClass(shop.status)">
+            {{ getStatusText(shop.status) }}
+          </div>
           <img
             :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'"
             :alt="shop?.businessName || '未命名商铺'" class="logo" @error="handleImageError">
@@ -67,8 +70,8 @@
 <script>
 import Swal from 'sweetalert2';
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import request from '../utils/request';
+import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast';
 
 export default {
@@ -78,9 +81,8 @@ export default {
     const shops = ref([]);
     const loading = ref(false);
     const errorMessage = ref('');
-    const activeTab = ref(null); // 当前选中的状态标签
+    const activeTab = ref(null);
 
-    // 状态标签配置
     const tabs = [
       { status: null, label: '全部' },
       { status: 0, label: '审核中' },
@@ -88,12 +90,10 @@ export default {
       { status: 2, label: '未通过' }
     ];
 
-    // 获取 token 的函数
     const getToken = () => {
       return localStorage.getItem('token') || sessionStorage.getItem('token');
     };
 
-    // 状态文本映射
     const getStatusText = (status) => {
       switch (status) {
         case 0: return '审核中';
@@ -103,7 +103,6 @@ export default {
       }
     };
 
-    // 状态样式映射
     const getStatusClass = (status) => {
       switch (status) {
         case 0: return 'status-pending';
@@ -113,7 +112,6 @@ export default {
       }
     };
 
-    // 根据当前选中的标签筛选商铺
     const filteredShops = computed(() => {
       if (activeTab.value === null) {
         return shops.value;
@@ -121,17 +119,14 @@ export default {
       return shops.value.filter(shop => shop.status === activeTab.value);
     });
 
-    // 切换标签
     const changeTab = (status) => {
       activeTab.value = status;
       loadShops(status);
     };
 
-    // 加载商铺列表
     const loadShops = async (status = null) => {
       loading.value = true;
       errorMessage.value = '';
-
       try {
         const token = getToken();
         if (!token) {
@@ -139,38 +134,23 @@ export default {
           router.push({ path: '/login' });
           return;
         }
-
-        // 获取用户信息
-        const userResponse = await request.get('/api/person', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
+        const userResponse = await request.get('/api/person', { headers: { 'Authorization': `Bearer ${token}` } });
         if (userResponse && userResponse.id) {
-          // 根据状态参数获取商铺列表
           const params = { userId: userResponse.id };
           if (status !== null) {
             params.status = status;
           }
-
           const shopResponse = await request.get('/api/businesses/merchant', {
             params,
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
           });
-
           if (shopResponse) {
             shops.value = shopResponse.data;
-            console.log('商铺列表加载成功:', shops.value);
           }
         }
       } catch (error) {
         console.error('获取商铺列表失败:', error);
-
         if (error.response && error.response.status === 401) {
-          // Token 过期或无效
           toast.error('登录已过期，请重新登录！');
           localStorage.removeItem('token');
           sessionStorage.removeItem('token');
@@ -184,7 +164,6 @@ export default {
       }
     };
 
-    // 删除商铺
     const deleteShop = async (shopId) => {
       const result = await Swal.fire({
         title: '确定删除此店铺？',
@@ -196,7 +175,6 @@ export default {
         confirmButtonText: '确定删除',
         cancelButtonText: '取消'
       });
-
       if (result.isConfirmed) {
         try {
           const token = getToken();
@@ -205,14 +183,7 @@ export default {
             router.push({ path: '/login' });
             return;
           }
-
-          await request.delete(`/api/businesses/${shopId}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          // 删除成功后更新本地列表
+          await request.delete(`/api/businesses/${shopId}`, { headers: { 'Authorization': `Bearer ${token}` } });
           shops.value = shops.value.filter(shop => shop.id !== shopId);
           toast.success('店铺删除成功！');
         } catch (error) {
@@ -222,17 +193,10 @@ export default {
       }
     };
 
-    // 编辑商铺
     const editShop = (shopId) => {
-      if (router) {
-        router.push(`/merchant/businessinfo?businessId=${shopId}`);
-      } else {
-        console.warn('Vue Router 未配置。将执行模拟跳转。');
-        alert(`跳转到 /merchant/businessinfo?businessId=${shopId}`);
-      }
+      router.push(`/merchant/businessinfo?businessId=${shopId}`);
     };
 
-    // 申请新店
     const applyNewShop = async () => {
       try {
         const token = getToken();
@@ -242,115 +206,105 @@ export default {
           return;
         }
 
+        let uploadedFile = null;
+        let imageUrl = '';
+        let selectedOrderType = null;
+
         const { value: formValues } = await Swal.fire({
           title: '申请新店',
           html: `
-            <style>
-              .swal-form-container {
-                display: flex;
-                flex-direction: column;
-                gap: 15px; /* 增加表单项间距 */
-                text-align: left;
-              }
-              .swal-form-item {
-                display: flex;
-                flex-direction: column;
-              }
-              .swal-form-item label {
-                font-weight: 600;
-                margin-bottom: 5px;
-                color: #444;
-              }
-              .swal2-input, .swal2-textarea, .swal2-select {
-                width: 100% !important; /* 确保宽度占满 */
-                padding: 12px;
-                border: 1px solid #ddd;
-                border-radius: 8px; /* 圆角 */
-                font-size: 16px;
-                transition: border-color 0.3s;
-              }
-              .swal2-input:focus, .swal2-textarea:focus, .swal2-select:focus {
-                outline: none;
-                border-color: #0097FF; /* 聚焦时边框变蓝色 */
-              }
-              #businessImg-preview-container {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                margin-top: 10px;
-              }
-              #businessImg-preview {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 2px solid #ddd;
-              }
-            </style>
-            <div class="swal-form-container">
-              <div class="swal-form-item">
-                <label for="businessName">商铺名称</label>
-                <input id="businessName" class="swal2-input" placeholder="请输入商铺名称" required>
+            <div class="swal2-content-wrapper">
+              <div id="image-upload-area" class="image-upload-area">
+                <span id="upload-icon" class="upload-icon">+</span>
+                <span id="upload-text" class="upload-text">上传商铺图片</span>
+                <img id="image-preview" src="" class="image-preview"/>
+                <input id="businessImg" type="file" accept="image/*" class="file-input">
               </div>
-              <div class="swal-form-item">
-                <label for="businessAddress">商铺地址</label>
-                <input id="businessAddress" class="swal2-input" placeholder="请输入商铺地址" required>
-              </div>
-              <div class="swal-form-item">
-                <label for="businessImg">商铺图片</label>
-                <input id="businessImg" type="file" accept="image/*" class="swal2-input">
-                <div id="businessImg-preview-container">
-                  <img id="businessImg-preview" src="https://via.placeholder.com/60" alt="图片预览" />
-                  <span>上传后可预览</span>
-                </div>
-              </div>
-              <div class="swal-form-item">
-                <label for="orderTypeId">商铺类型</label>
-                <select id="orderTypeId" class="swal2-select" required>
-                  <option value="" disabled selected>请选择商铺类型</option>
-                  <option value="1">美食</option>
-                  <option value="2">早餐</option>
-                  <option value="3">跑腿代购</option>
-                  <option value="4">汉堡披萨</option>
-                  <option value="5">甜品饮品</option>
-                  <option value="6">速食简食</option>
-                  <option value="7">地方小吃</option>
-                  <option value="8">米粉面馆</option>
-                  <option value="9">包子粥铺</option>
-                  <option value="10">炸鸡炸串</option>
-                </select>
-              </div>
-              <div class="swal-form-item">
-                <label for="businessExplain">商铺介绍</label>
-                <textarea id="businessExplain" class="swal2-textarea" placeholder="请输入商铺介绍"></textarea>
-              </div>
-              <div class="swal-form-item">
-                <label for="deliveryPrice">配送费 (元)</label>
-                <input id="deliveryPrice" class="swal2-input" placeholder="0" type="number" min="0" step="0.1" required>
-              </div>
-              <div class="swal-form-item">
-                <label for="startPrice">起送费 (元)</label>
-                <input id="startPrice" class="swal2-input" placeholder="0" type="number" min="0" step="0.1" required>
+              <input id="businessName" class="swal2-input modern-input" placeholder="商铺名称" required>
+              <input id="businessAddress" class="swal2-input modern-input" placeholder="商铺地址" required>
+              <textarea id="businessExplain" class="swal2-textarea modern-textarea" placeholder="商铺介绍"></textarea>
+              <input id="deliveryPrice" class="swal2-input modern-input" placeholder="配送费(元)" type="number" min="0" step="0.1" required>
+              <input id="startPrice" class="swal2-input modern-input" placeholder="起送价(元)" type="number" min="0" step="0.1" required>
+              
+              <div class="input-with-button-container">
+                <input id="orderTypeInput" class="swal2-input modern-input" placeholder="请选择商铺类型" readonly required>
+                <button id="selectTypeBtn" class="select-type-btn">选择</button>
               </div>
             </div>
           `,
           focusConfirm: false,
           showCancelButton: true,
           confirmButtonText: '提交申请',
+          confirmButtonColor: '#0097ff',
           cancelButtonText: '取消',
-          confirmButtonColor: '#0097FF', // 确认按钮颜色改为蓝色
           didOpen: () => {
             const fileInput = document.getElementById('businessImg');
-            const imgPreview = document.getElementById('businessImg-preview');
+            const imagePreview = document.getElementById('image-preview');
+            const uploadIcon = document.getElementById('upload-icon');
+            const uploadText = document.getElementById('upload-text');
+            
+            const orderTypeInput = document.getElementById('orderTypeInput');
+            const selectTypeBtn = document.getElementById('selectTypeBtn');
+
             fileInput.addEventListener('change', (event) => {
-              const file = event.target.files[0];
-              if (file) {
+              uploadedFile = event.target.files[0];
+              if (uploadedFile) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                  imgPreview.src = e.target.result;
+                  imagePreview.src = e.target.result;
+                  imagePreview.style.display = 'block';
+                  uploadIcon.style.display = 'none';
+                  uploadText.style.display = 'none';
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(uploadedFile);
+              } else {
+                imagePreview.style.display = 'none';
+                uploadIcon.style.display = 'block';
+                uploadText.style.display = 'block';
               }
+            });
+
+            // 点击选择按钮，弹出新的 SweetAlert2 弹窗选择类型
+            selectTypeBtn.addEventListener('click', async () => {
+              const typeOptions = [
+                { id: 1, label: '美食' },
+                { id: 2, label: '早餐' },
+                { id: 3, label: '跑腿代购' },
+                { id: 4, label: '汉堡披萨' },
+                { id: 5, label: '甜品饮品' },
+                { id: 6, label: '速食简食' },
+                { id: 7, label: '地方小吃' },
+                { id: 8, label: '米粉面馆' },
+                { id: 9, label: '包子粥铺' },
+                { id: 10, label: '炸鸡炸串' },
+              ];
+
+              const optionsHtml = typeOptions.map(option => `
+                <div class="type-option" data-id="${option.id}">${option.label}</div>
+              `).join('');
+
+              const { dismiss, value: selectedId } = await Swal.fire({
+                title: '选择商铺类型',
+                html: `<div class="type-options-container">${optionsHtml}</div>`,
+                showConfirmButton: false,
+                showCancelButton: false,
+                focusConfirm: false,
+                customClass: {
+                  container: 'type-select-popup'
+                },
+                didOpen: () => {
+                  const options = document.querySelectorAll('.type-option');
+                  options.forEach(option => {
+                    option.addEventListener('click', () => {
+                      const id = option.getAttribute('data-id');
+                      const label = option.textContent;
+                      orderTypeInput.value = label;
+                      selectedOrderType = { id: parseInt(id), label: label };
+                      Swal.close();
+                    });
+                  });
+                }
+              });
             });
           },
           preConfirm: async () => {
@@ -359,19 +313,15 @@ export default {
             const businessExplain = document.getElementById('businessExplain').value;
             const deliveryPrice = parseFloat(document.getElementById('deliveryPrice').value) || 0;
             const startPrice = parseFloat(document.getElementById('startPrice').value) || 0;
-            const orderTypeId = document.getElementById('orderTypeId').value;
-            const imageFile = document.getElementById('businessImg').files[0];
 
-            if (!businessName || !businessAddress || !orderTypeId) {
+            if (!businessName || !businessAddress || !selectedOrderType) {
               Swal.showValidationMessage('请填写所有必填项');
               return false;
             }
 
-            let imageUrl = '';
-            if (imageFile) {
+            if (uploadedFile) {
               const formData = new FormData();
-              formData.append('file', imageFile);
-              
+              formData.append('file', uploadedFile);
               try {
                 const uploadResponse = await request.post('/upload', formData, {
                   headers: {
@@ -379,7 +329,6 @@ export default {
                     'Authorization': `Bearer ${token}`
                   }
                 });
-
                 if (uploadResponse && uploadResponse.success && uploadResponse.data) {
                   imageUrl = uploadResponse.data;
                 } else {
@@ -388,15 +337,10 @@ export default {
                 }
               } catch (error) {
                 console.error('图片上传出错:', error.response || error);
-                Swal.showValidationMessage(
-                  error.response?.data?.message || 
-                  error.message || 
-                  '图片上传出错'
-                );
+                Swal.showValidationMessage(error.response?.data?.message || error.message || '图片上传出错');
                 return false;
               }
             }
-
             return {
               businessName,
               businessAddress,
@@ -404,34 +348,21 @@ export default {
               deliveryPrice,
               startPrice,
               businessImg: imageUrl,
-              orderTypeId: parseInt(orderTypeId)
+              orderTypeId: selectedOrderType.id
             };
           }
         });
 
         if (formValues) {
-          const userResponse = await request.get('/api/person', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
+          const userResponse = await request.get('/api/person', { headers: { 'Authorization': `Bearer ${token}` } });
           if (!userResponse || !userResponse.id) {
             toast.error('获取用户信息失败');
             return;
           }
-
-          const applicationData = {
-            ...formValues,
-            userId: userResponse.id
-          };
-
+          const applicationData = { ...formValues, userId: userResponse.id };
           const response = await request.post('/api/permission/apply-shop', applicationData, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
           });
-
           if (response && response.success) {
             toast.success('新店申请提交成功！');
             await loadShops(activeTab.value);
@@ -445,14 +376,9 @@ export default {
       }
     };
 
-    // 页面加载时获取商铺列表
     onMounted(() => {
       changeTab(null);
     });
-
-    const handleImageError = (event) => {
-        event.target.src = 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png';
-    };
 
     return {
       shops,
@@ -466,8 +392,7 @@ export default {
       applyNewShop,
       getStatusText,
       getStatusClass,
-      changeTab,
-      handleImageError
+      changeTab
     };
   }
 };
@@ -484,11 +409,35 @@ export default {
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
   background-color: #f8f8f8;
   color: #333;
   line-height: 1.6;
 }
+
+/* 确保父容器居中，并让子元素继承或对齐到中心 */
+  .swal2-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 关键：这会将内部的块级元素（如input）居中 */
+  }
+
+  /* 调整输入框和文本域的样式以适应居中对齐 */
+  .modern-input,
+  .modern-textarea,
+  .image-upload-area,
+  .input-with-button-container {
+    width: 90%; /* 确保它们有足够的宽度，但不至于撑满容器 */
+    max-width: 400px; /* 设置一个最大宽度，使其在较大屏幕上看起来更好 */
+    margin: 10px 0; /* 增加上下间距 */
+  }
+
+  /* 可选：为选择按钮容器添加居中样式 */
+  .input-with-button-container {
+    display: flex;
+    justify-content: center; /* 确保内部元素居中 */
+    align-items: center;
+  }
 
 /* ----------------------- 顶部标题栏 ----------------------- */
 .header {
@@ -506,11 +455,9 @@ body {
 }
 
 .header h1 {
-  font-size: 5vw;
   font-size: clamp(18px, 5vw, 24px);
   color: #fff;
   margin: 0;
-  font-family: 'miscrosoft yahei', Arial, sans-serif;
 }
 
 /* ----------------------- 状态标签栏 ----------------------- */
@@ -563,54 +510,31 @@ body {
 
 .wrapper .business-list li {
   padding: 12px;
-  border-bottom: 1px solid #f0f0f0;
   background-color: #fff;
   border-radius: 8px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
+  transition: transform 0.3s ease-in-out;
 }
 
 .wrapper .business-list li:hover {
-  background-color: #f9f9f9;
-}
-
-.business-item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.business-image-container {
-  width: 20vw;
-  height: 20vw;
-  max-width: 100px;
-  max-height: 100px;
-  min-width: 80px;
-  min-height: 80px;
-  flex-shrink: 0;
-  margin-right: 12px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 6px;
-}
-
-.business-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
   width: 20vw;
   height: 20vw;
+  max-width: 80px;
+  max-height: 80px;
   object-fit: cover;
-  border-radius: 1vw;
+  border-radius: 8px;
   margin-right: 3vw;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .business-info-detail {
@@ -618,7 +542,6 @@ body {
 }
 
 .business-info-detail h3 {
-  font-size: 4vw;
   font-size: clamp(16px, 4vw, 20px);
   margin: 0 0 8px 0;
   color: #333;
@@ -626,7 +549,6 @@ body {
 }
 
 .business-info-delivery {
-  font-size: 3.5vw;
   font-size: clamp(14px, 3.5vw, 16px);
   color: #666;
   margin: 4px 0;
@@ -651,7 +573,6 @@ body {
   border-radius: 6px;
   padding: 8px 12px;
   cursor: pointer;
-  font-size: 3.5vw;
   font-size: clamp(12px, 3.5vw, 14px);
   transition: all 0.3s;
   white-space: nowrap;
@@ -682,6 +603,8 @@ body {
 .action-buttons button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background-color: #f0f0f0;
+  color: #999;
 }
 
 /* ----------------------- 状态标签 ----------------------- */
@@ -730,17 +653,21 @@ body {
   padding: 12px 0;
   border-radius: 10px;
   text-decoration: none;
-  font-size: 4.5vw;
   font-size: clamp(16px, 4.5vw, 18px);
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 .apply-button:hover {
-  background-color: #0097ff;
+  background-color: #007bb5;
+  transform: translateY(-2px);
+}
+
+.apply-button:active {
+  transform: translateY(0);
 }
 
 /* ----------------------- 底部导航栏 ----------------------- */
@@ -793,5 +720,151 @@ body {
   background-color: #f8d7da;
   border-radius: 6px;
   margin: 15px;
+}
+
+/* ----------------------- SweetAlert2 表单现代化样式 ----------------------- */
+.swal2-content-wrapper {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* 增加表单项之间的间距 */
+}
+
+.image-upload-area {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #0097ff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+  margin: 0 auto 20px;
+  background-color: #f7f7f7; /* 增加背景色 */
+}
+
+.image-upload-area:hover {
+  border-color: #007bb5;
+  background-color: #f0f8ff; /* 悬停时颜色变浅 */
+}
+
+.upload-icon {
+  font-size: 50px;
+  color: #0097ff;
+  font-weight: 300;
+  transition: all 0.3s;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+  transition: all 0.3s;
+}
+
+.image-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: none;
+}
+
+.file-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.modern-input, .modern-textarea {
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 16px !important;
+  color: #333 !important;
+}
+
+.modern-input:focus, .modern-textarea:focus {
+  border-color: #0097ff !important;
+  box-shadow: 0 0 0 4px rgba(0, 151, 255, 0.15) !important;
+  outline: none !important;
+}
+
+.modern-input::placeholder, .modern-textarea::placeholder {
+  color: #999 !important;
+  font-style: italic;
+}
+
+/* 新增的样式 */
+.input-with-button-container {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* 输入框和按钮之间的间距 */
+  width: 100%;
+}
+
+.input-with-button-container .modern-input {
+  flex-grow: 1; /* 让输入框占据剩余空间 */
+  cursor: pointer; /* 增加手型光标 */
+  color: #666; /* 默认文字颜色 */
+}
+
+.select-type-btn {
+  padding: 12px 16px;
+  border: 1px solid #0097ff;
+  background-color: #0097ff;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  white-space: nowrap; /* 防止按钮文字换行 */
+}
+
+.select-type-btn:hover {
+  background-color: #007bb5;
+  border-color: #007bb5;
+  transform: translateY(-1px);
+}
+
+.select-type-btn:active {
+  transform: translateY(0);
+}
+
+/* 弹出类型选择列表的样式 */
+.type-select-popup .swal2-popup {
+  width: 320px !important; /* 调整弹窗宽度 */
+  padding: 0 !important;
+}
+
+.type-options-container {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.type-option {
+  padding: 15px;
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 6px;
+}
+
+.type-option:hover {
+  background-color: #f0f0f0;
 }
 </style>
