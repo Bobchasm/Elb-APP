@@ -3,7 +3,7 @@
 		<!-- header部分 -->
 		<BackButton />
     <div class="header">
-    
+
       <h1 class="title">订单配送地址</h1>
     </div>
 		<!-- 地址列表部分 -->
@@ -16,8 +16,9 @@
 				<div class="addresslist-right">
 					<i class="fa fa-edit" @click="editUserAddress(item.id)"></i>
 					<i class="fa fa-remove" @click="removeUserAddress(item.id)"></i>
-					<button class="select-btn" :class="{ 'selected': addressSelectedId === item.id }"
-						@click="selectUserAddress(item.id)" :disabled="addressSelectedId === item.id">
+					<button class="select-btn"
+							:class="{ 'selected': addressSelectedId === item.id }"
+							@click="toggleUserAddress(item.id)">
 						{{ addressSelectedId === item.id ? '已选' : '使用' }}
 					</button>
 				</div>
@@ -30,36 +31,39 @@
 			<i class="fa fa-plus-circle"></i>
 			<p>新增收货地址</p>
 		</div>
-		<!-- 确认对话框 - 完全保留原始样式 -->
-		<div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>确认操作</h3>
-            <span class="close-btn" @click="showConfirmModal = false">&times;</span>
-          </div>
-          <div class="modal-body">
-            <p>确定要删除地址吗？</p>
-          </div>
-          <div class="modal-footer">
-            <button class="modal-btn cancel-btn" @click="showConfirmModal = false">取消</button>
-            <button class="modal-btn confirm-btn" @click="confirmRemove">确认</button>
-          </div>
-        </div>
-      </div>
+
 		<!-- 底部结算栏 -->
 		<div class="order-bar">
 			<button class="checkout-order-btn" @click="submitOrder">确认下单</button>
 		</div>
 
+		<!-- 确认删除弹窗 -->
+		<div v-if="showConfirmModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>确认操作</h3>
+            <span class="close-btn" @click="closeModal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>确认要删除此送货地址吗？</p>
+          </div>
+          <div class="modal-footer">
+			<button class="modal-btn confirm-btn" @click="confirmDelete">确认</button>
+            <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+          </div>
+        </div>
+      </div>
+
 	</div>
 </template>
-
+  
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
 import BackButton from '@/components/BackButton.vue';
+import { toast } from '../utils/toast';
 export default {
 	name: 'UserAddress',
 	components: {
@@ -75,7 +79,10 @@ export default {
 		const orderId = ref();
 		const addressSelectedId = ref(0);
 		const showConfirmModal = ref(false);
-		
+		const addressDeleteSelectId = ref(0);
+
+
+
 		const goBack = () => {
       router.back();
     };
@@ -95,8 +102,6 @@ export default {
 				deliveryAddressArr.value = response.data;
 			}).catch(error => {
 				console.error('获取送货地址列表失败:', error);
-				// 可以添加错误提示，例如：
-				// toast.error('获取送货地址失败');
 			});
 		};
 
@@ -110,34 +115,35 @@ export default {
 			router.push({ path: '/addUserAddress', query: { businessId: businessId.value } });
 		};
 
-
-		const selectUserAddress = (id) => {
-			addressSelectedId.value = id;
+		// 修改：切换地址选择状态
+		const toggleUserAddress = (id) => {
+			if (addressSelectedId.value === id) {
+				// 如果点击已选中的地址，则取消选择
+				addressSelectedId.value = 0;
+			} else {
+				// 否则选择该地址
+				addressSelectedId.value = id;
+			}
 		};
 
 		const submitOrder = () => {
 			if (addressSelectedId.value === 0) {
-				alert('请选择配送地址');
-				// uni.showToast({
-				// 	title: '请选择配送地址',//提示内容
-				// 	icon: 'none',//图标
-				// 	duration: 2000//持续时间
-				// });
+				toast.error("请选择配送地址");
 				return;
 			}
 			else {
 				request.get("/api/orders/submit?businessId=" + businessId.value + "&addressId=" + addressSelectedId.value)
-					.then(response => {
-						if (response.success) {
-							orderId.value = response.data;
-							router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
-						} else {
-							alert('下单失败！');
-							router.push({ path: '/orderList' })
-						}
-					}).catch(error => {
-						console.error('下单失败:', error);
-					});
+				.then(response => {
+					if (response.success) {
+						orderId.value = response.data;
+						router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
+					} else {
+						toast.error("下单失败，请重试");
+						router.push({path: '/orderList'})
+					}
+				}).catch(error => {
+					console.error('下单失败:', error);
+			});
 			}
 		};
 
@@ -146,25 +152,40 @@ export default {
 		};
 
 		const removeUserAddress = (id) => {
-			// if (!confirm('确认要删除此送货地址吗？')) {
-			// 	return;
-			// }
+			addressDeleteSelectId.value = id;
 			showConfirmModal.value = true;
+		};
+
+		// 关闭弹窗
+		const closeModal = () => {
+			showConfirmModal.value = false;
+			addressDeleteSelectId.value = 0;
+		};
+
+		// 确认删除
+		const confirmDelete = () => {
+			if (addressDeleteSelectId.value === 0) return;
+
 			request.put('/api/addresses/removeDeliveryAddress', {
-				id: id
+				id: addressDeleteSelectId.value
 			}).then(response => {
 				console.log(response.data);
 				if (response.success) {
+					// 修复：使用 addressDeleteSelectId.value 而不是未定义的 id
 					let deliveryAddress = JSON.parse(localStorage.getItem(user.value.id.toString()));
-					if (deliveryAddress && deliveryAddress.id === id) {
+					if (deliveryAddress && deliveryAddress.id === addressDeleteSelectId.value) {
 						localStorage.removeItem(user.value.id.toString());
 					}
+					toast.success("删除地址成功");
 					listDeliveryAddressByUserId();
 				} else {
-					alert('删除地址失败！');
+					toast.error("删除地址失败！");
 				}
 			}).catch(error => {
 				console.error(error);
+				toast.error("删除地址失败！");
+			}).finally(() => {
+				closeModal(); // 无论成功失败都关闭弹窗
 			});
 		};
 
@@ -179,12 +200,15 @@ export default {
 			toAddUserAddress,
 			editUserAddress,
 			removeUserAddress,
-			selectUserAddress,
+			toggleUserAddress, // 修改：使用切换函数
 			sexFilter,
 			orderId,
 			addressSelectedId,
 			submitOrder,
-			goBack
+			showConfirmModal,
+			closeModal,
+			confirmDelete,
+      goBack
 		};
 	},
 	components: {
@@ -274,6 +298,109 @@ export default {
 	align-items: center;
 }
 
+
+
+/*************** 新增地址部分 ***************/
+.wrapper .addbtn {
+	width: 100%;
+	height: 14vw;
+	border-top: solid 1px #DDD;
+	border-bottom: solid 1px #DDD;
+	background-color: #fff;
+	margin-top: 4vw;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 4.5vw;
+	color: #0097FF;
+	user-select: none;
+	cursor: pointer;
+}
+
+.wrapper .addbtn p {
+	margin-left: 2vw;
+}
+
+/* .wrapper .addresslist .addresslist-right .fa-select {
+	background-color: #0097ef;
+	color: #fff;
+	border: none;
+	padding: 2vw 3.5vw;
+	border-radius: 5px;
+	font-size: 3vw;
+	cursor: pointer;
+	margin-left: 2vw;
+	transition: background-color 0.3s;
+} */
+
+.wrapper .addresslist .addresslist-right .select-btn {
+    background-color: #0097ef;
+    color: #fff;
+    border: none;
+    padding: 2vw 3.5vw;
+    border-radius: 5px;
+    font-size: 3vw;
+    cursor: pointer;
+    margin-left: 2vw;
+    transition: all 0.3s;
+}
+
+.wrapper .addresslist .addresslist-right .select-btn.selected {
+    background-color: #f25858;
+    color: #fcfafa;
+    /* cursor: not-allowed; */
+	border: none;
+    padding: 2vw 3.5vw;
+    border-radius: 5px;
+    font-size: 3vw;
+    cursor: pointer;
+    margin-left: 2vw;
+}
+
+.wrapper .addresslist .addresslist-right .select-btn:not(.selected):hover {
+    background-color: #0081e6;
+}
+
+.wrapper .addresslist .addresslist-right .select-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+
+/*************** 底部结算栏 ***************/
+.wrapper .order-bar {
+	position: fixed;
+	right: 10vw;
+	bottom: 25vw;
+	z-index: 1000;
+}
+
+.wrapper .order-bar .checkout-order-btn {
+	background-color: #d91212;
+	color: #fff;
+	border: none;
+	padding: 3vw 6vw;
+	border-radius: 8vw;
+	font-size: 4.5vw;
+	font-weight: bold;
+	cursor: pointer;
+	box-shadow: 0 2vw 4vw rgba(0, 151, 255, 0.3);
+	transition: all 0.3s ease;
+	min-width: 25vw;
+	text-align: center;
+}
+
+.wrapper .order-bar .checkout-order-btn:hover {
+	background-color: #0081e6;
+	transform: translateY(-0.5vw);
+	box-shadow: 0 3vw 6vw rgba(0, 151, 255, 0.4);
+}
+
+.wrapper .order-bar .checkout-order-btn:active {
+	transform: translateY(0);
+	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -286,6 +413,7 @@ export default {
   align-items: center;
   z-index: 2000;
 }
+
 .modal-content {
   background: white;
   border-radius: 12px;
@@ -297,6 +425,11 @@ export default {
   flex-direction: column;
   gap: 15px;
   animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-header {
@@ -323,6 +456,7 @@ export default {
 .close-btn:hover {
   color: #666;
 }
+
 .modal-body {
   display: flex;
   flex-direction: column;
@@ -372,104 +506,4 @@ export default {
   box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 
-/*************** 新增地址部分 ***************/
-.wrapper .addbtn {
-	width: 100%;
-	height: 14vw;
-	border-top: solid 1px #DDD;
-	border-bottom: solid 1px #DDD;
-	background-color: #fff;
-	margin-top: 4vw;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	font-size: 4.5vw;
-	color: #0097FF;
-	user-select: none;
-	cursor: pointer;
-}
-
-.wrapper .addbtn p {
-	margin-left: 2vw;
-}
-
-/* .wrapper .addresslist .addresslist-right .fa-select {
-	background-color: #0097ef;
-	color: #fff;
-	border: none;
-	padding: 2vw 3.5vw;
-	border-radius: 5px;
-	font-size: 3vw;
-	cursor: pointer;
-	margin-left: 2vw;
-	transition: background-color 0.3s;
-} */
-
-.wrapper .addresslist .addresslist-right .select-btn {
-	background-color: #0097ef;
-	color: #fff;
-	border: none;
-	padding: 2vw 3.5vw;
-	border-radius: 5px;
-	font-size: 3vw;
-	cursor: pointer;
-	margin-left: 2vw;
-	transition: all 0.3s;
-}
-
-.wrapper .addresslist .addresslist-right .select-btn.selected {
-	background-color: #f25858;
-	color: #fcfafa;
-	/* cursor: not-allowed; */
-	border: none;
-	padding: 2vw 3.5vw;
-	border-radius: 5px;
-	font-size: 3vw;
-	cursor: pointer;
-	margin-left: 2vw;
-}
-
-.wrapper .addresslist .addresslist-right .select-btn:not(.selected):hover {
-	background-color: #0081e6;
-}
-
-.wrapper .addresslist .addresslist-right .select-btn:disabled {
-	cursor: not-allowed;
-	opacity: 0.8;
-}
-
-
-/*************** 底部结算栏 ***************/
-.wrapper .order-bar {
-	position: fixed;
-	right: 10vw;
-	bottom: 25vw;
-	z-index: 1000;
-}
-
-.wrapper .order-bar .checkout-order-btn {
-	background-color: #d91212;
-	color: #fff;
-	border: none;
-	padding: 3vw 6vw;
-	border-radius: 8vw;
-	font-size: 4.5vw;
-	font-weight: bold;
-	cursor: pointer;
-	box-shadow: 0 2vw 4vw rgba(0, 151, 255, 0.3);
-	transition: all 0.3s ease;
-	min-width: 25vw;
-	text-align: center;
-}
-
-.wrapper .order-bar .checkout-order-btn:hover {
-	background-color: #0081e6;
-	transform: translateY(-0.5vw);
-	box-shadow: 0 3vw 6vw rgba(0, 151, 255, 0.4);
-}
-
-.wrapper .order-bar .checkout-order-btn:active {
-	transform: translateY(0);
-	box-shadow: 0 1vw 2vw rgba(0, 151, 255, 0.3);
-}
 </style>
