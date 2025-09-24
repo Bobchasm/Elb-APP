@@ -439,7 +439,7 @@ export default {
 
 /****************** 内容区域 ******************/
 .content-area {
-	margin-top: calc(12vw + 18vw); /* 顶部蓝色栏高度 + 固定标题和筛选栏高度 */
+	margin-top: calc(20vw + 18vw); /* 顶部蓝色栏高度 + 固定标题和筛选栏高度 */
 	padding: 0 4vw;
 }
 
