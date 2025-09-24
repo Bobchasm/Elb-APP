@@ -286,7 +286,7 @@ export default {
 }
 
 .wrapper .addresslist .addresslist-right .select-btn.selected {
-    background-color: #f25858;
+    background-color: #0081e6;
     color: #fcfafa;
     /* cursor: not-allowed; */
 	border: none;
@@ -316,7 +316,7 @@ export default {
 }
 
 .wrapper .order-bar .checkout-order-btn {
-	background-color: #d91212;
+	background-color: #0097FF;
 	color: #fff;
 	border: none;
 	padding: 3vw 6vw;
