@@ -4,7 +4,6 @@
       <h1>我的商铺</h1>
     </div>
 
-    <!-- 状态筛选标签 -->
     <div class="status-tabs">
       <button 
         v-for="tab in tabs" 
@@ -18,10 +17,7 @@
 
     <div class="container wrapper">
       <ul class="business-list">
-        <li v-for="shop in filteredShops" :key="shop?.id || index">
-          <!-- <div class="status-badge" :class="getStatusClass(shop.status)">
-            {{ getStatusText(shop.status) }}
-          </div> -->
+        <li v-for="(shop, index) in filteredShops" :key="shop?.id || index">
           <img
             :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'"
             :alt="shop?.businessName || '未命名商铺'" class="logo" @error="handleImageError">
@@ -36,7 +32,7 @@
               </div>
             </div>
             <div class="business-info-delivery">
-              <p>商家地址：{{ shop?.businessAddress || 暂无地址信息 }}</p>
+              <p>商家地址：{{ shop?.businessAddress || '暂无地址信息' }}</p>
             </div>
           </div>
           <div class="action-buttons">
@@ -71,18 +67,12 @@
 <script>
 import Swal from 'sweetalert2';
 import { ref, onMounted, computed } from 'vue';
-import Footer from '../components/Footer.vue';
-import AddressManager from '../components/AddressManager.vue';
-import request from '../utils/request';
 import { useRouter } from 'vue-router';
+import request from '../utils/request';
 import { toast } from '../utils/toast';
 
 export default {
   name: 'MyApplication',
-  components: {
-    AddressManager,
-    AddressManager
-  },
   setup() {
     const router = useRouter();
     const shops = ref([]);
@@ -245,7 +235,6 @@ export default {
     // 申请新店
     const applyNewShop = async () => {
       try {
-        // 获取 token 放在最前面
         const token = getToken();
         if (!token) {
           toast.warning('用户未登录，请先登录！');
@@ -253,41 +242,118 @@ export default {
           return;
         }
 
-        // 使用一个弹窗同时收集图片和其他信息
         const { value: formValues } = await Swal.fire({
           title: '申请新店',
           html: `
-            <div style="text-align: left;">
-              <div style="margin-bottom: 15px;">
-                <label for="businessImg" style="display: block; margin-bottom: 5px;">商铺图片</label>
-                <input id="businessImg" type="file" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <style>
+              .swal-form-container {
+                display: flex;
+                flex-direction: column;
+                gap: 15px; /* 增加表单项间距 */
+                text-align: left;
+              }
+              .swal-form-item {
+                display: flex;
+                flex-direction: column;
+              }
+              .swal-form-item label {
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: #444;
+              }
+              .swal2-input, .swal2-textarea, .swal2-select {
+                width: 100% !important; /* 确保宽度占满 */
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px; /* 圆角 */
+                font-size: 16px;
+                transition: border-color 0.3s;
+              }
+              .swal2-input:focus, .swal2-textarea:focus, .swal2-select:focus {
+                outline: none;
+                border-color: #0097FF; /* 聚焦时边框变蓝色 */
+              }
+              #businessImg-preview-container {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-top: 10px;
+              }
+              #businessImg-preview {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #ddd;
+              }
+            </style>
+            <div class="swal-form-container">
+              <div class="swal-form-item">
+                <label for="businessName">商铺名称</label>
+                <input id="businessName" class="swal2-input" placeholder="请输入商铺名称" required>
               </div>
-              <input id="businessName" class="swal2-input" placeholder="商铺名称" required>
-              <input id="businessAddress" class="swal2-input" placeholder="商铺地址" required>
-              <textarea id="businessExplain" class="swal2-textarea" placeholder="商铺介绍"></textarea>
-              <input id="deliveryPrice" class="swal2-input" placeholder="配送费(元)" type="number" min="0" step="0.1" required>
-              <input id="startPrice" class="swal2-input" placeholder="起送价(元)" type="number" min="0" step="0.1" required>
-              <select id="orderTypeId" class="swal2-input" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                <option value="" disabled selected>请选择商铺类型</option>
-                <option value="1">美食</option>
-                <option value="2">早餐</option>
-                <option value="3">跑腿代购</option>
-                <option value="4">汉堡披萨</option>
-                <option value="5">甜品饮品</option>
-                <option value="6">速食简食</option>
-                <option value="7">地方小吃</option>
-                <option value="8">米粉面馆</option>
-                <option value="9">包子粥铺</option>
-                <option value="10">炸鸡炸串</option>
-              </select>
+              <div class="swal-form-item">
+                <label for="businessAddress">商铺地址</label>
+                <input id="businessAddress" class="swal2-input" placeholder="请输入商铺地址" required>
+              </div>
+              <div class="swal-form-item">
+                <label for="businessImg">商铺图片</label>
+                <input id="businessImg" type="file" accept="image/*" class="swal2-input">
+                <div id="businessImg-preview-container">
+                  <img id="businessImg-preview" src="https://via.placeholder.com/60" alt="图片预览" />
+                  <span>上传后可预览</span>
+                </div>
+              </div>
+              <div class="swal-form-item">
+                <label for="orderTypeId">商铺类型</label>
+                <select id="orderTypeId" class="swal2-select" required>
+                  <option value="" disabled selected>请选择商铺类型</option>
+                  <option value="1">美食</option>
+                  <option value="2">早餐</option>
+                  <option value="3">跑腿代购</option>
+                  <option value="4">汉堡披萨</option>
+                  <option value="5">甜品饮品</option>
+                  <option value="6">速食简食</option>
+                  <option value="7">地方小吃</option>
+                  <option value="8">米粉面馆</option>
+                  <option value="9">包子粥铺</option>
+                  <option value="10">炸鸡炸串</option>
+                </select>
+              </div>
+              <div class="swal-form-item">
+                <label for="businessExplain">商铺介绍</label>
+                <textarea id="businessExplain" class="swal2-textarea" placeholder="请输入商铺介绍"></textarea>
+              </div>
+              <div class="swal-form-item">
+                <label for="deliveryPrice">配送费 (元)</label>
+                <input id="deliveryPrice" class="swal2-input" placeholder="0" type="number" min="0" step="0.1" required>
+              </div>
+              <div class="swal-form-item">
+                <label for="startPrice">起送费 (元)</label>
+                <input id="startPrice" class="swal2-input" placeholder="0" type="number" min="0" step="0.1" required>
+              </div>
             </div>
           `,
           focusConfirm: false,
           showCancelButton: true,
           confirmButtonText: '提交申请',
           cancelButtonText: '取消',
+          confirmButtonColor: '#0097FF', // 确认按钮颜色改为蓝色
+          didOpen: () => {
+            const fileInput = document.getElementById('businessImg');
+            const imgPreview = document.getElementById('businessImg-preview');
+            fileInput.addEventListener('change', (event) => {
+              const file = event.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  imgPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+              }
+            });
+          },
           preConfirm: async () => {
-            // 获取表单值
             const businessName = document.getElementById('businessName').value;
             const businessAddress = document.getElementById('businessAddress').value;
             const businessExplain = document.getElementById('businessExplain').value;
@@ -296,14 +362,12 @@ export default {
             const orderTypeId = document.getElementById('orderTypeId').value;
             const imageFile = document.getElementById('businessImg').files[0];
 
-            // 验证必填字段
             if (!businessName || !businessAddress || !orderTypeId) {
-              Swal.showValidationMessage('请填写必填项');
+              Swal.showValidationMessage('请填写所有必填项');
               return false;
             }
 
             let imageUrl = '';
-            // 如果有上传图片，先上传图片
             if (imageFile) {
               const formData = new FormData();
               formData.append('file', imageFile);
@@ -312,7 +376,7 @@ export default {
                 const uploadResponse = await request.post('/upload', formData, {
                   headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}` // 使用外部的 token
+                    'Authorization': `Bearer ${token}`
                   }
                 });
 
@@ -346,7 +410,6 @@ export default {
         });
 
         if (formValues) {
-          // 获取用户ID
           const userResponse = await request.get('/api/person', {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -358,7 +421,6 @@ export default {
             return;
           }
 
-          // 提交申请
           const applicationData = {
             ...formValues,
             userId: userResponse.id
@@ -385,9 +447,12 @@ export default {
 
     // 页面加载时获取商铺列表
     onMounted(() => {
-      // 默认加载全部商铺
       changeTab(null);
     });
+
+    const handleImageError = (event) => {
+        event.target.src = 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png';
+    };
 
     return {
       shops,
@@ -401,7 +466,8 @@ export default {
       applyNewShop,
       getStatusText,
       getStatusClass,
-      changeTab
+      changeTab,
+      handleImageError
     };
   }
 };
