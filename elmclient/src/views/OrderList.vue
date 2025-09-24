@@ -1,9 +1,9 @@
 <template>
   <div class="wrapper">
     <!-- 顶部蓝色栏 -->
-    <header class="topbar">
-      <p>订单</p>
-    </header>
+    <div class="top-background">
+      <h1>订单</h1>
+    </div>
 
     <!-- 固定标题和筛选栏 -->
     <div class="fixed-header">
@@ -416,28 +416,64 @@ export default {
   min-height: 100vh;
 }
 
-.topbar {
+.top-background {
   width: 100%;
-  height: 12vw;
-  background-color: #409eff;
-  color: #fff;
-  font-size: 4.8vw;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 1000;
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
   display: flex;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
+}
+
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+  margin: 0;
+  z-index: 1;
 }
 
 /****************** 固定标题和筛选栏 ******************/
 .fixed-header {
   position: fixed;
-  top: 12vw;
-  /* 在顶部蓝色栏下方 */
-  left: 0;
+  top: 100px; /* 在顶部背景下方 */
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
+  max-width: 600px;
   z-index: 999;
   background: white;
 }
@@ -488,10 +524,12 @@ export default {
 
 /****************** 内容区域 ******************/
 .content-area {
-  margin-top: calc(20vw + 18vw);
-  /* 顶部蓝色栏高度 + 固定标题和筛选栏高度 */
+  margin-top: calc(100px + 18vw); /* 顶部背景高度 + 固定标题和筛选栏高度 */
   padding: 0 4vw;
   margin-bottom: 15vw;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /****************** 加载和空状态 ******************/
@@ -756,5 +794,31 @@ export default {
 .confirm-btn:hover {
   background-color: #0085e0;
   box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  .top-background {
+    height: 90px;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  
+  .fixed-header {
+    top: 90px;
+    max-width: 100vw;
+    transform: none;
+    left: 0;
+  }
+  
+  .content-area {
+    margin-top: calc(130px + 18vw);
+    max-width: 100vw;
+    width: 100vw;
+  }
 }
 </style>
