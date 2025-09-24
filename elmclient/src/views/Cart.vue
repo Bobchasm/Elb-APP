@@ -1,4 +1,5 @@
 <template>
+	<BackButton :show-back-button="true" />
 	<div class="wrapper">
 		<!-- header部分 -->
 		<header>
@@ -54,12 +55,13 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import BackButton from '../components/BackButton.vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
 
 export default {
 	name: 'Cart',
+	components: { BackButton },
 	setup() {
 		const cartItems = ref([]);
 		const userInfo = ref(null);
