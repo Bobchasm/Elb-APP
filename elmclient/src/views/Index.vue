@@ -22,16 +22,13 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-                        
+
                         <div class="modal-content">
                             <!-- 位置层级导航 -->
                             <div class="location-nav">
-                                <div 
-                                    v-for="(level, index) in locationLevels" 
-                                    :key="index"
+                                <div v-for="(level, index) in locationLevels" :key="index"
                                     :class="['nav-item', { active: currentLevel === index, disabled: index > currentLevel }]"
-                                    @click="switchLevel(index)"
-                                >
+                                    @click="switchLevel(index)">
                                     {{ level }}
                                 </div>
                             </div>
@@ -42,19 +39,16 @@
                                     <i class="fa fa-spinner fa-spin"></i>
                                     <span>加载中...</span>
                                 </div>
-                                
+
                                 <div v-else-if="locationData.length === 0" class="empty-state">
                                     <i class="fa fa-map-marker"></i>
                                     <span>暂无数据</span>
                                 </div>
-                                
+
                                 <div v-else class="location-items">
-                                    <div 
-                                        v-for="item in locationData" 
-                                        :key="item.id"
+                                    <div v-for="item in locationData" :key="item.id"
                                         :class="['location-item', { selected: isSelected(item) }]"
-                                        @click="selectLocation(item)"
-                                    >
+                                        @click="selectLocation(item)">
                                         <span class="item-name">{{ item.name }}</span>
                                         <i v-if="isSelected(item)" class="fa fa-check selected-icon"></i>
                                     </div>
@@ -63,10 +57,10 @@
 
                             <!-- 当前选择显示 -->
                             <div v-if="selectedLocation.province" class="current-selection">
-                                  <span>已选择：</span>
-                                  <span class="selection-text">
-                                     {{ getDisplayText(selectedLocation) }}
-                                  </span>
+                                <span>已选择：</span>
+                                <span class="selection-text">
+                                    {{ getDisplayText(selectedLocation) }}
+                                </span>
                             </div>
                         </div>
 
@@ -152,49 +146,41 @@
                 <h3>🏆 销量冠军榜</h3>
                 <p>最受欢迎的优质商家</p>
             </div>
-            
+
             <div v-if="!topThreeBusinesses || topThreeBusinesses.length === 0" class="empty-carousel">
                 <div class="empty-state">
                     <i class="fa fa-trophy"></i>
                     <p>暂无销量冠军数据</p>
                 </div>
             </div>
-            
+
             <div class="carousel-3d-container" v-if="topThreeBusinesses && topThreeBusinesses.length > 0">
                 <!-- 左侧箭头按钮 -->
                 <div class="carousel-arrow carousel-arrow-left" @click="prevSlide">
                     <i class="fa fa-chevron-left"></i>
                 </div>
-                
+
                 <!-- 轮播图内容 -->
-                <div 
-                    v-for="(business, index) in topThreeBusinesses" 
-                    :key="business.id"
-                    :class="[
-                        'carousel-3d-item',
-                        {
-                            'active': index === currentSlide,
-                            'left': index === getPrevIndex(),
-                            'right': index === getNextIndex()
-                        }
-                    ]"
-                    @click="goToSlide(index)"
-                >
+                <div v-for="(business, index) in topThreeBusinesses" :key="business.id" :class="[
+                    'carousel-3d-item',
+                    {
+                        'active': index === currentSlide,
+                        'left': index === getPrevIndex(),
+                        'right': index === getNextIndex()
+                    }
+                ]" @click="goToSlide(index)">
                     <div class="business-card-3d">
                         <!-- 排名徽章 -->
                         <div class="rank-badge" :class="getRankClass(index)">
                             <span>{{ getRankText(index) }}</span>
                         </div>
-                        
+
                         <!-- 商家图片 -->
                         <div class="business-image">
-                            <img 
-                                :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')" 
-                                :alt="business.businessName"
-                                @error="handleImageError"
-                            >
+                            <img :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')"
+                                :alt="business.businessName" @error="handleImageError">
                         </div>
-                        
+
                         <!-- 商家信息 -->
                         <div class="business-info">
                             <h4>{{ business.businessName || '商家名称' }}</h4>
@@ -209,20 +195,16 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 右侧箭头按钮 -->
                 <div class="carousel-arrow carousel-arrow-right" @click="nextSlide">
                     <i class="fa fa-chevron-right"></i>
                 </div>
-                
+
                 <!-- 指示器 -->
                 <div class="carousel-indicators">
-                    <span 
-                        v-for="(business, index) in topThreeBusinesses" 
-                        :key="index"
-                        :class="['indicator', { active: index === currentSlide }]"
-                        @click="goToSlide(index)"
-                    ></span>
+                    <span v-for="(business, index) in topThreeBusinesses" :key="index"
+                        :class="['indicator', { active: index === currentSlide }]" @click="goToSlide(index)"></span>
                 </div>
             </div>
         </div>
@@ -248,23 +230,14 @@
 
         <!-- 推荐方式部分 -->
         <ul class="recommendtype">
-            <li
-                :class="{ active: sortBy === 'default' }"
-                @click="setSortBy('default')"
-            >
+            <li :class="{ active: sortBy === 'default' }" @click="setSortBy('default')">
                 综合排序<i class="fa fa-caret-down"></i>
             </li>
 
-            <li
-                :class="{ active: sortBy === 'sales' }"
-                @click="setSortBy('sales')"
-            >
+            <li :class="{ active: sortBy === 'sales' }" @click="setSortBy('sales')">
                 销量最高
             </li>
-            <li
-                :class="{ active: showFilter }"
-                @click="toggleFilter"
-            >
+            <li :class="{ active: showFilter }" @click="toggleFilter">
                 筛选<i class="fa fa-filter"></i>
             </li>
         </ul>
@@ -285,11 +258,7 @@
                         <div class="filter-section">
                             <h4>配送费</h4>
                             <label class="filter-option">
-                                <input
-                                    type="checkbox"
-                                    v-model="filters.freeDelivery"
-                                    @change="applyFilters"
-                                >
+                                <input type="checkbox" v-model="filters.freeDelivery" @change="applyFilters">
                                 <span>免配送费</span>
                             </label>
                         </div>
@@ -299,43 +268,23 @@
                             <h4>起送价</h4>
                             <div class="price-range">
                                 <label class="filter-option">
-                                    <input
-                                        type="radio"
-                                        name="startPrice"
-                                        value="0"
-                                        v-model="filters.startPrice"
-                                        @change="applyFilters"
-                                    >
+                                    <input type="radio" name="startPrice" value="0" v-model="filters.startPrice"
+                                        @change="applyFilters">
                                     <span>不限</span>
                                 </label>
                                 <label class="filter-option">
-                                    <input
-                                        type="radio"
-                                        name="startPrice"
-                                        value="20"
-                                        v-model="filters.startPrice"
-                                        @change="applyFilters"
-                                    >
+                                    <input type="radio" name="startPrice" value="20" v-model="filters.startPrice"
+                                        @change="applyFilters">
                                     <span>20元以下</span>
                                 </label>
                                 <label class="filter-option">
-                                    <input
-                                        type="radio"
-                                        name="startPrice"
-                                        value="30"
-                                        v-model="filters.startPrice"
-                                        @change="applyFilters"
-                                    >
+                                    <input type="radio" name="startPrice" value="30" v-model="filters.startPrice"
+                                        @change="applyFilters">
                                     <span>30元以下</span>
                                 </label>
                                 <label class="filter-option">
-                                    <input
-                                        type="radio"
-                                        name="startPrice"
-                                        value="50"
-                                        v-model="filters.startPrice"
-                                        @change="applyFilters"
-                                    >
+                                    <input type="radio" name="startPrice" value="50" v-model="filters.startPrice"
+                                        @change="applyFilters">
                                     <span>50元以下</span>
                                 </label>
                             </div>
@@ -358,15 +307,18 @@
                 <p class="empty-hint">请稍后再试或检查网络连接</p>
             </div>
         </div>
-        
+
         <ul class="business-list" v-if="businessList && businessList.length > 0">
-            <li v-for="business in businessList" :key="business.id || business.businessId" @click="toBusinessInfo(business.id || business.businessId)">
+            <li v-for="business in businessList" :key="business.id || business.businessId"
+                @click="toBusinessInfo(business.id || business.businessId)">
                 <div class="business-info">
-                    <img :src="business.businessImg === 'string' ? require('@/assets/default-business.png') : business.businessImg" @error="handleImageError" :alt="business.businessName">
+                    <img :src="business.businessImg === 'string' ? require('@/assets/default-business.png') : business.businessImg"
+                        @error="handleImageError" :alt="business.businessName">
                     <div class="business-info-detail">
                         <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
                         <div class="business-info-rating">
-                            <span class="rating-number">评分：{{ business.score || getBusinessRating(business.id || business.businessId) }}</span>
+                            <span class="rating-number">评分：{{ business.score || getBusinessRating(business.id ||
+                                business.businessId) }}</span>
                             <span class="sales-number">销量：{{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
@@ -388,7 +340,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount,computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import Footer from '../components/Footer.vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -406,12 +358,12 @@ export default {
         const businessList = ref([]);
         const originalBusinessList = ref([]); // 保存原始数据用于筛选和排序
         const ratingMap = ref({});
-        
+
         // 轮播图相关
         const currentSlide = ref(0);
         const topThreeBusinesses = ref([]);
         let autoPlayTimer = null;
-        
+
         const currentLocation = ref('定位中...');
         const searchKeyword = ref('');
         const sortBy = ref('default');
@@ -436,32 +388,32 @@ export default {
             city: '',
             district: ''
         });
-        
+
         // 计算显示的位置文本
         const displayLocation = computed(() => {
-    const { province, city, district } = selectedLocation.value;
-    
-    // 如果有区级信息，显示完整省市区
-    if (district && province && city) {
-        // 如果是直辖市，省和市名相同，只显示一次省/市名
-        if (province === city) {
-            return `${province} ${district}`;
-        }
-        return `${province} ${city} ${district}`;
-    }
-    
-    // 只有省市信息
-    if (province && city) {
-        return `${province} ${city}`;
-    }
-    
-    // 只有省信息
-    if (province) {
-        return province;
-    }
-    
-    // 默认情况
-    return currentLocation.value;
+            const { province, city, district } = selectedLocation.value;
+
+            // 如果有区级信息，显示完整省市区
+            if (district && province && city) {
+                // 如果是直辖市，省和市名相同，只显示一次省/市名
+                if (province === city) {
+                    return `${province} ${district}`;
+                }
+                return `${province} ${city} ${district}`;
+            }
+
+            // 只有省市信息
+            if (province && city) {
+                return `${province} ${city}`;
+            }
+
+            // 只有省信息
+            if (province) {
+                return province;
+            }
+
+            // 默认情况
+            return currentLocation.value;
         });
 
         // 获取当前位置
@@ -472,7 +424,7 @@ export default {
                 // 直接使用axios而不是request，避免拦截器干扰
                 const response = await axios.get(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
                 console.log('🌍 位置API响应:', response);
-                
+
                 // 高德地图API返回的数据在response.data中
                 if (response && response.data && response.data.status === '1' && response.data.city) {
                     console.log('✅ 位置获取成功:', response.data.city);
@@ -508,8 +460,8 @@ export default {
         // 隐藏位置选择器
         const hideLocationPicker = () => {
             showPicker.value = false;
-    // 重置临时变量：恢复为当前已确认的最终地址
-    tempSelectedLocation.value = { ...selectedLocation.value };
+            // 重置临时变量：恢复为当前已确认的最终地址
+            tempSelectedLocation.value = { ...selectedLocation.value };
         };
 
         // 加载省份数据
@@ -573,8 +525,8 @@ export default {
                 currentLevel.value = level;
                 if (level === 0) {
                     // 切换回省份级：重置临时变量的城市/区域
-                tempSelectedLocation.value.city = '';
-                tempSelectedLocation.value.district = '';
+                    tempSelectedLocation.value.city = '';
+                    tempSelectedLocation.value.district = '';
                     loadProvinces();
                 } else if (level === 1) {
                     loadCities(tempSelectedLocation.value.province, tempSelectedLocation.value.province);
@@ -618,27 +570,27 @@ export default {
             localStorage.setItem('userLocation', JSON.stringify(selectedLocation.value));
             const displayText = getDisplayText(selectedLocation.value);
             localStorage.setItem('userLocationDisplay', displayText);
-            
+
             // 4. 关闭弹窗
             hideLocationPicker();
         };
         // 新增一个方法来生成显示文本
-const getDisplayText = (location) => {
-    const { province, city, district } = location;
-    if (district && province && city) {
-        if (province === city) {
-            return `${province} ${district}`;
-        }
-        return `${province} ${city} ${district}`;
-    }
-    if (province && city) {
-        return `${province} ${city}`;
-    }
-    if (province) {
-        return province;
-    }
-    return '未知位置';
-};
+        const getDisplayText = (location) => {
+            const { province, city, district } = location;
+            if (district && province && city) {
+                if (province === city) {
+                    return `${province} ${district}`;
+                }
+                return `${province} ${city} ${district}`;
+            }
+            if (province && city) {
+                return `${province} ${city}`;
+            }
+            if (province) {
+                return province;
+            }
+            return '未知位置';
+        };
 
         // 检查是否选中
         const isSelected = (item) => {
@@ -656,53 +608,53 @@ const getDisplayText = (location) => {
 
         const fetchUserInfo = async () => {
 
-    const tokenFromLocal = localStorage.getItem('token');
-    const tokenFromSession = sessionStorage.getItem('token');
-    const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+            const tokenFromLocal = localStorage.getItem('token');
+            const tokenFromSession = sessionStorage.getItem('token');
+            const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
 
-        if (storage) {
-            const savedUserInfo = storage.getItem('userInfo');
-            if (savedUserInfo) {
-            try {
-                const parsedUserInfo = JSON.parse(savedUserInfo);
-                // 校验用户信息是否完整（避免存储的是无效数据）
-                if (parsedUserInfo.id && parsedUserInfo.username) { // 假设用户信息必须包含id和username
-                userInfo.value = parsedUserInfo;
-                console.log('从本地存储加载用户信息成功:', userInfo.value);
-                return; // 读取到有效信息，直接返回，不发请求
+            if (storage) {
+                const savedUserInfo = storage.getItem('userInfo');
+                if (savedUserInfo) {
+                    try {
+                        const parsedUserInfo = JSON.parse(savedUserInfo);
+                        // 校验用户信息是否完整（避免存储的是无效数据）
+                        if (parsedUserInfo.id && parsedUserInfo.username) { // 假设用户信息必须包含id和username
+                            userInfo.value = parsedUserInfo;
+                            console.log('从本地存储加载用户信息成功:', userInfo.value);
+                            return; // 读取到有效信息，直接返回，不发请求
+                        }
+                    } catch (e) {
+                        console.error('解析本地用户信息失败:', e);
+                        storage.removeItem('userInfo'); // 删除损坏的存储数据
+                    }
                 }
-            } catch (e) {
-                console.error('解析本地用户信息失败:', e);
-                storage.removeItem('userInfo'); // 删除损坏的存储数据
             }
-            }
-        }
 
-        const token = tokenFromLocal || tokenFromSession;
-        if (!token) return;
+            const token = tokenFromLocal || tokenFromSession;
+            if (!token) return;
 
-        try {
-            const res = await request.get('/api/user');
-            if (res && res.id && res.username) { // 校验接口返回的用户信息完整性
-            userInfo.value = res;
-            console.log('从接口加载用户信息成功:', userInfo.value);
-            // 同步到本地存储（和token位置一致）
-            storage?.setItem('userInfo', JSON.stringify(res));
-            } else {
-            console.error('获取用户信息失败：接口返回数据不完整');
-            userInfo.value = null;
+            try {
+                const res = await request.get('/api/user');
+                if (res && res.id && res.username) { // 校验接口返回的用户信息完整性
+                    userInfo.value = res;
+                    console.log('从接口加载用户信息成功:', userInfo.value);
+                    // 同步到本地存储（和token位置一致）
+                    storage?.setItem('userInfo', JSON.stringify(res));
+                } else {
+                    console.error('获取用户信息失败：接口返回数据不完整');
+                    userInfo.value = null;
+                }
+            } catch (error) {
+                console.error('获取用户信息异常:', error);
+                userInfo.value = null;
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    sessionStorage.removeItem('token');
+                    localStorage.removeItem('userInfo');
+                    sessionStorage.removeItem('userInfo');
+                }
             }
-        } catch (error) {
-            console.error('获取用户信息异常:', error);
-            userInfo.value = null;
-            if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            sessionStorage.removeItem('token');
-            localStorage.removeItem('userInfo');
-            sessionStorage.removeItem('userInfo');
-            }
-        }
-    };
+        };
 
         const loadReactions = () => {
             try {
@@ -711,7 +663,7 @@ const getDisplayText = (location) => {
                 return { likes: {}, favorites: {} };
             }
         };
-        
+
         const getReactionCount = (businessId) => {
             const reactions = loadReactions();
             const likesMap = reactions.likes[String(businessId)] || {};
@@ -763,29 +715,16 @@ const getDisplayText = (location) => {
 
         // 获取销量前三的商家
         const updateTopThreeBusinesses = () => {
-            if (originalBusinessList.value.length === 0) {
-                topThreeBusinesses.value = [];
-                return;
-            }
-            
-            const businesses = [...originalBusinessList.value];
-            
-            // 按销量排序获取前三
-            const sortedBySales = businesses
-                .sort((a, b) => {
-                    const salesA = parseInt(a.salesCount || 0);
-                    const salesB = parseInt(b.salesCount || 0);
-                    if (salesA !== salesB) {
-                        return salesB - salesA; // 销量降序
+
+            request.get("/api/businesses/carousel")
+                .then(response => {
+                    if (response.success) {
+                        topThreeBusinesses.value = response.data;
                     }
-                    // 销量相同按ID降序
-                    return (b.id || 0) - (a.id || 0);
-                })
-                .slice(0, 3);
-            
-            topThreeBusinesses.value = sortedBySales;
+                });
+
             console.log('🏆 轮播图更新:', topThreeBusinesses.value.map(b => `${b.businessName}(销量${b.salesCount || 0})`).join(', '));
-            
+
             // 数据更新后启动自动轮播
             restartAutoPlay();
         };
@@ -801,8 +740,8 @@ const getDisplayText = (location) => {
         };
 
         const prevSlide = () => {
-            currentSlide.value = currentSlide.value === 0 
-                ? topThreeBusinesses.value.length - 1 
+            currentSlide.value = currentSlide.value === 0
+                ? topThreeBusinesses.value.length - 1
                 : currentSlide.value - 1;
         };
 
@@ -852,7 +791,7 @@ const getDisplayText = (location) => {
             console.log('=== 开始排序商家列表 ===');
             console.log('排序类型:', sortType);
             console.log('待排序商家数量:', list.length);
-            
+
             // 显示排序前有销量的商家
             const beforeSalesData = list.filter(b => (b.salesCount || 0) > 0);
             console.log('排序前有销量的商家:', beforeSalesData.map(b => ({
@@ -860,41 +799,41 @@ const getDisplayText = (location) => {
                 id: b.id,
                 sales: b.salesCount
             })));
-            
+
             const sortedList = [...list];
-            
+
             switch (sortType) {
                 case 'default':
                     // 综合排序：评分优先，评分相同则按ID排序（ID大的在前，表示较新的商家）
                     sortedList.sort((a, b) => {
                         const scoreA = parseFloat(a.score || getBusinessRating(a.id || a.businessId));
                         const scoreB = parseFloat(b.score || getBusinessRating(b.id || b.businessId));
-                        
+
                         // 评分比较（保留一位小数精度）
                         const scoreDiff = Math.round((scoreB - scoreA) * 10) / 10;
                         if (Math.abs(scoreDiff) >= 0.1) {
                             return scoreDiff; // 评分降序
                         }
-                        
+
                         // 评分相同，按ID排序（ID越大表示越新）
                         const idA = parseInt(a.id || a.businessId || 0);
                         const idB = parseInt(b.id || b.businessId || 0);
                         return idB - idA; // ID降序（新的在前）
                     });
                     break;
-                    
+
                 case 'sales':
                     // 销量排序：销量优先，销量相同则按ID排序（ID大的在前）
                     console.log('🔄 执行销量排序');
                     sortedList.sort((a, b) => {
                         const salesA = parseInt(a.salesCount || 0);
                         const salesB = parseInt(b.salesCount || 0);
-                        
+
                         // 详细记录排序过程
                         if (salesA > 0 || salesB > 0) {
                             console.log(`比较: ${a.businessName}(销量${salesA}) vs ${b.businessName}(销量${salesB})`);
                         }
-                        
+
                         if (salesA !== salesB) {
                             const result = salesB - salesA; // 销量降序（高销量在前）
                             if (salesA > 0 || salesB > 0) {
@@ -902,7 +841,7 @@ const getDisplayText = (location) => {
                             }
                             return result;
                         }
-                        
+
                         // 销量相同，按ID排序（ID越大表示越新）
                         const idA = parseInt(a.id || a.businessId || 0);
                         const idB = parseInt(b.id || b.businessId || 0);
@@ -910,12 +849,12 @@ const getDisplayText = (location) => {
                     });
                     console.log('✅ 销量排序完成');
                     break;
-                    
+
                 default:
                     // 默认不排序，保持原有顺序
                     break;
             }
-            
+
             // 显示排序后的结果
             const afterSalesData = sortedList.filter(b => (b.salesCount || 0) > 0);
             console.log('排序后有销量的商家:', afterSalesData.map((b, index) => ({
@@ -924,7 +863,7 @@ const getDisplayText = (location) => {
                 id: b.id,
                 sales: b.salesCount
             })));
-            
+
             console.log('=== 排序完成 ===');
             return sortedList;
         };
@@ -948,7 +887,7 @@ const getDisplayText = (location) => {
         // 测试API接口连通性
         const testAPIConnection = async () => {
             console.log('🧪 === 测试API连通性 ===');
-            
+
             // 测试基础连接
             try {
                 console.log('🔄 测试基础连接...');
@@ -956,7 +895,7 @@ const getDisplayText = (location) => {
                 console.log('✅ API连接成功');
                 console.log('响应类型:', typeof healthResponse);
                 console.log('响应内容:', healthResponse);
-                
+
                 return healthResponse;
             } catch (error) {
                 console.error('❌ API连接失败:', error);
@@ -964,7 +903,7 @@ const getDisplayText = (location) => {
                 console.error('- 错误消息:', error.message);
                 console.error('- 响应状态:', error.response?.status);
                 console.error('- 响应数据:', error.response?.data);
-                
+
                 // 检查常见问题
                 if (error.code === 'ECONNREFUSED') {
                     console.error('🚨 后端服务器未启动或端口不正确');
@@ -973,7 +912,7 @@ const getDisplayText = (location) => {
                 } else if (error.response?.status === 500) {
                     console.error('🚨 后端服务器内部错误');
                 }
-                
+
                 return null;
             }
         };
@@ -1028,7 +967,7 @@ const getDisplayText = (location) => {
                     "salesCount": 0
                 }
             ];
-            
+
             console.log('🧪 硬编码数据:', testData);
             originalBusinessList.value = testData;
             computeRatings();
@@ -1039,37 +978,37 @@ const getDisplayText = (location) => {
         onMounted(() => {
             console.log('🚀 === 页面加载开始 ===');
             console.log('Vue组件已挂载');
-            
+
             // 先从localStorage获取保存的位置
-    const savedLocation = localStorage.getItem('userLocation');
-    if (savedLocation) {
-        try {
-            const location = JSON.parse(savedLocation);
-            selectedLocation.value = location;
-            tempSelectedLocation.value = { ...location };
-            
-            // 如果有保存的显示文本，直接使用
-            const savedDisplay = localStorage.getItem('userLocationDisplay');
-            if (savedDisplay) {
-                currentLocation.value = savedDisplay;
+            const savedLocation = localStorage.getItem('userLocation');
+            if (savedLocation) {
+                try {
+                    const location = JSON.parse(savedLocation);
+                    selectedLocation.value = location;
+                    tempSelectedLocation.value = { ...location };
+
+                    // 如果有保存的显示文本，直接使用
+                    const savedDisplay = localStorage.getItem('userLocationDisplay');
+                    if (savedDisplay) {
+                        currentLocation.value = savedDisplay;
+                    }
+                } catch (e) {
+                    getCurrentLocation();
+                }
+            } else {
+                getCurrentLocation();
             }
-        } catch (e) {
-            getCurrentLocation();
-        }
-    } else {
-        getCurrentLocation();
-    }
             // 加载用户信息
             fetchUserInfo();
-    
+
             window.addEventListener('scroll', handleScroll);
 
             console.log('📋 准备获取商家列表');
-            
+
             // 🧪 临时使用硬编码数据测试 - 先测试硬编码数据是否正常
             // console.log('🧪 启用硬编码数据测试');
             // testWithHardcodedData();
-            
+
             getBusinessList(); // 恢复API调用
         });
 
@@ -1083,12 +1022,12 @@ const getDisplayText = (location) => {
         };
         const goToLChoose = () => {
             // 跳转到登录页面
-            router.push({path: '/login'});
+            router.push({ path: '/login' });
         };
         const goToRChoose = () => {
             // 跳转到注册页面
             console.log('111111');
-            router.push({path: '/register'});
+            router.push({ path: '/register' });
         }
         const navigateToSearch = () => {
             router.push({ path: '/search' });
@@ -1130,9 +1069,9 @@ const getDisplayText = (location) => {
                     console.log('- response类型:', typeof response);
                     console.log('- response.success:', response?.success);
                     console.log('- response.data存在:', !!response?.data);
-                    
+
                     let searchData = null;
-                    
+
                     if (response && response.success && Array.isArray(response.data)) {
                         searchData = response.data;
                         console.log('✅ 搜索使用标准响应格式');
@@ -1143,7 +1082,7 @@ const getDisplayText = (location) => {
                         console.warn('❌ 搜索响应格式不正确:', response);
                         searchData = [];
                     }
-                    
+
                     if (searchData && searchData.length > 0) {
                         console.log('🔍 搜索到商家数据:', searchData.length, '个');
                         originalBusinessList.value = searchData;
@@ -1177,14 +1116,14 @@ const getDisplayText = (location) => {
             console.log('从', sortBy.value, '切换到', type);
             console.log('当前原始数据数量:', originalBusinessList.value.length);
             console.log('当前显示数据数量:', businessList.value.length);
-            
+
             // 🔍 在排序前再次检查原始数据
             console.log('🔍 排序前最后检查 - originalBusinessList中的销量:');
             const preCheckSales = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
             preCheckSales.forEach(business => {
                 console.log(`- ${business.businessName}: salesCount=${business.salesCount}`);
             });
-            
+
             sortBy.value = type;
 
             if (searchKeyword.value.trim() !== '') {
@@ -1215,7 +1154,7 @@ const getDisplayText = (location) => {
                         dataType: Array.isArray(response?.data) ? 'Array' : typeof response?.data,
                         dataLength: response?.data?.length
                     });
-                    
+
                     // 🔍 详细检查response.data的前3个元素
                     if (response?.data && Array.isArray(response.data)) {
                         console.log('🔍 response.data前3个元素的详细信息:');
@@ -1225,7 +1164,7 @@ const getDisplayText = (location) => {
                             console.log(`  - salesCount: ${item.salesCount} (类型: ${typeof item.salesCount})`);
                             console.log(`  - id: ${item.id} (类型: ${typeof item.id})`);
                         });
-                        
+
                         // 🔍 特别检查有销量的商家
                         const withSales = response.data.filter(item => item.salesCount > 0);
                         console.log('🏆 API返回的有销量商家:', withSales.map(item => ({
@@ -1234,16 +1173,16 @@ const getDisplayText = (location) => {
                             id: item.id
                         })));
                     }
-                    
+
                     // 统一处理API响应数据
                     console.log('🔍 API响应数据结构分析:');
                     console.log('- response类型:', typeof response);
                     console.log('- response.success:', response?.success);
                     console.log('- response.data存在:', !!response?.data);
                     console.log('- response.data是数组:', Array.isArray(response?.data));
-                    
+
                     let businessData = null;
-                    
+
                     // 处理不同的响应格式
                     if (response && response.success && Array.isArray(response.data)) {
                         // 标准格式: { success: true, data: [...] }
@@ -1257,10 +1196,10 @@ const getDisplayText = (location) => {
                         console.warn('❌ 无法识别的响应格式:', response);
                         businessData = [];
                     }
-                    
+
                     if (businessData && businessData.length > 0) {
                         console.log('📊 获取到商家数据:', businessData.length, '个');
-                        
+
                         // 显示前3个商家的基本信息
                         console.log('🔍 前3个商家预览:');
                         businessData.slice(0, 3).forEach((business, index) => {
@@ -1270,7 +1209,7 @@ const getDisplayText = (location) => {
                                 score: business.score
                             });
                         });
-                        
+
                         // 统计有销量的商家
                         const businessesWithSales = businessData.filter(b => (b.salesCount || 0) > 0);
                         console.log('🏆 有销量的商家:', businessesWithSales.length, '个');
@@ -1283,18 +1222,18 @@ const getDisplayText = (location) => {
                                     console.log(`  ${index + 1}. ${business.businessName}: ${business.salesCount}`);
                                 });
                         }
-                        
+
                         originalBusinessList.value = businessData;
                         computeRatings();
                         updateTopThreeBusinesses();
                         applyFiltersAndSort();
-                        
+
                         console.log('✅ 数据加载完成:', {
                             总商家数: originalBusinessList.value.length,
                             显示商家数: businessList.value.length,
                             轮播图商家数: topThreeBusinesses.value.length
                         });
-                        
+
                     } else {
                         console.warn('❌ 没有获取到商家数据');
                         originalBusinessList.value = [];
@@ -1307,12 +1246,12 @@ const getDisplayText = (location) => {
                     console.error('错误详情:', error.response?.data);
                     console.error('错误状态:', error.response?.status);
                     console.error('错误消息:', error.message);
-                    
+
                     // 设置空数据
                     originalBusinessList.value = [];
                     businessList.value = [];
                     topThreeBusinesses.value = [];
-                    
+
                     // 如果是网络错误，可以考虑重试
                     if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNREFUSED') {
                         console.log('🔄 网络错误，3秒后自动重试...');
@@ -1328,7 +1267,7 @@ const getDisplayText = (location) => {
         const handleImageError = (e) => {
             e.target.src = require('@/assets/default-business.png');
         };
-        
+
         // 跳转到商家详情页
         const toBusinessInfo = (businessId) => {
             router.push({
@@ -1352,7 +1291,7 @@ const getDisplayText = (location) => {
             console.log('筛选条件:', filters.value);
             console.log('排序方式:', sortBy.value);
             console.log('原始数据数量:', originalBusinessList.value.length);
-            
+
             // 检查原始数据中的销量情况
             const originalSalesData = originalBusinessList.value.filter(b => (b.salesCount || 0) > 0);
             console.log('📈 原始数据中有销量的商家:', originalSalesData.map(b => ({
@@ -1360,11 +1299,11 @@ const getDisplayText = (location) => {
                 id: b.id,
                 sales: b.salesCount
             })));
-            
+
             // 从原始数据开始筛选
             console.log('🔄 开始筛选 - 复制原始数据');
             let filteredList = [...originalBusinessList.value];
-            
+
             // 🔍 检查复制后的数据
             console.log('🔍 复制后的数据检查:');
             const copiedWithSales = filteredList.filter(b => (b.salesCount || 0) > 0);
@@ -1396,10 +1335,10 @@ const getDisplayText = (location) => {
 
             // 应用排序
             const sortedList = sortBusinessList(filteredList, sortBy.value);
-            
+
             businessList.value = sortedList;
             console.log('筛选和排序后的商家列表:', sortedList.length, '个商家');
-            
+
             // 输出前5个商家的排序信息用于调试
             if (sortedList.length > 0) {
                 const debugInfo = sortedList.slice(0, 5).map(business => ({
@@ -1410,7 +1349,7 @@ const getDisplayText = (location) => {
                     rawSalesCount: business.salesCount // 显示原始销量数据
                 }));
                 console.log(`排序后前5个商家 (${sortBy.value}排序):`, debugInfo);
-                
+
                 // 如果是销量排序，特别显示销量信息
                 if (sortBy.value === 'sales') {
                     const salesInfo = sortedList.map(business => ({
@@ -1421,7 +1360,7 @@ const getDisplayText = (location) => {
                     })).sort((a, b) => b.sales - a.sales).slice(0, 8);
                     console.log('销量排序详情（前8名）:', salesInfo);
                 }
-                
+
                 // 检查最终显示的数据
                 console.log('🎯 === 最终显示数据检查 ===');
                 console.log('最终businessList总数量:', businessList.value.length);
@@ -1435,7 +1374,7 @@ const getDisplayText = (location) => {
                         销量类型: typeof business.salesCount
                     });
                 });
-                
+
                 // 特别检查模板绑定的数据
                 console.log('🎭 模板显示检查 - 前5个商家的销量显示值:');
                 businessList.value.slice(0, 5).forEach((business, index) => {
@@ -1542,7 +1481,7 @@ const getDisplayText = (location) => {
 
     display: flex;
     align-items: center;
- 
+
     /* 让location和login-register两端对齐 */
     padding: 0 3vw;
     /* 添加两边的内边距，使内容不要紧贴屏幕边缘 */
@@ -1616,7 +1555,8 @@ const getDisplayText = (location) => {
     justify-content: center;
     align-items: center;
     position: relative;
-    z-index: 20; /* 确保搜索框在轮播图之上 */
+    z-index: 20;
+    /* 确保搜索框在轮播图之上 */
 }
 
 .wrapper .search .search-fixed-top .search-box {
@@ -1749,23 +1689,28 @@ const getDisplayText = (location) => {
 /****************** 销量冠军3D轮播图部分 ******************/
 .wrapper .top-businesses-carousel {
     width: 95%;
-    margin: 1.5vw auto; /* 进一步减少上下外边距 */
+    margin: 1.5vw auto;
+    /* 进一步减少上下外边距 */
     background: white;
     border-radius: 2vw;
-    padding: 1.5vw 2vw; /* 进一步减少上下内边距 */
+    padding: 1.5vw 2vw;
+    /* 进一步减少上下内边距 */
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     position: relative;
-    z-index: 10; /* 确保在搜索框之下 */
+    z-index: 10;
+    /* 确保在搜索框之下 */
 }
 
 .wrapper .top-businesses-carousel .carousel-header {
     text-align: center;
-    margin-bottom: 1.5vw; /* 减少标题下方间距 */
+    margin-bottom: 1.5vw;
+    /* 减少标题下方间距 */
     color: #333;
 }
 
 .wrapper .top-businesses-carousel .carousel-header h3 {
-    font-size: 6vw; /* 增大字体大小 */
+    font-size: 6vw;
+    /* 增大字体大小 */
     margin: 0 0 1vw 0;
     font-weight: 700;
     text-shadow: none;
@@ -1780,13 +1725,17 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .carousel-3d-container {
     position: relative;
-    height: 50vw; /* 减少整体高度，让占位更小 */
-    min-height: 320px; /* 减少最小高度 */
+    height: 50vw;
+    /* 减少整体高度，让占位更小 */
+    min-height: 320px;
+    /* 减少最小高度 */
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 3vw 12vw; /* 减少内边距，让占位更小 */
-    margin: -3vw -12vw; /* 调整负边距 */
+    padding: 3vw 12vw;
+    /* 减少内边距，让占位更小 */
+    margin: -3vw -12vw;
+    /* 调整负边距 */
 }
 
 .wrapper .top-businesses-carousel .carousel-3d-item {
@@ -1818,11 +1767,14 @@ const getDisplayText = (location) => {
 }
 
 .wrapper .top-businesses-carousel .business-card-3d {
-    width: 38vw; /* 减少卡片宽度 */
-    min-width: 240px; /* 减少最小宽度 */
+    width: 38vw;
+    /* 减少卡片宽度 */
+    min-width: 240px;
+    /* 减少最小宽度 */
     background: white;
     border-radius: 2vw;
-    padding: 2.5vw; /* 减少内边距 */
+    padding: 2.5vw;
+    /* 减少内边距 */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     position: relative;
     overflow: hidden;
@@ -1859,11 +1811,14 @@ const getDisplayText = (location) => {
 
 .wrapper .top-businesses-carousel .business-image {
     width: 100%;
-    height: 25vw; /* 调整图片高度，在更小的卡片中保持比例 */
-    min-height: 160px; /* 调整最小高度 */
+    height: 25vw;
+    /* 调整图片高度，在更小的卡片中保持比例 */
+    min-height: 160px;
+    /* 调整最小高度 */
     border-radius: 1.5vw;
     overflow: hidden;
-    margin-bottom: 1.5vw; /* 减少底部间距 */
+    margin-bottom: 1.5vw;
+    /* 减少底部间距 */
 }
 
 .wrapper .top-businesses-carousel .business-image img {
@@ -1882,18 +1837,22 @@ const getDisplayText = (location) => {
 }
 
 .wrapper .top-businesses-carousel .business-info h4 {
-    font-size: 3.2vw; /* 稍微减少字体大小 */
+    font-size: 3.2vw;
+    /* 稍微减少字体大小 */
     font-weight: 700;
     color: #333;
-    margin: 0 0 1vw 0; /* 减少底部间距 */
+    margin: 0 0 1vw 0;
+    /* 减少底部间距 */
     line-height: 1.2;
 }
 
 .wrapper .top-businesses-carousel .stats {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1vw; /* 减少底部间距 */
-    gap: 1vw; /* 减少间隙 */
+    margin-bottom: 1vw;
+    /* 减少底部间距 */
+    gap: 1vw;
+    /* 减少间隙 */
 }
 
 .wrapper .top-businesses-carousel .sales {
@@ -1963,18 +1922,21 @@ const getDisplayText = (location) => {
 }
 
 .wrapper .top-businesses-carousel .carousel-arrow-left {
-    left: 8vw; /* 调整到扩大的悬停区域内 */
+    left: 8vw;
+    /* 调整到扩大的悬停区域内 */
 }
 
 .wrapper .top-businesses-carousel .carousel-arrow-right {
-    right: 8vw; /* 调整到扩大的悬停区域内 */
+    right: 8vw;
+    /* 调整到扩大的悬停区域内 */
 }
 
 .wrapper .top-businesses-carousel .carousel-indicators {
     display: flex;
     justify-content: center;
     gap: 1.5vw;
-    margin-top: 1.5vw; /* 减少指示器上方间距 */
+    margin-top: 1.5vw;
+    /* 减少指示器上方间距 */
 }
 
 .wrapper .top-businesses-carousel .indicator {
@@ -2075,7 +2037,8 @@ const getDisplayText = (location) => {
 .wrapper .business-list {
     width: 100%;
     padding: 0;
-    margin: 0 0 15vh 0; /* 添加底部边距，避免被 Footer 遮挡 */
+    margin: 0 0 15vh 0;
+    /* 添加底部边距，避免被 Footer 遮挡 */
     list-style: none;
 }
 
@@ -2182,6 +2145,7 @@ const getDisplayText = (location) => {
     font-size: 3vw;
     margin: 0;
 }
+
 /* 位置显示样式 */
 .location-text {
     cursor: pointer;
@@ -2304,7 +2268,8 @@ const getDisplayText = (location) => {
     margin-bottom: 20px;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2313,7 +2278,8 @@ const getDisplayText = (location) => {
     color: #999;
 }
 
-.loading-state i, .empty-state i {
+.loading-state i,
+.empty-state i {
     font-size: 24px;
     margin-bottom: 10px;
 }
@@ -2380,7 +2346,8 @@ const getDisplayText = (location) => {
     background-color: #fafafa;
 }
 
-.btn-cancel, .btn-confirm {
+.btn-cancel,
+.btn-confirm {
     flex: 1;
     padding: 12px;
     border: none;
@@ -2410,16 +2377,19 @@ const getDisplayText = (location) => {
 }
 
 /* 动画效果 */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
     transition: opacity 0.3s;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
     opacity: 0;
 }
 
 /* 空状态样式 */
-.empty-carousel, .empty-business-list {
+.empty-carousel,
+.empty-business-list {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -2427,18 +2397,21 @@ const getDisplayText = (location) => {
     padding: 40px 20px;
 }
 
-.empty-carousel .empty-state, .empty-business-list .empty-state {
+.empty-carousel .empty-state,
+.empty-business-list .empty-state {
     text-align: center;
     color: #999;
 }
 
-.empty-carousel .empty-state i, .empty-business-list .empty-state i {
+.empty-carousel .empty-state i,
+.empty-business-list .empty-state i {
     font-size: 48px;
     margin-bottom: 16px;
     opacity: 0.5;
 }
 
-.empty-carousel .empty-state p, .empty-business-list .empty-state p {
+.empty-carousel .empty-state p,
+.empty-business-list .empty-state p {
     font-size: 16px;
     margin: 8px 0;
 }
@@ -2584,7 +2557,8 @@ const getDisplayText = (location) => {
     background-color: #fafafa;
 }
 
-.btn-reset, .btn-confirm {
+.btn-reset,
+.btn-confirm {
     flex: 1;
     padding: 12px;
     border: none;

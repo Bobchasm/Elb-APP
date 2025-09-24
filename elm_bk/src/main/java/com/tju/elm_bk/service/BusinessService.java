@@ -25,4 +25,5 @@ public interface BusinessService {
     List<Business> getMerchantBusinesses(Long userId, Integer status);
     List<Business>listBusinessByOrderTypeId(Integer type);
     List<MerchantStatsVO> getBusinessIdList();
+    List<BusinessSearchVO> getBusinessesInCarousel();
 }
