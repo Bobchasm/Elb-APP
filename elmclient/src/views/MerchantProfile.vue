@@ -18,9 +18,16 @@
           <span>{{ formattedPhone }}</span>
         </div>
       </div>
+      <div class="card-button-section">
+        <button class="switch-btn" @click="switchToCustomer">
+          <i class="fas fa-user"></i> 切换为顾客
+        </button>
+        <button class="logout-btn" @click="logout">
+          <i class="fas fa-sign-out-alt"></i> 退出登录
+        </button>
+      </div>
     </div>
 
-    <!-- 修改为显示商铺列表 -->
     <div class="stores-container">
       <div class="store-card" v-for="store in stores" :key="store.merchantId">
         <div class="store-name">{{ store.merchantName }}</div>
@@ -39,15 +46,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="button-section">
-      <button class="switch-btn" @click="switchToCustomer">
-        <i class="fas fa-user"></i> 切换为顾客
-      </button>
-      <button class="logout-btn" @click="logout">
-        <i class="fas fa-sign-out-alt"></i> 退出登录
-      </button>
     </div>
 
     <div class="bottom-nav">
@@ -70,7 +68,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { toast } from '../utils/toast'; 
+import { toast } from '../utils/toast';
 import request from '../utils/request';
 
 export default {
@@ -81,7 +79,7 @@ export default {
 
     const merchant = ref(null);
     const stores = ref([]); // 存储商铺列表
-    
+
     const loading = ref(false);
 
     // 格式化手机号显示
@@ -103,7 +101,7 @@ export default {
       loading.value = true;
       try {
         const data = await request.get('/api/person');
-        
+
         if (data && data.id) {
           merchant.value = {
             id: data.id,
@@ -121,12 +119,12 @@ export default {
         loading.value = false;
       }
     };
-    
+
     // 修改：加载商家统计数据，现在获取的是商铺列表
     const loadMerchantStats = async (userId) => {
       try {
         const response = await request.get(`http://localhost:8080/api/merchant/interaction/statsByUserId/${userId}`);
-        
+
         if (response && response.success && response.data) {
           stores.value = response.data;
         } else {
@@ -141,6 +139,9 @@ export default {
     const logout = () => {
       sessionStorage.removeItem('merchant');
       sessionStorage.removeItem('user');
+      // 清空所有本地存储，确保完全退出
+      localStorage.clear();
+      sessionStorage.clear();
       router.push({ path: '/login' });
     };
 
@@ -176,6 +177,7 @@ export default {
   align-items: center;
   position: relative;
 }
+
 .top-background {
   width: 100%;
   height: 100px;
@@ -189,6 +191,7 @@ export default {
   overflow: hidden;
   margin-bottom: 50px;
 }
+
 .top-background::before {
   content: '';
   position: absolute;
@@ -200,19 +203,26 @@ export default {
   transform: rotate(30deg);
   animation: shine 6s infinite linear;
 }
+
 @keyframes shine {
-  0% { transform: rotate(30deg) translate(-10%, -10%); }
-  100% { transform: rotate(30deg) translate(10%, 10%); }
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
 }
+
 .top-background h1 {
   color: white;
   font-size: 1.8rem;
   font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   letter-spacing: 1px;
   margin: 0;
   z-index: 1;
 }
+
 .user-card {
   width: 92%;
   max-width: 500px;
@@ -222,12 +232,14 @@ export default {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 20px 0;
   display: flex;
+  flex-direction: column; /* 调整为列布局 */
   align-items: center;
-  gap: 20px;
+  gap: 15px; /* 增加卡片内元素间距 */
   position: relative;
   z-index: 2;
   transform: translateY(-50px);
 }
+
 .avatar {
   width: 100px;
   height: 100px;
@@ -237,16 +249,17 @@ export default {
   box-shadow: 0 6px 20px rgba(0, 151, 255, 0.3);
   flex-shrink: 0;
   background: #f8f9fa;
-  margin-left: 15px;
 }
+
 .avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
+
 .user-details {
-  flex: 1;
+  width: 90%; /* 调整宽度以适应新布局 */
   background-color: #f8f9fa;
   padding: 15px;
   border-radius: 12px;
@@ -255,9 +268,10 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-right: 15px;
 }
-.user-name, .user-phone {
+
+.user-name,
+.user-phone {
   font-size: 0.95rem;
   color: #495057;
   background: #fff;
@@ -267,19 +281,29 @@ export default {
   display: flex;
   align-items: center;
 }
+
 .user-name {
   font-size: 1.1rem;
   font-weight: 500;
   color: #333;
   margin-bottom: 8px;
 }
-.user-name .user-icon, 
+
+.user-name .user-icon,
 .user-phone .phone-icon {
   margin-right: 8px;
   color: #3498db;
 }
 
-/* 新增商铺列表样式 */
+/* 新增卡片内部的按钮区域样式 */
+.card-button-section {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
 .stores-container {
   width: 92%;
   max-width: 500px;
@@ -305,7 +329,6 @@ export default {
   text-align: center;
 }
 
-/* 店铺数据栏样式 */
 .store-data-bar {
   display: flex;
   justify-content: space-around;
@@ -332,20 +355,14 @@ export default {
   color: #777;
 }
 
-.button-section {
-  width: 92%;
-  max-width: 500px;
-  margin: 20px auto;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  transform: translateY(-50px);
-}
+/* 删除原有的 .button-section 样式，因为按钮已移动 */
+
+/* 按钮样式（保持不变） */
 .switch-btn {
   width: 100%;
   padding: 14px;
   text-align: center;
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  background: linear-gradient(135deg, #2782dd, #61c8f4);
   color: white;
   font-weight: 600;
   border-radius: 12px;
@@ -354,17 +371,18 @@ export default {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 10px;
 }
+
 .switch-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
+
 .logout-btn {
   width: 100%;
   padding: 14px;
   text-align: center;
-  background: linear-gradient(135deg,#8e2de2, #4a00e0);
+  background: linear-gradient(135deg, #3258cc, #71a3ff);
   color: white;
   font-weight: 600;
   border-radius: 12px;
@@ -374,11 +392,13 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
 .logout-btn:hover {
   background: #ffeaea;
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
+
 .logout-btn i {
   margin-right: 8px;
 }
@@ -423,13 +443,15 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .container, .user-card, .button-section {
+  .container,
+  .user-card,
+  .stores-container {
     max-width: 100vw;
     width: 100vw;
     border-radius: 0;
     padding: 0;
   }
-
+  
   .top-background {
     height: 90px;
     margin-bottom: 50px;
@@ -444,22 +466,23 @@ export default {
     transform: translateY(-50px);
     width: 90%;
   }
-
   .avatar {
     width: 80px;
     height: 80px;
     margin-left: 0;
   }
-
   .user-details {
     width: 85%;
     padding: 10px;
     gap: 6px;
     margin-right: 0;
   }
-
   .bottom-nav {
     border-radius: 0;
+  }
+  .card-button-section {
+    width: 85%;
+    margin-top: 5px;
   }
 }
 </style>

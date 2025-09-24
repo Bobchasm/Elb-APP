@@ -320,6 +320,7 @@ export default {
 	background-color: #409eff;
 	color: #fff;
 	font-size: 4.8vw;
+	font-weight: 600;
 	position: fixed;
 	left: 0;
 	top: 0;

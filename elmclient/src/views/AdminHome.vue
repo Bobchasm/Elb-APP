@@ -686,7 +686,7 @@ const getShopTypeName = (typeId) => {
   width: 92%;
   max-width: 500px;
   margin: 0 auto 20px;
-  background-color: #0097ff; /* 红色系，与主题和谐 */
+  background: linear-gradient(135deg, #2782dd, #61c8f4); /* 红色系，与主题和谐 */
   color: white;
   border: none;
   border-radius: 12px;
