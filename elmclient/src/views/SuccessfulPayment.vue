@@ -22,7 +22,7 @@
       <div class="details">
         <div class="detail-item">
           <span class="label">商家名称</span>
-          <span class="value">{{ paymentDetails.business?.name || '未知商家' }}</span>
+          <span class="value">{{ paymentDetails.business?.businessName || '未知商家' }}</span>
         </div>
         <div class="detail-item">
           <span class="label">支付金额</span>
@@ -143,16 +143,16 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 90px; /* 增大外框尺寸 */
-  height: 90px; /* 增大外框尺寸 */
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   background-color: #e6f6e8;
   animation: scale-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .check-icon {
-  width: 55px; /* 增大图标尺寸 */
-  height: 55px; /* 增大图标尺寸 */
+  width: 55px;
+  height: 55px;
   color: #2e7d32;
   animation: fade-in 0.8s ease-out 0.2s both;
 }
@@ -207,10 +207,10 @@ html, body {
 .btn-back {
   width: 100%;
   padding: 1rem;
-  background-color: #0493f2da;
-  color: #ffffff;
+  background-color:  #0493f2da;
+  color: #e2e8f0;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;

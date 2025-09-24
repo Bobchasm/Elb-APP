@@ -1,5 +1,7 @@
 <template>
-	<BackButton :show-back-button="true" />
+	<div class="back-btn-container">
+    <BackButton />
+  </div>
 	<div class="wrapper">
 		<!-- header部分 -->
 		<header>
@@ -319,5 +321,11 @@ export default {
 	border-radius: 2vw;
 	font-size: 4vw;
 	cursor: pointer;
+}
+.back-btn-container {
+  position: fixed; /* 固定定位，不随滚动移动 */
+  left: 0vw; /* 距离左侧的距离，可根据需求调整 */
+  top: 1vw; /* 距离顶部的距离，与 header 高度（12vw）适配，确保垂直居中 */
+  z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 </style>

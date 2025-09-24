@@ -89,6 +89,7 @@ import { ref, onMounted, computed,onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import request from "../utils/request";
 import Footer from '../components/Footer.vue';
+import { toast } from "../utils/toast";
 
 export default {
   name: "OrderList",
@@ -135,11 +136,11 @@ export default {
           console.log("获取订单列表成功:", orderArr.value);
         } else {
           console.error('获取订单列表失败:', response.data.message);
-          alert('获取订单列表失败: ' + response.data.message);
+         toast.error('获取订单列表失败: ' + response.data.message);
         }
       } catch (error) {
         console.error("请求订单列表失败:", error);
-        alert("获取订单列表失败，请稍后重试！");
+        toast.error("获取订单列表失败，请稍后重试！");
       } finally {
         loading.value = false;
       }
@@ -227,17 +228,17 @@ export default {
         const response = await request.put("/api/orders/status?orderState=4&orderId=" + id);
         
         if (response.success) {
-          alert("订单取消成功");
+          toast.success("订单取消成功");
           // 重新加载当前标签的订单
           fetchOrders();
           router.push({path: '/orderList'});
         } else {
-          alert("取消失败: " + response.message);
+          toast.error("取消失败: " + response.message);
           router.push({path: '/orderList'});
         }
       } catch (error) {
         console.error("取消订单失败:", error);
-        alert("取消订单失败，请稍后重试");
+        toast.error("取消订单失败，请稍后重试");
       }
     };
 
@@ -254,16 +255,16 @@ export default {
         const response = await request.put("/api/orders/status?orderState=3&orderId=" + id);
         
         if (response.success) {
-          alert("订单完成");
+          toast.success("订单完成");
           // 重新加载当前标签的订单
           fetchOrders(); // 重新加载订单
           router.push({path: '/orderList'});
         } else {
-          alert("确认完成失败: " + response.message);
+         toast.error("确认完成失败: " + response.message);
           router.push({path: '/orderList'});
         }
       } catch (error) {
-        alert("确认完成订单失败，请稍后重试");
+        toast.error("确认完成订单失败，请稍后重试");
       }
     };
 
@@ -326,7 +327,7 @@ export default {
       userInfo.value = userData ? JSON.parse(userData) : null;
 
       if (!userInfo.value) {
-        alert("用户未登录，请先登录！");
+        toast.error("用户未登录，请先登录！");
         router.push({ path: "/login" });
         return;
       }

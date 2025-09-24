@@ -422,7 +422,7 @@ export default {
           toast.success('申请成功，请等待管理员审核！');
           closeMerchantApplyModal();
         } else {
-          toast.error('申请失败，请重试！');
+          toast.error(response.message);
         }
       } catch (error) {
         console.error('申请成为商家失败:', error);
