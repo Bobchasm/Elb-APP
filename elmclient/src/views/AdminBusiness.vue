@@ -55,7 +55,7 @@ export default {
     name: 'ManageBusiness',
     setup() {
         const businessList = ref([]);
-        const defaultImg = '/R-C.png';
+        const defaultImg = require('@/assets/default-avatar.png');
         const router = useRouter();
 
         const editor = reactive({

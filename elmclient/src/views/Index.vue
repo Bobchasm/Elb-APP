@@ -91,7 +91,7 @@
             <div class="search-fixed-top" ref="fixedBox">
                 <div class="search-box">
                     <i class="fa fa-search"></i>
-                    <input v-model="searchKeyword" type="text" placeholder="搜索饿了么商家、商品名称" @keyup.enter="performSearch" />
+                    <input v-model="searchKeyword" type="text" placeholder="搜索饿了么商家" @keyup.enter="performSearch" />
                     <button @click="performSearch" class="search-btn">搜索</button>
                 </div>
             </div>
@@ -179,13 +179,13 @@
 
                         <!-- 商家图片 -->
                         <div class="business-image">
-                            <img :src="business.businessImg && business.businessImg !== 'string' && business.businessImg !== '' ? business.businessImg : require('@/assets/default-business.png')"
+                            <img :src="business.businessImg || require('@/assets/business-default.png')"
                                 :alt="business.businessName" @error="handleImageError" @click="toBusinessInfo(business.id)">
                         </div>
 
                         <!-- 商家信息 -->
                         <div class="business-info">
-                            <h4>{{ business.businessName || '商家名称' }}</h4>
+                            <h4>{{ business.businessName || '未命名商铺' }}</h4>
                             <div class="stats">
                                 <div class="stat-item rating-stat">
                                     <i class="fa fa-star"></i>
@@ -199,11 +199,11 @@
                             <div class="delivery-info">
                                 <div class="delivery-tag">
                                     <span class="tag-label">起送</span>
-                                    <span class="tag-price">¥{{ business.startPrice || business.starPrice || 0 }}</span>
+                                    <span class="tag-price">¥{{ business.startPrice.toFixed(2) || 0 }}</span>
                                 </div>
                                 <div class="delivery-tag">
                                     <span class="tag-label">配送</span>
-                                    <span class="tag-price">¥{{ business.deliveryPrice || 0 }}</span>
+                                    <span class="tag-price">¥{{ business.deliveryPrice.toFixed(2) || 0 }}</span>
                                 </div>
                             </div>
                         </div>
@@ -326,19 +326,19 @@
             <li v-for="business in businessList" :key="business.id || business.businessId"
                 @click="toBusinessInfo(business.id || business.businessId)">
                 <div class="business-info">
-                    <img :src="business.businessImg === 'string' ? require('@/assets/default-business.png') : business.businessImg"
+                    <img :src="business.businessImg || require('@/assets/business-default.png')"
                         @error="handleImageError" :alt="business.businessName">
                     <div class="business-info-detail">
-                        <h3>{{ business.businessName === 'string' ? '商家名称待更新' : business.businessName }}</h3>
+                        <h3>{{ business.businessName || '未命名商铺'}}</h3>
                         <div class="business-info-rating">
                             <span class="rating-score">{{ business.score || getBusinessRating(business.id ||
                                 business.businessId) }}分</span>
                             <span class="monthly-sales">月售 {{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
-                            <span class="start-price">起送 ¥{{ business.startPrice || business.starPrice }}</span>
-                            <span class="delivery-fee" :class="{ 'free-delivery': (business.deliveryPrice || 0) === 0 }">
-                                {{ (business.deliveryPrice || 0) === 0 ? '免配送费' : `配送 ¥${business.deliveryPrice}` }}
+                            <span class="start-price">起送 ¥{{ business.startPrice.toFixed(2) || 0 }}</span>
+                            <span class="delivery-fee" :class="{ 'free-delivery': (business.deliveryPrice.toFixed(2) || 0) === 0 }">
+                                {{ (business.deliveryPrice || 0) === 0 ? '免配送费' : `配送 ¥${business.deliveryPrice.toFixed(2)}` }}
                             </span>
                         </div>
                         <div class="business-info-promotion">
@@ -349,7 +349,7 @@
                 </div>
             </li>
         </ul>
-<ai-chatbot />
+<ai-chatbot class="ai-chat"/>
         <!-- 底部菜单部分 -->
 
     </div>
@@ -2682,5 +2682,12 @@ export default {
 .btn-confirm:hover {
     background: linear-gradient(135deg, #0080e0, #0055aa);
     transform: translateY(-1px);
+}
+
+.ai-chat {
+    position: fixed;
+  bottom: 100px; /* 距离底部40px */
+  right: 20px; /* 距离右边20px */
+  z-index: 9999;
 }
 </style>

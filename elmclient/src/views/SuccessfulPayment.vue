@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="actions">
-        <button @click="goBack" class="btn-back">返回首页</button>
+        <button @click="goBack" class="btn-back">去查看订单</button>
       </div>
     </div>
   </div>
@@ -76,7 +76,7 @@ export default {
     });
 
     const goBack = () => {
-      router.push('/index');
+      router.push('/orderList');
     };
 
     return {

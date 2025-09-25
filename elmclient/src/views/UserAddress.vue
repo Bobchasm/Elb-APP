@@ -4,7 +4,7 @@
 		<BackButton style="margin-top: -12vw;"/>
     <div class="header">
 
-      <h1 class="title">订单配送地址</h1>
+      <p>订单配送地址</p>
     </div>
 		<!-- 地址列表部分 -->
 		<ul class="addresslist">
@@ -236,21 +236,19 @@ export default {
 }
 
 /*************** header ***************/
-.wrapper header {
+.wrapper .header {
 	width: 100%;
-	height: 12vw;
-	background-color: #0097FF;
-	display: flex;
-	justify-content: space-around;
-	align-items: center;
-	color: #fff;
-	font-size: 4.8vw;
-	font-weight: 600;
-	position: fixed;
-	left: 0;
-	top: 0;
-	/*保证在最上层*/
-	z-index: 1000;
+  height: 12vw;
+  background-color: #0097ff;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .wapper title {
  font-size: 1.1rem;

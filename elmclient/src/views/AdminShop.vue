@@ -11,8 +11,8 @@
 			<div class="store-info">
 			  <img :src="s.businessImg || defaultImg" class="logo" @error="onImgError" />
 			  <div class="meta">
-				<p class="name">{{ s.businessName }}</p>
-				<p class="addr">{{ s.businessAddress }}</p>
+				<p class="name">{{ s.businessName ||'未命名商铺'}}</p>
+				<p class="addr">{{ s.businessAddress ||'暂无地址'}}</p>
 				<p class="desc">{{ s.businessExplain || '暂无简介' }}</p>
 				<p class="type">类型: {{ shopTypes.find(t => t.id === s.orderTypeId)?.name || '未设置' }}</p>
 			  </div>
@@ -65,7 +65,7 @@
 				<img :src="editor.form.businessImg" alt="预览" />
 			  </div>
 			  
-			  <label>商铺地址 <span class="limit">(不超过20字)</span></label>
+			  <label>商铺地址 <span class="limit">(不超过15字)</span></label>
 			  <input 
 				v-model="editor.form.businessAddress" 
 				placeholder="请输入地址" 
@@ -73,7 +73,7 @@
 			  />
 			  <p class="error" v-if="addressError">{{ addressError }}</p>
 			  
-			  <label>商铺简介 <span class="limit">(不超过30字)</span></label>
+			  <label>商铺简介 <span class="limit">(不超过15字)</span></label>
 			  <textarea 
 				v-model="editor.form.businessExplain" 
 				placeholder="请输入商铺简介"
@@ -143,7 +143,7 @@ export default {
     const ownerId = ref(null);
     const businessName = ref('');
     const storeList = ref([]);
-    const defaultImg = '/R-C.png';
+    const defaultImg = require('@/assets/default-business.png');
     const fileInput = ref(null);
     const selectedFile = ref(null);
     const uploadFileName = ref('');
@@ -233,8 +233,8 @@ export default {
 
     // 验证商铺地址
     const validateAddress = () => {
-      if (editor.form.businessAddress.length > 20) {
-        addressError.value = '商铺地址不能超过20个字';
+      if (editor.form.businessAddress.length >15) {
+        addressError.value = '商铺地址不能超过15个字';
       } else {
         addressError.value = '';
       }
@@ -242,8 +242,8 @@ export default {
 
     // 验证商铺简介
     const validateExplain = () => {
-      if (editor.form.businessExplain.length > 30) {
-        explainError.value = '商铺简介不能超过30个字';
+      if (editor.form.businessExplain.length > 15) {
+        explainError.value = '商铺简介不能超过15个字';
       } else {
         explainError.value = '';
       }

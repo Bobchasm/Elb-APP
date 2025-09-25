@@ -79,7 +79,7 @@ export default {
   name: 'MerchantProfile',
   setup() {
     const router = useRouter();
-    const defaultAvatar = 'https://via.placeholder.com/100'; // 备用默认头像
+    const defaultAvatar = require('@/assets/default-avatar.png'); // 备用默认头像
 
     const merchant = ref(null);
     const stores = ref([]); // 存储商铺列表

@@ -32,6 +32,10 @@ public class JWTFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String uri = request.getRequestURI();//请求后缀 协议://域名"/xxx/xxx"
+        if (uri.startsWith("/ws/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         log.info("收到请求 " + uri);
         try {
             String jwt = resolveToken(request);

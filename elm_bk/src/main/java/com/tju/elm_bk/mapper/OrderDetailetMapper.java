@@ -20,7 +20,7 @@ public interface OrderDetailetMapper {
 
     @Select("""
         select od.id,od.quantity,od.food_id,
-           f.food_name,f.food_price,
+           f.food_name,od.food_price,
            o.id as order_id
         from orderdetailet od
         left join food f on f.id = od.food_id

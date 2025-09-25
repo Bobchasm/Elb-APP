@@ -10,7 +10,7 @@
 
     <div class="business-info-card">
       <div class="business-logo">
-        <img :src="business.businessImg" />
+        <img :src="business.businessImg || require('@/assets/default-business.png')" />
       </div>
       <div class="info-details">
         <h1>{{ business.businessName }}</h1>
@@ -170,6 +170,73 @@ export default {
           const uploadBtn = document.getElementById('upload-btn');
           const imagePreview = document.getElementById('image-preview');
 
+          // 实时校验函数
+          const validateField = (inputId, validationFn, errorMessage) => {
+            const input = document.getElementById(inputId);
+            if (input) {
+              input.addEventListener('input', () => {
+                const isValid = validationFn(input.value.trim());
+                if (!isValid) {
+                  input.style.borderColor = '#dc3545';
+                  input.style.backgroundColor = '#fff5f5';
+                  showFieldError(input, errorMessage);
+                } else {
+                  input.style.borderColor = '#28a745';
+                  input.style.backgroundColor = '#f8fff8';
+                  hideFieldError(input);
+                }
+              });
+            }
+          };
+
+          // 显示字段错误提示
+          const showFieldError = (input, message) => {
+            hideFieldError(input);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error-message';
+            errorDiv.textContent = message;
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '12px';
+            errorDiv.style.marginTop = '4px';
+            input.parentNode.appendChild(errorDiv);
+          };
+
+          // 隐藏字段错误提示
+          const hideFieldError = (input) => {
+            const existingError = input.parentNode.querySelector('.field-error-message');
+            if (existingError) {
+              existingError.remove();
+            }
+          };
+
+          // 商铺名称校验（最多10个字符）
+          validateField('businessName', (value) => {
+            return value.length <= 10;
+          }, '商铺名称不能超过10个字符');
+
+          // 商铺介绍校验（最多15个字符）
+          validateField('businessExplain', (value) => {
+            return value.length <= 15;
+          }, '商铺介绍不能超过15个字符');
+
+          // 起送价校验
+          validateField('startPrice', (value) => {
+            if (!value) return false;
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) return false;
+            if (value.includes('.') && value.split('.')[1].length > 2) return false;
+            return true;
+          }, '起送价必须大于等于0，小数点最多保留两位');
+
+          // 配送费校验
+          validateField('deliveryPrice', (value) => {
+            if (!value) return false;
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) return false;
+            if (value.includes('.') && value.split('.')[1].length > 2) return false;
+            return true;
+          }, '配送费必须大于等于0，小数点最多保留两位');
+
           uploadBtn.addEventListener('click', () => {
             fileInput.click();
           });
@@ -186,14 +253,21 @@ export default {
           });
         },
         preConfirm: async () => {
-          const businessName = document.getElementById('businessName').value;
+          const businessName = document.getElementById('businessName').value.trim();
           const startPrice = parseFloat(document.getElementById('startPrice').value);
           const deliveryPrice = parseFloat(document.getElementById('deliveryPrice').value);
-          const businessExplain = document.getElementById('businessExplain').value;
+          const businessExplain = document.getElementById('businessExplain').value.trim();
           const orderTypeId = document.getElementById('orderTypeId').value;
 
           if (!businessName || isNaN(startPrice) || isNaN(deliveryPrice) || !orderTypeId) {
             Swal.showValidationMessage('请填写完整且正确的信息');
+            return false;
+          }
+
+          // 检查是否有字段校验错误
+          const errorMessages = document.querySelectorAll('.field-error-message');
+          if (errorMessages.length > 0) {
+            Swal.showValidationMessage('请修正表单中的错误');
             return false;
           }
 
@@ -313,6 +387,64 @@ export default {
           const imagePreview = document.getElementById('image-preview');
           const noImageText = document.getElementById('no-image-text');
 
+          // 实时校验函数
+          const validateField = (inputId, validationFn, errorMessage) => {
+            const input = document.getElementById(inputId);
+            if (input) {
+              input.addEventListener('input', () => {
+                const isValid = validationFn(input.value.trim());
+                if (!isValid) {
+                  input.style.borderColor = '#dc3545';
+                  input.style.backgroundColor = '#fff5f5';
+                  showFieldError(input, errorMessage);
+                } else {
+                  input.style.borderColor = '#28a745';
+                  input.style.backgroundColor = '#f8fff8';
+                  hideFieldError(input);
+                }
+              });
+            }
+          };
+
+          // 显示字段错误提示
+          const showFieldError = (input, message) => {
+            hideFieldError(input);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error-message';
+            errorDiv.textContent = message;
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '12px';
+            errorDiv.style.marginTop = '4px';
+            input.parentNode.appendChild(errorDiv);
+          };
+
+          // 隐藏字段错误提示
+          const hideFieldError = (input) => {
+            const existingError = input.parentNode.querySelector('.field-error-message');
+            if (existingError) {
+              existingError.remove();
+            }
+          };
+
+          // 商品名称校验（最多6个字符）
+          validateField('foodName', (value) => {
+            return value.length <= 6;
+          }, '商品名称不能超过6个字符');
+
+          // 商品简介校验（最多8个字符）
+          validateField('foodExplain', (value) => {
+            return value.length <= 8;
+          }, '商品简介不能超过8个字符');
+
+          // 商品价格校验
+          validateField('foodPrice', (value) => {
+            if (!value) return false;
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) return false;
+            if (value.includes('.') && value.split('.')[1].length > 2) return false;
+            return true;
+          }, '商品价格必须大于等于0，小数点最多保留两位');
+
           uploadBtn.addEventListener('click', () => {
             fileInput.click();
           });
@@ -331,12 +463,19 @@ export default {
           });
         },
         preConfirm: async () => {
-          const foodName = document.getElementById('foodName').value;
-          const foodExplain = document.getElementById('foodExplain').value;
+          const foodName = document.getElementById('foodName').value.trim();
+          const foodExplain = document.getElementById('foodExplain').value.trim();
           const foodPrice = parseFloat(document.getElementById('foodPrice').value);
 
           if (!foodName || !foodExplain || isNaN(foodPrice)) {
             Swal.showValidationMessage('请填写完整且正确的信息');
+            return false;
+          }
+
+          // 检查是否有字段校验错误
+          const errorMessages = document.querySelectorAll('.field-error-message');
+          if (errorMessages.length > 0) {
+            Swal.showValidationMessage('请修正表单中的错误');
             return false;
           }
 
@@ -449,6 +588,64 @@ export default {
           const uploadBtn = document.getElementById('upload-btn');
           const imagePreview = document.getElementById('image-preview');
 
+          // 实时校验函数
+          const validateField = (inputId, validationFn, errorMessage) => {
+            const input = document.getElementById(inputId);
+            if (input) {
+              input.addEventListener('input', () => {
+                const isValid = validationFn(input.value.trim());
+                if (!isValid) {
+                  input.style.borderColor = '#dc3545';
+                  input.style.backgroundColor = '#fff5f5';
+                  showFieldError(input, errorMessage);
+                } else {
+                  input.style.borderColor = '#28a745';
+                  input.style.backgroundColor = '#f8fff8';
+                  hideFieldError(input);
+                }
+              });
+            }
+          };
+
+          // 显示字段错误提示
+          const showFieldError = (input, message) => {
+            hideFieldError(input);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error-message';
+            errorDiv.textContent = message;
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '12px';
+            errorDiv.style.marginTop = '4px';
+            input.parentNode.appendChild(errorDiv);
+          };
+
+          // 隐藏字段错误提示
+          const hideFieldError = (input) => {
+            const existingError = input.parentNode.querySelector('.field-error-message');
+            if (existingError) {
+              existingError.remove();
+            }
+          };
+
+          // 商品名称校验（最多6个字符）
+          validateField('foodName', (value) => {
+            return value.length <= 6;
+          }, '商品名称不能超过6个字符');
+
+          // 商品简介校验（最多8个字符）
+          validateField('foodExplain', (value) => {
+            return value.length <= 8;
+          }, '商品简介不能超过8个字符');
+
+          // 商品价格校验
+          validateField('foodPrice', (value) => {
+            if (!value) return false;
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) return false;
+            if (value.includes('.') && value.split('.')[1].length > 2) return false;
+            return true;
+          }, '商品价格必须大于等于0，小数点最多保留两位');
+
           uploadBtn.addEventListener('click', () => {
             fileInput.click();
           });
@@ -465,9 +662,21 @@ export default {
           });
         },
         preConfirm: async () => {
-          const foodName = document.getElementById('foodName').value;
-          const foodExplain = document.getElementById('foodExplain').value;
+          const foodName = document.getElementById('foodName').value.trim();
+          const foodExplain = document.getElementById('foodExplain').value.trim();
           const foodPrice = parseFloat(document.getElementById('foodPrice').value);
+
+          if (!foodName || !foodExplain || isNaN(foodPrice)) {
+            Swal.showValidationMessage('请填写完整且正确的信息');
+            return false;
+          }
+
+          // 检查是否有字段校验错误
+          const errorMessages = document.querySelectorAll('.field-error-message');
+          if (errorMessages.length > 0) {
+            Swal.showValidationMessage('请修正表单中的错误');
+            return false;
+          }
 
           let finalImageUrl = currentImageUrl;
 
@@ -602,6 +811,30 @@ export default {
 </script>
 
 <style scoped>
+/* 实时校验错误提示样式 */
+.field-error-message {
+  color: #dc3545 !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+  padding: 4px 8px !important;
+  background-color: #fff5f5 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 4px !important;
+  animation: slideDown 0.3s ease-out !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /****************** 总容器 ******************/
 .wrapper {
   width: 100%;

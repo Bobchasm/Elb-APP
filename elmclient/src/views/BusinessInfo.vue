@@ -8,18 +8,18 @@
         </div>
         <!-- 商家logo部分 -->
         <div class="business-logo">
-            <img :src="business.businessImg || require('@/assets/default-business.png')" />
+            <img :src="business.businessImg || require('@/assets/business-default.png')" />
         </div>
 
         <!-- 商家信息部分 -->
         <div class="business-info">
-            <h1>{{ business.businessName }}</h1>
+            <h1>{{ business.businessName || ''}}</h1>
             <p>
-                &#165;{{ business.startPrice }}起送 &#165;{{
-                    business.deliveryPrice
+                &#165;{{ business.startPrice.toFixed(2) || 0}}起送 &#165;{{
+                    business.deliveryPrice.toFixed(2) || 0
                 }}配送
             </p>
-            <p class="explain-info">{{ business.businessExplain }}</p>
+            <p class="explain-info">{{ business.businessExplain || ''}}</p>
             <div class="reactions">
                 <div class="reaction" @click.stop="toggleLike"
                     :class="{ 'active': isLiked, 'disabled': interactionLoading }" :title="isLiked ? '已点赞' : '点赞'">
@@ -41,11 +41,11 @@
         <ul class="food">
             <li v-for="(item, index) in foodArr" :key="item.foodId">
                 <div class="food-left">
-                    <img :src="item.foodImg || require('@/assets/default-business.png')" />
+                    <img :src="item.foodImg || require('@/assets/food-default.png')" />
                     <div class="food-left-info">
-                        <h3>{{ item.foodName }}</h3>
-                        <p>{{ item.foodExplain }}</p>
-                        <p>&#165;{{ item.foodPrice }}</p>
+                        <h3>{{ item.foodName || ''}}</h3>
+                        <p>{{ item.foodExplain || ''}}</p>
+                        <p>&#165;{{ item.foodPrice.toFixed(2) || 0}}</p>
                     </div>
                 </div>
                 <div class="food-right">
@@ -53,7 +53,7 @@
                         <i class="fa fa-minus-circle" @click="minus(index)" v-show="getCartQuantity(item.id) > 0"></i>
                     </div>
                     <p>
-                        <span v-show="getCartQuantity(item.id) > 0">{{ getCartQuantity(item.id) }}</span>
+                        <span v-show="getCartQuantity(item.id) > 0">{{ getCartQuantity(item.id) || 0}}</span>
                     </p>
                     <div>
                         <i class="fa fa-plus-circle" @click="add(index)"></i>
@@ -71,18 +71,18 @@
                     " @click="goToCart()">
                     <i class="fa fa-shopping-cart"></i>
                     <div class="cart-left-icon-quantity" v-show="totalQuantity != 0">
-                        {{ totalQuantity }}
+                        {{ totalQuantity || 0}}
                     </div>
                 </div>
                 <div class="cart-left-info">
-                    <p>&#165;{{ totalPrice.toFixed(2) }}</p>
-                    <p>另需配送费{{ business.deliveryPrice }}元</p>
+                    <p>&#165;{{ totalPrice.toFixed(2) || 0}}</p>
+                    <p>另需配送费{{ business.deliveryPrice || 0}}元</p>
                 </div>
             </div>
             <div class="cart-right">
                 <!-- 不够起送费 -->
                 <div class="cart-right-item" v-show="!canOrder" style="background-color: #535356; cursor: default">
-                    &#165;{{ business.startPrice }}起送
+                    &#165;{{ business.startPrice || 0}}起送
                 </div>
                 <!-- 达到起送费但商品总价小于配送费 -->
                 <div class="cart-right-item" v-show="canOrder && totalPrice < business.deliveryPrice"

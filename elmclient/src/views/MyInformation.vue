@@ -425,8 +425,8 @@ export default {
           toast.error(response.message);
         }
       } catch (error) {
-        console.error('申请成为商家失败:', error);
-        toast.error('申请失败，请重试！');
+        // console.error('申请成为商家失败:', error);
+        toast.error(error);
       }
     };
     const submitEdits = async () => {

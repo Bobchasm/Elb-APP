@@ -3,7 +3,7 @@
 		<!-- header部分 -->
 		<BackButton style="margin-top: 2vw;"/>
     <div class="header">
-      <h1 class="title">新增送货地址</h1>
+      <p>新增送货地址</p>
     </div>
 
     <!-- 表单部分 -->
@@ -149,14 +149,14 @@ export default {
 
 /*************** header ***************/
 .header {
-  width: 100%;
+	width: 100%;
   height: 12vw;
-  background-color: #0097FF;
+  background-color: #0097ff;
   color: #fff;
   font-size: 4.8vw;
   position: fixed;
-  top: 0;
   left: 0;
+  top: 0;
   z-index: 1000;
   display: flex;
   justify-content: center;

@@ -17,7 +17,7 @@
 			
 			<!-- 错误提示 -->
 			<div v-else-if="error" class="error">
-				<p>{{ error }}</p>
+				<p>{{ error || ''}}</p>
 				<button @click="retry">重新加载</button>
 			</div>
 			
@@ -31,7 +31,7 @@
 					<div class="status-info">
 						<h3>{{ getStatusText(orderDetail.orderState) }}</h3>
 						<p>订单号: {{ orderDetail.id || '-' }}</p>
-						<p>下单时间: {{ formatTime(orderDetail.orderDate) }}</p>
+						<p>下单时间: {{ formatTime(orderDetail.orderDate) || ''}}</p>
 					</div>
 				</div>
 
@@ -72,15 +72,15 @@
 					<div class="price-details">
 						<div class="price-row">
 							<span>商品金额</span>
-							<span>¥ {{ itemsTotal.toFixed(2) }}</span>
+							<span>¥ {{ itemsTotal.toFixed(2) || '0'}}</span>
 						</div>
 						<div class="price-row">
 							<span>配送费</span>
-							<span>&#165;{{ orderDetail.deliveryPrice || '0.00' }}</span>
+							<span>&#165;{{ orderDetail.deliveryPrice.toFixed(2) || '0.00' }}</span>
 						</div>
 						<div class="price-row total">
 							<span>实付款</span>
-							<span>¥ {{ orderDetail.orderTotal.toFixed(2) }}</span>
+							<span>¥ {{ orderDetail.orderTotal.toFixed(2) || '0.00'}}</span>
 						</div>
 					</div>
 				</div>

@@ -34,8 +34,8 @@
               <span class="sales-volume">月售{{ business.salesVolume }}单</span>
             </div>
             <div class="business-delivery-row">
-              <span class="delivery-fee">配送费￥{{ business.deliveryFee }}</span>
-              <span class="start-price">起送费￥{{ business.startPrice }}</span>
+              <span class="delivery-fee">配送费￥{{ business.deliveryFee.toFixed(2) }}</span>
+              <span class="start-price">起送费￥{{ business.startPrice.toFixed(2) }}</span>
             </div>
           </div>
         </div>

@@ -5,12 +5,8 @@
     </div>
 
     <div class="status-tabs">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.status" 
-        :class="{ active: activeTab === tab.status }"
-        @click="changeTab(tab.status)"
-      >
+      <button v-for="tab in tabs" :key="tab.status" :class="{ active: activeTab === tab.status }"
+        @click="changeTab(tab.status)">
         {{ tab.label }}
       </button>
     </div>
@@ -21,9 +17,8 @@
           <!-- <div class="status-badge" :class="getStatusClass(shop.status)">
             {{ getStatusText(shop.status) }}
           </div> -->
-          <img
-            :src="shop?.businessImg || 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/6a48eb69-23ba-473b-8755-3efb4f3d14a7.png'"
-            :alt="shop?.businessName || '未命名商铺'" class="logo" @error="handleImageError">
+          <img :src="shop?.businessImg || require('@/assets/default-business.png')" :alt="shop?.businessName || '未命名商铺'"
+            class="logo" @error="handleImageError" />
           <div class="business-info-detail">
             <h3>{{ shop?.businessName || '未命名商铺' }}</h3>
             <div class="delivery-info-container">
@@ -249,9 +244,82 @@ export default {
             const imagePreview = document.getElementById('image-preview');
             const uploadIcon = document.getElementById('upload-icon');
             const uploadText = document.getElementById('upload-text');
-            
+
             const orderTypeInput = document.getElementById('orderTypeInput');
             const selectTypeBtn = document.getElementById('selectTypeBtn');
+
+            // 实时校验函数
+            const validateField = (inputId, validationFn, errorMessage) => {
+              const input = document.getElementById(inputId);
+              if (input) {
+                input.addEventListener('input', () => {
+                  const isValid = validationFn(input.value.trim());
+                  if (!isValid) {
+                    input.style.borderColor = '#dc3545';
+                    input.style.backgroundColor = '#fff5f5';
+                    // 显示错误提示
+                    showFieldError(input, errorMessage);
+                  } else {
+                    input.style.borderColor = '#28a745';
+                    input.style.backgroundColor = '#f8fff8';
+                    hideFieldError(input);
+                  }
+                });
+              }
+            };
+
+            // 显示字段错误提示
+            const showFieldError = (input, message) => {
+              hideFieldError(input);
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'field-error-message';
+              errorDiv.textContent = message;
+              errorDiv.style.color = '#dc3545';
+              errorDiv.style.fontSize = '12px';
+              errorDiv.style.marginTop = '4px';
+              input.parentNode.appendChild(errorDiv);
+            };
+
+            // 隐藏字段错误提示
+            const hideFieldError = (input) => {
+              const existingError = input.parentNode.querySelector('.field-error-message');
+              if (existingError) {
+                existingError.remove();
+              }
+            };
+
+            // 商铺名称校验（最多10个字符）
+            validateField('businessName', (value) => {
+              return value.length <= 10;
+            }, '商铺名称不能超过10个字符');
+
+            // 商铺地址校验（最多15个字符）
+            validateField('businessAddress', (value) => {
+              return value.length <= 15;
+            }, '商铺地址不能超过15个字符');
+
+            // 商铺介绍校验（最多15个字符）
+            validateField('businessExplain', (value) => {
+              return value.length <= 15;
+            }, '商铺介绍不能超过15个字符');
+
+            // 配送费校验
+            validateField('deliveryPrice', (value) => {
+              if (!value) return false;
+              const num = parseFloat(value);
+              if (isNaN(num) || num < 0) return false;
+              if (value.includes('.') && value.split('.')[1].length > 2) return false;
+              return true;
+            }, '配送费必须大于等于0，小数点最多保留两位');
+
+            // 起送价校验
+            validateField('startPrice', (value) => {
+              if (!value) return false;
+              const num = parseFloat(value);
+              if (isNaN(num) || num < 0) return false;
+              if (value.includes('.') && value.split('.')[1].length > 2) return false;
+              return true;
+            }, '起送价必须大于等于0，小数点最多保留两位');
 
             fileInput.addEventListener('change', (event) => {
               uploadedFile = event.target.files[0];
@@ -274,7 +342,7 @@ export default {
             // 点击选择按钮，弹出类型选择弹窗
             selectTypeBtn.addEventListener('click', async (e) => {
               e.preventDefault();
-              
+
               const typeOptions = [
                 { id: 1, label: '美食' },
                 { id: 2, label: '早餐' },
@@ -306,13 +374,13 @@ export default {
                     <div class="type-options-container">${optionsHtml}</div>
                   </div>
                 `;
-                
+
                 document.body.appendChild(overlay);
 
                 // 添加事件监听
                 const closeBtn = overlay.querySelector('.type-select-close');
                 const options = overlay.querySelectorAll('.type-option');
-                
+
                 closeBtn.addEventListener('click', () => {
                   overlay.remove();
                   resolve(null);
@@ -344,16 +412,27 @@ export default {
             });
           },
           preConfirm: async () => {
-            const businessName = document.getElementById('businessName').value;
-            const businessAddress = document.getElementById('businessAddress').value;
-            const businessExplain = document.getElementById('businessExplain').value;
-            const deliveryPrice = parseFloat(document.getElementById('deliveryPrice').value) || 0;
-            const startPrice = parseFloat(document.getElementById('startPrice').value) || 0;
+            const businessName = document.getElementById('businessName').value.trim();
+            const businessAddress = document.getElementById('businessAddress').value.trim();
+            const businessExplain = document.getElementById('businessExplain').value.trim();
+            const deliveryPriceStr = document.getElementById('deliveryPrice').value.trim();
+            const startPriceStr = document.getElementById('startPrice').value.trim();
 
+            // 基础必填项校验
             if (!businessName || !businessAddress || !selectedOrderType) {
               Swal.showValidationMessage('请填写所有必填项');
               return false;
             }
+
+            // 检查是否有字段校验错误
+            const errorMessages = document.querySelectorAll('.field-error-message');
+            if (errorMessages.length > 0) {
+              Swal.showValidationMessage('请修正表单中的错误');
+              return false;
+            }
+
+            const deliveryPrice = parseFloat(deliveryPriceStr) || 0;
+            const startPrice = parseFloat(startPriceStr) || 0;
 
             if (uploadedFile) {
               const formData = new FormData();
@@ -452,28 +531,33 @@ body {
 }
 
 /* 确保父容器居中，并让子元素继承或对齐到中心 */
-  .swal2-content-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* 关键：这会将内部的块级元素（如input）居中 */
-  }
+.swal2-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 关键：这会将内部的块级元素（如input）居中 */
+}
 
-  /* 调整输入框和文本域的样式以适应居中对齐 */
-  .modern-input,
-  .modern-textarea,
-  .image-upload-area,
-  .input-with-button-container {
-    width: 90%; /* 确保它们有足够的宽度，但不至于撑满容器 */
-    max-width: 350px; /* 减小最大宽度 */
-    margin: 8px 0; /* 减小上下间距 */
-  }
+/* 调整输入框和文本域的样式以适应居中对齐 */
+.modern-input,
+.modern-textarea,
+.image-upload-area,
+.input-with-button-container {
+  width: 90%;
+  /* 确保它们有足够的宽度，但不至于撑满容器 */
+  max-width: 350px;
+  /* 减小最大宽度 */
+  margin: 8px 0;
+  /* 减小上下间距 */
+}
 
-  /* 可选：为选择按钮容器添加居中样式 */
-  .input-with-button-container {
-    display: flex;
-    justify-content: center; /* 确保内部元素居中 */
-    align-items: center;
-  }
+/* 可选：为选择按钮容器添加居中样式 */
+.input-with-button-container {
+  display: flex;
+  justify-content: center;
+  /* 确保内部元素居中 */
+  align-items: center;
+}
 
 /* ----------------------- 顶部标题栏 ----------------------- */
 .top-background {
@@ -511,6 +595,7 @@ body {
   0% {
     transform: rotate(30deg) translate(-10%, -10%);
   }
+
   100% {
     transform: rotate(30deg) translate(10%, 10%);
   }
@@ -525,7 +610,7 @@ body {
   margin: 0;
   z-index: 1;
 }
-
+ 
 /* ----------------------- 状态标签栏 ----------------------- */
 .status-tabs {
   display: flex;
@@ -568,7 +653,8 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 0 4vw;
-  padding-top: 150px; /* 为固定的头部和标签栏留出空间 */
+  padding-top: 150px;
+  /* 为固定的头部和标签栏留出空间 */
   padding-bottom: 140px;
 }
 
@@ -692,15 +778,18 @@ body {
 }
 
 .status-pending {
-  background-color: #ffc107; /* 黄色，表示审核中 */
+  background-color: #ffc107;
+  /* 黄色，表示审核中 */
 }
 
 .status-approved {
-  background-color: #28a745; /* 绿色，表示已上线 */
+  background-color: #28a745;
+  /* 绿色，表示已上线 */
 }
 
 .status-rejected {
-  background-color: #dc3545; /* 红色，表示审核未通过 */
+  background-color: #dc3545;
+  /* 红色，表示审核未通过 */
 }
 
 /* ----------------------- 底部按钮 ----------------------- */
@@ -798,7 +887,32 @@ body {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 2px; /* 减小表单项之间的间距 */
+  gap: 2px;
+  /* 减小表单项之间的间距 */
+}
+
+/* 实时校验错误提示样式 */
+.field-error-message {
+  color: #dc3545 !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+  padding: 4px 8px !important;
+  background-color: #fff5f5 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 4px !important;
+  animation: slideDown 0.3s ease-out !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 紧凑型弹窗样式 */
@@ -828,12 +942,14 @@ body {
   cursor: pointer;
   transition: border-color 0.3s, background-color 0.3s;
   margin: 0 auto 15px;
-  background-color: #f7f7f7; /* 增加背景色 */
+  background-color: #f7f7f7;
+  /* 增加背景色 */
 }
 
 .image-upload-area:hover {
   border-color: #007bb5;
-  background-color: #f0f8ff; /* 悬停时颜色变浅 */
+  background-color: #f0f8ff;
+  /* 悬停时颜色变浅 */
 }
 
 .upload-icon {
@@ -869,7 +985,8 @@ body {
   cursor: pointer;
 }
 
-.modern-input, .modern-textarea {
+.modern-input,
+.modern-textarea {
   border: 1px solid #e0e0e0 !important;
   border-radius: 6px !important;
   padding: 10px 14px !important;
@@ -880,13 +997,15 @@ body {
   color: #333 !important;
 }
 
-.modern-input:focus, .modern-textarea:focus {
+.modern-input:focus,
+.modern-textarea:focus {
   border-color: #0097ff !important;
   box-shadow: 0 0 0 4px rgba(0, 151, 255, 0.15) !important;
   outline: none !important;
 }
 
-.modern-input::placeholder, .modern-textarea::placeholder {
+.modern-input::placeholder,
+.modern-textarea::placeholder {
   color: #999 !important;
   font-style: italic;
 }
@@ -895,14 +1014,18 @@ body {
 .input-with-button-container {
   display: flex;
   align-items: center;
-  gap: 10px; /* 输入框和按钮之间的间距 */
+  gap: 10px;
+  /* 输入框和按钮之间的间距 */
   width: 100%;
 }
 
 .input-with-button-container .modern-input {
-  flex-grow: 1; /* 让输入框占据剩余空间 */
-  cursor: pointer; /* 增加手型光标 */
-  color: #666; /* 默认文字颜色 */
+  flex-grow: 1;
+  /* 让输入框占据剩余空间 */
+  cursor: pointer;
+  /* 增加手型光标 */
+  color: #666;
+  /* 默认文字颜色 */
 }
 
 .select-type-btn {
@@ -914,7 +1037,8 @@ body {
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
-  white-space: nowrap; /* 防止按钮文字换行 */
+  white-space: nowrap;
+  /* 防止按钮文字换行 */
 }
 
 .select-type-btn:hover {
@@ -929,7 +1053,8 @@ body {
 
 /* 弹出类型选择列表的样式 */
 .type-select-popup .swal2-popup {
-  width: 320px !important; /* 调整弹窗宽度 */
+  width: 320px !important;
+  /* 调整弹窗宽度 */
   padding: 0 !important;
 }
 
@@ -1045,8 +1170,13 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
@@ -1054,6 +1184,7 @@ body {
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1066,20 +1197,20 @@ body {
     max-width: 100vw;
     width: 100vw;
   }
-  
+
   .top-background {
     height: 90px;
     border-radius: 0;
     max-width: 100vw;
   }
-  
+
   .status-tabs {
     top: 90px;
     max-width: 100vw;
     transform: none;
     left: 0;
   }
-  
+
   .container {
     max-width: 100vw;
     width: 100vw;

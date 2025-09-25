@@ -177,11 +177,11 @@
               </div>
               <div class="modal-item">
                 <label>起送价:</label>
-                <span>¥{{ currentShopApp?.startPrice }}</span>
+                <span>¥{{ currentShopApp?.startPrice.toFixed(2) }}</span>
               </div>
               <div class="modal-item">
                 <label>配送费:</label>
-                <span>¥{{ currentShopApp?.deliveryPrice }}</span>
+                <span>¥{{ currentShopApp?.deliveryPrice.toFixed(2) }}</span>
               </div>
               <div class="modal-item">
                 <label>店铺类型:</label>
