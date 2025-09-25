@@ -3,7 +3,7 @@
 		<BackButton :show-back-button="true" style="margin-top: -10vw;" />
 		<!-- header部分 -->
 		<div class="header">
-			<h1 class="title">商家列表</h1>
+			<p>商家列表</p>
 		</div>
 
 		<!-- 商家列表部分 -->
@@ -93,17 +93,19 @@ export default {
 	padding-top: 0;
 	background-color: #f5f5f5;
 }
-
-.wrapper header {
-	padding: 20px;
-	text-align: center;
-	background: linear-gradient(to right, #3a7bd5, #00d2ff);
-	color: white;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	border-radius: 16px 16px 0 0;
-	position: relative;
-	overflow: hidden;
-	margin-bottom: 20px;
+.header {
+	width: 100%;
+  height: 12vw;
+  background-color: #0097ff;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .wrapper title {
@@ -116,6 +118,7 @@ export default {
 .wrapper .business-list {
 	padding: 2vw;
 	margin-top: 12vw;
+	margin-bottom: 15vw;
 }
 
 .wrapper .business-item {

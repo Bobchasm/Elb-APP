@@ -198,7 +198,8 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
             merchantApplications.add(new MerchantApplicationsVO(
                     application.getId(),
                     application.getUserId(),
-                    userMapper.findById(application.getUserId()).getUsername()
+                    userMapper.findById(application.getUserId()).getUsername(),
+                    application.getCreateTime()
             ));
         }
         return merchantApplications;

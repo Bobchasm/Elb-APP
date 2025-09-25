@@ -354,11 +354,12 @@ const getMerchantApplications = async () => {
     const res = await request.get('/api/permission/merchant-applications');
     if (res.success && Array.isArray(res.data)) {
       // 补充申请时间（若接口未返回，可根据实际调整）
+      console.log("第一个申请列表后端:",res.data);
       merchantApplications.value = res.data.map((app) => ({
         ...app,
         createTime: app.createTime || new Date().toISOString(),
       }));
-      console.log(merchantApplications.value);
+      console.log("第一个申请列表后端:",merchantApplications.value);
     }
   } catch (error) {
     console.error('获取商家申请列表失败:', error);

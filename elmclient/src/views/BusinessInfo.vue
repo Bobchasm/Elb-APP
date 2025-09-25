@@ -4,7 +4,7 @@
         <!-- header部分 -->
         <!-- 首页点进去后展示的内容 -->
         <div class="header">
-            <h1 class="title">商家信息</h1>
+            <p>商家信息</p>
         </div>
         <!-- 商家logo部分 -->
         <div class="business-logo">
@@ -702,17 +702,19 @@ export default {
     justify-content: center;
     align-items: center;
 } */
-.wrapper header {
-  padding: 20px;
-  text-align: center;
-  font-weight: 600;
-  background: linear-gradient(to right, #3a7bd5, #00d2ff);
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 20px;
+.wrapper .header {
+	width: 100%;
+  height: 12vw;
+  background-color: #0097ff;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .wrapper title {
   margin: 0;

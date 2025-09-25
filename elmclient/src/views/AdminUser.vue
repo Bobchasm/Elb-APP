@@ -373,7 +373,7 @@ onMounted(() => {
 .search-section {
   width: 92%;
   max-width: 500px;
-  margin-top: -4.7vw;
+  margin-top: -2vw;
   transform: translateY(-40px);
   position: fixed;
   z-index:999;
@@ -383,8 +383,9 @@ onMounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  background: #f8f9fa;
+  background: #f8f9fad8;
   border-radius: 25px;
+  border:1px solid #f0f0f0;
   padding: 12px 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -410,7 +411,7 @@ onMounted(() => {
 .filter-section {
   width: 92%;
   max-width: 500px;
-  margin-top: 22px;
+  margin-top: 40px;
   transform: translateY(-40px);
   position: fixed;
   z-index:999;
@@ -448,7 +449,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 15px;
   transform: translateY(-40px);
-  margin-top:22vw;
+  margin-top:27vw;
 }
 
 .user-item {

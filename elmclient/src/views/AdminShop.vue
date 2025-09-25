@@ -3,7 +3,7 @@
     <BackButton style="margin-top: -10vw;"/>  
 	  <!-- <header class="topbar"><p>商铺管理 - {{ businessName || '商家' }}</p></header> -->
     <div class="header">
-            <h1 class="title">商铺管理 - {{ businessName || '商家' }}</h1>
+            <p>商铺管理 - {{ businessName || '商家' }}</p>
         </div>
 	  <div class="content">
 		<ul class="store-list">
@@ -105,10 +105,26 @@
 			</div>
 		  </div>
 		</div>
+
+		<!-- 删除确认弹窗 -->
+		<div v-if="showConfirmModal" class="modal-overlay" @click.self="closeModal">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h3>确认操作</h3>
+			  <span class="close-btn" @click="closeModal">&times;</span>
+			</div>
+			<div class="modal-body">
+			  <p>确认要删除此商铺吗？</p>
+			</div>
+			<div class="modal-footer">
+			  <button class="modal-btn confirm-btn" @click="confirmDelete">确认</button>
+			  <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+			</div>
+		  </div>
+		</div>
 	  </div>
 	</div>
   </template>
-
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
@@ -131,6 +147,10 @@ export default {
     const fileInput = ref(null);
     const selectedFile = ref(null);
     const uploadFileName = ref('');
+
+    // 删除确认弹窗相关
+    const showConfirmModal = ref(false);
+    const storeDeleteSelectId = ref(null);
 
     // 商铺类型选项
     const shopTypes = ref([
@@ -333,6 +353,33 @@ export default {
       typeError.value = '';
     };
 
+    // 删除商铺相关方法
+    const removeStore = (store) => {
+      storeDeleteSelectId.value = store.id;
+      showConfirmModal.value = true;
+    };
+
+    const closeModal = () => {
+      showConfirmModal.value = false;
+      storeDeleteSelectId.value = null;
+    };
+
+    const confirmDelete = async () => {
+      if (!storeDeleteSelectId.value) return;
+
+      try {
+        await request.delete(`/api/businesses/${storeDeleteSelectId.value}`);
+        storeList.value = storeList.value.filter(s => s.id !== storeDeleteSelectId.value);
+        // ElMessage.success('商铺删除成功');
+      } catch (error) {
+        console.error('删除商铺失败:', error);
+        storeList.value = storeList.value.filter(s => s.id !== storeDeleteSelectId.value);
+        // ElMessage.success('商铺删除成功');
+      } finally {
+        closeModal();
+      }
+    };
+
     const saveStore = async () => {
       // 先验证所有字段
       if (!validateAll()) {
@@ -410,19 +457,6 @@ export default {
       }
     };
 
-    const removeStore = async (store) => {
-      if (!confirm('确认删除该商铺吗？')) return;
-      try {
-        await request.delete(`/api/businesses/${store.id}`);
-        storeList.value = storeList.value.filter(s => s.id !== store.id);
-        // ElMessage.success('商铺删除成功');
-      } catch (error) {
-        console.error('删除商铺失败:', error);
-        storeList.value = storeList.value.filter(s => s.id !== store.id);
-        // ElMessage.success('商铺删除成功');
-      }
-    };
-
     onMounted(() => {
       ownerId.value = route.query.ownerId;
       businessName.value = route.query.merchantName || '';
@@ -454,12 +488,15 @@ export default {
       validateName,
       validateAddress,
       validateExplain,
-      validateType
+      validateType,
+      // 删除弹窗相关
+      showConfirmModal,
+      closeModal,
+      confirmDelete
     };
   }
 };
 </script>
-
 
 <style scoped>
 /* 原有样式保持不变 */
@@ -478,16 +515,19 @@ export default {
 	justify-content: center; 
 	align-items: center; 
 }
-.wrapper header {
-  padding: 20px;
-  text-align: center;
-  background: linear-gradient(to right, #3a7bd5, #00d2ff);
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px 16px 0 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 20px;
+.wrapper .header {
+	width: 100%;
+  height: 12vw;
+  background-color: #0097ff;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .wrapper title {
   margin: 0;
@@ -704,5 +744,111 @@ export default {
   font-size: 3vw;
   margin-top: -1vw;
   margin-bottom: 1vw;
+}
+
+/* 删除确认弹窗样式 - 与UserAddress保持一致 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 </style>

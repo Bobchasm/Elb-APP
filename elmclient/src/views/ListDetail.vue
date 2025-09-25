@@ -4,7 +4,7 @@
 		<div class="fixed-top">
 			<BackButton :show-back-button="true" style="margin-top: 2vw;"/>
 			<div class="header">
-				<h1 class="title">订单详情</h1>
+				<p>订单详情</p>
 			</div>
 		</div>
 		
@@ -286,14 +286,18 @@ export default {
 }
 
 .header {
-	padding: 20px;
-	text-align: center;
-	background: #0097ff;
-	color: white;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	border-radius: 0;
-	position: relative;
-	overflow: hidden;
+	width: 100%;
+  height: 12vw;
+  background-color: #0097ff;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .title {

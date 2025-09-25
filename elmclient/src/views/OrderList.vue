@@ -1,9 +1,9 @@
 <template>
-	<div class="wrapper">
-		<!-- 顶部蓝色栏 -->
-		<header class="topbar">
-			<p>订单</p>
-		</header>
+  <div class="wrapper">
+    <!-- 顶部蓝色栏 -->
+    <div class="top-background">
+      <h1>订单</h1>
+    </div>
 
 		<!-- 固定标题和筛选栏 -->
 		<div class="fixed-header">
@@ -375,30 +375,66 @@ export default {
 	padding-bottom: 30px;
 }
 
-.topbar {
-	width: 100%;
-	height: 12vw;
-	background-color: #409eff;
-	color: #fff;
-	font-size: 4.8vw;
-	font-weight: 600;
-	position: fixed;
-	left: 0;
-	top: 0;
-	z-index: 1000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+.top-background {
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
+}
+
+.top-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(30deg) translate(-10%, -10%);
+  }
+  100% {
+    transform: rotate(30deg) translate(10%, 10%);
+  }
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+  margin: 0;
+  z-index: 1;
 }
 
 /****************** 固定标题和筛选栏 ******************/
 .fixed-header {
-	position: fixed;
-	top: 12vw; /* 在顶部蓝色栏下方 */
-	left: 0;
-	width: 100%;
-	z-index: 999;
-	background: white;
+  position: fixed;
+  top: 100px; /* 在顶部背景下方 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 999;
+  background: white;
 }
 
 .page-title {
@@ -444,8 +480,12 @@ export default {
 
 /****************** 内容区域 ******************/
 .content-area {
-	margin-top: calc(20vw + 18vw); /* 顶部蓝色栏高度 + 固定标题和筛选栏高度 */
-	padding: 0 4vw;
+  margin-top: calc(100px + 18vw); /* 顶部背景高度 + 固定标题和筛选栏高度 */
+  padding: 0 4vw;
+  margin-bottom: 15vw;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /****************** 加载和空状态 ******************/
@@ -596,5 +636,136 @@ export default {
 .detail-btn {
 	background: #f5f5f5;
 	color: #666;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  .top-background {
+    height: 90px;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  
+  .fixed-header {
+    top: 90px;
+    max-width: 100vw;
+    transform: none;
+    left: 0;
+  }
+  
+  .content-area {
+    margin-top: calc(130px + 18vw);
+    max-width: 100vw;
+    width: 100vw;
+  }
 }
 </style>
