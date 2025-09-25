@@ -61,7 +61,7 @@
 							</template>
 							<div class="detail-item delivery-fee">
 								<span>配送费</span>
-								<span>&#165;{{ orderDetail.deliveryPrice || '0.00' }}</span>
+								<span>&#165;{{ orderDetail.deliveryPrice.toFixed(2) || '0.00' }}</span>
 							</div>
 						</div>
 					</div>

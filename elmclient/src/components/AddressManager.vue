@@ -15,7 +15,7 @@
         </div>
         <div class="address-actions">
           <i class="fas fa-edit edit-icon" @click="openAddressModal(address)"></i>
-          <i class="fas fa-trash-alt delete-icon" @click="deleteAddress(address.id)"></i>
+          <i class="fas fa-trash-alt delete-icon" @click="showDeleteConfirm(address)"></i>
         </div>
       </div>
       <div class="add-new-item" @click="openAddressModal()">
@@ -64,6 +64,25 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 删除确认弹窗 -->
+    <Teleport to="body">
+      <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>确认删除</h3>
+            <span class="close-btn" @click="closeDeleteModal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>确定要删除收货地址 "{{ selectedAddress?.contactName }}" 吗？</p>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn confirm-btn" @click="confirmDelete">确认</button>
+            <button class="modal-btn cancel-btn" @click="closeDeleteModal">取消</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -81,6 +100,8 @@ const addresses = ref([]);
 const isLoading = ref(false);
 const showAddressModal = ref(false);
 const isEditing = ref(false);
+const showDeleteModal = ref(false);
+const selectedAddress = ref(null);
 const addressForm = ref({
   id: null,
   contactName: '',
@@ -153,6 +174,12 @@ const closeAddressModal = () => {
   showAddressModal.value = false;
 };
 
+const closeDeleteModal = () => {
+  document.body.style.overflow = '';
+  showDeleteModal.value = false;
+  selectedAddress.value = null;
+};
+
 const submitAddress = async () => {
   const form = addressForm.value;
   
@@ -196,15 +223,25 @@ const submitAddress = async () => {
   }
 };
 
-const deleteAddress = async (id) => {
-  if (confirm('确定要删除此地址吗？')) {
-    try {
-      // 使用 request.post 方法发送 POST 请求
-      await request.put('/api/addresses/removeDeliveryAddress',  {  id: id });
-      toast.success('地址删除成功！');
-      loadAddresses();
-    } catch (error) {
-      console.error('删除失败:', error);
+const showDeleteConfirm = (address) => {
+  selectedAddress.value = address;
+  showDeleteModal.value = true;
+  document.body.style.overflow = 'hidden';
+};
+
+const confirmDelete = async () => {
+  if (!selectedAddress.value) return;
+
+  try {
+    await request.put('/api/addresses/removeDeliveryAddress', { id: selectedAddress.value.id });
+    toast.success('地址删除成功！');
+    closeDeleteModal();
+    loadAddresses();
+  } catch (error) {
+    console.error('删除失败:', error);
+    if (error.response && error.response.data && error.response.data.message) {
+      toast.error(`删除失败：${error.response.data.message}`);
+    } else {
       toast.error('删除失败，请重试！');
     }
   }
@@ -340,6 +377,27 @@ const deleteAddress = async (id) => {
   animation: modalSlideIn 0.3s ease-out;
 }
 
+/* 删除确认弹窗的特定样式 */
+.modal-overlay .modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+  max-height: none;
+  overflow-y: visible;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 .modal-content h3 {
   margin-top: 0;
   color: #2c3e50;
@@ -431,5 +489,80 @@ const deleteAddress = async (id) => {
 
 .radio-group input {
   margin-right: 5px; /* 单选按钮和文字的间距 */
+}
+
+/* AdminUser风格的确认弹窗样式 */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 </style>

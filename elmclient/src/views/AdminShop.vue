@@ -143,7 +143,7 @@ export default {
     const ownerId = ref(null);
     const businessName = ref('');
     const storeList = ref([]);
-    const defaultImg = require('@/assets/default-business.png');
+    const defaultImg = require('@/assets/business-default.png');
     const fileInput = ref(null);
     const selectedFile = ref(null);
     const uploadFileName = ref('');

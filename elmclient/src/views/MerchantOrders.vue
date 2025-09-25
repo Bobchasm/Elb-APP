@@ -67,7 +67,7 @@
           </div>
 
           <div class="price-row">
-            <br><span class="items-title">配送费: &#165;{{ order.deliveryPrice || '0.00' }}</span>
+            <br><span class="items-title">配送费: &#165;{{ order.deliveryPrice.toFixed(2) || '0.00' }}</span>
           </div>
           
           <div class="order-footer">
