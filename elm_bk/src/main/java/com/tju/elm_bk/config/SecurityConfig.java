@@ -67,7 +67,10 @@ public class SecurityConfig {
                 "/swagger-ui/**",
                 "/swagger-ui.html",
                 "/upload",
-                "/ws/**"
+                "/ws/**",
+                "/api/ai/chat/health",
+                "/api/businesses/search",
+                "/api/businesses/carousel"
         };
 
         http

@@ -17,16 +17,16 @@
           <!-- <div class="status-badge" :class="getStatusClass(shop.status)">
             {{ getStatusText(shop.status) }}
           </div> -->
-          <img :src="shop?.businessImg || require('@/assets/default-business.png')" :alt="shop?.businessName || '未命名商铺'"
+          <img :src="shop?.businessImg || require('@/assets/business-default.png')" :alt="shop?.businessName || '未命名商铺'"
             class="logo" @error="handleImageError" />
           <div class="business-info-detail">
             <h3>{{ shop?.businessName || '未命名商铺' }}</h3>
             <div class="delivery-info-container">
               <div class="business-info-delivery">
-                <p>配送费{{ shop?.deliveryPrice || 0 }}元</p>
+                <p>配送费{{ shop?.deliveryPrice.toFixed(2) || 0 }}元</p>
               </div>
               <div class="business-info-delivery">
-                <p>起送费{{ shop?.startPrice || 0 }}元</p>
+                <p>起送费{{ shop?.startPrice.toFixed(2) || 0 }}元</p>
               </div>
             </div>
             <div class="business-info-delivery">
