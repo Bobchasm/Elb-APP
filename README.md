@@ -98,6 +98,12 @@ MySQL版本信息：
   
   ![Alt](./gra/success_bk_start.png)
 
+如果在IDEA启动或打包项目时遇到控制台报错如 "找不到符号"，请确保以下位置选择正确
+
+![Alt](./gra/fix1.png)
+
+![Alt](./gra/fix2.png)
+
 ### 2.2 前端部分
 
 基于 Vue3
