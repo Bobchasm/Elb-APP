@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class AiKnowledgeBaseUtil {
                 
                 请注意：
                 - 保持友善、专业的服务态度
-                - 回答要准确、有用，基于实际的数据库信息
+                - 回答一定要准确、有用，基于实际的数据库信息
                 - 如果无法确定答案，请诚实告知并建议联系人工客服
                 - 回答要简洁明了，避免过于冗长
                 - 可以适当使用emoji让对话更生动
@@ -57,15 +58,16 @@ public class AiKnowledgeBaseUtil {
                 - 平台名称：饿了吧外卖平台
                 - 服务时间：7:00-23:00
                 - 客服电话：400-888-8888
+                - 咨询邮箱：elm_v2.0@elm.com
                 """;
     }
-    
+
     /**
-     * 根据用户ID获取用户上下文信息
+     * 根据用户ID获取用户上下文信息（包含所有最近订单详情）
      */
     public Map<String, Object> getUserContext(Long userId) {
         Map<String, Object> context = new HashMap<>();
-        
+
         try {
             // 获取用户基本信息
             User user = userMapper.findById(userId);
@@ -74,25 +76,44 @@ public class AiKnowledgeBaseUtil {
                 context.put("username", user.getUsername());
                 context.put("userActivated", user.getActivated());
             }
-            
+
             // 获取用户最近订单信息
             List<Order> recentOrders = ordersMapper.selectRecentOrdersByUserId(userId, 5);
             context.put("recentOrdersCount", recentOrders.size());
-            
+
+            // 存储所有订单的详细信息
             if (!recentOrders.isEmpty()) {
+                List<Map<String, Object>> orderDetails = new ArrayList<>();
+
+                for (int i = 0; i < recentOrders.size(); i++) {
+                    Order order = recentOrders.get(i);
+                    Map<String, Object> orderInfo = new HashMap<>();
+                    orderInfo.put("orderIndex", i + 1); // 订单序号（从1开始）
+                    orderInfo.put("orderId", order.getId());
+                    orderInfo.put("orderState", order.getOrderState());
+                    orderInfo.put("orderTotal", order.getOrderTotal());
+                    orderInfo.put("orderDate", order.getOrderDate()); // 假设有订单日期字段
+                    orderInfo.put("isLatest", i == 0); // 标记是否是最新订单
+
+                    orderDetails.add(orderInfo);
+                }
+
+                context.put("recentOrders", orderDetails);
+
+                // 同时保留最新订单的快速访问（可选）
                 Order lastOrder = recentOrders.get(0);
                 context.put("lastOrderId", lastOrder.getId());
                 context.put("lastOrderState", lastOrder.getOrderState());
                 context.put("lastOrderTotal", lastOrder.getOrderTotal());
             }
-            
+
         } catch (Exception e) {
             log.error("获取用户上下文信息失败: userId={}", userId, e);
         }
-        
+
         return context;
     }
-    
+
     /**
      * 搜索相关商家信息
      */

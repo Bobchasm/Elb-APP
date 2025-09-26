@@ -24,24 +24,28 @@ public class FoodController {
     private FoodService foodService;
 
     @GetMapping
-    @Operation(summary = "根据商家或订单获取商品列表")
+    @Operation(summary = "根据商家或订单获取商品列表",description = "老师测试用")
     public HttpResult<List<FoodVO>> getAllFoods(@RequestParam(required = false) Integer business, @RequestParam(required = false) Integer order) {
         return HttpResult.success(foodService.getFoodList(business,order));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "根据商家或订单获取商品列表")
+    @Operation(summary = "根据商家或订单获取商品列表",description = "老师测试用")
     public HttpResult<FoodVO> getAllFoods(@PathVariable Long id) {
         return HttpResult.success(foodService.getFoodById(id));
     }
 
     @PostMapping
-    @Operation(summary = "新增商品")
+    @Operation(summary = "新增商品",description = "老师测试用")
     public HttpResult<FoodVO> addFood(@RequestBody FoodDTO foodDTO) {
         return HttpResult.success(foodService.addFood(foodDTO));
     }
 
-
+    @PatchMapping("/{id}")
+    @Operation(summary = "修改商品信息",description = "老师测试用")
+    public HttpResult<FoodVO> modifyFood(@RequestBody FoodDTO foodDTO,@PathVariable Long id) {
+        return HttpResult.success(foodService.updateFood(foodDTO,id));
+    }
 
 
 

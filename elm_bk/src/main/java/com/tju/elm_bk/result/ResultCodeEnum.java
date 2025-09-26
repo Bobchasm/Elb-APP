@@ -11,9 +11,6 @@ public enum ResultCodeEnum {
 
     COMMON_ERROR("COMMON_ERROR","通用返回失败"),
 
-    PASSWORD_UNMATCHED("PASSWORD_UNMATCHED","用户名或密码错误"),
-    ACCOUNT_VALID("ACCOUNT_VALID","用户未激活或账号锁定"),
-
     CLIENT_ABORT("CLIENT_ABORT","异常中止"),
     PARAM_NOT_MATCHED_GET("PARAM_NOT_MATCHED_GET","GET参数有误"),
     PARAM_NOT_MATCHED_POST("PARAM_NOT_MATCHED_POST","POST参数有误"),
@@ -32,6 +29,9 @@ public enum ResultCodeEnum {
     CART_MISSED("CART_MISSED","购物车商品不存在"),
     FOOD_UNSHELVED("CART_MISSED","商品已下架"),
     FOOD_STATUS_SET_FAILED("FOOD_STATUS_SET_FAILED","商品上下架失败"),
+    USER_MISSED("USER_MISSED","用户不存在"),
+    USER_VALUE_MISSED("USER_VALUE_MISSED","管理员未指定用户"),
+    CART_EMPTY("CART_EMPTY","购物车为空"),
 
     ORDER_MISSED("ORDER_MISSED","订单不存在"),
     ORDER_STATUS_UNMATCHED("ORDER_STATUS_UNMATCHED","订单状态错误"),
@@ -44,7 +44,9 @@ public enum ResultCodeEnum {
     QUANTITY_ILLEGAL("QUANTITY_ILLEGAL","数量不合法"),
 
     BUSINESS_MISSED("BUSINESS_MISSED","商家不存在"),
-    UNAUTHORIZED("UNAUTHORIZED","无权限")
+    UNAUTHORIZED("UNAUTHORIZED","无权限"),
+    USER_UNMATCHED("USER_UNMATCHED","无法查看其他用户信息"),
+
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 
     // 1000～1999 区间表示用户模块错误

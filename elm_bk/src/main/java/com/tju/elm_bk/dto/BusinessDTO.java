@@ -17,12 +17,12 @@ public class BusinessDTO {
     @Schema(description = "店铺ID")
     private Long id;
 
-    @Schema(description = "创建时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createTime;
-    @Schema(description = "更新时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updateTime;
+//    @Schema(description = "创建时间")
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+//    private LocalDateTime createTime;
+//    @Schema(description = "更新时间")
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+//    private LocalDateTime updateTime;
     @Schema(description = "创建人ID")
     private Integer creator;
     @Schema(description = "更新人ID")
@@ -51,6 +51,6 @@ public class BusinessDTO {
     private Double deliveryPrice;
     @Schema(description = "备注")
     private String remarks;
-    @Schema(description = "商铺状态")
-    private Integer status;
+//    @Schema(description = "商铺状态")
+//    private Integer status;
 }

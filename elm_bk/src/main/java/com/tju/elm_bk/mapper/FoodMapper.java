@@ -24,6 +24,9 @@ public interface FoodMapper {
     @Select("SELECT * FROM food WHERE is_deleted = 0 AND id = #{id}")
     Food selectFoodById(Long id);
 
+    @Update("update food set update_time = #{updateTime}, updater = #{updater}, foodExplain = #{foodExplain}, foodImg =#{food_img}, foodName = #{food_name}, foodPrice = #{foodPrice}, remarks = #{remarks} where id = #{foodId}")
+    void updateFood(Food food,Long foodId);
+
 
 
     List<FoodItemVO> selectFoodItemVOList(Long businessId,Integer shelveStatus);

@@ -20,7 +20,7 @@ public class CartController {
     private CartService cartService;
 
     @PostMapping
-    @Operation(summary = "向购物车添加商品")
+    @Operation(summary = "向购物车添加商品",description = "老师测试用")
     public HttpResult<CartVO> addCartItem(@RequestBody CartItemCreateDTO cartItemCreateDTO) {
         return HttpResult.success(cartService.addCart(cartItemCreateDTO));
     }

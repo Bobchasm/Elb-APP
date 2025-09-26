@@ -53,12 +53,25 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderVO> getCustomerOrderList(Long customerId) {
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        if (!Objects.equals(customerId, user.getId())) {
+            throw new APIException(ResultCodeEnum.USER_UNMATCHED);
+        }
         return ordersMapper.selectOrders(customerId);
     }
 
     @Override
     public OrderVO getOrderById(Long orderId) {
-        return ordersMapper.selectOrderById(orderId);
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        OrderVO orderVO = ordersMapper.selectOrderById(orderId);
+        if (orderVO == null) {
+            throw new APIException(ResultCodeEnum.ORDER_MISSED);
+        }
+        Business business = businessMapper.selectBusinessById(orderId);
+        if(!Objects.equals(orderVO.getCustomer().getId(), user.getId()) && !Objects.equals(orderVO.getBusiness().getId(), business.getId())) {
+            throw new APIException(ResultCodeEnum.USER_UNMATCHED);
+        }
+        return orderVO;
     }
 
     @Override
@@ -79,6 +92,9 @@ public class OrderServiceImpl implements OrderService {
         // 设置订单信息
         Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         List<CartItemVO> cartItemsInBusiness = cartMapper.selectCartItems(userId,business.getId());
+        if (!cartItemsInBusiness.isEmpty()) {
+            throw new APIException(ResultCodeEnum.CART_EMPTY);
+        }
         Order order = new Order();
         order.setBusinessId(business.getId());
         order.setOrderDate(LocalDateTime.now());

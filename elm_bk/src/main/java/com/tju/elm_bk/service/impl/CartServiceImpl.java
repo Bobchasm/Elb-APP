@@ -46,14 +46,14 @@ public class CartServiceImpl implements CartService {
         if (food == null) {
             throw new APIException(ResultCodeEnum.FOOD_MISSED);
         }
-        Business business = businessMapper.selectBusinessById(cartItemCreateDTO.getBusiness().getId());
-        if (business == null) {
-            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
-        }
+//        Business business = businessMapper.selectBusinessById(cartItemCreateDTO.getBusiness().getId());
+//        if (business == null) {
+//            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
+//        }
 
         Cart cart = new Cart();
-        BeanUtils.copyProperties(cartItemCreateDTO, cart);
-        cart.setBusinessId(cartItemCreateDTO.getBusiness().getId());
+        cart.setQuantity(cartItemCreateDTO.getQuantity());
+        cart.setBusinessId(food.getBusinessId());
         cart.setFoodId(cartItemCreateDTO.getFood().getId());
         cart.setCustomerId(user.getId());
         cart.setCreator(user.getId());

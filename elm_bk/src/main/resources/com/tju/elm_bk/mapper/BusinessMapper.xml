@@ -68,8 +68,24 @@
         WHERE b.id = #{id} AND b.is_deleted = 0
     </select>
 
-    <!-- 更新商户信息并返回完整对象 -->
+    <!-- 完全更新商户信息并返回完整对象 -->
     <update id="updateBusiness" parameterType="map">
+        UPDATE business
+        SET
+            business_name = #{updateDto.businessName},
+            business_address = #{updateDto.businessAddress},
+            business_explain = #{updateDto.businessExplain},
+            business_img = #{updateDto.businessImg},
+            order_type_id = #{updateDto.orderTypeId, jdbcType=INTEGER},
+            start_price = #{updateDto.startPrice, jdbcType=DECIMAL},
+            delivery_price = #{updateDto.deliveryPrice, jdbcType=DECIMAL},
+            remarks = #{updateDto.remarks},
+            updater = #{updateDto.updater},
+            update_time = NOW()
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+    <!-- 部分更新商户信息并返回完整对象 -->
+    <update id="patchBusiness" parameterType="map">
         UPDATE business
         <set>
             <if test="updateDto.businessName != null and updateDto.businessName != ''">
@@ -86,6 +102,9 @@
             </if>
             <if test="updateDto.orderTypeId != null">
                 order_type_id = #{updateDto.orderTypeId},
+            </if>
+            <if test="updateDto.orderTypeId == null">
+                order_type_id = 1,
             </if>
             <if test="updateDto.startPrice != null">
                 start_price = #{updateDto.startPrice},
@@ -104,20 +123,30 @@
         WHERE id = #{id} AND is_deleted = 0
     </update>
 
-    <!-- 更新商户所有者信息 -->
+    <!-- 完全更新商户所有者信息 -->
     <update id="updateBusinessOwner" parameterType="map">
-        UPDATE users
+        UPDATE users u
+            JOIN business b ON u.id = b.user_id AND b.is_deleted = 0
+            SET
+                u.username = #{updateDto.businessOwner.username},
+                u.updater = #{updateDto.businessOwner.updater},
+                u.update_time = NOW()
+        WHERE b.id = #{id} AND u.is_deleted = 0
+    </update>
+    <!-- 部分更新商户所有者信息 -->
+    <update id="patchBusinessOwner" parameterType="map">
+        UPDATE users u
+        JOIN business b ON u.id = b.user_id AND b.is_deleted = 0
         <set>
             <if test="updateDto.businessOwner != null and updateDto.businessOwner.username != null and updateDto.businessOwner.username != ''">
-                username = #{updateDto.businessOwner.username},
+                u.username = #{updateDto.businessOwner.username},
             </if>
             <if test="updateDto.businessOwner != null and updateDto.businessOwner.updater != null">
-                updater = #{updateDto.businessOwner.updater},
+                u.updater = #{updateDto.businessOwner.updater},
             </if>
-
-            update_time = NOW()
+            u.update_time = NOW()
         </set>
-        WHERE id = (SELECT user_id FROM business WHERE id = #{id}) AND is_deleted = 0
+        WHERE b.id = #{id} AND u.is_deleted = 0
     </update>
 
     <!-- 获取所有商户列表 -->
@@ -147,7 +176,7 @@
             u.updater as user_updater
         FROM business b
                  LEFT JOIN users u ON b.user_id = u.id
-        WHERE b.is_deleted = 0 AND b.status = 1
+        WHERE b.is_deleted = 0
         ORDER BY b.create_time DESC
     </select>
 
@@ -168,8 +197,7 @@
             updater,
             create_time,
             update_time,
-            is_deleted,
-            status
+            is_deleted
         ) VALUES (
                      #{businessDto.businessName},
                      #{businessDto.businessAddress},
@@ -184,8 +212,7 @@
                      #{businessDto.updater},
                      NOW(),
                      NOW(),
-                     0,
-                     #{businessDto.status}
+                     0
                  )
     </insert>
     <insert id="insertBusinessPermission" parameterType="com.tju.elm_bk.dto.BusinessPermissionDTO" useGeneratedKeys="true" keyProperty="id">

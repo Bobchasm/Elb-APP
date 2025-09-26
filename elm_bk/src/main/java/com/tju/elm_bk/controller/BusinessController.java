@@ -37,11 +37,11 @@ public class BusinessController {
 
     /**
      * 根据ID获取店铺详情
-     * @param id 店铺ID (路径参数)
+     * @param id 店铺ID (路径参数)--牙膏1
      * @return 店铺详细信息
      */
     @GetMapping("/{id}")
-    @Operation(summary = "根据id获取某店铺详情", description = "根据id获取某店铺详情")
+    @Operation(summary = "（牙膏）根据id获取某店铺详情", description = "根据id获取某店铺详情")
     public HttpResult<BusinessVO> getBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("获取店铺详情请求参数错误: id={}", id);
@@ -58,13 +58,13 @@ public class BusinessController {
     }
 
     /**
-     * 更新店铺信息
+     * 更新店铺信息--牙膏
      * @param id 店铺ID (路径参数)
      * @param updateDto 更新数据
      * @return 更新后的店铺信息
      */
     @PutMapping("/{id}")
-    @Operation(summary = "更新某店铺信息", description = "更新某店铺信息")
+    @Operation(summary = "（牙膏）更新某店铺信息（覆盖）", description = "更新某店铺信息")
     public HttpResult<BusinessVO> updateBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto){
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -76,7 +76,7 @@ public class BusinessController {
     }
 
      @DeleteMapping("/{id}")
-     @Operation(summary = "删除某店铺")
+     @Operation(summary = "（牙膏）删除某店铺")
     public HttpResult<BusinessVO> deleteBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("删除店铺信息请求参数错误: id={}", id);
@@ -86,7 +86,7 @@ public class BusinessController {
         return HttpResult.success(businessVo);
     }
      @PatchMapping("/{id}")
-     @Operation(summary = "部分更新某店铺信息")
+     @Operation(summary = "（牙膏）部分更新某店铺信息")
     public HttpResult<BusinessVO> patchBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -100,7 +100,6 @@ public class BusinessController {
      * 获取所有店铺信息
      * @return 所有店铺信息
      */
-    //  【【----------------------- 后续加上分页查询，别忘了-------------------------】】
     @GetMapping
     @Operation(summary = "获取所有店铺信息--牙膏版本")
     public HttpResult<List<BusinessVO>> getBusinesses() {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tju.elm_bk.dto.LoginDTO;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.result.HttpResult;
-import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.security.TokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,10 +52,10 @@ public class AuthenticationRestController {
         return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
     } catch (BadCredentialsException e) {
         // 捕获密码错误异常，返回自定义消息
-       throw new APIException(ResultCodeEnum.PASSWORD_UNMATCHED);
+       throw new APIException("用户名或者密码错误");
     } catch (AuthenticationException e) {
         // 处理其他认证异常（如用户未激活、账号锁定等）
-            throw new APIException(ResultCodeEnum.ACCOUNT_VALID);
+            throw new APIException("用户未激活或账号锁定");
         }
     }
 
