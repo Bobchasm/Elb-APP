@@ -54,7 +54,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderVO> getCustomerOrderList(Long customerId) {
         User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        if (!Objects.equals(customerId, user.getId())) {
+        if (!Objects.equals(customerId, user.getId()) &&
+                user.getAuthorities().stream().noneMatch(auth -> "ADMIN".equals(auth.getName()))) {
             throw new APIException(ResultCodeEnum.USER_UNMATCHED);
         }
         return ordersMapper.selectOrders(customerId);
@@ -90,20 +91,23 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 设置订单信息
-        Long userId = userMapper.getUserIdByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        List<CartItemVO> cartItemsInBusiness = cartMapper.selectCartItems(userId,business.getId());
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        if (!Objects.equals(userMapper.getUserIdByUsername(orderDTO.getCustomer().getUsername()), user.getId())) {
+            throw new APIException(ResultCodeEnum.USER_UNMATCHED);
+        }
+        List<CartItemVO> cartItemsInBusiness = cartMapper.selectCartItems(user.getId(), business.getId());
         if (!cartItemsInBusiness.isEmpty()) {
             throw new APIException(ResultCodeEnum.CART_EMPTY);
         }
         Order order = new Order();
         order.setBusinessId(business.getId());
         order.setOrderDate(LocalDateTime.now());
-        order.setCustomerId(userId);
+        order.setCustomerId(user.getId());
         order.setAddressId(deliveryAddress.getId());
 
         order.setOrderState(0);
-        order.setCreator(userId);
-        order.setUpdater(userId);
+        order.setCreator(user.getId());
+        order.setUpdater(user.getId());
         order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
@@ -127,8 +131,8 @@ public class OrderServiceImpl implements OrderService {
             orderDetailet.setQuantity(cartItemVO.getQuantity());
             orderDetailet.setFoodId(cartItemVO.getFoodId());
 
-            orderDetailet.setCreator(userId);
-            orderDetailet.setUpdater(userId);
+            orderDetailet.setCreator(user.getId());
+            orderDetailet.setUpdater(user.getId());
             orderDetailet.setCreateTime(LocalDateTime.now());
             orderDetailet.setUpdateTime(LocalDateTime.now());
             orderDetailet.setIsDeleted(false);
@@ -137,7 +141,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 清空该用户在当前商家的购物车
-        cartMapper.clearCart(userId,orderDTO.getBusiness().getId());
+        cartMapper.clearCart(user.getId(),orderDTO.getBusiness().getId());
 
         return ordersMapper.selectOrderById(order.getId());
     }

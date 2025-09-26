@@ -42,6 +42,11 @@ public class CartServiceImpl implements CartService {
         }
 
         User user = userMapper.findByUsername(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+
+        if(!Objects.equals(userMapper.getUserIdByUsername(cartItemCreateDTO.getCustomer().getUsername()), user.getId())) {
+            throw new APIException(ResultCodeEnum.USER_UNMATCHED);
+        }
+
         Food food = foodMapper.selectFoodById(cartItemCreateDTO.getFood().getId());
         if (food == null) {
             throw new APIException(ResultCodeEnum.FOOD_MISSED);
