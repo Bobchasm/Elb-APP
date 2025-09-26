@@ -134,7 +134,7 @@ export default {
                     console.log('新增商家:', response.data);
                 } else {
                     // 调用更新接口
-                    const response = await request.put(`http://localhost:8080/api/businesses/${editor.form.userId}`, editor.form);
+                    const response = await request.patch(`http://localhost:8080/api/businesses/${editor.form.userId}`, editor.form);
                     const index = businessList.value.findIndex(
                         b => b.userId === editor.form.userId
                     );

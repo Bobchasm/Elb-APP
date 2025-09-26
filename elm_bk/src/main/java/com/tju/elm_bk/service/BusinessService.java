@@ -26,4 +26,5 @@ public interface BusinessService {
     List<Business>listBusinessByOrderTypeId(Integer type);
     List<MerchantStatsVO> getBusinessIdList();
     List<BusinessSearchVO> getBusinessesInCarousel();
+    public BusinessVO patchBusinessOwn(Long id, BusinessUpdateDTO updateDto);
 }
