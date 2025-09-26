@@ -11,7 +11,7 @@
  Target Server Version : 80040 (8.0.40)
  File Encoding         : 65001
 
- Date: 25/09/2025 10:20:27
+ Date: 26/09/2025 19:58:08
 */
 
 SET NAMES utf8mb4;
@@ -44,6 +44,10 @@ CREATE TABLE `ai_chat_history`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI对话历史表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of ai_chat_history
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for authority
 -- ----------------------------
 DROP TABLE IF EXISTS `authority`;
@@ -51,6 +55,13 @@ CREATE TABLE `authority`  (
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`name`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of authority
+-- ----------------------------
+INSERT INTO `authority` VALUES ('ADMIN');
+INSERT INTO `authority` VALUES ('BUSINESS');
+INSERT INTO `authority` VALUES ('USER');
 
 -- ----------------------------
 -- Table structure for business
@@ -79,6 +90,10 @@ CREATE TABLE `business`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of business
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for cart
 -- ----------------------------
 DROP TABLE IF EXISTS `cart`;
@@ -103,6 +118,10 @@ CREATE TABLE `cart`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of cart
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for delivery_address
 -- ----------------------------
 DROP TABLE IF EXISTS `delivery_address`;
@@ -122,6 +141,10 @@ CREATE TABLE `delivery_address`  (
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `delivery_address_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of delivery_address
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for food
@@ -147,6 +170,10 @@ CREATE TABLE `food`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of food
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for merchant_interaction
 -- ----------------------------
 DROP TABLE IF EXISTS `merchant_interaction`;
@@ -169,6 +196,10 @@ CREATE TABLE `merchant_interaction`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '商家互动表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of merchant_interaction
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for notification
 -- ----------------------------
 DROP TABLE IF EXISTS `notification`;
@@ -186,6 +217,10 @@ CREATE TABLE `notification`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_user_is_read`(`user_id` ASC, `is_read` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户消息通知表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of notification
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for orderdetailet
@@ -208,6 +243,10 @@ CREATE TABLE `orderdetailet`  (
   CONSTRAINT `orderdetailet_ibfk_1` FOREIGN KEY (`food_id`) REFERENCES `food` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `orderdetailet_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of orderdetailet
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for orders
@@ -237,6 +276,10 @@ CREATE TABLE `orders`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of orders
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for permission_application
 -- ----------------------------
 DROP TABLE IF EXISTS `permission_application`;
@@ -249,6 +292,10 @@ CREATE TABLE `permission_application`  (
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of permission_application
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for person
@@ -267,6 +314,10 @@ CREATE TABLE `person`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of person
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for user_authority
 -- ----------------------------
 DROP TABLE IF EXISTS `user_authority`;
@@ -278,6 +329,10 @@ CREATE TABLE `user_authority`  (
   CONSTRAINT `user_authority_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `user_authority_ibfk_2` FOREIGN KEY (`authority_name`) REFERENCES `authority` (`name`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of user_authority
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for users
@@ -295,5 +350,9 @@ CREATE TABLE `users`  (
   `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of users
+-- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;
