@@ -60,7 +60,7 @@ MySQL版本信息：
   frontend-comprehension/elm_bk/elm_v2.sql
   ```
 
-##### 运行
+##### 部署运行
 
 - 如果仅在本地测试后端接口
   
@@ -72,15 +72,29 @@ MySQL版本信息：
 
 - 如果需要部署
   
-  1.使用Maven打包项目，先 clean，再 package，成功控制台如图，生成的项目jar包在:
+  1.打包
+  
+  若使用IDEA打包项目，先 clean，再 package，成功控制台如图![Alt](./gra/success_package.png)
+  
+  若使用命令行打包：
+  
+  在 /frontend-comprehension/elm_bk 中打开cmd，执行：
+  
+  ```bash
+  mvn clean package
+  ```
+  
+  成功如下图：
+  
+  ![Alt](./gra/success_cmd_package.png)
+  
+  生成的项目jar包路径在:
   
   ```
   frontend-comprehension/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
   ```
   
-  ![Alt](./gra/success_package.png)
-  
-  2.可以将生成的jar包复制到想要的目录中，在jar包存放的目录中打开cmd，执行:
+  2.命令行在jar包存放的目录中执行:
   
   ```bash
   java -jar elm_bk-0.0.1-SNAPSHOT.jar
@@ -98,7 +112,7 @@ MySQL版本信息：
   
   ![Alt](./gra/success_bk_start.png)
 
-如果在IDEA启动或打包项目时遇到控制台报错如 "找不到符号"，请确保以下位置选择正确
+如使用IDEA在启动或打包项目时遇到控制台报错如 "找不到符号"，请确保以下位置选择正确
 
 ![Alt](./gra/fix1.png)
 
