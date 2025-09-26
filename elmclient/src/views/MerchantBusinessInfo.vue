@@ -327,14 +327,14 @@ export default {
             orderTypeId: formValues.orderTypeId
           };
 
-          const response = await request.put(`/api/businesses/${businessId.value}`, updateData);
+          const response = await request.patch(`/api/businesses/own/${businessId.value}`, updateData);
 
           if (response.success) {
             business.value = {
               ...business.value,
               ...updateData
             };
-
+console.log('修改成功，新的接口测试ok');
             Swal.fire({
               icon: 'success',
               title: '修改成功',

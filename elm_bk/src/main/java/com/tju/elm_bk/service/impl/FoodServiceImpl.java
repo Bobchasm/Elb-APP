@@ -51,20 +51,59 @@ public class FoodServiceImpl implements FoodService {
         if(!foodDTO.verify()) {
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
         }
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        List<Authority> authorities = user.getAuthorities();
+        Business business = businessMapper.selectBusinessById(foodDTO.getBusiness().getId());
+        if (business == null) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
+        }
+        if (authorities.stream()
+                .noneMatch(auth -> "ADMIN".equals(auth.getName()))
+                && !Objects.equals(user.getId(), business.getUserId())) {
+            throw new APIException(ResultCodeEnum.UNAUTHORIZED);
+        }
+
         Food food = new Food();
         BeanUtils.copyProperties(foodDTO, food);
         food.setBusinessId(foodDTO.getBusiness().getId());
-        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         food.setCreator(user.getId());
         food.setCreateTime(LocalDateTime.now());
-        food.setCreator(user.getId());
+        food.setUpdater(user.getId());
         food.setUpdateTime(LocalDateTime.now());
         food.setIsDeleted(false);
         foodMapper.insertFood(food);
         return foodMapper.selectFoodVOById(food.getId());
     }
 
+    @Override
+    public FoodVO updateFood(FoodDTO foodDTO,Long id) {
+        if (foodDTO == null) {
+            return null;
+        }
+        Food food = foodMapper.selectFoodById(id);
+        if (food == null) {
+            throw new APIException(ResultCodeEnum.FOOD_MISSED);
+        }
 
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        List<Authority> authorities = user.getAuthorities();
+        Business business = businessMapper.selectBusinessById(foodDTO.getBusiness().getId());
+        if (authorities.stream()
+                .noneMatch(auth -> "ADMIN".equals(auth.getName()))
+                && !Objects.equals(user.getId(), business.getUserId())) {
+            throw new APIException(ResultCodeEnum.UNAUTHORIZED);
+        }
+
+        food.setFoodName(foodDTO.getFoodName() == null ? food.getFoodName() : foodDTO.getFoodName());
+        food.setFoodExplain(foodDTO.getFoodExplain() == null ? food.getFoodExplain() : foodDTO.getFoodExplain());
+        food.setFoodPrice(foodDTO.getFoodPrice() == null ? food.getFoodPrice() : foodDTO.getFoodPrice());
+        food.setFoodImg(foodDTO.getFoodImg() == null ? food.getFoodImg() : foodDTO.getFoodImg());
+        food.setRemarks(foodDTO.getRemarks() == null ? food.getRemarks() : foodDTO.getRemarks());
+        food.setUpdater(user.getId());
+        food.setUpdateTime(LocalDateTime.now());
+        foodMapper.updateFood(food,id);
+        return foodMapper.selectFoodVOById(food.getId());
+    }
 
 
     @Override

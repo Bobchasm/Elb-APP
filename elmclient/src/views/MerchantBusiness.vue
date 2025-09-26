@@ -23,10 +23,10 @@
             <h3>{{ shop?.businessName || '未命名商铺' }}</h3>
             <div class="delivery-info-container">
               <div class="business-info-delivery">
-                <p>配送费{{ shop?.deliveryPrice.toFixed(2) || 0 }}元</p>
+                <p>配送费{{ shop?.deliveryPrice?.toFixed(2) || '0.00' }}元</p>
               </div>
               <div class="business-info-delivery">
-                <p>起送费{{ shop?.startPrice.toFixed(2) || 0 }}元</p>
+                <p>起送费{{ shop?.startPrice?.toFixed(2) || '0.00' }}元</p>
               </div>
             </div>
             <div class="business-info-delivery">
@@ -610,7 +610,7 @@ body {
   margin: 0;
   z-index: 1;
 }
- 
+
 /* ----------------------- 状态标签栏 ----------------------- */
 .status-tabs {
   display: flex;
@@ -909,6 +909,7 @@ body {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

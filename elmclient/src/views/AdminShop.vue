@@ -428,7 +428,7 @@ export default {
             orderTypeId: editor.form.orderTypeId // 新增的商铺类型
           };
           
-          await request.put(`/api/businesses/${editor.form.id}`, updateData);
+          await request.patch(`/api/businesses/own/${editor.form.id}`, updateData);
           const idx = storeList.value.findIndex(s => s.id === editor.form.id);
           if (idx >= 0) storeList.value[idx] = { ...storeList.value[idx], ...updateData };
           // ElMessage.success('商铺更新成功');

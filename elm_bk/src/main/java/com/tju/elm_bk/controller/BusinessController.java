@@ -22,8 +22,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//import static com.sun.beans.introspect.PropertyInfo.Name.required;
-
 @Slf4j
 @RestController
 @RequestMapping("/api/businesses")
@@ -37,37 +35,37 @@ public class BusinessController {
 
     /**
      * 根据ID获取店铺详情
-     * @param id 店铺ID (路径参数)
+     * @param id 店铺ID (路径参数)--牙膏1
      * @return 店铺详细信息
      */
     @GetMapping("/{id}")
-    @Operation(summary = "根据id获取某店铺详情", description = "根据id获取某店铺详情")
+    @Operation(summary = "（牙膏）根据id获取某店铺详情", description = "根据id获取某店铺详情")
     public HttpResult<BusinessVO> getBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
-            log.warn("获取店铺详情请求参数错误: id={}", id);
+//            log.warn("获取店铺详情请求参数错误: id={}", id);
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
         }
         BusinessVO businessVo = businessService.getBusinessById(id);
-        if (businessVo == null) {
-            log.info("未找到对应的店铺信息: id={}", id);
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        System.out.println("查询到的BusinessVO对象: " + businessVo);
-        log.debug("成功获取店铺详情: id={}, name={}", id, businessVo.getBusinessName());
+//        if (businessVo == null) {
+//            log.info("未找到对应的店铺信息: id={}", id);
+//            throw new APIException(ResultCodeEnum.NOT_FOUND);
+//        }
+//        System.out.println("查询到的BusinessVO对象: " + businessVo);
+//        log.debug("成功获取店铺详情: id={}, name={}", id, businessVo.getBusinessName());
         return HttpResult.success(businessVo);
     }
 
     /**
-     * 更新店铺信息
+     * 更新店铺信息--牙膏
      * @param id 店铺ID (路径参数)
      * @param updateDto 更新数据
      * @return 更新后的店铺信息
      */
     @PutMapping("/{id}")
-    @Operation(summary = "更新某店铺信息", description = "更新某店铺信息")
+    @Operation(summary = "（牙膏）更新某店铺信息（覆盖）", description = "更新某店铺信息")
     public HttpResult<BusinessVO> updateBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto){
         if (id == null || id <= 0) {
-            log.warn("更新店铺信息请求参数错误: id={}", id);
+//            log.warn("更新店铺信息请求参数错误: id={}", id);
             throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
         }
 
@@ -76,7 +74,7 @@ public class BusinessController {
     }
 
      @DeleteMapping("/{id}")
-     @Operation(summary = "删除某店铺")
+     @Operation(summary = "（牙膏）删除某店铺")
     public HttpResult<BusinessVO> deleteBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("删除店铺信息请求参数错误: id={}", id);
@@ -85,8 +83,9 @@ public class BusinessController {
          BusinessVO businessVo = businessService.deleteBusiness(id);
         return HttpResult.success(businessVo);
     }
+
      @PatchMapping("/{id}")
-     @Operation(summary = "部分更新某店铺信息")
+     @Operation(summary = "（牙膏）部分更新某店铺信息")
     public HttpResult<BusinessVO> patchBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -100,7 +99,6 @@ public class BusinessController {
      * 获取所有店铺信息
      * @return 所有店铺信息
      */
-    //  【【----------------------- 后续加上分页查询，别忘了-------------------------】】
     @GetMapping
     @Operation(summary = "获取所有店铺信息--牙膏版本")
     public HttpResult<List<BusinessVO>> getBusinesses() {
@@ -181,6 +179,14 @@ public class BusinessController {
     public HttpResult<List<BusinessSearchVO>> searchBusiness(){
         return HttpResult.success(businessService.getBusinessesInCarousel());
 
+    }
+
+    //还是更新商铺的接口，但部分跟新且适配数据库版本
+    @PatchMapping("/own/{id}")
+    @Operation(summary = "（可用）部分更新某店铺信息")
+    public HttpResult<BusinessVO> patchBusinessOwn(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
+         BusinessVO businessVO = businessService.patchBusinessOwn( id,  updateDto);
+         return HttpResult.success(businessVO);
     }
 
 

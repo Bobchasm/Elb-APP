@@ -16,6 +16,7 @@ public interface FoodService {
 
     FoodVO addFood(FoodDTO food);
 
+    FoodVO updateFood(FoodDTO foodDTO,Long id);
 
 
     List<FoodItemVO> getFoodItemList(Long businessId,Integer shelveStatus);

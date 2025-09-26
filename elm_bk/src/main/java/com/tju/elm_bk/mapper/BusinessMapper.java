@@ -10,7 +10,6 @@ import com.tju.elm_bk.entity.Authority;
 import com.tju.elm_bk.vo.*;
 import com.tju.elm_bk.entity.Business;
 import com.tju.elm_bk.vo.BusinessVO;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.apache.ibatis.annotations.*;
 
 
@@ -24,10 +23,12 @@ public interface BusinessMapper {
 
     // 更新商户信息
     int updateBusiness(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
-
+    int patchBusiness(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
     // 更新商户所有者信息
     int updateBusinessOwner(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
-
+    int patchBusinessOwner(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
+    @Update("UPDATE business SET user_id = #{ownerId} WHERE id = #{id}")
+    void updateUserIdById(@Param("ownerId") Long ownerId, @Param("id") Long id);
     // 嵌套查询方法
     List<Authority> selectAuthoritiesByUserId(@Param("userId") Long userId);
 

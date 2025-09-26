@@ -55,7 +55,7 @@ public class FoodDTO {
     private BusinessVO business;
 
     public Boolean verify() {
-        if(business == null || business.getId() == null || foodName == null ||foodPrice == null) {
+        if(business == null || business.getId() == null || foodName == null ||foodPrice == null || foodPrice.compareTo(BigDecimal.ZERO) < 0) {
             return false;
         }
         return true;

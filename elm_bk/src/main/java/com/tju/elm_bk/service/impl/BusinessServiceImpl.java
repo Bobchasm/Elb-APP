@@ -61,7 +61,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 添加 null 检查
         if (currentUser == null) {
-            throw new RuntimeException("无法获取当前用户信息");
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
         }
 
         // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
@@ -72,18 +72,43 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
         if (!hasBusinessPermission && !isAdmin) {
-            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+            throw new APIException(ResultCodeEnum.UNAUTHORIZED);
         }
-        //判断是不是自己操作自己的店铺或者管理员
-        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),id);
+//        //判断是不是自己操作自己的店铺或者管理员
+//        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),id);
+//
+//        if(!isSelf&&!isAdmin){
+//            throw new APIException(ResultCodeEnum.UNAUTHORIZED);
+//        }
+////        System.out.println("前端--更新商家信息为: " + updateDto);
+//        // 1. 更新商户基本信息
+//        int result = businessMapper.updateBusiness(id, updateDto);
+//        if (result == 0) {throw new APIException(ResultCodeEnum.BUSINESS_MISSED);}
 
+        //如果是不是管理员，且传入的商铺id不是自己的 isSelf
+        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),id);
         if(!isSelf&&!isAdmin){
-            throw new RuntimeException("不是该商家自己的商铺，更新失败");
+            throw new APIException(ResultCodeEnum.USER_DENIED);
         }
-//        System.out.println("前端--更新商家信息为: " + updateDto);
-        // 1. 更新商户基本信息
-        int result = businessMapper.updateBusiness(id, updateDto);
-        if (result == 0) {throw new RuntimeException("更新商户信息失败，商户不存在或已被删除");}
+        //如果不是管理员，且传入的businessOwner的username对应的user_id不是自己的--USER_DENIED
+        Long ownerId=userMapper.getUserIdByUsername(updateDto.getBusinessOwner().getUsername());
+        boolean isOwner=ownerId.equals(currentUser.getId());
+        //判断是不是管理员 isAdmin
+        if(!isOwner&&!isAdmin){
+            throw new APIException(ResultCodeEnum.USER_DENIED);
+        }
+        //执行更新操作（部分更新）
+        int result = businessMapper.patchBusiness(id, updateDto);
+        //如果是管理员，需要将传入的username对应的user_id传入business表的user_id
+        if(isAdmin){
+            //根据商铺id更新user_id
+            businessMapper.updateUserIdById(ownerId,id);//id是business的商铺id，更新business表的user_id为传入的username对应的user_id
+        }
+        if (result == 0) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
+        }
+
+
         // 2. 如果有商户所有者信息，更新商户所有者
         if (updateDto.getBusinessOwner() != null) {businessMapper.updateBusinessOwner(id, updateDto);}
         // 3. 重新查询完整的商户信息并返回
@@ -97,7 +122,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 添加 null 检查
         if (currentUser == null) {
-            throw new RuntimeException("无法获取当前用户信息");
+            throw new APIException(ResultCodeEnum.USER_MISSED);//用户不存在
         }
 
         // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
@@ -109,17 +134,17 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
         if (!hasBusinessPermission && !isAdmin) {
-            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+            throw new APIException(ResultCodeEnum.NOT_ENOUGH_PERMISSION);//权限不足
         }
-        //判断是不是自己操作自己的店铺或者管理员
+        // 判断是不是自己操作自己的店铺或者管理员
         boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),id);
         if(!isSelf&&!isAdmin){
-            throw new RuntimeException("不是该商家自己的商铺，更新失败");
+            throw new APIException(ResultCodeEnum.NOT_ENOUGH_PERMISSION);//权限不足
         }
         BusinessVO businessVo =businessMapper.getBusinessById(id);
         int result =businessMapper.deleteBusiness(id);
         if (result == 0) {
-            throw new RuntimeException("删除商户信息失败，商户不存在或已被删除");
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);//商铺不存在
         }
         return businessVo;
 
@@ -139,12 +164,12 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BusinessVO patchBusiness(Long id, BusinessUpdateDTO updateDto) {
         User currentUser = userMapper.findByUsernameWithAuthorities(
-                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.USER_MISSED))
         );
 
         // 添加 null 检查
         if (currentUser == null) {
-            throw new RuntimeException("无法获取当前用户信息");
+            throw new APIException(ResultCodeEnum.USER_MISSED);
         }
 
         // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
@@ -155,22 +180,36 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
         if (!hasBusinessPermission && !isAdmin) {
-            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
-        }
-        int result = businessMapper.updateBusiness(id, updateDto);
-        if (result == 0) {
-            throw new RuntimeException("更新商户信息失败，商户不存在或已被删除");
+            throw new APIException(ResultCodeEnum.NOT_ENOUGH_PERMISSION);
         }
 
-        //判断是不是自己操作自己的店铺或者管理员
-        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),updateDto.getId());
-
+        //如果是不是管理员，且传入的商铺id不是自己的 isSelf
+        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),id);
         if(!isSelf&&!isAdmin){
-            throw new RuntimeException("不是该商家自己的商铺，更新失败");
+            throw new APIException(ResultCodeEnum.USER_DENIED);
         }
+        //如果不是管理员，且传入的businessOwner的username对应的user_id不是自己的--USER_DENIED
+        Long ownerId=userMapper.getUserIdByUsername(updateDto.getBusinessOwner().getUsername());
+        boolean isOwner=ownerId.equals(currentUser.getId());
+        //判断是不是管理员 isAdmin
+        if(!isOwner&&!isAdmin){
+            throw new APIException(ResultCodeEnum.USER_DENIED);
+        }
+        //执行更新操作（部分更新）
+        int result = businessMapper.patchBusiness(id, updateDto);
+        //如果是管理员，需要将传入的username对应的user_id传入business表的user_id
+        if(isAdmin){
+            //根据商铺id更新user_id
+            businessMapper.updateUserIdById(ownerId,id);//id是business的商铺id，更新business表的user_id为传入的username对应的user_id
+        }
+        if (result == 0) {
+            throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
+        }
+
         // 2. 如果有商户所有者信息，更新商户所有者
         if (updateDto.getBusinessOwner() != null) {
-            businessMapper.updateBusinessOwner(id, updateDto);
+            //部分更新
+            businessMapper.patchBusinessOwner(id, updateDto);
         }
         return businessMapper.getBusinessById(id);
     }
@@ -178,11 +217,37 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BusinessVO addBusiness(BusinessDTO businessDTO) {
         //先查id是否在users表里面
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.USER_MISSED))
+        );
+
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new APIException(ResultCodeEnum.USER_MISSED);
+        }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new APIException(ResultCodeEnum.NOT_ENOUGH_PERMISSION);
+        }
+        // 1.是商家：传入的username对应的user_id与currentUser的user_id是否一致
+        // 2.是管理员：直接通过
+        boolean isSelf=userMapper.getUserIdByUsername(businessDTO.getBusinessOwner().getUsername()).equals(currentUser.getId());
+//        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),businessDTO.getId());
+        if(!isSelf&&!isAdmin){
+            throw new APIException(ResultCodeEnum.USER_DENIED);
+        }
         //-----------------------需要调用user的接口------------------!!!
 
         int result =businessMapper.insertBusiness(businessDTO);
-        if (result == 0) {
-            throw new RuntimeException("添加商户信息失败");
+        if (result == 0) {//这不对吧..
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
         }
         return businessMapper.getBusinessById(businessDTO.getId());
     }
@@ -190,10 +255,10 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public List<BusinessVO> getBusinesses() {
         List<BusinessVO> businesses = businessMapper.getBusinesses();
-        if (businesses == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        return businessMapper.getBusinesses();
+//        if (businesses == null) {
+//            throw new APIException(ResultCodeEnum.NOT_FOUND);
+//        }
+        return businesses;
     }
 
     //搜索与筛选商铺信息
@@ -282,7 +347,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 添加 null 检查
         if (currentUser == null) {
-            throw new RuntimeException("无法获取当前用户信息");
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
         }
 
         // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
@@ -293,7 +358,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
         if (!hasBusinessPermission && !isAdmin) {
-            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+            throw new APIException(ResultCodeEnum.NOT_ENOUGH_PERMISSION);
         }
 
         // 设置基础信息
@@ -307,7 +372,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (isAdmin) {
             // 管理员操作，必须传入userId
             if (business.getUserId() == null) {
-                throw new RuntimeException("管理员创建商铺时必须指定userId");
+                throw new APIException(ResultCodeEnum.USER_VALUE_MISSED);// 用户ID不能为空
             }
         } else {
             // 普通商家操作，使用当前用户ID
@@ -350,6 +415,45 @@ public class BusinessServiceImpl implements BusinessService {
         );
 
         return businessMapper.selectBusinessIdListByUserId(currentUser.getId());
+    }
+
+    @Override
+    public BusinessVO patchBusinessOwn(Long id, BusinessUpdateDTO updateDto) {
+        User currentUser = userMapper.findByUsernameWithAuthorities(
+                SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED))
+        );
+
+        // 添加 null 检查
+        if (currentUser == null) {
+            throw new RuntimeException("无法获取当前用户信息");
+        }
+
+        // 权限判断 - 检查用户是否有 BUSINESS 或 ADMIN 权限
+        boolean hasBusinessPermission = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "BUSINESS".equals(auth.getName()));
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getName()));
+
+        // 如果没有 BUSINESS 权限且不是 ADMIN，则抛出权限异常
+        if (!hasBusinessPermission && !isAdmin) {
+            throw new RuntimeException("权限不足，需要“商家”或“管理员”权限");
+        }
+        int result = businessMapper.updateBusiness(id, updateDto);
+        if (result == 0) {
+            throw new RuntimeException("更新商户信息失败，商户不存在或已被删除");
+        }
+
+        //判断是不是自己操作自己的店铺或者管理员
+        boolean isSelf=isIdPresent(businessMapper.getBusinessIdsByUserId(currentUser.getId()),updateDto.getId());
+
+        if(!isSelf&&!isAdmin){
+            throw new RuntimeException("不是该商家自己的商铺，更新失败");
+        }
+        // 2. 如果有商户所有者信息，更新商户所有者
+        if (updateDto.getBusinessOwner() != null) {
+            businessMapper.updateBusinessOwner(id, updateDto);
+        }
+        return businessMapper.getBusinessById(id);
     }
 
 }

@@ -60,7 +60,7 @@ public class OrderDTO {
     private AddressVO deliveryAddress;
 
     public Boolean verify() {
-        if(business == null || business.getId() == null || orderTotal == null) {
+        if(business == null || business.getId() == null || deliveryAddress == null || deliveryAddress.getId() == null) {
             return false;
         }
         return true;
