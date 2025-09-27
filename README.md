@@ -20,7 +20,7 @@
 
 基于 SpringBoot，Maven，Mybatis
 
-##### 环境准备
+##### 开发环境
 
 JDK 17
 
@@ -108,6 +108,8 @@ MySQL版本信息：
   
   注：该命令进行了内存配置
   
+  后端配置端口为 8080，请注意端口占用
+  
   3.当终端出现以下界面，则启动成功：
   
   ![Alt](./gra/success_bk_start.png)
@@ -128,7 +130,9 @@ MySQL版本信息：
   
   可参见 [VUE安装及环境配置（完整版）-CSDN博客](https://blog.csdn.net/qq_52611686/article/details/142653081?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522b9220596f6cbffa1a2f0eb8c533005ed%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=b9220596f6cbffa1a2f0eb8c533005ed&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-142653081-null-null.142^v102^pc_search_result_base7&utm_term=vue%E5%AE%89%E8%A3%85%E5%8F%8A%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE&spm=1018.2226.3001.4187)
 
-- 可参见 [Node.js安装与配置（详细步骤）_nodejs安装及环境配置-CSDN博客](https://blog.csdn.net/qq_42006801/article/details/124830995?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522363c66d0a867fcac896383171b678743%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=363c66d0a867fcac896383171b678743&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-124830995-null-null.142^v102^pc_search_result_base7&utm_term=%E9%85%8D%E7%BD%AEnode&spm=1018.2226.3001.4187)
+- node
+  
+  可参见 [Node.js安装与配置（详细步骤）_nodejs安装及环境配置-CSDN博客](https://blog.csdn.net/qq_42006801/article/details/124830995?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522363c66d0a867fcac896383171b678743%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=363c66d0a867fcac896383171b678743&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-124830995-null-null.142^v102^pc_search_result_base7&utm_term=%E9%85%8D%E7%BD%AEnode&spm=1018.2226.3001.4187)
 
 ##### 运行
 
@@ -204,19 +208,30 @@ MySQL版本信息：
   
   5.在 **my_server** 文件夹下新建文件夹 **public**，后续用于存放vue项目的文件
   
-  6.使用ide (Visual Studio Code) 或者是命令行终端打开项目的前端部分:
+  6.打包前端代码
   
-  ```
-  frontend-comprehension/elmclient
-  ```
+  - 直接将以下路径目录中的所有东西复制到前面创建的 **my_server** 文件夹下的 **public** 中。若之后在下面第7点出现失败，请尝试自己打包(如下一点)
+    
+    ```
+    frontend-comprehension/elmclient/dist/
+    ```
   
-  执行:
-  
-  ```bash
-  npm run build
-  ```
-  
-  项目文件 **elmclient** 下中将出现文件夹 **dist**，此时将 **dist** 下的所有东西复制到前面创建的 **my_server** 文件夹下的 **public** 中
+  - 自己打包：
+    
+    使用ide (Visual Studio Code) 或者是命令行终端打开项目的前端部分:
+    
+    ```
+    frontend-comprehension/elmclient
+    ```
+    
+    执行:
+    
+    ```bash
+    npm i    #如失败则尝试 cnpm i
+    npm run build
+    ```
+    
+    项目文件 **elmclient** 下中将出现文件夹 **dist**，之后同上
   
   7.在 **my_server** 目录下打开cmd，执行:
   
