@@ -199,11 +199,11 @@
                             <div class="delivery-info">
                                 <div class="delivery-tag">
                                     <span class="tag-label">起送</span>
-                                    <span class="tag-price">¥{{ business.startPrice.toFixed(2) || 0 }}</span>
+                                    <span class="tag-price">¥{{ (business.startPrice || 0).toFixed(2) }}</span>
                                 </div>
                                 <div class="delivery-tag">
                                     <span class="tag-label">配送</span>
-                                    <span class="tag-price">¥{{ business.deliveryPrice.toFixed(2) || 0 }}</span>
+                                    <span class="tag-price">¥{{ (business.deliveryPrice || 0).toFixed(2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -336,9 +336,9 @@
                             <span class="monthly-sales">月售 {{ business.salesCount || 0 }}</span>
                         </div>
                         <div class="business-info-delivery">
-                            <span class="start-price">起送 ¥{{ business.startPrice.toFixed(2) || 0 }}</span>
-                            <span class="delivery-fee" :class="{ 'free-delivery': (business.deliveryPrice.toFixed(2) || 0) === 0 }">
-                                {{ (business.deliveryPrice || 0) === 0 ? '免配送费' : `配送 ¥${business.deliveryPrice.toFixed(2)}` }}
+                            <span class="start-price">起送 ¥{{ (business.startPrice || 0).toFixed(2) }}</span>
+                            <span class="delivery-fee" :class="{ 'free-delivery': (business.deliveryPrice || 0) === 0 }">
+                                {{ (business.deliveryPrice || 0) === 0 ? '免配送费' : `配送 ¥${(business.deliveryPrice || 0).toFixed(2)}` }}
                             </span>
                         </div>
                         <div class="business-info-promotion">
@@ -1077,7 +1077,7 @@ export default {
                     }
 
                     console.log('搜索参数:', params);
-                    console.log('请求URL:', 'http://localhost:8080/api/businesses/search');
+                    console.log('请求URL:', '/api/businesses/search');
 
                     // 调用搜索接口
                     const response = await request.get('/api/businesses/search', { params });

@@ -127,7 +127,7 @@ const initWebSocket = () => {
     // 创建WebSocket连接（根据实际后端地址修改）
     const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`;
+    const wsUrl = `${wsProtocol}//REDACTED_IP:8080/ws/${sid}`;
     
     webSocket.value = new WebSocket(wsUrl);
 
