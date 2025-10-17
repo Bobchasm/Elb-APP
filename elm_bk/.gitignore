@@ -3,6 +3,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.mvn/
 
 ### STS ###
 .apt_generated
@@ -31,3 +32,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Project ###
+# 镜像包
+elm_backend_1.0.tar
