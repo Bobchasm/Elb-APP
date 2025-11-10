@@ -23,6 +23,8 @@ import BusinessInformation from '@/views/BusinessInformation.vue'
 import BusinessView from '@/views/BusinessView.vue'
 import SubmitItems from '@/views/SubmitItems.vue'
 import AiChat from '@/views/AiChat.vue'
+import Wallet from '@/views/Wallet.vue'
+import WalletTransactions from '@/views/WalletTransactions.vue'
 
 //商家端路由配置
 import MerchantProfile from '../views/MerchantProfile.vue';
@@ -220,6 +222,18 @@ const routes = [
     name: 'AiChat',
     component: AiChat,
     meta: { title: 'AI智能客服' }
+  },
+  {
+    path: '/wallet',
+    name: 'Wallet',
+    component: Wallet,
+    meta: { title: '虚拟钱包' }
+  },
+  {
+    path: '/wallet/transactions',
+    name: 'WalletTransactions',
+    component: WalletTransactions,
+    meta: { title: '交易明细' }
   },
  //
 //管理端

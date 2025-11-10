@@ -71,6 +71,14 @@
 				<div class="section payment-section">
 					<h3>选择支付方式</h3>
 					<div class="payment-options">
+						<div class="payment-option" :class="{ active: selectedPayment === 'wallet' }"
+							@click="selectPayment('wallet')">
+							<div class="wallet-icon">
+								<i class="fa fa-wallet"></i>
+								<span>虚拟钱包</span>
+							</div>
+							<i class="fa fa-check-circle"></i>
+						</div>
 						<div class="payment-option" :class="{ active: selectedPayment === 'alipay' }"
 							@click="selectPayment('alipay')">
 							<img src="../assets/alipay.png" alt="支付宝支付">
@@ -96,6 +104,27 @@
 
 		<!-- 底部菜单部分 -->
 	</div>
+
+	<!-- 钱包开通对话框 -->
+	<div v-if="showWalletCreateModal" class="modal-overlay" @click.self="showWalletCreateModal = false">
+		<div class="modal-content wallet-modal">
+			<div class="modal-header">
+				<h3>开通虚拟钱包</h3>
+				<i class="fa fa-times close-btn" @click="showWalletCreateModal = false"></i>
+			</div>
+			<div class="modal-body">
+				<p class="wallet-tip">您还没有虚拟钱包账户，是否现在开通？</p>
+				<p class="wallet-desc">开通后即可使用钱包余额进行支付，享受便捷的支付体验。</p>
+			</div>
+			<div class="modal-footer">
+				<button class="cancel-btn" @click="showWalletCreateModal = false">取消</button>
+				<button class="confirm-btn" @click="handleCreateWallet" :disabled="creatingWallet">
+					<span v-if="creatingWallet">开通中...</span>
+					<span v-else>确认开通</span>
+				</button>
+			</div>
+		</div>
+	</div>
 </template>
   
 <script>
@@ -117,9 +146,49 @@ export default {
 		const router = useRouter();
 		const orderId = ref();
 		const loading = ref(true);
-		const selectedPayment = ref('alipay');
+		const selectedPayment = ref('wallet'); // 默认选择钱包支付
 		const paying = ref(false);
 		const deliveryPrice = ref(5); // 默认配送费，可根据实际情况调整
+		const showWalletCreateModal = ref(false); // 钱包开通对话框
+		const creatingWallet = ref(false); // 正在创建钱包
+		const walletExists = ref(false); // 钱包是否存在
+
+		const getCurrentUser = () => {
+			try {
+				const localUser = localStorage.getItem('userInfo');
+				if (localUser) return JSON.parse(localUser);
+				const sessionUser = sessionStorage.getItem('userInfo');
+				if (sessionUser) return JSON.parse(sessionUser);
+			} catch (error) {
+				console.error('解析用户信息失败:', error);
+			}
+			return null;
+		};
+
+		const getWalletInfoKey = () => {
+			const user = getCurrentUser();
+			return user ? `walletInfo_${user.id}` : 'walletInfo_guest';
+		};
+
+		const getWalletTransactionsKey = () => {
+			const user = getCurrentUser();
+			return user ? `walletTransactions_${user.id}` : 'walletTransactions_guest';
+		};
+
+		const addTransactionRecord = (record) => {
+			try {
+				const transactions = JSON.parse(localStorage.getItem(getWalletTransactionsKey()) || '[]');
+				const transaction = {
+					id: Date.now(),
+					transactionTime: new Date().toISOString(),
+					...record
+				};
+				transactions.unshift(transaction);
+				localStorage.setItem(getWalletTransactionsKey(), JSON.stringify(transactions));
+			} catch (error) {
+				console.error('保存交易记录失败:', error);
+			}
+		};
 
 		// 获取订单详情
 		const fetchOrderDetails = async () => {
@@ -148,24 +217,254 @@ export default {
 			}
 		};
 
-		// 支付处理
-		const handlePayment = async () => {
+		// 检查钱包是否存在
+		const checkWalletExists = async () => {
 			try {
-				const response = await request.put("/api/orders/status?orderState=1&orderId=" + orderId.value);
-				if (response.success) {
-					// 支付成功，跳转到成功页面
-					router.push({
-						path: '/successfulPayment',
-						query: { orderId: orderId.value }
-					});
+				// ========== 前端模拟模式（用于测试，不连接后端） ==========
+				const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
+				if (savedWalletInfo) {
+					walletExists.value = true;
+					return true;
 				} else {
-					toast.error("支付失败" + response.data.message);
+					walletExists.value = false;
+					return false;
 				}
+				// ========== 前端模拟模式结束 ==========
+				
+				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
+				// const response = await request.get("/api/wallet/info");
+				// if (response && response.success) {
+				//   walletExists.value = true;
+				//   return true;
+				// } else {
+				//   walletExists.value = false;
+				//   return false;
+				// }
+				// ========== 后端调用逻辑结束 ==========
 			} catch (error) {
-				console.error('支付失败:', error);
-				toast.error("支付失败，请重试！");
+				console.error('检查钱包失败:', error);
+				// ========== 前端模拟模式 ==========
+				walletExists.value = false;
+				return false;
+				// ========== 后端调用逻辑（已注释） ==========
+				// // 404 或其他错误，说明钱包不存在或接口不存在
+				// const status = error.response?.status;
+				// const message = error.message || '';
+				// const responseData = error.response?.data || {};
+				// 
+				// if (status === 404 || 
+				//   message.includes('No static resource') || 
+				//   message.includes('api/wallet') ||
+				//   JSON.stringify(responseData).includes('No static resource')) {
+				//   walletExists.value = false;
+				//   return false;
+				// }
+				// console.error('检查钱包失败:', error);
+				// return false;
+				// ========== 后端调用逻辑结束 ==========
+			}
+		};
+
+		// 创建钱包
+		const handleCreateWallet = async () => {
+			// ========== 前端模拟模式（用于测试，不连接后端） ==========
+			try {
+				creatingWallet.value = true;
+				
+				// 模拟延迟，让用户看到"开通中"的状态
+				await new Promise(resolve => setTimeout(resolve, 500));
+				
+				const newWalletInfo = {
+					balance: 0,
+					isVip: false,
+					overdraftLimit: 0,
+					usedOverdraft: 0
+				};
+				
+				// 保存到localStorage
+				try {
+					localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
+				} catch (storageError) {
+					console.error('保存钱包信息到localStorage失败:', storageError);
+				}
+				
+				walletExists.value = true;
+				showWalletCreateModal.value = false;
+				toast.success('钱包开通成功');
+				addTransactionRecord({
+					transactionType: 'create',
+					amount: 0,
+					reason: '钱包开通成功'
+				});
+				
+				// 钱包开通后，不自动进行支付（支付需要用户手动操作）
+				// await performWalletPayment();
+				// ========== 前端模拟模式结束 ==========
+				return; // 直接返回，不执行后面的代码
+				
+				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
+				// const response = await request.post("/api/wallet/create");
+				// if (response && response.success) {
+				//   walletExists.value = true;
+				//   showWalletCreateModal.value = false;
+				//   toast.success('钱包开通成功');
+				//   // 钱包开通后，自动进行支付
+				//   await performWalletPayment();
+				// } else {
+				//   toast.error("钱包开通失败：" + (response?.message || '未知错误'));
+				// }
+				// ========== 后端调用逻辑结束 ==========
+				
+				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
+				// try {
+				//   const response = await request.post("/api/wallet/create");
+				//   if (response && response.success) {
+				//     walletExists.value = true;
+				//     showWalletCreateModal.value = false;
+				//     toast.success('钱包开通成功');
+				//     // 钱包开通后，自动进行支付
+				//     await performWalletPayment();
+				//   } else {
+				//     toast.error("钱包开通失败：" + (response?.message || '未知错误'));
+				//   }
+				// } catch (error) {
+				//   console.error('创建钱包失败:', error);
+				//   // 检查是否是接口不存在的错误
+				//   const status = error.response?.status;
+				//   const message = error.message || '';
+				//   const responseData = error.response?.data || {};
+				//   
+				//   if (status === 404 || 
+				//     message.includes('No static resource') || 
+				//     message.includes('api/wallet') ||
+				//     JSON.stringify(responseData).includes('No static resource')) {
+				//     toast.error("钱包开通失败：后端接口未实现，请联系管理员");
+				//   } else {
+				//     toast.error("钱包开通失败：" + (error.response?.data?.message || '请重试'));
+				//   }
+				// }
+				// ========== 后端调用逻辑结束 ==========
+			} catch (error) {
+				console.error('创建钱包失败:', error);
+				toast.error("钱包开通失败，请重试");
+			} finally {
+				creatingWallet.value = false;
+			}
+		};
+
+		// 执行钱包支付
+		const performWalletPayment = async () => {
+			// ========== 前端模拟模式（用于测试，不连接后端） ==========
+			try {
+				paying.value = true;
+				
+				// 模拟延迟
+				await new Promise(resolve => setTimeout(resolve, 500));
+				
+				// 检查钱包余额
+				const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
+				let walletData = savedWalletInfo ? JSON.parse(savedWalletInfo) : {
+					balance: 0,
+					isVip: false,
+					overdraftLimit: 0,
+					usedOverdraft: 0
+				};
+				
+				const payAmount = orderDetail.value?.orderTotal || 0;
+				
+				// 检查余额是否足够（包括透支额度）
+				const availableBalance = walletData.balance + (walletData.isVip ? (walletData.overdraftLimit - walletData.usedOverdraft) : 0);
+				
+				if (availableBalance < payAmount) {
+					toast.error("钱包支付失败：余额不足");
+					return;
+				}
+				
+				// 扣除余额
+				let usedOverdraftAmount = 0;
+				if (walletData.balance >= payAmount) {
+					walletData.balance -= payAmount;
+				} else {
+					// 使用透支额度
+					const needOverdraft = payAmount - walletData.balance;
+					walletData.balance = 0;
+					walletData.usedOverdraft = (walletData.usedOverdraft || 0) + needOverdraft;
+					usedOverdraftAmount = needOverdraft;
+				}
+				
+				// 保存钱包信息
+				localStorage.setItem(getWalletInfoKey(), JSON.stringify(walletData));
+
+				addTransactionRecord({
+					transactionType: 'payment',
+					amount: -payAmount,
+					orderId: orderId.value,
+					reason: `订单支付${usedOverdraftAmount > 0 ? `，使用透支 ¥${usedOverdraftAmount.toFixed(2)}` : ''}`
+				});
+				
+				// 支付成功，跳转到成功页面
+				router.push({
+					path: '/successfulPayment',
+					query: { orderId: orderId.value }
+				});
+				// ========== 前端模拟模式结束 ==========
+				return; // 直接返回，不执行后面的代码
+				
+				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
+				// const response = await request.post("/api/wallet/pay", {
+				//   orderId: orderId.value,
+				//   amount: orderDetail.value.orderTotal
+				// });
+				// if (response && response.success) {
+				//   // 支付成功，跳转到成功页面
+				//   router.push({
+				//     path: '/successfulPayment',
+				//     query: { orderId: orderId.value }
+				//   });
+				// } else {
+				//   toast.error("钱包支付失败：" + (response?.message || '余额不足或账户异常'));
+				// }
+				// ========== 后端调用逻辑结束 ==========
+			} catch (error) {
+				console.error('钱包支付失败:', error);
+				toast.error("钱包支付失败，请重试");
 			} finally {
 				paying.value = false;
+			}
+		};
+
+		// 支付处理
+		const handlePayment = async () => {
+			if (selectedPayment.value === 'wallet') {
+				// 钱包支付：先检查钱包是否存在
+				const exists = await checkWalletExists();
+				if (!exists) {
+					// 钱包不存在，弹出开通对话框
+					showWalletCreateModal.value = true;
+					return;
+				}
+				// 钱包存在，直接支付
+				await performWalletPayment();
+			} else {
+				// 原有的第三方支付逻辑
+				try {
+					paying.value = true;
+					const response = await request.put("/api/orders/status?orderState=1&orderId=" + orderId.value);
+					if (response.success) {
+						// 支付成功，跳转到成功页面
+						router.push({
+							path: '/successfulPayment',
+							query: { orderId: orderId.value }
+						});
+					} else {
+						toast.error("支付失败" + response.data.message);
+					}
+				} catch (error) {
+					console.error('支付失败:', error);
+					toast.error("支付失败，请重试！");
+				} finally {
+					paying.value = false;
+				}
 			}
 		};
 
@@ -194,6 +493,9 @@ export default {
 			selectPayment,
 			paying,
 			deliveryPrice,
+			showWalletCreateModal,
+			creatingWallet,
+			handleCreateWallet,
 		};
 	}
 }
@@ -357,6 +659,23 @@ export default {
 	object-fit: contain;
 }
 
+.payment-option .wallet-icon {
+	display: flex;
+	align-items: center;
+	gap: 2vw;
+}
+
+.payment-option .wallet-icon i {
+	font-size: 6vw;
+	color: #0097FF;
+}
+
+.payment-option .wallet-icon span {
+	font-size: 3.6vw;
+	color: #333;
+	font-weight: 500;
+}
+
 .payment-option .fa-check-circle {
 	font-size: 5vw;
 	color: #ddd;
@@ -430,5 +749,105 @@ export default {
   height: 8vw;
   color: #fff; /* 按钮颜色，与 header 白色文字匹配 */
   /* 如果组件内部是图标，可加图标大小控制 */
+}
+
+/* 钱包开通对话框样式 */
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 2000;
+}
+
+.wallet-modal {
+	background: white;
+	border-radius: 4vw;
+	width: 85%;
+	max-width: 500px;
+}
+
+.wallet-modal .modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 4vw;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.wallet-modal .modal-header h3 {
+	font-size: 4.5vw;
+	margin: 0;
+	color: #333;
+}
+
+.wallet-modal .close-btn {
+	font-size: 5vw;
+	color: #999;
+	cursor: pointer;
+}
+
+.wallet-modal .modal-body {
+	padding: 4vw;
+}
+
+.wallet-tip {
+	font-size: 4vw;
+	color: #333;
+	margin-bottom: 3vw;
+	text-align: center;
+}
+
+.wallet-desc {
+	font-size: 3.6vw;
+	color: #666;
+	line-height: 1.6;
+	text-align: center;
+}
+
+.wallet-modal .modal-footer {
+	display: flex;
+	gap: 3vw;
+	padding: 4vw;
+	border-top: 1px solid #f0f0f0;
+}
+
+.wallet-modal .modal-footer button {
+	flex: 1;
+	padding: 3.5vw;
+	border: none;
+	border-radius: 2vw;
+	font-size: 4vw;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.3s;
+}
+
+.wallet-modal .cancel-btn {
+	background: #f5f5f5;
+	color: #666;
+}
+
+.wallet-modal .cancel-btn:active {
+	background: #e0e0e0;
+}
+
+.wallet-modal .confirm-btn {
+	background: #0097FF;
+	color: white;
+}
+
+.wallet-modal .confirm-btn:active {
+	background: #0080e6;
+}
+
+.wallet-modal .confirm-btn:disabled {
+	background: #ccc;
+	cursor: not-allowed;
 }
 </style>
