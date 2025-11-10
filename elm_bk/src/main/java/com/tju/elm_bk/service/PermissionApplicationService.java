@@ -1,11 +1,10 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.AuditPermissionDTO;
-import com.tju.elm_bk.dto.BusinessDTO;
-import com.tju.elm_bk.dto.BusinessPermissionDTO;
-import com.tju.elm_bk.entity.PermissionApplication;
-import com.tju.elm_bk.vo.BusinessPermissionVO;
-import com.tju.elm_bk.vo.MerchantApplicationsVO;
+import com.tju.elm_bk.pojo.dto.AuditPermissionDTO;
+import com.tju.elm_bk.pojo.dto.BusinessPermissionDTO;
+import com.tju.elm_bk.pojo.entity.PermissionApplication;
+import com.tju.elm_bk.pojo.vo.BusinessPermissionVO;
+import com.tju.elm_bk.pojo.vo.MerchantApplicationsVO;
 
 import java.util.List;
 

@@ -1,9 +1,7 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.entity.User;
-import com.tju.elm_bk.vo.UserVO;
-
-import java.util.Optional;
+import com.tju.elm_bk.pojo.entity.User;
+import com.tju.elm_bk.pojo.vo.UserVO;
 
 public interface UserService {
     User getUserWithAuthorities(String username);

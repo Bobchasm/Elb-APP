@@ -5,17 +5,15 @@ package com.tju.elm_bk.service.impl;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.service.UserService;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.UserVO;
+import com.tju.elm_bk.pojo.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @Slf4j

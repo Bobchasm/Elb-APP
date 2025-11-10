@@ -1,10 +1,10 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.CartItemCreateDTO;
+import com.tju.elm_bk.pojo.dto.CartItemCreateDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.CartService;
-import com.tju.elm_bk.vo.CartItemVO;
-import com.tju.elm_bk.vo.CartVO;
+import com.tju.elm_bk.pojo.vo.CartItemVO;
+import com.tju.elm_bk.pojo.vo.CartVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;

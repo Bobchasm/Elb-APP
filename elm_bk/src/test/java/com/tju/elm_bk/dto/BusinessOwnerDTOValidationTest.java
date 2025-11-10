@@ -1,5 +1,6 @@
 package com.tju.elm_bk.dto;
 
+import com.tju.elm_bk.pojo.dto.BusinessOwnerDTO;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

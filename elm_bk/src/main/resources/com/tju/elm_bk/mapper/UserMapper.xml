@@ -3,11 +3,11 @@
 
 <mapper namespace="com.tju.elm_bk.mapper.UserMapper">
 
-    <resultMap id="BaseResultMap" type="com.tju.elm_bk.entity.User">
+    <resultMap id="BaseResultMap" type="com.tju.elm_bk.pojo.entity.User">
         <id column="id" property="id"/>
     </resultMap>
 
-    <resultMap id="UserWithAuthoritiesResultMap" type="com.tju.elm_bk.entity.User" extends="BaseResultMap">
+    <resultMap id="UserWithAuthoritiesResultMap" type="com.tju.elm_bk.pojo.entity.User" extends="BaseResultMap">
         <id property="id" column="id"/>
         <result property="username" column="username"/>
         <result property="password" column="password"/>
@@ -17,7 +17,7 @@
         <result property="isDeleted" column="is_deleted"/>
         <result property="creator" column="creator"/>
         <result property="updater" column="updater"/>
-        <collection property="authorities" ofType="com.tju.elm_bk.entity.Authority">
+        <collection property="authorities" ofType="com.tju.elm_bk.pojo.entity.Authority">
             <id property="name" column="authority_name"/>
         </collection>
     </resultMap>
@@ -41,7 +41,7 @@
         WHERE u.id = #{id} AND u.is_deleted = 0
     </select>
 
-    <insert id="insert" parameterType="com.tju.elm_bk.entity.User" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.tju.elm_bk.pojo.entity.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO users (
             create_time, creator, is_deleted, update_time, updater,
             activated, password, username
@@ -51,7 +51,7 @@
                  )
     </insert>
 
-    <update id="update" parameterType="com.tju.elm_bk.entity.User">
+    <update id="update" parameterType="com.tju.elm_bk.pojo.entity.User">
         UPDATE users
         <set>
             <if test="createTime != null">create_time = #{createTime},</if>

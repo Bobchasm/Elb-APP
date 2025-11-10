@@ -1,12 +1,11 @@
 
 // OrdersMapper.java
 package com.tju.elm_bk.mapper;
-import com.tju.elm_bk.dto.OrderDTO;
-import com.tju.elm_bk.entity.Order;
+import com.tju.elm_bk.pojo.entity.Order;
 
-import com.tju.elm_bk.vo.OrderItemDetailVO;
-import com.tju.elm_bk.vo.OrderItemVO;
-import com.tju.elm_bk.vo.OrderVO;
+import com.tju.elm_bk.pojo.vo.OrderItemDetailVO;
+import com.tju.elm_bk.pojo.vo.OrderItemVO;
+import com.tju.elm_bk.pojo.vo.OrderVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

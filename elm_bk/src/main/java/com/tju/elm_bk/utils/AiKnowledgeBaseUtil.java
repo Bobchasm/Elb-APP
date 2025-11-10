@@ -1,9 +1,9 @@
 package com.tju.elm_bk.utils;
 
-import com.tju.elm_bk.entity.Business;
-import com.tju.elm_bk.entity.Food;
-import com.tju.elm_bk.entity.Order;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.entity.Business;
+import com.tju.elm_bk.pojo.entity.Food;
+import com.tju.elm_bk.pojo.entity.Order;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.mapper.FoodMapper;
 import com.tju.elm_bk.mapper.OrdersMapper;

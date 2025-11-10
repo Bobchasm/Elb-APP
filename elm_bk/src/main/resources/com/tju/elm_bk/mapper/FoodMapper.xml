@@ -4,7 +4,7 @@
 
 <mapper namespace="com.tju.elm_bk.mapper.FoodMapper">
 
-    <resultMap id="foodVOResultMap" type="com.tju.elm_bk.vo.FoodVO">
+    <resultMap id="foodVOResultMap" type="com.tju.elm_bk.pojo.vo.FoodVO">
         <id property="id" column="id"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
@@ -20,7 +20,7 @@
         <association property="business" resultMap="businessVOResultMap"/>
     </resultMap>
 
-    <resultMap id="businessVOResultMap" type="com.tju.elm_bk.vo.BusinessVO">
+    <resultMap id="businessVOResultMap" type="com.tju.elm_bk.pojo.vo.BusinessVO">
         <id property="id" column="business_id"/>
         <result property="businessName" column="business_business_name"/>
         <result property="businessAddress" column="business_business_address"/>
@@ -38,7 +38,7 @@
         <association property="businessOwner" resultMap="userVOResultMap"/>
     </resultMap>
 
-    <resultMap id="userVOResultMap" type="com.tju.elm_bk.vo.UserVO">
+    <resultMap id="userVOResultMap" type="com.tju.elm_bk.pojo.vo.UserVO">
         <id property="id" column="user_id"/>
         <result property="username" column="user_username"/>
         <result property="createTime" column="user_create_time"/>
@@ -46,11 +46,11 @@
         <result property="isDeleted" column="user_deleted"/>
         <result property="updateTime" column="user_update_time"/>
         <result property="updater" column="user_updater"/>
-        <collection property="authorities" ofType="com.tju.elm_bk.entity.Authority"
+        <collection property="authorities" ofType="com.tju.elm_bk.pojo.entity.Authority"
                     select="selectAuthoritiesByUserId" column="name"/>
     </resultMap>
 
-    <select id="selectAuthoritiesByUserId" resultType="com.tju.elm_bk.entity.Authority">
+    <select id="selectAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">
         SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{id}
     </select>
 
@@ -156,7 +156,7 @@
 
 
 
-    <select id="selectFoodItemVOList" resultType="com.tju.elm_bk.vo.FoodItemVO">
+    <select id="selectFoodItemVOList" resultType="com.tju.elm_bk.pojo.vo.FoodItemVO">
         select f.*, b.business_name
         from food f
         left join business b on b.id = f.business_id and b.is_deleted = 0

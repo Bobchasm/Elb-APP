@@ -1,16 +1,16 @@
 // MerchantInteractionServiceImpl.java
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.entity.MerchantInteraction;
+import com.tju.elm_bk.pojo.entity.MerchantInteraction;
 import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.mapper.MerchantInteractionMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.service.MerchantInteractionService;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.BusinessVO;
-import com.tju.elm_bk.vo.MerchantInteractionVO;
-import com.tju.elm_bk.vo.MerchantStatsVO;
-import com.tju.elm_bk.dto.MerchantInteractionDTO;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
+import com.tju.elm_bk.pojo.vo.BusinessVO;
+import com.tju.elm_bk.pojo.vo.MerchantInteractionVO;
+import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
+import com.tju.elm_bk.pojo.dto.MerchantInteractionDTO;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

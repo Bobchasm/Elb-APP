@@ -1,15 +1,15 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.AiChatRequestDTO;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.dto.AiChatRequestDTO;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.AiChatService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.AiChatHistoryVO;
-import com.tju.elm_bk.vo.AiChatResponseVO;
+import com.tju.elm_bk.pojo.vo.AiChatHistoryVO;
+import com.tju.elm_bk.pojo.vo.AiChatResponseVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import com.tju.elm_bk.entity.Order;
+import com.tju.elm_bk.pojo.entity.Order;
 import com.tju.elm_bk.mapper.OrdersMapper;
 
 @Slf4j

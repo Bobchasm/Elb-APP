@@ -1,6 +1,6 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.entity.Notification;
+import com.tju.elm_bk.pojo.entity.Notification;
 
 import java.util.List;
 

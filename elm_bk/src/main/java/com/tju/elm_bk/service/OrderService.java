@@ -1,9 +1,9 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.OrderDTO;
-import com.tju.elm_bk.vo.OrderItemDetailVO;
-import com.tju.elm_bk.vo.OrderItemVO;
-import com.tju.elm_bk.vo.OrderVO;
+import com.tju.elm_bk.pojo.dto.OrderDTO;
+import com.tju.elm_bk.pojo.vo.OrderItemDetailVO;
+import com.tju.elm_bk.pojo.vo.OrderItemVO;
+import com.tju.elm_bk.pojo.vo.OrderVO;
 
 import java.util.List;
 

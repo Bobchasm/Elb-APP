@@ -1,8 +1,7 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.Person;
-import com.tju.elm_bk.entity.User;
-import com.tju.elm_bk.vo.PersonVO;
+import com.tju.elm_bk.pojo.entity.Person;
+import com.tju.elm_bk.pojo.vo.PersonVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 

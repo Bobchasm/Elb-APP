@@ -1,13 +1,10 @@
 // UserMapper.xml.java
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.User;
-import com.tju.elm_bk.vo.UserVO;
+import com.tju.elm_bk.pojo.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
-
-import java.util.List;
 
 @Mapper
 public interface UserMapper {

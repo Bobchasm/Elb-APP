@@ -1,16 +1,15 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.FoodCreateDTO;
-import com.tju.elm_bk.dto.FoodDTO;
-import com.tju.elm_bk.dto.FoodUpdateDTO;
+import com.tju.elm_bk.pojo.dto.FoodCreateDTO;
+import com.tju.elm_bk.pojo.dto.FoodDTO;
+import com.tju.elm_bk.pojo.dto.FoodUpdateDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.FoodService;
-import com.tju.elm_bk.vo.FoodItemVO;
-import com.tju.elm_bk.vo.FoodVO;
+import com.tju.elm_bk.pojo.vo.FoodItemVO;
+import com.tju.elm_bk.pojo.vo.FoodVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

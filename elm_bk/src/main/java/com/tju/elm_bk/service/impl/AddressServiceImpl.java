@@ -1,9 +1,8 @@
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.constant.MessageConstant;
-import com.tju.elm_bk.dto.AddressCreateDTO;
-import com.tju.elm_bk.entity.DeliveryAddress;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.dto.AddressCreateDTO;
+import com.tju.elm_bk.pojo.entity.DeliveryAddress;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.DeliveryAddressMapper;
 import com.tju.elm_bk.mapper.UserMapper;
@@ -11,11 +10,10 @@ import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.AddressService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.AddressVO;
-import com.tju.elm_bk.vo.UserVO;
+import com.tju.elm_bk.pojo.vo.AddressVO;
+import com.tju.elm_bk.pojo.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

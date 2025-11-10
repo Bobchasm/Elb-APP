@@ -1,10 +1,10 @@
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.dto.BusinessDTO;
-import com.tju.elm_bk.dto.BusinessInfoDTO;
-import com.tju.elm_bk.dto.BusinessUpdateDTO;
-import com.tju.elm_bk.entity.Business;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.dto.BusinessDTO;
+import com.tju.elm_bk.pojo.dto.BusinessInfoDTO;
+import com.tju.elm_bk.pojo.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.pojo.entity.Business;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.mapper.MerchantInteractionMapper;
@@ -13,9 +13,9 @@ import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.BusinessService;
 import com.tju.elm_bk.service.UserService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.BusinessVO;
-import com.tju.elm_bk.vo.MerchantStatsVO;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
+import com.tju.elm_bk.pojo.vo.BusinessVO;
+import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,11 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

@@ -1,8 +1,8 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.AiChatRequestDTO;
-import com.tju.elm_bk.vo.AiChatHistoryVO;
-import com.tju.elm_bk.vo.AiChatResponseVO;
+import com.tju.elm_bk.pojo.dto.AiChatRequestDTO;
+import com.tju.elm_bk.pojo.vo.AiChatHistoryVO;
+import com.tju.elm_bk.pojo.vo.AiChatResponseVO;
 
 import java.util.List;
 

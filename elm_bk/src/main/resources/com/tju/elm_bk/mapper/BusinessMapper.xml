@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.tju.elm_bk.mapper.BusinessMapper">
 
-    <resultMap id="businessVOResultMap" type="com.tju.elm_bk.vo.BusinessVO">
+    <resultMap id="businessVOResultMap" type="com.tju.elm_bk.pojo.vo.BusinessVO">
         <id property="id" column="business_id"/>
         <result property="businessName" column="business_name"/>
         <result property="businessAddress" column="business_address"/>
@@ -21,7 +21,7 @@
         <association property="businessOwner" resultMap="userVOResultMap"/>
     </resultMap>
 
-    <resultMap id="userVOResultMap" type="com.tju.elm_bk.vo.UserVO">
+    <resultMap id="userVOResultMap" type="com.tju.elm_bk.pojo.vo.UserVO">
         <id property="id" column="user_id"/>
         <result property="username" column="user_username"/>
         <result property="createTime" column="user_create_time"/>
@@ -29,11 +29,11 @@
         <result property="isDeleted" column="user_deleted"/>
         <result property="updateTime" column="user_update_time"/>
         <result property="updater" column="user_updater"/>
-        <collection property="authorities" ofType="com.tju.elm_bk.entity.Authority"
+        <collection property="authorities" ofType="com.tju.elm_bk.pojo.entity.Authority"
                     select="selectAuthoritiesByUserId" column="user_id"/>
     </resultMap>
 
-    <select id="selectAuthoritiesByUserId" resultType="com.tju.elm_bk.entity.Authority">
+    <select id="selectAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">
         SELECT ua.authority_name as name
         FROM user_authority ua
         WHERE ua.user_id = #{userId}
@@ -181,7 +181,7 @@
     </select>
 
     <!-- 插入商户 -->
-    <insert id="insertBusiness" parameterType="com.tju.elm_bk.dto.BusinessDTO"
+    <insert id="insertBusiness" parameterType="com.tju.elm_bk.pojo.dto.BusinessDTO"
             useGeneratedKeys="true" keyProperty="businessDto.id" keyColumn="id">
         INSERT INTO business (
             business_name,
@@ -215,7 +215,7 @@
                      0
                  )
     </insert>
-    <insert id="insertBusinessPermission" parameterType="com.tju.elm_bk.dto.BusinessPermissionDTO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertBusinessPermission" parameterType="com.tju.elm_bk.pojo.dto.BusinessPermissionDTO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO business
         (
         business_name,
@@ -252,7 +252,7 @@
         )
     </insert>
 
-    <select id="searchBusinesses" resultType="com.tju.elm_bk.vo.BusinessSearchVO">
+    <select id="searchBusinesses" resultType="com.tju.elm_bk.pojo.vo.BusinessSearchVO">
         SELECT
         id,
         business_name as businessName,
@@ -277,7 +277,7 @@
         WHERE merchant_id = #{businessId}
     </select>
 
-    <insert id="applyForAddBusiness" parameterType="com.tju.elm_bk.entity.Business"
+    <insert id="applyForAddBusiness" parameterType="com.tju.elm_bk.pojo.entity.Business"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO business (
             business_name,

@@ -1,9 +1,9 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.PersonUpdateDTO;
-import com.tju.elm_bk.dto.UserSearchDTO;
-import com.tju.elm_bk.entity.Person;
-import com.tju.elm_bk.vo.PersonVO;
+import com.tju.elm_bk.pojo.dto.PersonUpdateDTO;
+import com.tju.elm_bk.pojo.dto.UserSearchDTO;
+import com.tju.elm_bk.pojo.entity.Person;
+import com.tju.elm_bk.pojo.vo.PersonVO;
 import jakarta.validation.Valid;
 
 import java.util.List;

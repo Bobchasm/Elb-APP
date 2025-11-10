@@ -1,9 +1,8 @@
 package com.tju.elm_bk.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.tju.elm_bk.dto.LoginDTO;
+import com.tju.elm_bk.pojo.dto.LoginDTO;
 import com.tju.elm_bk.exception.APIException;
-import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.security.TokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

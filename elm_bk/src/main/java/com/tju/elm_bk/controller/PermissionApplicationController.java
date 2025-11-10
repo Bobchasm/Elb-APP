@@ -1,15 +1,12 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.AuditPermissionDTO;
-import com.tju.elm_bk.dto.BusinessDTO;
-import com.tju.elm_bk.dto.BusinessPermissionDTO;
-import com.tju.elm_bk.entity.Business;
-import com.tju.elm_bk.entity.PermissionApplication;
+import com.tju.elm_bk.pojo.dto.AuditPermissionDTO;
+import com.tju.elm_bk.pojo.dto.BusinessPermissionDTO;
+import com.tju.elm_bk.pojo.entity.PermissionApplication;
 import com.tju.elm_bk.result.HttpResult;
-import com.tju.elm_bk.service.BusinessService;
 import com.tju.elm_bk.service.PermissionApplicationService;
-import com.tju.elm_bk.vo.BusinessPermissionVO;
-import com.tju.elm_bk.vo.MerchantApplicationsVO;
+import com.tju.elm_bk.pojo.vo.BusinessPermissionVO;
+import com.tju.elm_bk.pojo.vo.MerchantApplicationsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

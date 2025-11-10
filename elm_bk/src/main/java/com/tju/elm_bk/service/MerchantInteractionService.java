@@ -1,10 +1,9 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.MerchantInteractionDTO;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.MerchantInteractionVO;
-import com.tju.elm_bk.vo.MerchantStatsVO;
-import org.springframework.stereotype.Service;
+import com.tju.elm_bk.pojo.dto.MerchantInteractionDTO;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
+import com.tju.elm_bk.pojo.vo.MerchantInteractionVO;
+import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
 
 import java.util.List;
 

@@ -1,20 +1,17 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.AddressCreateDTO;
-import com.tju.elm_bk.entity.DeliveryAddress;
+import com.tju.elm_bk.pojo.dto.AddressCreateDTO;
+import com.tju.elm_bk.pojo.entity.DeliveryAddress;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.AddressService;
-import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.AddressVO;
+import com.tju.elm_bk.pojo.vo.AddressVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/addresses")

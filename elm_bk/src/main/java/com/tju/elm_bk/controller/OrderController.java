@@ -1,11 +1,11 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.dto.OrderDTO;
+import com.tju.elm_bk.pojo.dto.OrderDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.OrderService;
-import com.tju.elm_bk.vo.OrderItemDetailVO;
-import com.tju.elm_bk.vo.OrderItemVO;
-import com.tju.elm_bk.vo.OrderVO;
+import com.tju.elm_bk.pojo.vo.OrderItemDetailVO;
+import com.tju.elm_bk.pojo.vo.OrderItemVO;
+import com.tju.elm_bk.pojo.vo.OrderVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;

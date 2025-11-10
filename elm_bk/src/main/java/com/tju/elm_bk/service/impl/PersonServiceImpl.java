@@ -1,16 +1,16 @@
 package com.tju.elm_bk.service.impl;
 
 
-import com.tju.elm_bk.dto.PersonUpdateDTO;
-import com.tju.elm_bk.dto.UserSearchDTO;
-import com.tju.elm_bk.entity.Person;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.dto.PersonUpdateDTO;
+import com.tju.elm_bk.pojo.dto.UserSearchDTO;
+import com.tju.elm_bk.pojo.entity.Person;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.PersonMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.service.PersonService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.PersonVO;
+import com.tju.elm_bk.pojo.vo.PersonVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

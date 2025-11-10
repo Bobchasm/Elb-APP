@@ -1,9 +1,9 @@
 // OrderDetailetMapper.java
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.OrderDetailet;
+import com.tju.elm_bk.pojo.entity.OrderDetailet;
 
-import com.tju.elm_bk.vo.OrderFoodVO;
+import com.tju.elm_bk.pojo.vo.OrderFoodVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

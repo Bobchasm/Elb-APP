@@ -2,14 +2,16 @@ package com.tju.elm_bk.mapper;
 import java.util.List;
 import java.util.Map;
 
-import com.tju.elm_bk.dto.BusinessDTO;
-import com.tju.elm_bk.dto.BusinessInfoDTO;
-import com.tju.elm_bk.dto.BusinessPermissionDTO;
-import com.tju.elm_bk.dto.BusinessUpdateDTO;
-import com.tju.elm_bk.entity.Authority;
-import com.tju.elm_bk.vo.*;
-import com.tju.elm_bk.entity.Business;
-import com.tju.elm_bk.vo.BusinessVO;
+import com.tju.elm_bk.pojo.dto.BusinessDTO;
+import com.tju.elm_bk.pojo.dto.BusinessInfoDTO;
+import com.tju.elm_bk.pojo.dto.BusinessPermissionDTO;
+import com.tju.elm_bk.pojo.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.pojo.entity.Authority;
+import com.tju.elm_bk.pojo.vo.BusinessPermissionVO;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
+import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
+import com.tju.elm_bk.pojo.entity.Business;
+import com.tju.elm_bk.pojo.vo.BusinessVO;
 import org.apache.ibatis.annotations.*;
 
 

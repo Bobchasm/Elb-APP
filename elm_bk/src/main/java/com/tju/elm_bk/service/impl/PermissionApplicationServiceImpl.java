@@ -1,19 +1,17 @@
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.dto.AuditPermissionDTO;
-import com.tju.elm_bk.dto.BusinessDTO;
-import com.tju.elm_bk.dto.BusinessPermissionDTO;
-import com.tju.elm_bk.entity.Authority;
-import com.tju.elm_bk.entity.Notification;
-import com.tju.elm_bk.entity.PermissionApplication;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.dto.AuditPermissionDTO;
+import com.tju.elm_bk.pojo.dto.BusinessPermissionDTO;
+import com.tju.elm_bk.pojo.entity.Authority;
+import com.tju.elm_bk.pojo.entity.Notification;
+import com.tju.elm_bk.pojo.entity.PermissionApplication;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.*;
 import com.tju.elm_bk.service.PermissionApplicationService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.BusinessPermissionVO;
-import com.tju.elm_bk.vo.BusinessVO;
-import com.tju.elm_bk.vo.MerchantApplicationsVO;
+import com.tju.elm_bk.pojo.vo.BusinessPermissionVO;
+import com.tju.elm_bk.pojo.vo.MerchantApplicationsVO;
 import com.tju.elm_bk.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jettison.json.JSONException;

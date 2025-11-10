@@ -4,7 +4,7 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.tju.elm_bk.mapper.OrdersMapper">
-    <resultMap id="orderVOResultMap" type="com.tju.elm_bk.vo.OrderVO">
+    <resultMap id="orderVOResultMap" type="com.tju.elm_bk.pojo.vo.OrderVO">
         <id property="id" column="id"/>
         <result property="createTime" column="create_time"/>
         <result property="creator" column="creator"/>
@@ -19,7 +19,7 @@
         <association property="deliveryAddress" resultMap="addressVOResultMap"/>
     </resultMap>
 
-    <resultMap id="businessVOResultMap" type="com.tju.elm_bk.vo.BusinessVO">
+    <resultMap id="businessVOResultMap" type="com.tju.elm_bk.pojo.vo.BusinessVO">
         <id property="id" column="business_id"/>
         <result property="businessName" column="business_business_name"/>
         <result property="businessAddress" column="business_business_address"/>
@@ -37,7 +37,7 @@
         <association property="businessOwner" resultMap="businessUserVOResultMap"/>
     </resultMap>
 
-    <resultMap id="businessUserVOResultMap" type="com.tju.elm_bk.vo.UserVO">
+    <resultMap id="businessUserVOResultMap" type="com.tju.elm_bk.pojo.vo.UserVO">
         <id property="id" column="business_user_id"/>
         <result property="username" column="business_user_username"/>
         <result property="createTime" column="business_user_create_time"/>
@@ -45,11 +45,11 @@
         <result property="isDeleted" column="business_user_deleted"/>
         <result property="updateTime" column="business_user_update_time"/>
         <result property="updater" column="business_user_updater"/>
-        <collection property="authorities" ofType="com.tju.elm_bk.entity.Authority"
+        <collection property="authorities" ofType="com.tju.elm_bk.pojo.entity.Authority"
                     select="selectBusinessUserAuthoritiesByUserId" column="name"/>
     </resultMap>
 
-    <resultMap id="customerUserVOResultMap" type="com.tju.elm_bk.vo.UserVO">
+    <resultMap id="customerUserVOResultMap" type="com.tju.elm_bk.pojo.vo.UserVO">
         <id property="id" column="customer_id"/>
         <result property="username" column="customer_username"/>
         <result property="createTime" column="customer_create_time"/>
@@ -57,11 +57,11 @@
         <result property="isDeleted" column="customer_deleted"/>
         <result property="updateTime" column="customer_update_time"/>
         <result property="updater" column="customer_updater"/>
-        <collection property="authorities" ofType="com.tju.elm_bk.entity.Authority"
+        <collection property="authorities" ofType="com.tju.elm_bk.pojo.entity.Authority"
                     select="selectCustomerUserAuthoritiesByUserId" column="name"/>
     </resultMap>
 
-    <resultMap id="addressVOResultMap" type="com.tju.elm_bk.vo.AddressVO">
+    <resultMap id="addressVOResultMap" type="com.tju.elm_bk.pojo.vo.AddressVO">
         <id property="id" column="ad_id"/>
 
         <result property="createTime" column="ad_create_time"/>
@@ -77,11 +77,11 @@
 
     </resultMap>
 
-    <select id="selectBusinessUserAuthoritiesByUserId" resultType="com.tju.elm_bk.entity.Authority">
+    <select id="selectBusinessUserAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">
         SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{business_user_id}
     </select>
 
-    <select id="selectCustomerUserAuthoritiesByUserId" resultType="com.tju.elm_bk.entity.Authority">
+    <select id="selectCustomerUserAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">
         SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{customer_id}
     </select>
 

@@ -1,10 +1,10 @@
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.dto.CartItemCreateDTO;
-import com.tju.elm_bk.entity.Business;
-import com.tju.elm_bk.entity.Cart;
-import com.tju.elm_bk.entity.Food;
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.dto.CartItemCreateDTO;
+import com.tju.elm_bk.pojo.entity.Business;
+import com.tju.elm_bk.pojo.entity.Cart;
+import com.tju.elm_bk.pojo.entity.Food;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.mapper.CartMapper;
@@ -13,9 +13,9 @@ import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.CartService;
 import com.tju.elm_bk.utils.SecurityUtils;
-import com.tju.elm_bk.vo.CartItemVO;
-import com.tju.elm_bk.vo.CartVO;
-import com.tju.elm_bk.vo.UserVO;
+import com.tju.elm_bk.pojo.vo.CartItemVO;
+import com.tju.elm_bk.pojo.vo.CartVO;
+import com.tju.elm_bk.pojo.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.Cart;
-import com.tju.elm_bk.vo.CartItemVO;
-import com.tju.elm_bk.vo.CartVO;
+import com.tju.elm_bk.pojo.entity.Cart;
+import com.tju.elm_bk.pojo.vo.CartItemVO;
+import com.tju.elm_bk.pojo.vo.CartVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

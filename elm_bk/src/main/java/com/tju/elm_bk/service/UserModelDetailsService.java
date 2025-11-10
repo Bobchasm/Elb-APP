@@ -1,6 +1,6 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.entity.User;
+import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.UserNotActivatedException;
 import com.tju.elm_bk.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.Notification;
+import com.tju.elm_bk.pojo.entity.Notification;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;

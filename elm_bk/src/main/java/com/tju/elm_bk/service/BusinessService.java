@@ -1,14 +1,14 @@
 package com.tju.elm_bk.service;
 
 
-import com.tju.elm_bk.dto.BusinessDTO;
-import com.tju.elm_bk.dto.BusinessInfoDTO;
-import com.tju.elm_bk.dto.BusinessUpdateDTO;
+import com.tju.elm_bk.pojo.dto.BusinessDTO;
+import com.tju.elm_bk.pojo.dto.BusinessInfoDTO;
+import com.tju.elm_bk.pojo.dto.BusinessUpdateDTO;
 
-import com.tju.elm_bk.entity.Business;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.BusinessVO;
-import com.tju.elm_bk.vo.MerchantStatsVO;
+import com.tju.elm_bk.pojo.entity.Business;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
+import com.tju.elm_bk.pojo.vo.BusinessVO;
+import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
 
 import java.util.List;
 

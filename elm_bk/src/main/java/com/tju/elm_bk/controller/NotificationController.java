@@ -1,6 +1,6 @@
 package com.tju.elm_bk.controller;
 
-import com.tju.elm_bk.entity.Notification;
+import com.tju.elm_bk.pojo.entity.Notification;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;

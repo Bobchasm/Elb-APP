@@ -1,6 +1,6 @@
 package com.tju.elm_bk.service.impl;
 
-import com.tju.elm_bk.entity.Notification;
+import com.tju.elm_bk.pojo.entity.Notification;
 import com.tju.elm_bk.mapper.NotificationMapper;
 import com.tju.elm_bk.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;

@@ -1,10 +1,9 @@
 package com.tju.elm_bk.mapper;
 import java.util.List;
 
-import com.tju.elm_bk.dto.FoodCreateDTO;
-import com.tju.elm_bk.entity.Food;
-import com.tju.elm_bk.vo.FoodItemVO;
-import com.tju.elm_bk.vo.FoodVO;
+import com.tju.elm_bk.pojo.entity.Food;
+import com.tju.elm_bk.pojo.vo.FoodItemVO;
+import com.tju.elm_bk.pojo.vo.FoodVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

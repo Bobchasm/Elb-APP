@@ -1,8 +1,7 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.MerchantInteraction;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.MerchantInteractionVO;
+import com.tju.elm_bk.pojo.entity.MerchantInteraction;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

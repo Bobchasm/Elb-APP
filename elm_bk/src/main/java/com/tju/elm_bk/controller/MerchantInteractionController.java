@@ -2,11 +2,11 @@ package com.tju.elm_bk.controller;
 
 //点赞收藏的接口
 
-import com.tju.elm_bk.dto.MerchantInteractionDTO;
+import com.tju.elm_bk.pojo.dto.MerchantInteractionDTO;
 import com.tju.elm_bk.service.MerchantInteractionService;
-import com.tju.elm_bk.vo.BusinessSearchVO;
-import com.tju.elm_bk.vo.MerchantInteractionVO;
-import com.tju.elm_bk.vo.MerchantStatsVO;
+import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
+import com.tju.elm_bk.pojo.vo.MerchantInteractionVO;
+import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
 import com.tju.elm_bk.result.HttpResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

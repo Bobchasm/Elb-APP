@@ -1,10 +1,10 @@
 package com.tju.elm_bk.service;
 
-import com.tju.elm_bk.dto.FoodCreateDTO;
-import com.tju.elm_bk.dto.FoodDTO;
-import com.tju.elm_bk.dto.FoodUpdateDTO;
-import com.tju.elm_bk.vo.FoodItemVO;
-import com.tju.elm_bk.vo.FoodVO;
+import com.tju.elm_bk.pojo.dto.FoodCreateDTO;
+import com.tju.elm_bk.pojo.dto.FoodDTO;
+import com.tju.elm_bk.pojo.dto.FoodUpdateDTO;
+import com.tju.elm_bk.pojo.vo.FoodItemVO;
+import com.tju.elm_bk.pojo.vo.FoodVO;
 
 import java.util.List;
 

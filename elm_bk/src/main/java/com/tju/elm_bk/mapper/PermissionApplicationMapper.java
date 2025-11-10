@@ -1,6 +1,6 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.PermissionApplication;
+import com.tju.elm_bk.pojo.entity.PermissionApplication;
 import jakarta.validation.constraints.NotNull;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;

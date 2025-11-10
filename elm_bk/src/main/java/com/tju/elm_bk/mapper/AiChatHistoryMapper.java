@@ -1,6 +1,6 @@
 package com.tju.elm_bk.mapper;
 
-import com.tju.elm_bk.entity.AiChatHistory;
+import com.tju.elm_bk.pojo.entity.AiChatHistory;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
