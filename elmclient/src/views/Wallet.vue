@@ -399,90 +399,54 @@ export default {
       }
     ]);
 
-    // 获取钱包信息
+    // 获取钱包信息（后端优先；本地模拟仅注释保留）
     const fetchWalletInfo = async () => {
       try {
         loading.value = true;
-        
-        // ========== 前端模拟模式（用于测试，不连接后端） ==========
-        const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-        if (savedWalletInfo) {
-          walletInfo.value = JSON.parse(savedWalletInfo);
+        // 前端模拟备用：
+        // const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
+        // if (savedWalletInfo) { walletInfo.value = JSON.parse(savedWalletInfo); return; }
+
+        // 后端调用
+        const response = await request.get('/api/wallet/info');
+        if (response.success) {
+          walletInfo.value = response.data;
         } else {
-          walletInfo.value = {
-            balance: 0,
-            isVip: false,
-            overdraftLimit: 0,
-            usedOverdraft: 0
-          };
+          if (response.message && response.message.includes('不存在')) {
+            await createWallet();
+          } else {
+            toast.error('获取钱包信息失败');
+          }
         }
-        // ========== 前端模拟模式结束 ==========
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const response = await request.get('/api/wallet/info');
-        // if (response.success) {
-        //   walletInfo.value = response.data;
-        // } else {
-        //   // 如果钱包不存在，创建钱包
-        //   if (response.message && response.message.includes('不存在')) {
-        //     await createWallet();
-        //   } else {
-        //     toast.error('获取钱包信息失败');
-        //   }
-        // }
-        // ========== 后端调用逻辑结束 ==========
       } catch (error) {
         console.error('获取钱包信息失败:', error);
-        // ========== 前端模拟模式 ==========
-        walletInfo.value = {
-          balance: 0,
-          isVip: false,
-          overdraftLimit: 0,
-          usedOverdraft: 0
-        };
-        // ========== 后端调用逻辑（已注释） ==========
-        // // 如果是404，说明钱包不存在，创建钱包
-        // if (error.response?.status === 404) {
-        //   await createWallet();
-        // } else {
-        //   toast.error('获取钱包信息失败');
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        if (error.response?.status === 404) {
+          await createWallet();
+        } else {
+          toast.error('获取钱包信息失败');
+        }
       } finally {
         loading.value = false;
       }
     };
 
-    // 创建钱包
+    // 创建钱包（后端；本地模拟以注释保留）
     const createWallet = async () => {
       try {
-        // ========== 前端模拟模式（用于测试，不连接后端） ==========
-        const newWalletInfo = {
-          balance: 0,
-          isVip: false,
-          overdraftLimit: 0,
-          usedOverdraft: 0
-        };
-        walletInfo.value = newWalletInfo;
-        localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
+        // 前端模拟备用：
+        // const newWalletInfo = { balance: 0, isVip: false, overdraftLimit: 0, usedOverdraft: 0 };
+        // walletInfo.value = newWalletInfo;
+        // localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
+        // addTransactionRecord({ transactionType: 'create', amount: 0, reason: '钱包开通成功' });
+        // toast.success('钱包已激活'); return;
 
-        addTransactionRecord({
-          transactionType: 'create',
-          amount: 0,
-          reason: '钱包开通成功'
-        });
-        toast.success('钱包已激活');
-        // ========== 前端模拟模式结束 ==========
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const response = await request.post('/api/wallet/create');
-        // if (response.success) {
-        //   walletInfo.value = response.data;
-        //   toast.success('钱包已激活');
-        // } else {
-        //   toast.error('激活钱包失败');
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        const response = await request.post('/api/wallet/create');
+        if (response.success) {
+          walletInfo.value = response.data;
+          toast.success('钱包已激活');
+        } else {
+          toast.error('激活钱包失败');
+        }
       } catch (error) {
         console.error('创建钱包失败:', error);
         toast.error('激活钱包失败');
@@ -504,30 +468,25 @@ export default {
       }
     };
 
-    // 获取充值/提现规则
+    // 获取充值/提现规则（后端优先）
     const fetchRules = async () => {
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
-      // 使用默认规则
-      rechargeRules.value = { rewardRate: 0.1 }; // 默认10%
-      withdrawRules.value = { feeRate: 0.1 }; // 默认10%
-      rulesText.value = null; // 规则文本
-      // ========== 前端模拟模式结束 ==========
-      
-      // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-      // try {
-      //   const response = await request.get('/api/wallet/rules');
-      //   if (response.success) {
-      //     rechargeRules.value = response.data.rechargeRules || { rewardRate: 0.1 }; // 默认10%
-      //     withdrawRules.value = response.data.withdrawRules || { feeRate: 0.1 }; // 默认10%
-      //     rulesText.value = response.data.rulesText || null; // 规则文本
-      //   }
-      // } catch (error) {
-      //   console.error('获取规则失败:', error);
-      //   // 使用默认规则
-      //   rechargeRules.value = { rewardRate: 0.1 };
-      //   withdrawRules.value = { feeRate: 0.1 };
-      // }
-      // ========== 后端调用逻辑结束 ==========
+      try {
+        // 前端模拟备用：
+        // rechargeRules.value = { rewardRate: 0.1 };
+        // withdrawRules.value = { feeRate: 0.1 };
+        // rulesText.value = null; return;
+
+        const response = await request.get('/api/wallet/rules');
+        if (response.success) {
+          rechargeRules.value = response.data.rechargeRules || { rewardRate: 0.1 };
+          withdrawRules.value = response.data.withdrawRules || { feeRate: 0.1 };
+          rulesText.value = response.data.rulesText || null;
+        }
+      } catch (error) {
+        console.error('获取规则失败:', error);
+        rechargeRules.value = { rewardRate: 0.1 };
+        withdrawRules.value = { feeRate: 0.1 };
+      }
     };
 
     // 关闭规则弹窗
@@ -536,68 +495,33 @@ export default {
       showWithdrawRules.value = false;
     };
 
-    // 处理充值
+    // 处理充值（后端）
     const handleRecharge = async () => {
       if (!rechargeAmount.value || rechargeAmount.value <= 0) {
         toast.warning('请输入有效的充值金额');
         return;
       }
       
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
       try {
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // 计算充值奖励
-        const reward = rechargeAmount.value * (rechargeRules.value?.rewardRate || 0.1);
-        const totalAmount = rechargeAmount.value + reward;
-        
-        // 更新钱包余额
-        const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-        let walletData = savedWalletInfo ? JSON.parse(savedWalletInfo) : {
-          balance: 0,
-          isVip: false,
-          overdraftLimit: 0,
-          usedOverdraft: 0
-        };
-        
-        walletData.balance = (walletData.balance || 0) + totalAmount;
-        walletInfo.value = walletData;
-        localStorage.setItem(getWalletInfoKey(), JSON.stringify(walletData));
-        
-        addTransactionRecord({
-          transactionType: 'recharge',
-          amount: totalAmount,
-          rewardAmount: reward,
-          reason: `充值 ¥${(rechargeAmount.value).toFixed(2)}，奖励 ¥${reward.toFixed(2)}`
+        // 前端模拟备用见注释；后端调用如下：
+        const response = await request.post('/api/wallet/recharge', {
+          amount: rechargeAmount.value
         });
-
-        toast.success('充值成功');
-        showRechargeModal.value = false;
-        rechargeAmount.value = null;
-        // ========== 前端模拟模式结束 ==========
-        return; // 直接返回，不执行后面的代码
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const response = await request.post('/api/wallet/recharge', {
-        //   amount: rechargeAmount.value
-        // });
-        // if (response.success) {
-        //   toast.success('充值成功');
-        //   showRechargeModal.value = false;
-        //   rechargeAmount.value = null;
-        //   await fetchWalletInfo();
-        // } else {
-        //   toast.error('充值失败：' + (response.message || '未知错误'));
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        if (response.success) {
+          toast.success('充值成功');
+          showRechargeModal.value = false;
+          rechargeAmount.value = null;
+          await fetchWalletInfo();
+        } else {
+          toast.error('充值失败：' + (response.message || '未知错误'));
+        }
       } catch (error) {
         console.error('充值失败:', error);
         toast.error('充值失败，请重试');
       }
     };
 
-    // 处理提现
+    // 处理提现（后端）
     const handleWithdraw = async () => {
       if (!withdrawAmount.value || withdrawAmount.value <= 0) {
         toast.warning('请输入有效的提现金额');
@@ -613,129 +537,43 @@ export default {
         return;
       }
       
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
       try {
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // 计算手续费
-        const fee = withdrawAmount.value * (withdrawRules.value?.feeRate || 0.1);
-        const actualAmount = withdrawAmount.value - fee;
-        
-        // 更新钱包余额
-        const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-        let walletData = savedWalletInfo ? JSON.parse(savedWalletInfo) : {
-          balance: 0,
-          isVip: false,
-          overdraftLimit: 0,
-          usedOverdraft: 0
-        };
-        
-        // 扣除余额，如果余额不足则使用透支额度
-        const withdrawAmountValue = withdrawAmount.value;
-        let usedOverdraftAmount = 0;
-        if (walletData.balance >= withdrawAmountValue) {
-          // 余额足够，直接扣除
-          walletData.balance = (walletData.balance || 0) - withdrawAmountValue;
-        } else {
-          // 余额不足，使用透支额度
-          const needOverdraft = withdrawAmountValue - (walletData.balance || 0);
-          walletData.balance = 0;
-          walletData.usedOverdraft = (walletData.usedOverdraft || 0) + needOverdraft;
-          usedOverdraftAmount = needOverdraft;
-        }
-        
-        walletInfo.value = walletData;
-        localStorage.setItem(getWalletInfoKey(), JSON.stringify(walletData));
-        
-        addTransactionRecord({
-          transactionType: 'withdraw',
-          amount: -withdrawAmountValue,
-          fee,
-          reason: `提现申请 ¥${withdrawAmountValue.toFixed(2)}，手续费 ¥${fee.toFixed(2)}，实际到账 ¥${actualAmount.toFixed(2)}${usedOverdraftAmount > 0 ? `，使用透支 ¥${usedOverdraftAmount.toFixed(2)}` : ''}`
+        const response = await request.post('/api/wallet/withdraw', {
+          amount: withdrawAmount.value
         });
-
-        toast.success('提现成功');
-        showWithdrawModal.value = false;
-        withdrawAmount.value = null;
-        // ========== 前端模拟模式结束 ==========
-        return; // 直接返回，不执行后面的代码
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const response = await request.post('/api/wallet/withdraw', {
-        //   amount: withdrawAmount.value
-        // });
-        // if (response.success) {
-        //   toast.success('提现成功');
-        //   showWithdrawModal.value = false;
-        //   withdrawAmount.value = null;
-        //   await fetchWalletInfo();
-        // } else {
-        //   toast.error('提现失败：' + (response.message || '未知错误'));
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        if (response.success) {
+          toast.success('提现成功');
+          showWithdrawModal.value = false;
+          withdrawAmount.value = null;
+          await fetchWalletInfo();
+        } else {
+          toast.error('提现失败：' + (response.message || '未知错误'));
+        }
       } catch (error) {
         console.error('提现失败:', error);
         toast.error('提现失败，请重试');
       }
     };
 
-    // 处理还款
+    // 处理还款（后端）
     const handleRepay = async () => {
       if (repayMethod.value === 'wallet') {
         if (walletInfo.value.balance < walletInfo.value.usedOverdraft) {
           toast.warning('钱包余额不足，请使用第三方支付');
           return;
         }
-        
-        // ========== 前端模拟模式（用于测试，不连接后端） ==========
         try {
-          // 模拟延迟
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // 更新钱包信息
-          const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-          let walletData = savedWalletInfo ? JSON.parse(savedWalletInfo) : {
-            balance: 0,
-            isVip: false,
-            overdraftLimit: 0,
-            usedOverdraft: 0
-          };
-          
-          const repayAmount = walletData.usedOverdraft || 0;
-          if (repayAmount <= 0) {
-            toast.info('暂无透支需要还款');
-            return;
-          }
-          walletData.balance = Math.max(0, (walletData.balance || 0) - repayAmount);
-          walletData.usedOverdraft = 0;
-          walletInfo.value = walletData;
-          localStorage.setItem(getWalletInfoKey(), JSON.stringify(walletData));
-
-          addTransactionRecord({
-            transactionType: 'repay',
-            amount: -repayAmount,
-            reason: '钱包余额还款'
+          const response = await request.post('/api/wallet/repay', {
+            method: 'wallet',
+            amount: walletInfo.value.usedOverdraft
           });
-          
-          toast.success('还款成功');
-          showRepayModal.value = false;
-          // ========== 前端模拟模式结束 ==========
-          return; // 直接返回，不执行后面的代码
-          
-          // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-          // const response = await request.post('/api/wallet/repay', {
-          //   method: 'wallet',
-          //   amount: walletInfo.value.usedOverdraft
-          // });
-          // if (response.success) {
-          //   toast.success('还款成功');
-          //   showRepayModal.value = false;
-          //   await fetchWalletInfo();
-          // } else {
-          //   toast.error('还款失败：' + (response.message || '未知错误'));
-          // }
-          // ========== 后端调用逻辑结束 ==========
+          if (response.success) {
+            toast.success('还款成功');
+            showRepayModal.value = false;
+            await fetchWalletInfo();
+          } else {
+            toast.error('还款失败：' + (response.message || '未知错误'));
+          }
         } catch (error) {
           console.error('还款失败:', error);
           toast.error('还款失败，请重试');
@@ -752,76 +590,25 @@ export default {
       router.push('/wallet/transactions');
     };
 
-    // 处理VIP升级
+    // 处理VIP升级（后端）
     const handleVipUpgrade = async () => {
       if (!selectedVipLevel.value) {
         toast.warning('请选择VIP等级');
         return;
       }
       
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
       try {
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // 更新钱包信息
-        const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-        let walletData = savedWalletInfo ? JSON.parse(savedWalletInfo) : {
-          balance: 0,
-          isVip: false,
-          overdraftLimit: 0,
-          usedOverdraft: 0
-        };
-        
-        const vipPrice = selectedVipLevel.value.price;
-        const availableBalance = walletData.balance + 
-          (walletData.isVip ? (walletData.overdraftLimit - walletData.usedOverdraft) : 0);
-
-        if (availableBalance < vipPrice) {
-          toast.warning('余额不足');
-          return;
-        }
-
-        if (walletData.balance >= vipPrice) {
-          walletData.balance -= vipPrice;
-        } else {
-          const needOverdraft = vipPrice - (walletData.balance || 0);
-          walletData.balance = 0;
-          walletData.usedOverdraft = (walletData.usedOverdraft || 0) + needOverdraft;
-        }
-
-        // 根据VIP等级设置透支额度
-        const overdraftLimits = { 1: 100, 2: 500, 3: 2000 };
-        walletData.isVip = true;
-        walletData.overdraftLimit = overdraftLimits[selectedVipLevel.value.id] || 0;
-        walletInfo.value = walletData;
-        localStorage.setItem(getWalletInfoKey(), JSON.stringify(walletData));
-
-        addTransactionRecord({
-          transactionType: 'upgrade',
-          amount: -vipPrice,
-          reason: `升级至 ${selectedVipLevel.value.name}，透支额度提升至 ¥${walletData.overdraftLimit}`
+        const response = await request.post('/api/wallet/upgrade-vip', {
+          vipLevelId: selectedVipLevel.value.id
         });
-        
-        toast.success('VIP升级成功');
-        showVipModal.value = false;
-        selectedVipLevel.value = null;
-        // ========== 前端模拟模式结束 ==========
-        return; // 直接返回，不执行后面的代码
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const response = await request.post('/api/wallet/upgrade-vip', {
-        //   vipLevelId: selectedVipLevel.value.id
-        // });
-        // if (response.success) {
-        //   toast.success('VIP升级成功');
-        //   showVipModal.value = false;
-        //   selectedVipLevel.value = null;
-        //   await fetchWalletInfo();
-        // } else {
-        //   toast.error('VIP升级失败：' + (response.message || '未知错误'));
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        if (response.success) {
+          toast.success('VIP升级成功');
+          showVipModal.value = false;
+          selectedVipLevel.value = null;
+          await fetchWalletInfo();
+        } else {
+          toast.error('VIP升级失败：' + (response.message || '未知错误'));
+        }
       } catch (error) {
         console.error('VIP升级失败:', error);
         toast.error('VIP升级失败，请重试');

@@ -547,101 +547,57 @@ export default {
       }
     };
 
-    // 检测并创建钱包
+    // 检测并创建钱包（后端优先；本地模拟保留为注释）
     const checkAndCreateWallet = async () => {
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
       try {
-        // 检查localStorage中是否有钱包信息
-        const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-        if (savedWalletInfo) {
-          // 钱包存在，直接跳转
+        // 前端模拟备用：
+        // const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
+        // if (savedWalletInfo) { router.push({ path: '/wallet' }); return; }
+
+        const token = getToken();
+        const response = await request.get('/api/wallet/info', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.success) {
           router.push({ path: '/wallet' });
         } else {
-          // 钱包不存在，显示开通弹窗
           showWalletActivateModal.value = true;
         }
-        return; // 直接返回，不执行后面的代码
-        // ========== 前端模拟模式结束 ==========
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const token = getToken();
-        // const response = await request.get('/api/wallet/info', {
-        //   headers: {
-        //     'Authorization': `Bearer ${token}`
-        //   }
-        // });
-        // if (response.success) {
-        //   // 钱包存在，直接跳转
-        //   router.push({ path: '/wallet' });
-        // } else {
-        //   // 钱包不存在，显示开通弹窗
-        //   showWalletActivateModal.value = true;
-        // }
-        // ========== 后端调用逻辑结束 ==========
       } catch (error) {
-        // ========== 前端模拟模式 ==========
-        // 钱包不存在，显示开通弹窗
-        showWalletActivateModal.value = true;
-        // ========== 后端调用逻辑（已注释） ==========
-        // // 如果是404，说明钱包不存在
-        // if (error.response?.status === 404) {
-        //   showWalletActivateModal.value = true;
-        // } else {
-        //   console.error('检查钱包失败:', error);
-        //   toast.error('检查钱包状态失败');
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        if (error.response?.status === 404) {
+          showWalletActivateModal.value = true;
+        } else {
+          console.error('检查钱包失败:', error);
+          toast.error('检查钱包状态失败');
+        }
       }
     };
 
-    // 激活钱包
+    // 激活钱包（后端；本地模拟保留为注释）
     const activateWallet = async () => {
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
       try {
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // 创建钱包信息
-        const newWalletInfo = {
-          balance: 0,
-          isVip: false,
-          overdraftLimit: 0,
-          usedOverdraft: 0
-        };
-        
-        // 保存到localStorage
-        try {
-          localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
-        } catch (storageError) {
-          console.error('保存钱包信息到localStorage失败:', storageError);
-        }
-        
-        toast.success('钱包开通成功');
-        addTransactionRecord({
-          transactionType: 'create',
-          amount: 0,
-          reason: '钱包开通成功'
+        // 前端模拟备用：
+        // await new Promise(r => setTimeout(r, 400));
+        // const newWalletInfo = { balance: 0, isVip: false, overdraftLimit: 0, usedOverdraft: 0 };
+        // localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
+        // addTransactionRecord({ transactionType: 'create', amount: 0, reason: '钱包开通成功' });
+        // toast.success('钱包开通成功'); showWalletActivateModal.value = false; router.push({ path: '/wallet' }); return;
+
+        const token = getToken();
+        const response = await request.post('/api/wallet/create', {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-        showWalletActivateModal.value = false;
-        router.push({ path: '/wallet' });
-        return; // 直接返回，不执行后面的代码
-        // ========== 前端模拟模式结束 ==========
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const token = getToken();
-        // const response = await request.post('/api/wallet/create', {}, {
-        //   headers: {
-        //     'Authorization': `Bearer ${token}`
-        //   }
-        // });
-        // if (response.success) {
-        //   toast.success('钱包开通成功');
-        //   showWalletActivateModal.value = false;
-        //   router.push({ path: '/wallet' });
-        // } else {
-        //   toast.error('钱包开通失败：' + (response.message || '未知错误'));
-        // }
-        // ========== 后端调用逻辑结束 ==========
+        if (response.success) {
+          toast.success('钱包开通成功');
+          showWalletActivateModal.value = false;
+          router.push({ path: '/wallet' });
+        } else {
+          toast.error('钱包开通失败：' + (response.message || '未知错误'));
+        }
       } catch (error) {
         console.error('激活钱包失败:', error);
         toast.error('钱包开通失败，请重试');
