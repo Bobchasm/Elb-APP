@@ -1,4 +1,4 @@
-package com.tju.elm_bk.wallet.domain.infrastructure.query;
+package com.tju.elm_bk.wallet.domain.web.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionRecordQuery {
+public class TransactionRecordVO {
     @Schema(description = "交易id")
     private Long id;
     @Schema(description = "交易类型 0-支付 1-收款 2-提现 3-充值")

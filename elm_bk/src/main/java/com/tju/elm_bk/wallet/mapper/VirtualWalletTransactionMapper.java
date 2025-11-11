@@ -1,15 +1,13 @@
 package com.tju.elm_bk.wallet.mapper;
 
-import com.tju.elm_bk.wallet.domain.infrastructure.query.TransactionRecordDetailQuery;
-import com.tju.elm_bk.wallet.domain.infrastructure.query.TransactionRecordQuery;
-import com.tju.elm_bk.wallet.entity.VirtualWallet;
+import com.tju.elm_bk.wallet.domain.web.vo.TransactionRecordDetailVO;
+import com.tju.elm_bk.wallet.domain.web.vo.TransactionRecordVO;
 import com.tju.elm_bk.wallet.entity.VirtualWalletTransaction;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -29,12 +27,12 @@ public interface VirtualWalletTransactionMapper {
                     and vmt.status = #{status}
                 </if>
                 <if test="startTime!=null and endTime!=null">
-                    and vmt.create_time >= #{startTime} and vmt.create_time <= #{endTime}
+                    and vmt.create_time &gt;= #{startTime} and vmt.create_time &lt;= #{endTime}
                 </if>
             </where>
         </script>
     """)
-    List<TransactionRecordQuery> queryTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate);
+    List<TransactionRecordVO> queryTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate);
 
     @Select("""
         select vmt.*, uf.username as fromAccountName, ut.username as toAccountName
@@ -45,7 +43,7 @@ public interface VirtualWalletTransactionMapper {
         left join users ut on vt.user_id = ut.id
         where vmt.id = #{transactionId} and vmt.is_deleted = 0
     """)
-    TransactionRecordDetailQuery queryTransactionRecordDetail(Long transactionId);
+    TransactionRecordDetailVO queryTransactionRecordDetail(Long transactionId);
 
     @Select("""
         select vmt.*, uf.username as fromAccountName, ut.username as toAccountName
@@ -56,7 +54,7 @@ public interface VirtualWalletTransactionMapper {
         left join users ut on vt.user_id = ut.id
         where vmt.order_id = #{orderId} and vmt.is_deleted = 0
     """)
-    TransactionRecordDetailQuery queryTransactionByOrder(Long orderId);
+    TransactionRecordDetailVO queryTransactionByOrder(Long orderId);
 
 
     @Insert("""

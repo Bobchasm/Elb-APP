@@ -1,4 +1,4 @@
-package com.tju.elm_bk.wallet.domain.infrastructure.query;
+package com.tju.elm_bk.wallet.domain.web.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WalletVipQuery {
+public class WalletVipVO {
     private Integer id;
     @Schema(description = "vip名称")
     private String name;

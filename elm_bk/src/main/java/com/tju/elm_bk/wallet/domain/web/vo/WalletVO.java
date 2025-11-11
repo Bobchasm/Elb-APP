@@ -1,4 +1,4 @@
-package com.tju.elm_bk.wallet.domain.infrastructure.query;
+package com.tju.elm_bk.wallet.domain.web.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WalletQuery {
+public class WalletVO {
     @Schema(description = "虚拟钱包id")
     private Long id;
     @Schema(description = "所属用户id")
@@ -33,4 +33,9 @@ public class WalletQuery {
 
     @Schema(description = "所属用户名")
     private Long username;
+    @Schema(description = "vip名")
+    private String vipName;
+    @Schema(description = "vip描述")
+    private String vipDescription;
+
 }

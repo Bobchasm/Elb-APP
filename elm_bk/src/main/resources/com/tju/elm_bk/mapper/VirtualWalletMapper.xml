@@ -5,7 +5,7 @@
 
 <mapper namespace="com.tju.elm_bk.wallet.mapper.VirtualWalletMapper">
     <insert id="createVirtualWallet" useGeneratedKeys="true" keyProperty="id">
-        insert into virtual_wallet (user_id,status)
-        values (#{userId}, #{status})
+        INSERT INTO virtual_wallet (user_id,status)
+        VALUES (#{userId}, #{status})
     </insert>
 </mapper>

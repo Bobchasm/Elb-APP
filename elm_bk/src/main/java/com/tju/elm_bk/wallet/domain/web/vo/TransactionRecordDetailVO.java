@@ -1,18 +1,14 @@
-package com.tju.elm_bk.wallet.domain.infrastructure.query;
+package com.tju.elm_bk.wallet.domain.web.vo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionRecordDetailQuery extends TransactionRecordQuery{
+public class TransactionRecordDetailVO extends TransactionRecordVO {
     @Schema(description = "操作金额是否为冻结 0-否 1-是")
     private Integer status;
     @Schema(description = "转出钱包 交易类型为充值时值为0")
