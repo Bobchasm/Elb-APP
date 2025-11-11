@@ -48,7 +48,9 @@ public enum ResultCodeEnum {
     USER_UNMATCHED("USER_UNMATCHED","无法查看其他用户信息"),
 
 
-    VIRTUAL_WALLET_MISSED("VIRTUAL_WALLET_MISSED","您还未开通虚拟钱包")
+    VIRTUAL_WALLET_MISSED("VIRTUAL_WALLET_MISSED","您还未开通钱包"),
+    TOUSER_VIRTUAL_WALLET_MISSED("TOUSER_VIRTUAL_WALLET_MISSED","收款方还未开通钱包，请尝试其他支付方式"),
+    BALANCE_LIMIT("BALANCE_LIMIT","钱包余额不足")
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 

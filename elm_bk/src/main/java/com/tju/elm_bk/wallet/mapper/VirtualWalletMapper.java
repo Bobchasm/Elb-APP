@@ -25,9 +25,12 @@ public interface VirtualWalletMapper {
     """)
     WalletVO queryWallet(Long userId);
 
+    @Select("select * from virtual_wallet where user_id = #{userId} and is_deleted = 0")
+    VirtualWallet getWalletById(Long userId);
+
     @Select("select * from virtual_wallet_vip_rule where is_deleted = 0")
     List<WalletVipVO> getVipRules();
 
-    @Update("update virtual_wallet_vip_rule set user_id = #{userId}, status = #{status}, vip_level = #{vipLevel}, balance = #{balance}, overdraft_amount = #{overdraftAmount}, overdrawn_amount = #{overdrawnAmount} where id = #{walletId}")
+    @Update("update virtual_wallet_vip_rule set status = #{status}, vip_level = #{vipLevel}, balance = #{balance}, overdraft_amount = #{overdraftAmount}, overdrawn_amount = #{overdrawnAmount} where id = #{walletId}")
     void updateWallet(Long walletId,VirtualWallet wallet);
 }

@@ -2,6 +2,8 @@ package com.tju.elm_bk.wallet.domain.model;
 
 
 import com.tju.elm_bk.exception.APIException;
+import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.wallet.domain.model.enums.TransactionType;
 import com.tju.elm_bk.wallet.domain.model.enums.VipLevel;
 import com.tju.elm_bk.wallet.domain.model.enums.WalletStatus;
 
@@ -46,4 +48,45 @@ public class Wallet {
     public VipInfo getVipInfo() { return vipInfo; }
     public LocalDateTime getCreateTime() { return createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }
+
+
+    public Boolean verifyUser(Long userId) {
+        return this.userId.equals(userId);
+    }
+
+    public void pay(BigDecimal amount) {
+        validateActiveStatus();
+        BigDecimal totalAvailable = balance.getAmount()
+                .add(overdraftLimit.getAmount())
+                .subtract(overdrawnAmount);
+
+        // 余额+可贷款不足
+        if (totalAvailable.compareTo(amount) < 0) {
+            throw new APIException(ResultCodeEnum.BALANCE_LIMIT);
+        }
+
+        // 优先使用余额
+        BigDecimal balancePayment = balance.getAmount().min(amount);
+        BigDecimal overdraftPayment = amount.subtract(balancePayment);
+        if (balancePayment.compareTo(BigDecimal.ZERO) > 0) {
+            balance = balance.subtract(balancePayment);
+        }
+        if (overdraftPayment.compareTo(BigDecimal.ZERO) > 0) {
+            overdrawnAmount = overdrawnAmount.add(overdraftPayment);
+        }
+    }
+
+    public void collection(BigDecimal amount) {
+        validateActiveStatus();
+        this.balance.add(amount);
+    }
+
+
+
+    private void validateActiveStatus() {
+        if (this.status != WalletStatus.ACTIVE) {
+            throw new APIException("钱包状态异常，无法操作");
+        }
+    }
+
 }

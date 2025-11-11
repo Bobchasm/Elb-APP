@@ -1,5 +1,7 @@
 package com.tju.elm_bk.wallet.domain.model.enums;
 
+import java.util.Objects;
+
 public enum TransactionType {
 
     PAYMENT(0,"支付"),
@@ -25,5 +27,14 @@ public enum TransactionType {
     TransactionType(Integer type, String description) {
         this.type = type;
         this.description = description;
+    }
+
+    public static TransactionType fromCode(Integer type) {
+        for(TransactionType transactionType : TransactionType.values()) {
+            if (Objects.equals(transactionType.type, type)) {
+                return transactionType;
+            }
+        }
+        return null;
     }
 }

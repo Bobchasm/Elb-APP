@@ -4,6 +4,7 @@ import com.tju.elm_bk.wallet.domain.model.enums.TransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Transaction {
     private Long id;
@@ -11,11 +12,13 @@ public class Transaction {
     private final BigDecimal amount;
     private final Long fromWalletId;
     private final Long toWalletId;
-    private final String remark;
     private final LocalDateTime createTime;
+    private final BigDecimal fee;
+    private final Integer status;
 
     public Transaction(TransactionType type, BigDecimal amount,
-                       Long fromWalletId, Long toWalletId, String remark) {
+                       Long fromWalletId, Long toWalletId, BigDecimal fee, Integer status) {
+
         if (type == null) {
             throw new IllegalArgumentException("交易类型不能为空");
         }
@@ -27,8 +30,9 @@ public class Transaction {
         this.amount = amount.setScale(2, BigDecimal.ROUND_HALF_UP);
         this.fromWalletId = fromWalletId;
         this.toWalletId = toWalletId;
-        this.remark = remark;
         this.createTime = LocalDateTime.now();
+        this.fee = fee;
+        this.status = status;
     }
 
     public Long getId() { return id; }
@@ -36,6 +40,10 @@ public class Transaction {
     public BigDecimal getAmount() { return amount; }
     public Long getFromWalletId() { return fromWalletId; }
     public Long getToWalletId() { return toWalletId; }
-    public String getRemark() { return remark; }
     public LocalDateTime getCreateTime() { return createTime; }
+    public BigDecimal getFee() {
+        return fee;
+    }
+
+
 }

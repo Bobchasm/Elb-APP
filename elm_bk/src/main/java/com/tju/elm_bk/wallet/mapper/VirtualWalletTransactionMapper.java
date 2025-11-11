@@ -45,6 +45,9 @@ public interface VirtualWalletTransactionMapper {
     """)
     TransactionRecordDetailVO queryTransactionRecordDetail(Long transactionId);
 
+    @Select("select * from virtual_wallet_transaction where order_id = #{orderId} and is_deleted = 0")
+    VirtualWalletTransaction getTransactionByOrder(Long orderId);
+
     @Select("""
         select vmt.*, uf.username as fromAccountName, ut.username as toAccountName
         from virtual_wallet_transaction vmt
@@ -55,7 +58,6 @@ public interface VirtualWalletTransactionMapper {
         where vmt.order_id = #{orderId} and vmt.is_deleted = 0
     """)
     TransactionRecordDetailVO queryTransactionByOrder(Long orderId);
-
 
     @Insert("""
         insert into virtual_wallet_transaction (type, status, amount, from_account, to_account, fee, fee_rate) 
