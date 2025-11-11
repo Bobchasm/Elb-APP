@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @MapperScan(
         basePackages = {
                 "com.tju.elm_bk.mapper",
-                "com.tju.elm_bk.wallet.mapper"},
+                "com.tju.elm_bk.rich.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class
 )
 public class ElmBkApplication {
