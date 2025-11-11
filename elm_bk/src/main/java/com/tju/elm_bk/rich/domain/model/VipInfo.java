@@ -7,8 +7,14 @@ import java.math.BigDecimal;
 public class VipInfo {
     private final Integer level;
     private final BigDecimal cost;
+    private final BigDecimal overdraftLimit;
 
-    public VipInfo(Integer level, BigDecimal cost) {
+    public BigDecimal getOverdraftLimit() {
+        return overdraftLimit;
+    }
+
+    public VipInfo(Integer level, BigDecimal cost, BigDecimal overdraftLimit) {
+        this.overdraftLimit = overdraftLimit;
         if (level == null) {
             throw new APIException("VIP等级不能为null");
         }

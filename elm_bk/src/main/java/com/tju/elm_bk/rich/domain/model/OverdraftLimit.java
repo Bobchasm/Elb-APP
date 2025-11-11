@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 public class OverdraftLimit {
     public static final OverdraftLimit ZERO = new OverdraftLimit(BigDecimal.ZERO);
 
-    private final BigDecimal amount;
+    private BigDecimal amount;
 
     public OverdraftLimit(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
@@ -22,5 +22,9 @@ public class OverdraftLimit {
 
     public boolean hasOverdraft() {
         return amount.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public void upgrade(BigDecimal amount) {
+        this.amount = amount;
     }
 }

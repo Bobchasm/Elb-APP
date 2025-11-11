@@ -17,8 +17,6 @@ import java.util.List;
 @Service
 public class TransactionRepositoryImpl implements TransactionRepository {
     @Autowired
-    private UserMapper userMapper;
-    @Autowired
     private VirtualWalletTransactionMapper virtualWalletTransactionMapper;
     @Autowired
     private TransactionAssembler transactionAssembler;

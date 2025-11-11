@@ -42,7 +42,7 @@ public class WalletAssembler {
         setField(wallet, "overdraftLimit", new OverdraftLimit(po.getOverdraftAmount() != null ? po.getOverdraftAmount() : BigDecimal.ZERO));
         setField(wallet, "overdrawnAmount", po.getOverdraftAmount() != null ? po.getOverdraftAmount() : BigDecimal.ZERO);
         setField(wallet, "status", WalletStatus.fromCode(po.getStatus()));
-        setField(wallet, "vipInfo", new VipInfo(po.getVipLevel(),BigDecimal.ZERO));
+        setField(wallet, "vipInfo", new VipInfo(po.getVipLevel(),BigDecimal.ZERO,BigDecimal.ZERO));
         setField(wallet, "createTime", po.getCreateTime());
         setField(wallet, "updateTime", po.getUpdateTime());
         return wallet;

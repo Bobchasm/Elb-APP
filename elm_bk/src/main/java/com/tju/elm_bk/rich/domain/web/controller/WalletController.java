@@ -4,6 +4,7 @@ import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.rich.domain.application.service.WalletApplicationService;
 import com.tju.elm_bk.rich.domain.application.service.WalletQueryService;
 import com.tju.elm_bk.rich.domain.web.vo.*;
+import com.tju.elm_bk.rich.entity.VirtualWalletLoan;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,6 +96,18 @@ public class WalletController {
     @Operation(summary = "申请vip")
     public HttpResult<Boolean> walletVipRule(Integer vipLevel) {
         return HttpResult.success(walletApplicationService.applyVip(vipLevel));
+    }
+
+    @GetMapping("/loan/repay")
+    @Operation(summary = "还贷款")
+    public HttpResult<Boolean> repayLoan(Long id) {
+        return HttpResult.success(walletApplicationService.repayLoan(id));
+    }
+
+    @GetMapping("/loan/list")
+    @Operation(summary = "查看钱包贷款",description = "LocalDateTime不为null就是还了的")
+    public HttpResult<List<VirtualWalletLoan>> listLoan() {
+        return HttpResult.success(walletApplicationService.getWalletLoanList());
     }
 
 }

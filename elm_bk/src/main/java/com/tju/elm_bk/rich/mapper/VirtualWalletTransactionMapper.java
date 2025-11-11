@@ -15,7 +15,11 @@ import java.util.List;
 public interface VirtualWalletTransactionMapper {
     @Select("""
         <script>
-            select vmt.id, vmt.type, vmt.amount, vmt.fee,vmt.create_time
+            select vmt.id, vmt.type, vmt.amount, vmt.fee,vmt.create_time,
+                CASE
+                    WHEN vmt.from_account = #{walletId} THEN 0
+                    ELSE 1
+                END as inOrOut
             from virtual_wallet_transaction vmt
             <where>
                 vmt.is_deleted = 0

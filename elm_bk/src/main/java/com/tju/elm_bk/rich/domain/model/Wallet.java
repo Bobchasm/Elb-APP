@@ -31,7 +31,7 @@ public class Wallet {
         this.overdraftLimit = OverdraftLimit.ZERO;
         this.overdrawnAmount = BigDecimal.ZERO;
         this.status = WalletStatus.ACTIVE;
-        this.vipInfo = new VipInfo(0,BigDecimal.ZERO);
+        this.vipInfo = new VipInfo(0,BigDecimal.ZERO,BigDecimal.ZERO);
         this.createTime = LocalDateTime.now();
         this.updateTime = LocalDateTime.now();
     }
@@ -52,7 +52,7 @@ public class Wallet {
         return this.userId.equals(userId);
     }
 
-    public void pay(BigDecimal amount) {
+    public BigDecimal pay(BigDecimal amount) {
         validateActiveStatus();
         BigDecimal totalAvailable = balance.getAmount()
                 .add(overdraftLimit.getAmount())
@@ -72,13 +72,21 @@ public class Wallet {
         if (overdraftPayment.compareTo(BigDecimal.ZERO) > 0) {
             overdrawnAmount = overdrawnAmount.add(overdraftPayment);
         }
+
+        balance = balance.subtract(balancePayment);
+        overdrawnAmount = overdrawnAmount.add(overdraftPayment);
+
+        return overdraftPayment;
     }
 
     public void collection(BigDecimal amount) {
         validateActiveStatus();
-        this.balance.add(amount);
+        balance = balance.add(amount);
     }
 
+    public void repay(BigDecimal amount) {
+        overdrawnAmount = overdrawnAmount.subtract(amount);
+    }
 
 
     private void validateActiveStatus() {
@@ -89,5 +97,9 @@ public class Wallet {
 
     public boolean compareVipLevel(VipInfo vipLevel) {
         return this.vipInfo.canUpgradeTo(vipLevel);
+    }
+
+    public void upgrade(BigDecimal overdraftLimitAmount) {
+        overdraftLimit.upgrade(overdraftLimitAmount);
     }
 }

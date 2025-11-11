@@ -24,4 +24,6 @@ public class TransactionRecordVO {
     @Schema(description = "交易时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private LocalDateTime createTime;
+    @Schema(description = "支出还是收入,0-支出 1-收入")
+    private Integer inOrOut;
 }
