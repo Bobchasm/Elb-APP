@@ -22,16 +22,21 @@ public class VirtualWalletTransaction {
     @Schema(description = "操作金额")
     private BigDecimal amount;
     @Schema(description = "转出钱包 交易类型为充值时值为0")
-    private Long from_account;
+    private Long fromAccount;
     @Schema(description = "转入钱包 交易类型为提现时值为0")
-    private Long to_account;
+    private Long toAccount;
     @Schema(description = "逻辑删除")
-    private Integer is_deleted;
+    private Integer isDeleted;
     @Schema(description = "手续费或奖励")
     private BigDecimal fee;
     @Schema(description = "手续费率或奖励率")
-    private Float fee_rate;
+    private Float feeRate;
     @Schema(description = "交易时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
-    private LocalDateTime create_time;
+    private LocalDateTime createTime;
+    @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
+    private LocalDateTime updateTime;
+    @Schema(description = "若是订单支付的流水，关联订单id，用于冻结操作")
+    private Long orderId;
 }
