@@ -49,8 +49,9 @@ public enum ResultCodeEnum {
 
 
     VIRTUAL_WALLET_MISSED("VIRTUAL_WALLET_MISSED","您还未开通钱包"),
+    VIRTUAL_WALLET_OPENED("VIRTUAL_WALLET_MISSED","您的钱包已开通"),
     TOUSER_VIRTUAL_WALLET_MISSED("TOUSER_VIRTUAL_WALLET_MISSED","收款方还未开通钱包，请尝试其他支付方式"),
-    BALANCE_LIMIT("BALANCE_LIMIT","钱包余额不足")
+    BALANCE_LIMIT("BALANCE_LIMIT","钱包余额不足"),
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 

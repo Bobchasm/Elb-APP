@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,4 +16,6 @@ public class WalletVipVO {
     private String name;
     @Schema(description = "描述")
     private String description;
+    @Schema(description = "申请费用/月")
+    private BigDecimal cost;
 }

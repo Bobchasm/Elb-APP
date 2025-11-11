@@ -3,7 +3,6 @@ package com.tju.elm_bk.rich.domain.infrastructure.assembler;
 import com.tju.elm_bk.rich.domain.model.OverdraftLimit;
 import com.tju.elm_bk.rich.domain.model.VipInfo;
 import com.tju.elm_bk.rich.domain.model.Wallet;
-import com.tju.elm_bk.rich.domain.model.enums.VipLevel;
 import com.tju.elm_bk.rich.domain.model.enums.WalletStatus;
 import com.tju.elm_bk.rich.entity.VirtualWallet;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,7 @@ public class WalletAssembler {
         po.setBalance(wallet.getBalance().getAmount());
         po.setOverdraftAmount(wallet.getOverdrawnAmount());
         po.setStatus(wallet.getStatus().getCode());
-        po.setVipLevel(wallet.getVipInfo().getLevel().getCode());
+        po.setVipLevel(wallet.getVipInfo().getLevel());
         po.setCreateTime(wallet.getCreateTime());
         po.setUpdateTime(wallet.getUpdateTime());
         return po;
@@ -43,7 +42,7 @@ public class WalletAssembler {
         setField(wallet, "overdraftLimit", new OverdraftLimit(po.getOverdraftAmount() != null ? po.getOverdraftAmount() : BigDecimal.ZERO));
         setField(wallet, "overdrawnAmount", po.getOverdraftAmount() != null ? po.getOverdraftAmount() : BigDecimal.ZERO);
         setField(wallet, "status", WalletStatus.fromCode(po.getStatus()));
-        setField(wallet, "vipInfo", new VipInfo(VipLevel.fromCode(po.getVipLevel())));
+        setField(wallet, "vipInfo", new VipInfo(po.getVipLevel(),BigDecimal.ZERO));
         setField(wallet, "createTime", po.getCreateTime());
         setField(wallet, "updateTime", po.getUpdateTime());
         return wallet;

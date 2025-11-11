@@ -1,24 +1,31 @@
 package com.tju.elm_bk.rich.domain.model;
 
 import com.tju.elm_bk.exception.APIException;
-import com.tju.elm_bk.rich.domain.model.enums.VipLevel;
+
+import java.math.BigDecimal;
 
 public class VipInfo {
-    private final VipLevel level;
+    private final Integer level;
+    private final BigDecimal cost;
 
-    public VipInfo(VipLevel level) {
+    public VipInfo(Integer level, BigDecimal cost) {
         if (level == null) {
             throw new APIException("VIP等级不能为null");
         }
         this.level = level;
+        this.cost = cost;
     }
 
 
-    public boolean canUpgradeTo(VipLevel targetLevel) {
-        return targetLevel.getCode() > this.level.getCode();
+    public boolean canUpgradeTo(VipInfo targetLevel) {
+        return targetLevel.getLevel() > this.level;
     }
 
-    public VipLevel getLevel() {
+    public BigDecimal getCost() {
+        return cost;
+    }
+
+    public Integer getLevel() {
         return level;
     }
 }

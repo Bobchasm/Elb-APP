@@ -5,6 +5,7 @@ import com.tju.elm_bk.mapper.SystemConfigMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.rich.mapper.VirtualWalletVipRuleMapper;
 import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.rich.domain.web.vo.WalletVO;
 import com.tju.elm_bk.rich.domain.web.vo.WalletVipVO;
@@ -24,6 +25,8 @@ public class WalletQueryService {
     @Autowired
     private VirtualWalletMapper virtualWalletMapper;
     @Autowired
+    private VirtualWalletVipRuleMapper virtualWalletVipRuleMapper;
+    @Autowired
     private VirtualWalletTransactionMapper virtualWalletTransactionMapper;
 
     public String walletRule() {
@@ -40,7 +43,7 @@ public class WalletQueryService {
     }
 
     public List<WalletVipVO> walletVipRules() {
-        return virtualWalletMapper.getVipRules();
+        return virtualWalletVipRuleMapper.getVipRules();
     }
 
 

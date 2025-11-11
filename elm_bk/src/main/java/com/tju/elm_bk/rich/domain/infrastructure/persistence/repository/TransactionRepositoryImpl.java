@@ -30,12 +30,12 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
     @Override
     public TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId) {
-        return null;
+        return virtualWalletTransactionMapper.queryTransactionRecordDetail(transactionId);
     }
 
     @Override
     public TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId) {
-        return null;
+        return virtualWalletTransactionMapper.queryTransactionByOrder(orderId);
     }
 
     @Override
@@ -61,4 +61,6 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         VirtualWalletTransaction virtualWalletTransaction = transactionAssembler.toPO(transaction);
         virtualWalletTransactionMapper.createTransaction(virtualWalletTransaction);
     }
+
+
 }

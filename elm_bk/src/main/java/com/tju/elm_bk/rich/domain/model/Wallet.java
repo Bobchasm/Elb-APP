@@ -3,7 +3,6 @@ package com.tju.elm_bk.rich.domain.model;
 
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.result.ResultCodeEnum;
-import com.tju.elm_bk.rich.domain.model.enums.VipLevel;
 import com.tju.elm_bk.rich.domain.model.enums.WalletStatus;
 
 import java.math.BigDecimal;
@@ -32,7 +31,7 @@ public class Wallet {
         this.overdraftLimit = OverdraftLimit.ZERO;
         this.overdrawnAmount = BigDecimal.ZERO;
         this.status = WalletStatus.ACTIVE;
-        this.vipInfo = new VipInfo(VipLevel.NORMAL);
+        this.vipInfo = new VipInfo(0,BigDecimal.ZERO);
         this.createTime = LocalDateTime.now();
         this.updateTime = LocalDateTime.now();
     }
@@ -88,4 +87,7 @@ public class Wallet {
         }
     }
 
+    public boolean compareVipLevel(VipInfo vipLevel) {
+        return this.vipInfo.canUpgradeTo(vipLevel);
+    }
 }

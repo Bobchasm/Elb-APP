@@ -24,7 +24,8 @@ public class WalletRepositoryImpl implements WalletRepository {
 
     @Override
     public Long createWallet(Wallet wallet) {
-        return null;
+        VirtualWallet virtualWallet = walletAssembler.toPO(wallet);
+        return virtualWalletMapper.createVirtualWallet(virtualWallet);
     }
 
     @Override

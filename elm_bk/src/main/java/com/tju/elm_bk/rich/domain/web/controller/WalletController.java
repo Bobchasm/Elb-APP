@@ -3,10 +3,7 @@ package com.tju.elm_bk.rich.domain.web.controller;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.rich.domain.application.service.WalletApplicationService;
 import com.tju.elm_bk.rich.domain.application.service.WalletQueryService;
-import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordDetailVO;
-import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordVO;
-import com.tju.elm_bk.rich.domain.web.vo.WalletVO;
-import com.tju.elm_bk.rich.domain.web.vo.WalletVipVO;
+import com.tju.elm_bk.rich.domain.web.vo.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -27,25 +25,16 @@ public class WalletController {
     @Autowired
     private WalletQueryService walletQueryService;
 
-
-
-
-    @GetMapping("/rule")
-    @Operation(summary = "获取虚拟钱包手续费&奖励规则")
-    public HttpResult<String> walletRule() {
-        return HttpResult.success(walletQueryService.walletRule());
+    @GetMapping("/open")
+    @Operation(summary = "用户开通钱包")
+    public HttpResult<Long> openWallet() {
+        return HttpResult.success(walletApplicationService.open());
     }
 
     @GetMapping("/message")
     @Operation(summary = "获取用户钱包信息",description = "未开通会抛异常")
     public HttpResult<WalletVO> walletMessage() {
         return HttpResult.success(walletQueryService.walletMessage());
-    }
-
-    @GetMapping("/vip_rule")
-    @Operation(summary = "获取虚拟钱包vip规则")
-    public HttpResult<List<WalletVipVO>> walletVipRule() {
-        return HttpResult.success(walletQueryService.walletVipRules());
     }
 
     @GetMapping("/transaction/list")
@@ -72,6 +61,12 @@ public class WalletController {
         return HttpResult.success(walletApplicationService.payOrder(orderId));
     }
 
+    @GetMapping("/rule")
+    @Operation(summary = "获取虚拟钱包手续费&奖励规则")
+    public HttpResult<String> walletRule() {
+        return HttpResult.success(walletQueryService.walletRule());
+    }
+
     @GetMapping("/recharge")
     @Operation(summary = "充值")
     public HttpResult<Boolean> recharge(BigDecimal amount) {
@@ -84,5 +79,22 @@ public class WalletController {
         return HttpResult.success(walletApplicationService.withdrawal(amount));
     }
 
+    @GetMapping("/preview")
+    @Operation(summary = "提现/充值预览",description = "返回手续费/奖励金额,option 0-充值 1-提现")
+    public HttpResult<PreviewVO> preview(BigDecimal amount, Integer option) {
+        return HttpResult.success(walletApplicationService.getPreview(amount,option));
+    }
+
+    @GetMapping("/vip/rule")
+    @Operation(summary = "获取虚拟钱包vip规则")
+    public HttpResult<List<WalletVipVO>> walletVipRule() {
+        return HttpResult.success(walletQueryService.walletVipRules());
+    }
+
+    @GetMapping("/vip/apply")
+    @Operation(summary = "申请vip")
+    public HttpResult<Boolean> walletVipRule(Integer vipLevel) {
+        return HttpResult.success(walletApplicationService.applyVip(vipLevel));
+    }
 
 }

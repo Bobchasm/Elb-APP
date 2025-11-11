@@ -8,6 +8,8 @@ import com.tju.elm_bk.pojo.entity.Business;
 import com.tju.elm_bk.pojo.entity.Order;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.rich.domain.model.VipInfo;
+import com.tju.elm_bk.rich.domain.web.vo.PreviewVO;
 import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.rich.domain.model.Transaction;
 import com.tju.elm_bk.rich.domain.model.Wallet;
@@ -38,6 +40,9 @@ public class WalletApplicationService {
     private BusinessMapper businessMapper;
     @Autowired
     private OrdersMapper ordersMapper;
+    @Autowired
+    private VipInfoRepository vipInfoRepository;
+
 
     public final static float RECHARGE_RATE = 0.01f;
     public final static float WITHDRAWAL_RATE = 0.05f;
@@ -142,6 +147,54 @@ public class WalletApplicationService {
         transactionRepository.createTransaction(transaction);
 
         return true;
+    }
+
+    public PreviewVO getPreview(BigDecimal amount, Integer option) {
+        BigDecimal fee = amount.multiply(BigDecimal.valueOf(option == 0 ? RECHARGE_RATE : WITHDRAWAL_RATE));
+
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        Wallet wallet = walletRepository.findByUserId(user.getId());
+        BigDecimal total = amount.add(fee);
+
+        return new PreviewVO(amount, fee, total, (option == 0 ? RECHARGE_RATE : WITHDRAWAL_RATE), wallet.getBalance().canAfford(total));
+    }
+
+    public Long open() {
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        Wallet wallet = walletRepository.findByUserId(user.getId());
+        if (null != wallet) {
+            throw new APIException(ResultCodeEnum.VIRTUAL_WALLET_OPENED);
+        }
+        wallet = new Wallet(user.getId());
+        return walletRepository.createWallet(wallet);
+    }
+
+    public Boolean applyVip(Integer toVipLevel) {
+        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
+        Wallet wallet = walletRepository.findByUserId(user.getId());
+        VipInfo vip = vipInfoRepository.findByLevel(toVipLevel);
+
+        if (wallet.compareVipLevel(vip)) {
+            throw new APIException("您已经拥有该项vip的权益");
+        }
+
+        Transaction transaction = new Transaction(TransactionType.PAYMENT,vip.getCost(),wallet.getId(),0L,BigDecimal.ZERO,0);
+        setVipInfo(wallet,vip);
+        wallet.pay(vip.getCost());
+
+        walletRepository.modifyWallet(wallet);
+        transactionRepository.createTransaction(transaction);
+        return true;
+    }
+
+    private void setVipInfo(Wallet wallet,VipInfo vipInfo) {
+        try {
+            java.lang.reflect.Field vipInfoField = Wallet.class.getDeclaredField("vipInfo");
+            vipInfoField.setAccessible(true);
+            vipInfoField.set(wallet, vipInfo);
+        } catch (Exception e) {
+            throw new RuntimeException("设置VIP信息失败", e);
+        }
     }
 
 }
