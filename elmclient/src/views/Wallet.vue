@@ -407,10 +407,16 @@ export default {
         // const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
         // if (savedWalletInfo) { walletInfo.value = JSON.parse(savedWalletInfo); return; }
 
-        // 后端调用
-        const response = await request.get('/api/wallet/info');
+        // 后端调用（Apifox: GET /api/wallet/message）
+        const response = await request.get('/api/wallet/message');
         if (response.success) {
-          walletInfo.value = response.data;
+          const d = response.data || {};
+          walletInfo.value = {
+            balance: d.balance ?? 0,
+            isVip: (d.vip_level ?? 0) > 0,
+            overdraftLimit: d.overdraft_amount ?? 0, // 可透支金额
+            usedOverdraft: d.overdrawn_amount ?? 0   // 已透支金额
+          };
         } else {
           if (response.message && response.message.includes('不存在')) {
             await createWallet();
@@ -427,6 +433,28 @@ export default {
         }
       } finally {
         loading.value = false;
+      }
+    };
+
+    // 获取VIP规则（后端）
+    const fetchVipRules = async () => {
+      try {
+        const response = await request.get('/api/wallet/vip_rule');
+        if (response.success && Array.isArray(response.data)) {
+          const palette = ['#FFD700', '#FF6B6B', '#9B59B6', '#3498DB'];
+          vipLevels.value = response.data.map((it, idx) => ({
+            id: it.id ?? idx + 1,
+            name: it.name ?? `VIP${idx + 1}`,
+            // 接口未返回价格与权益，给出合理默认值以满足现有UI结构
+            price: 0,
+            color: palette[idx % palette.length],
+            benefits: it.description
+              ? it.description.split(/[,，；;]/).map(s => s.trim()).filter(Boolean)
+              : ['VIP权益']
+          }));
+        }
+      } catch (error) {
+        console.error('获取VIP规则失败:', error);
       }
     };
 
@@ -476,11 +504,15 @@ export default {
         // withdrawRules.value = { feeRate: 0.1 };
         // rulesText.value = null; return;
 
-        const response = await request.get('/api/wallet/rules');
+        const response = await request.get('/api/wallet/rule');
         if (response.success) {
-          rechargeRules.value = response.data.rechargeRules || { rewardRate: 0.1 };
-          withdrawRules.value = response.data.withdrawRules || { feeRate: 0.1 };
-          rulesText.value = response.data.rulesText || null;
+          const d = response.data || {};
+          // 兼容多种返回：
+          // 1) { rechargeRules:{rewardRate}, withdrawRules:{feeRate}, rulesText }
+          // 2) { recharge_rate, withdraw_fee, rulesText }
+          rechargeRules.value = d.rechargeRules || { rewardRate: d.recharge_rate ?? 0.1 };
+          withdrawRules.value = d.withdrawRules || { feeRate: d.withdraw_fee ?? 0.1 };
+          rulesText.value = d.rulesText || null;
         }
       } catch (error) {
         console.error('获取规则失败:', error);
@@ -504,8 +536,8 @@ export default {
       
       try {
         // 前端模拟备用见注释；后端调用如下：
-        const response = await request.post('/api/wallet/recharge', {
-          amount: rechargeAmount.value
+        const response = await request.get('/api/wallet/recharge', {
+          params: { amount: rechargeAmount.value }
         });
         if (response.success) {
           toast.success('充值成功');
@@ -538,8 +570,8 @@ export default {
       }
       
       try {
-        const response = await request.post('/api/wallet/withdraw', {
-          amount: withdrawAmount.value
+        const response = await request.get('/api/wallet/withdrawal', {
+          params: { amount: withdrawAmount.value }
         });
         if (response.success) {
           toast.success('提现成功');
@@ -618,6 +650,7 @@ export default {
     onMounted(() => {
       fetchWalletInfo();
       fetchRules();
+      fetchVipRules();
     });
 
     return {

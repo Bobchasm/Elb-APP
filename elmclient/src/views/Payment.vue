@@ -105,7 +105,7 @@
 		<!-- 底部菜单部分 -->
 	</div>
 
-	<!-- 钱包开通对话框 -->
+	<!-- 钱包开通对话框（后端模式，保留前端交互） -->
 	<div v-if="showWalletCreateModal" class="modal-overlay" @click.self="showWalletCreateModal = false">
 		<div class="modal-content wallet-modal">
 			<div class="modal-header">
@@ -149,46 +149,9 @@ export default {
 		const selectedPayment = ref('wallet'); // 默认选择钱包支付
 		const paying = ref(false);
 		const deliveryPrice = ref(5); // 默认配送费，可根据实际情况调整
-		const showWalletCreateModal = ref(false); // 钱包开通对话框
-		const creatingWallet = ref(false); // 正在创建钱包
-		const walletExists = ref(false); // 钱包是否存在
-
-		const getCurrentUser = () => {
-			try {
-				const localUser = localStorage.getItem('userInfo');
-				if (localUser) return JSON.parse(localUser);
-				const sessionUser = sessionStorage.getItem('userInfo');
-				if (sessionUser) return JSON.parse(sessionUser);
-			} catch (error) {
-				console.error('解析用户信息失败:', error);
-			}
-			return null;
-		};
-
-		const getWalletInfoKey = () => {
-			const user = getCurrentUser();
-			return user ? `walletInfo_${user.id}` : 'walletInfo_guest';
-		};
-
-		const getWalletTransactionsKey = () => {
-			const user = getCurrentUser();
-			return user ? `walletTransactions_${user.id}` : 'walletTransactions_guest';
-		};
-
-		const addTransactionRecord = (record) => {
-			try {
-				const transactions = JSON.parse(localStorage.getItem(getWalletTransactionsKey()) || '[]');
-				const transaction = {
-					id: Date.now(),
-					transactionTime: new Date().toISOString(),
-					...record
-				};
-				transactions.unshift(transaction);
-				localStorage.setItem(getWalletTransactionsKey(), JSON.stringify(transactions));
-			} catch (error) {
-				console.error('保存交易记录失败:', error);
-			}
-		};
+		const showWalletCreateModal = ref(false);
+		const creatingWallet = ref(false);
+		const walletExists = ref(false);
 
 		// 获取订单详情
 		const fetchOrderDetails = async () => {
@@ -217,133 +180,38 @@ export default {
 			}
 		};
 
-		// 检查钱包是否存在
+		// 检查钱包是否存在（后端）
 		const checkWalletExists = async () => {
 			try {
-				// ========== 前端模拟模式（用于测试，不连接后端） ==========
-				const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-				if (savedWalletInfo) {
+				const response = await request.get("/api/wallet/info");
+				if (response && response.success) {
 					walletExists.value = true;
 					return true;
-				} else {
+				}
+				walletExists.value = false;
+				return false;
+			} catch (error) {
+				if (error.response?.status === 404) {
 					walletExists.value = false;
 					return false;
 				}
-				// ========== 前端模拟模式结束 ==========
-				
-				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-				// const response = await request.get("/api/wallet/info");
-				// if (response && response.success) {
-				//   walletExists.value = true;
-				//   return true;
-				// } else {
-				//   walletExists.value = false;
-				//   return false;
-				// }
-				// ========== 后端调用逻辑结束 ==========
-			} catch (error) {
 				console.error('检查钱包失败:', error);
-				// ========== 前端模拟模式 ==========
-				walletExists.value = false;
 				return false;
-				// ========== 后端调用逻辑（已注释） ==========
-				// // 404 或其他错误，说明钱包不存在或接口不存在
-				// const status = error.response?.status;
-				// const message = error.message || '';
-				// const responseData = error.response?.data || {};
-				// 
-				// if (status === 404 || 
-				//   message.includes('No static resource') || 
-				//   message.includes('api/wallet') ||
-				//   JSON.stringify(responseData).includes('No static resource')) {
-				//   walletExists.value = false;
-				//   return false;
-				// }
-				// console.error('检查钱包失败:', error);
-				// return false;
-				// ========== 后端调用逻辑结束 ==========
 			}
 		};
 
-		// 创建钱包
+		// 创建钱包（后端）
 		const handleCreateWallet = async () => {
-			// ========== 前端模拟模式（用于测试，不连接后端） ==========
 			try {
 				creatingWallet.value = true;
-				
-				// 模拟延迟，让用户看到"开通中"的状态
-				await new Promise(resolve => setTimeout(resolve, 500));
-				
-				const newWalletInfo = {
-					balance: 0,
-					isVip: false,
-					overdraftLimit: 0,
-					usedOverdraft: 0
-				};
-				
-				// 保存到localStorage
-				try {
-					localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
-				} catch (storageError) {
-					console.error('保存钱包信息到localStorage失败:', storageError);
+				const response = await request.post("/api/wallet/create");
+				if (response && response.success) {
+					walletExists.value = true;
+					showWalletCreateModal.value = false;
+					toast.success('钱包开通成功');
+				} else {
+					toast.error("钱包开通失败：" + (response?.message || '未知错误'));
 				}
-				
-				walletExists.value = true;
-				showWalletCreateModal.value = false;
-				toast.success('钱包开通成功');
-				addTransactionRecord({
-					transactionType: 'create',
-					amount: 0,
-					reason: '钱包开通成功'
-				});
-				
-				// 钱包开通后，不自动进行支付（支付需要用户手动操作）
-				// await performWalletPayment();
-				// ========== 前端模拟模式结束 ==========
-				return; // 直接返回，不执行后面的代码
-				
-				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-				// const response = await request.post("/api/wallet/create");
-				// if (response && response.success) {
-				//   walletExists.value = true;
-				//   showWalletCreateModal.value = false;
-				//   toast.success('钱包开通成功');
-				//   // 钱包开通后，自动进行支付
-				//   await performWalletPayment();
-				// } else {
-				//   toast.error("钱包开通失败：" + (response?.message || '未知错误'));
-				// }
-				// ========== 后端调用逻辑结束 ==========
-				
-				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-				// try {
-				//   const response = await request.post("/api/wallet/create");
-				//   if (response && response.success) {
-				//     walletExists.value = true;
-				//     showWalletCreateModal.value = false;
-				//     toast.success('钱包开通成功');
-				//     // 钱包开通后，自动进行支付
-				//     await performWalletPayment();
-				//   } else {
-				//     toast.error("钱包开通失败：" + (response?.message || '未知错误'));
-				//   }
-				// } catch (error) {
-				//   console.error('创建钱包失败:', error);
-				//   // 检查是否是接口不存在的错误
-				//   const status = error.response?.status;
-				//   const message = error.message || '';
-				//   const responseData = error.response?.data || {};
-				//   
-				//   if (status === 404 || 
-				//     message.includes('No static resource') || 
-				//     message.includes('api/wallet') ||
-				//     JSON.stringify(responseData).includes('No static resource')) {
-				//     toast.error("钱包开通失败：后端接口未实现，请联系管理员");
-				//   } else {
-				//     toast.error("钱包开通失败：" + (error.response?.data?.message || '请重试'));
-				//   }
-				// }
-				// ========== 后端调用逻辑结束 ==========
 			} catch (error) {
 				console.error('创建钱包失败:', error);
 				toast.error("钱包开通失败，请重试");
@@ -352,82 +220,24 @@ export default {
 			}
 		};
 
-		// 执行钱包支付
+		// 钱包支付（后端）
 		const performWalletPayment = async () => {
-			// ========== 前端模拟模式（用于测试，不连接后端） ==========
 			try {
 				paying.value = true;
-				
-				// 模拟延迟
-				await new Promise(resolve => setTimeout(resolve, 500));
-				
-				// 检查钱包余额
-				const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
-				let walletData = savedWalletInfo ? JSON.parse(savedWalletInfo) : {
-					balance: 0,
-					isVip: false,
-					overdraftLimit: 0,
-					usedOverdraft: 0
-				};
-				
-				const payAmount = orderDetail.value?.orderTotal || 0;
-				
-				// 检查余额是否足够（包括透支额度）
-				const availableBalance = walletData.balance + (walletData.isVip ? (walletData.overdraftLimit - walletData.usedOverdraft) : 0);
-				
-				if (availableBalance < payAmount) {
-					toast.error("钱包支付失败：余额不足");
-					return;
-				}
-				
-				// 扣除余额
-				let usedOverdraftAmount = 0;
-				if (walletData.balance >= payAmount) {
-					walletData.balance -= payAmount;
+				const response = await request.get("/api/wallet/transaction/payment", {
+          params: { orderId: orderId.value }
+        });
+        if (response && response.success) {
+          router.push({
+            path: '/successfulPayment',
+            query: { orderId: orderId.value }
+          });
 				} else {
-					// 使用透支额度
-					const needOverdraft = payAmount - walletData.balance;
-					walletData.balance = 0;
-					walletData.usedOverdraft = (walletData.usedOverdraft || 0) + needOverdraft;
-					usedOverdraftAmount = needOverdraft;
+					toast.error("钱包支付失败：" + (response?.message || '余额不足或账户异常'));
 				}
-				
-				// 保存钱包信息
-				localStorage.setItem(getWalletInfoKey(), JSON.stringify(walletData));
-
-				addTransactionRecord({
-					transactionType: 'payment',
-					amount: -payAmount,
-					orderId: orderId.value,
-					reason: `订单支付${usedOverdraftAmount > 0 ? `，使用透支 ¥${usedOverdraftAmount.toFixed(2)}` : ''}`
-				});
-				
-				// 支付成功，跳转到成功页面
-				router.push({
-					path: '/successfulPayment',
-					query: { orderId: orderId.value }
-				});
-				// ========== 前端模拟模式结束 ==========
-				return; // 直接返回，不执行后面的代码
-				
-				// ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-				// const response = await request.post("/api/wallet/pay", {
-				//   orderId: orderId.value,
-				//   amount: orderDetail.value.orderTotal
-				// });
-				// if (response && response.success) {
-				//   // 支付成功，跳转到成功页面
-				//   router.push({
-				//     path: '/successfulPayment',
-				//     query: { orderId: orderId.value }
-				//   });
-				// } else {
-				//   toast.error("钱包支付失败：" + (response?.message || '余额不足或账户异常'));
-				// }
-				// ========== 后端调用逻辑结束 ==========
 			} catch (error) {
 				console.error('钱包支付失败:', error);
-				toast.error("钱包支付失败，请重试");
+				toast.error("钱包支付失败，请重试！");
 			} finally {
 				paying.value = false;
 			}
@@ -436,14 +246,8 @@ export default {
 		// 支付处理
 		const handlePayment = async () => {
 			if (selectedPayment.value === 'wallet') {
-				// 钱包支付：先检查钱包是否存在
 				const exists = await checkWalletExists();
-				if (!exists) {
-					// 钱包不存在，弹出开通对话框
-					showWalletCreateModal.value = true;
-					return;
-				}
-				// 钱包存在，直接支付
+				if (!exists) { showWalletCreateModal.value = true; return; }
 				await performWalletPayment();
 			} else {
 				// 原有的第三方支付逻辑

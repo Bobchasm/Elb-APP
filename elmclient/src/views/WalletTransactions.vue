@@ -60,6 +60,7 @@
           v-for="transaction in filteredTransactions" 
           :key="transaction.id" 
           class="transaction-item"
+          @click="viewDetail(transaction.id)"
         >
           <div class="transaction-icon" :class="getTransactionTypeClass(transaction.transactionType)">
             <i :class="getTransactionIcon(transaction.transactionType)"></i>
@@ -121,58 +122,107 @@ export default {
   },
   setup() {
     const router = useRouter();
-
-    const getCurrentUser = () => {
-      try {
-        const localUser = localStorage.getItem('userInfo');
-        if (localUser) return JSON.parse(localUser);
-        const sessionUser = sessionStorage.getItem('userInfo');
-        if (sessionUser) return JSON.parse(sessionUser);
-      } catch (error) {
-        console.error('解析用户信息失败:', error);
-      }
-      return null;
-    };
-
-    const getWalletTransactionsKey = () => {
-      const user = getCurrentUser();
-      return user ? `walletTransactions_${user.id}` : 'walletTransactions_guest';
-    };
     const loading = ref(true);
     const transactions = ref([]);
     const currentFilter = ref('all');
 
     // 获取交易明细
     const fetchTransactions = async () => {
-      // ========== 前端模拟模式（用于测试，不连接后端） ==========
       try {
         loading.value = true;
-        
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // 从localStorage获取交易记录（如果有的话）
-        const savedTransactions = localStorage.getItem(getWalletTransactionsKey());
-        if (savedTransactions) {
-          transactions.value = JSON.parse(savedTransactions);
+        // Apifox 定义：GET /api/wallet/transaction/list，需要 type/status/startDate/endDate 四个必填查询参数
+        const params = {
+          // -1 代表全部（若后端不支持，可按需要调整为具体值）
+          type: -1,
+          status: -1,
+          startDate: '1970-01-01',
+          endDate: new Date().toISOString()
+        };
+
+    const viewDetailByOrder = async (orderId) => {
+      try {
+        const response = await request.get('/api/wallet/transaction/detail/order', {
+          params: { orderId }
+        });
+        if (response.success && response.data) {
+          const d = response.data;
+          const mapType = (n) => ({ 0: 'payment', 1: 'received', 2: 'withdraw', 3: 'recharge' }[n] ?? 'unknown');
+          const detail = {
+            id: d.id,
+            transactionType: mapType(d.type),
+            amount: d.amount,
+            fee: d.fee,
+            transactionTime: d.createTime,
+            status: d.status,
+            fromAccount: d.from_account,
+            toAccount: d.to_account,
+            fromAccountName: d.from_account_name,
+            toAccountName: d.to_account_name,
+            feeRate: d.fee_rate
+          };
+          alert(`订单明细#${detail.id}\n类型: ${getTransactionTypeName(detail.transactionType)}\n金额: ${detail.amount}\n时间: ${detail.transactionTime}`);
         } else {
-          // 如果没有交易记录，返回空数组
-          transactions.value = [];
+          toast.error('获取订单明细失败');
         }
-        // ========== 前端模拟模式结束 ==========
-        return; // 直接返回，不执行后面的代码
-        
-        // ========== 后端调用逻辑（已注释，需要时取消注释） ==========
-        // const response = await request.get('/api/wallet/transactions');
-        // if (response.success) {
-        //   transactions.value = response.data || [];
-        // } else {
-        //   toast.error('获取交易明细失败');
-        // }
-        // ========== 后端调用逻辑结束 ==========
+      } catch (e) {
+        console.error('获取订单明细失败:', e);
+        toast.error('获取订单明细失败');
+      }
+    };
+
+    // 查看单条明细详情
+    const viewDetail = async (id) => {
+      try {
+        const response = await request.get('/api/wallet/transaction/detail', {
+          params: { transactionId: id }
+        });
+        if (response.success && response.data) {
+          const d = response.data;
+          const mapType = (n) => ({ 0: 'payment', 1: 'received', 2: 'withdraw', 3: 'recharge' }[n] ?? 'unknown');
+          const detail = {
+            id: d.id,
+            transactionType: mapType(d.type),
+            amount: d.amount,
+            fee: d.fee,
+            transactionTime: d.createTime,
+            status: d.status,
+            fromAccount: d.from_account,
+            toAccount: d.to_account,
+            fromAccountName: d.from_account_name,
+            toAccountName: d.to_account_name,
+            feeRate: d.fee_rate
+          };
+          // 简易演示：弹窗查看（后续可改为独立详情页/弹窗）
+          alert(`明细#${detail.id}\n类型: ${getTransactionTypeName(detail.transactionType)}\n金额: ${detail.amount}\n时间: ${detail.transactionTime}`);
+        } else {
+          toast.error('获取明细详情失败');
+        }
+      } catch (e) {
+        console.error('获取明细详情失败:', e);
+        toast.error('获取明细详情失败');
+      }
+    };
+        const response = await request.get('/api/wallet/transaction/list', { params });
+        if (response.success) {
+          const list = Array.isArray(response.data) ? response.data : [];
+          const mapType = (n) => {
+            const m = { 0: 'payment', 1: 'received', 2: 'withdraw', 3: 'recharge' };
+            return m[n] ?? 'unknown';
+          };
+          transactions.value = list.map(it => ({
+            id: it.id,
+            transactionType: mapType(it.type),
+            amount: it.amount ?? 0,
+            fee: it.fee ?? 0,
+            transactionTime: it.createTime,
+            reason: it.reason ?? ''
+          }));
+        } else {
+          toast.error('获取交易明细失败');
+        }
       } catch (error) {
         console.error('获取交易明细失败:', error);
-        transactions.value = [];
+        toast.error('获取交易明细失败');
       } finally {
         loading.value = false;
       }
@@ -291,7 +341,9 @@ export default {
       getTransactionTypeClass,
       getAmountPrefix,
       getAmountClass,
-      formatTime
+      formatTime,
+      viewDetail,
+      viewDetailByOrder
     };
   }
 };
