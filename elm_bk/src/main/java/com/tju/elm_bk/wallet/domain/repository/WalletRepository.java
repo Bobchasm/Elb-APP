@@ -12,23 +12,8 @@ import java.util.List;
 
 public interface WalletRepository {
 
-     WalletVO getUserWallet();
-
      Long createWallet(Wallet wallet);
 
      void modifyWallet(Wallet wallet);
 
-     List<WalletVipVO> getWalletVipRules();
-
-
-
-     List<TransactionRecordVO> getTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate);
-
-     TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId);
-
-     TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId);
-
-     Long createTransaction(Transaction transaction);
-
-     void thawTransaction(Long transactionId, Integer status);
 }

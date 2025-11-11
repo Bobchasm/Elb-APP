@@ -1,6 +1,7 @@
 package com.tju.elm_bk.wallet.domain.infrastructure.persistence.repository;
 
 import com.tju.elm_bk.exception.APIException;
+import com.tju.elm_bk.mapper.SystemConfigMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.result.ResultCodeEnum;
@@ -28,12 +29,8 @@ public class WalletRepositoryImpl implements WalletRepository {
     private VirtualWalletTransactionMapper virtualWalletTransactionMapper;
     @Autowired
     private UserMapper userMapper;
-
-    @Override
-    public WalletVO getUserWallet() {
-        User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        return virtualWalletMapper.queryWallet(user.getId());
-    }
+    @Autowired
+    private SystemConfigMapper systemConfigMapper;
 
     @Override
     public Long createWallet(Wallet wallet) {
@@ -45,33 +42,5 @@ public class WalletRepositoryImpl implements WalletRepository {
 
     }
 
-    @Override
-    public List<WalletVipVO> getWalletVipRules() {
-        return List.of();
-    }
 
-    @Override
-    public List<TransactionRecordVO> getTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate) {
-        return List.of();
-    }
-
-    @Override
-    public TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId) {
-        return null;
-    }
-
-    @Override
-    public TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId) {
-        return null;
-    }
-
-    @Override
-    public Long createTransaction(Transaction transaction) {
-        return null;
-    }
-
-    @Override
-    public void thawTransaction(Long transactionId, Integer status) {
-
-    }
 }

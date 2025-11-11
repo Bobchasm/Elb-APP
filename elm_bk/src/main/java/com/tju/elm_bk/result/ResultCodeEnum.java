@@ -47,6 +47,9 @@ public enum ResultCodeEnum {
     UNAUTHORIZED("UNAUTHORIZED","无权限"),
     USER_UNMATCHED("USER_UNMATCHED","无法查看其他用户信息"),
 
+
+    VIRTUAL_WALLET_MISSED("VIRTUAL_WALLET_MISSED","您还未开通虚拟钱包")
+
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 
     // 1000～1999 区间表示用户模块错误
