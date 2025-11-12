@@ -11,6 +11,7 @@ public enum ResultCodeEnum {
 
     COMMON_ERROR("COMMON_ERROR","通用返回失败"),
 
+    KEY_MISSED("KEY_MISSED","配置键不存在"),
     CLIENT_ABORT("CLIENT_ABORT","异常中止"),
     PARAM_NOT_MATCHED_GET("PARAM_NOT_MATCHED_GET","GET参数有误"),
     PARAM_NOT_MATCHED_POST("PARAM_NOT_MATCHED_POST","POST参数有误"),

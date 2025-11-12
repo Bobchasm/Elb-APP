@@ -174,7 +174,7 @@ public class WalletApplicationService {
         Wallet wallet = walletRepository.findByUserId(user.getId());
         BigDecimal total = amount.add(fee);
 
-        return new PreviewVO(amount, fee, total, (option == 0 ? RECHARGE_RATE : WITHDRAWAL_RATE), wallet.getBalance().canAfford(total));
+        return new PreviewVO(amount, fee, total, (option == 0 ? RECHARGE_RATE : WITHDRAWAL_RATE), option == 0 || wallet.getBalance().canAfford(total));
     }
 
     public Long open() {

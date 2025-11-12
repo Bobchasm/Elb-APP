@@ -16,7 +16,7 @@ public interface VirtualWalletMapper {
     @Select("""
         select vm.*,
             u.username,
-            vr.name as vipName, vr.description as vipDescription
+            vr.name as vipName, vr.description as vipDescription,vr.overdraft_limit
         from virtual_wallet vm
         left join users u on vm.user_id = u.id
         left join virtual_wallet_vip_rule vr on vm.vip_level = vr.id
