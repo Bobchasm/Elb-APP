@@ -169,11 +169,19 @@ public class WalletApplicationService {
     }
 
     public PreviewVO getPreview(BigDecimal amount, Integer option) {
-        BigDecimal fee = amount.multiply(BigDecimal.valueOf(option == 0 ? RECHARGE_RATE : WITHDRAWAL_RATE));
-
+        BigDecimal fee;
         User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         Wallet wallet = walletRepository.findByUserId(user.getId());
-        BigDecimal total = amount.add(fee);
+        BigDecimal total = amount;
+
+        if (option == 0) {
+            fee = amount.multiply(BigDecimal.valueOf(RECHARGE_RATE));
+            total = total.add(fee);
+        }
+        else {
+            fee = amount.multiply(BigDecimal.valueOf(WITHDRAWAL_RATE));
+            total = total.subtract(fee);
+        }
 
         return new PreviewVO(amount, fee, total, (option == 0 ? RECHARGE_RATE : WITHDRAWAL_RATE), option == 0 || wallet.getBalance().canAfford(total));
     }

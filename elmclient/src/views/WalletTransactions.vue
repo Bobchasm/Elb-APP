@@ -15,99 +15,186 @@
     <div v-else class="transactions-content">
       <!-- 筛选器 -->
       <div class="filter-section">
-        <div class="refresh-section">
-          <button class="refresh-btn" @click="fetchTransactions">
-            <i class="fas fa-sync-alt"></i>
-            刷新交易记录
+        <!-- 时间筛选 -->
+        <div class="date-filter">
+          <div class="date-input-group">
+            <label>开始日期</label>
+            <input 
+              type="date" 
+              v-model="startDate" 
+              class="date-input"
+              @change="handleDateChange"
+            />
+          </div>
+          <div class="date-input-group">
+            <label>结束日期</label>
+            <input 
+              type="date" 
+              v-model="endDate" 
+              class="date-input"
+              @change="handleDateChange"
+            />
+          </div>
+          <button class="clear-date-btn" @click="clearDates" v-if="startDate || endDate">
+            <i class="fas fa-times"></i>
+            清空
           </button>
         </div>
+
+        <!-- 类型筛选 -->
         <div class="filter-tabs">
           <div 
             class="filter-tab" 
-            :class="{ active: currentFilter === 'all' }"
-            @click="currentFilter = 'all'"
+            :class="{ active: currentFilter === -1 }"
+            @click="changeFilter(-1)"
           >
             全部
           </div>
           <div 
             class="filter-tab" 
-            :class="{ active: currentFilter === 'recharge' }"
-            @click="currentFilter = 'recharge'"
+            :class="{ active: currentFilter === 3 }"
+            @click="changeFilter(3)"
           >
             充值
           </div>
           <div 
             class="filter-tab" 
-            :class="{ active: currentFilter === 'withdraw' }"
-            @click="currentFilter = 'withdraw'"
+            :class="{ active: currentFilter === 2 }"
+            @click="changeFilter(2)"
           >
             提现
           </div>
           <div 
             class="filter-tab" 
-            :class="{ active: currentFilter === 'payment' }"
-            @click="currentFilter = 'payment'"
+            :class="{ active: currentFilter === 0 }"
+            @click="changeFilter(0)"
           >
             支付
           </div>
           <div 
             class="filter-tab" 
-            :class="{ active: currentFilter === 'received' }"
-            @click="currentFilter = 'received'"
+            :class="{ active: currentFilter === 1 }"
+            @click="changeFilter(1)"
           >
             收款
           </div>
+          <div 
+            class="filter-tab" 
+            :class="{ active: currentFilter === 4 }"
+            @click="changeFilter(4)"
+          >
+            退款
+          </div>
+        </div>
+
+        <!-- 状态筛选 -->
+        <div class="status-filter">
+          <div 
+            class="status-tab" 
+            :class="{ active: currentStatus === -1 }"
+            @click="changeStatus(-1)"
+          >
+            全部状态
+          </div>
+          <div 
+            class="status-tab" 
+            :class="{ active: currentStatus === 0 }"
+            @click="changeStatus(0)"
+          >
+            正常
+          </div>
+          <div 
+            class="status-tab" 
+            :class="{ active: currentStatus === 1 }"
+            @click="changeStatus(1)"
+          >
+            冻结
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+          <button class="reset-btn" @click="resetFilters">
+            <i class="fas fa-redo"></i>
+            重置筛选
+          </button>
+        </div>
+      </div>
+
+      <!-- 统计信息 -->
+      <div class="stats-section" v-if="transactions.length > 0">
+        <div class="stat-item">
+          <span class="stat-label">总收入</span>
+          <span class="stat-value income">+¥{{ totalIncome.toFixed(2) }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">总支出</span>
+          <span class="stat-value expense">-¥{{ totalExpense.toFixed(2) }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">交易笔数</span>
+          <span class="stat-value">{{ transactions.length }}</span>
         </div>
       </div>
 
       <!-- 交易列表 -->
       <div class="transactions-list">
         <div 
-          v-for="transaction in filteredTransactions" 
+          v-for="transaction in transactions" 
           :key="transaction.id" 
           class="transaction-item"
           @click="viewDetail(transaction.id)"
         >
-          <div class="transaction-icon" :class="getTransactionTypeClass(transaction.transactionType)">
-            <i :class="getTransactionIcon(transaction.transactionType)"></i>
+          <div class="transaction-icon" :class="getTransactionTypeClass(transaction.type)">
+            <i :class="getTransactionIcon(transaction.type)"></i>
           </div>
           <div class="transaction-info">
             <div class="transaction-header">
               <div class="transaction-title">
-                <span class="transaction-type">{{ getTransactionTypeName(transaction.transactionType) }}</span>
-                <span class="transaction-type-badge" v-if="transaction.transactionType">
-                  {{ transaction.transactionType }}
+                <span class="transaction-type">{{ getTransactionTypeName(transaction.type) }}</span>
+                <span class="transaction-status" :class="getStatusClass(transaction.status)">
+                  {{ getStatusName(transaction.status) }}
                 </span>
               </div>
-              <span class="transaction-amount" :class="getAmountClass(transaction.transactionType)">
-                {{ getAmountPrefix(transaction.transactionType) }}¥{{ Math.abs(transaction.amount).toFixed(2) }}
+              <span class="transaction-amount" :class="getAmountClass(transaction.inOrOut)">
+                {{ getAmountPrefix(transaction.inOrOut) }}¥{{ Math.abs(transaction.amount).toFixed(2) }}
               </span>
             </div>
             <div class="transaction-details">
               <div class="transaction-reason" v-if="transaction.reason">
-                <span class="label">原因：</span>
+                <span class="label">备注：</span>
                 <span class="reason-text">{{ transaction.reason }}</span>
               </div>
               <div class="transaction-time">
                 <i class="fas fa-clock"></i>
-                {{ formatTime(transaction.transactionTime || transaction.createTime) }}
+                {{ formatTime(transaction.createTime) }}
               </div>
-              <div class="transaction-counterparty" v-if="transaction.counterpartyAccount">
-                <span class="label">{{ transaction.transactionType === 'payment' ? '收款方：' : '付款方：' }}</span>
-                <span>{{ transaction.counterpartyAccount }}</span>
+              <div class="transaction-fee" v-if="transaction.fee > 0">
+                <span class="label">手续费：</span>
+                <span class="fee-amount">¥{{ transaction.fee.toFixed(2) }}</span>
               </div>
-              <div class="transaction-order" v-if="transaction.orderId">
-                <span class="label">订单号：</span>
-                <span>{{ transaction.orderId }}</span>
+              <div class="transaction-accounts">
+                <div v-if="transaction.fromAccountName && transaction.type !== 3" class="account-info">
+                  <span class="label">转出：</span>
+                  <span>{{ transaction.fromAccountName }}</span>
+                </div>
+                <div v-if="transaction.toAccountName && transaction.type !== 2" class="account-info">
+                  <span class="label">转入：</span>
+                  <span>{{ transaction.toAccountName }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 空状态 -->
-        <div v-if="filteredTransactions.length === 0" class="empty-state">
+        <div v-if="transactions.length === 0" class="empty-state">
           <i class="fas fa-inbox"></i>
           <p>暂无交易记录</p>
+          <button class="retry-btn" @click="fetchTransactions">
+            <i class="fas fa-redo"></i>
+            重新加载
+          </button>
         </div>
       </div>
     </div>
@@ -131,40 +218,54 @@ export default {
     const router = useRouter();
     const loading = ref(true);
     const transactions = ref([]);
-    const currentFilter = ref('all');
+    const currentFilter = ref(-1); // -1表示全部
+    const currentStatus = ref(-1); // -1表示全部状态
+    const startDate = ref('');
+    const endDate = ref('');
 
     // 获取交易明细
     const fetchTransactions = async () => {
       try {
         loading.value = true;
-        // 直接调用交易明细接口，获取真实数据
-        const params = {
-          type: -1, // 全部类型
-          status: -1, // 全部状态
-          startDate: '1970-01-01',
-          endDate: new Date().toISOString().split('T')[0]
-        };
+        transactions.value = [];
+
+        // 构建请求参数，所有参数都是可选的
+        const params = {};
         
+        // 只有当不是全部时才添加类型参数
+        if (currentFilter.value !== -1) {
+          params.type = currentFilter.value;
+        }
+        
+        // 只有当不是全部状态时才添加状态参数
+        if (currentStatus.value !== -1) {
+          params.status = currentStatus.value;
+        }
+        
+        // 只有当有日期时才添加日期参数
+        if (startDate.value) {
+          // 确保日期格式为 yyyy-mm-dd
+          params.startDate = startDate.value;
+        }
+        
+        if (endDate.value) {
+          // 确保日期格式为 yyyy-mm-dd
+          params.endDate = endDate.value;
+        }
+
         console.log('调用交易明细接口，参数:', params);
         const response = await request.get('/api/wallet/transaction/list', { params });
         console.log('交易明细接口响应:', response);
-        
+
         if (response && response.success) {
           const list = Array.isArray(response.data) ? response.data : [];
-          console.log('交易明细原始数据:', list);
+          console.log('交易明细数据:', list);
+
+          transactions.value = list;
           
-          // 直接使用后端返回的真实数据，不添加任何假数据
-          transactions.value = list.map(it => ({
-            id: it.id,
-            transactionType: getTypeFromNumber(it.type),
-            amount: it.amount ?? 0,
-            fee: it.fee ?? 0,
-            transactionTime: it.createTime,
-            inOrOut: it.inOrOut, // 0-支出 1-收入
-            reason: it.reason ?? ''
-          }));
-          
-          // 不显示任何提示，让用户看到真实的数据状态
+          if (list.length === 0) {
+            toast.info('暂无交易记录');
+          }
         } else {
           toast.error('获取交易明细失败: ' + (response?.message || '接口调用失败'));
         }
@@ -176,74 +277,49 @@ export default {
       }
     };
 
-    // 根据数字类型转换为字符串类型
-    const getTypeFromNumber = (typeNum) => {
-      const typeMap = {
-        0: 'payment',   // 支付
-        1: 'received',  // 收款
-        2: 'withdraw',  // 提现
-        3: 'recharge'   // 充值
-      };
-      return typeMap[typeNum] || 'unknown';
+    // 更改类型筛选
+    const changeFilter = (type) => {
+      currentFilter.value = type;
+      fetchTransactions();
     };
 
-    const viewDetailByOrder = async (orderId) => {
-      try {
-        const response = await request.get('/api/wallet/transaction/detail/order', {
-          params: { orderId }
-        });
-        if (response && response.success && response.data) {
-          const d = response.data;
-          const detail = {
-            id: d.id,
-            type: d.type, // 交易类型 0-支付 1-收款 2-提现 3-充值
-            amount: d.amount, // 操作金额
-            fee: d.fee, // 手续费或奖励
-            createTime: d.createTime, // 交易时间
-            inOrOut: d.inOrOut, // 支出还是收入 0-支出 1-收入
-            status: d.status, // 操作金额是否为冻结 0-否 1-是
-            fromAccount: d.from_account, // 转出钱包 交易类型为充值时值为0
-            toAccount: d.to_account, // 转入钱包 交易类型为提现时值为0
-            fromAccountName: d.from_account_name, // 转出钱包用户姓名 交易类型为充值时值为null
-            toAccountName: d.to_account_name, // 转入钱包用户姓名 交易类型为提现时值为null
-            feeRate: d.fee_rate // 手续费率或奖励率
-          };
-          
-          // 格式化显示订单详情
-          const typeNames = { 0: '支付', 1: '收款', 2: '提现', 3: '充值' };
-          const inOutNames = { 0: '支出', 1: '收入' };
-          const statusNames = { 0: '正常', 1: '冻结' };
-          
-          let detailInfo = `订单交易详情#${detail.id}\n`;
-          detailInfo += `订单ID: ${orderId}\n`;
-          detailInfo += `类型: ${typeNames[detail.type] || '未知'}\n`;
-          detailInfo += `金额: ¥${detail.amount}\n`;
-          detailInfo += `手续费: ¥${detail.fee}\n`;
-          detailInfo += `收支: ${inOutNames[detail.inOrOut] || '未知'}\n`;
-          detailInfo += `状态: ${statusNames[detail.status] || '未知'}\n`;
-          detailInfo += `时间: ${detail.createTime}\n`;
-          
-          if (detail.fromAccountName) {
-            detailInfo += `转出方: ${detail.fromAccountName}\n`;
-          }
-          if (detail.toAccountName) {
-            detailInfo += `转入方: ${detail.toAccountName}\n`;
-          }
-          if (detail.feeRate) {
-            detailInfo += `费率: ${(detail.feeRate * 100).toFixed(2)}%\n`;
-          }
-          
-          alert(detailInfo);
-        } else {
-          toast.error('获取订单明细失败');
-        }
-      } catch (e) {
-        console.error('获取订单明细失败:', e);
-        toast.error('获取订单明细失败');
+    // 更改状态筛选
+    const changeStatus = (status) => {
+      currentStatus.value = status;
+      fetchTransactions();
+    };
+
+    // 处理日期变化
+    const handleDateChange = () => {
+      // 确保开始日期不大于结束日期
+      if (startDate.value && endDate.value && startDate.value > endDate.value) {
+        toast.warning('开始日期不能大于结束日期');
+        // 自动交换日期
+        const temp = startDate.value;
+        startDate.value = endDate.value;
+        endDate.value = temp;
+        return;
       }
+      fetchTransactions();
     };
 
-    // 查看单条明细详情
+    // 清空日期
+    const clearDates = () => {
+      startDate.value = '';
+      endDate.value = '';
+      fetchTransactions();
+    };
+
+    // 重置筛选条件
+    const resetFilters = () => {
+      currentFilter.value = -1;
+      currentStatus.value = -1;
+      startDate.value = '';
+      endDate.value = '';
+      fetchTransactions();
+    };
+
+    // 查看详情
     const viewDetail = async (id) => {
       try {
         const response = await request.get('/api/wallet/transaction/detail', {
@@ -253,42 +329,51 @@ export default {
           const d = response.data;
           const detail = {
             id: d.id,
-            type: d.type, // 交易类型 0-支付 1-收款 2-提现 3-充值
-            amount: d.amount, // 操作金额
-            fee: d.fee, // 手续费或奖励
-            createTime: d.createTime, // 交易时间
-            inOrOut: d.inOrOut, // 支出还是收入 0-支出 1-收入
-            status: d.status, // 操作金额是否为冻结 0-否 1-是
-            fromAccount: d.from_account, // 转出钱包 交易类型为充值时值为0
-            toAccount: d.to_account, // 转入钱包 交易类型为提现时值为0
-            fromAccountName: d.from_account_name, // 转出钱包用户姓名 交易类型为充值时值为null
-            toAccountName: d.to_account_name, // 转入钱包用户姓名 交易类型为提现时值为null
-            feeRate: d.fee_rate // 手续费率或奖励率
+            type: d.type,
+            amount: d.amount,
+            fee: d.fee,
+            createTime: d.createTime,
+            inOrOut: d.inOrOut,
+            status: d.status,
+            fromAccount: d.from_account,
+            toAccount: d.to_account,
+            fromAccountName: d.from_account_name,
+            toAccountName: d.to_account_name,
+            feeRate: d.fee_rate,
+            reason: d.reason
           };
-          
+
           // 格式化显示详情
-          const typeNames = { 0: '支付', 1: '收款', 2: '提现', 3: '充值' };
+          const typeNames = { 0: '支付', 1: '收款', 2: '提现', 3: '充值', 4: '退款' };
           const inOutNames = { 0: '支出', 1: '收入' };
           const statusNames = { 0: '正常', 1: '冻结' };
+
+          let detailInfo = `交易详情 #${detail.id}\n\n`;
+          detailInfo += `交易类型：${typeNames[detail.type] || '未知'}\n`;
+          detailInfo += `交易金额：${getAmountPrefix(detail.inOrOut)}¥${Math.abs(detail.amount).toFixed(2)}\n`;
+          detailInfo += `资金流向：${inOutNames[detail.inOrOut] || '未知'}\n`;
           
-          let detailInfo = `交易详情#${detail.id}\n`;
-          detailInfo += `类型: ${typeNames[detail.type] || '未知'}\n`;
-          detailInfo += `金额: ¥${detail.amount}\n`;
-          detailInfo += `手续费: ¥${detail.fee}\n`;
-          detailInfo += `收支: ${inOutNames[detail.inOrOut] || '未知'}\n`;
-          detailInfo += `状态: ${statusNames[detail.status] || '未知'}\n`;
-          detailInfo += `时间: ${detail.createTime}\n`;
-          
-          if (detail.fromAccountName) {
-            detailInfo += `转出方: ${detail.fromAccountName}\n`;
-          }
-          if (detail.toAccountName) {
-            detailInfo += `转入方: ${detail.toAccountName}\n`;
+          if (detail.fee > 0) {
+            detailInfo += `手续费：¥${detail.fee.toFixed(2)}\n`;
           }
           if (detail.feeRate) {
-            detailInfo += `费率: ${(detail.feeRate * 100).toFixed(2)}%\n`;
+            detailInfo += `手续费率：${(detail.feeRate * 100).toFixed(2)}%\n`;
           }
           
+          detailInfo += `交易状态：${statusNames[detail.status] || '未知'}\n`;
+          detailInfo += `交易时间：${formatTime(detail.createTime)}\n`;
+          
+          if (detail.reason) {
+            detailInfo += `交易备注：${detail.reason}\n`;
+          }
+          
+          if (detail.fromAccountName && detail.type !== 3) {
+            detailInfo += `转出账户：${detail.fromAccountName}\n`;
+          }
+          if (detail.toAccountName && detail.type !== 2) {
+            detailInfo += `转入账户：${detail.toAccountName}\n`;
+          }
+
           alert(detailInfo);
         } else {
           toast.error('获取明细详情失败');
@@ -299,89 +384,73 @@ export default {
       }
     };
 
-    // 筛选后的交易列表
-    const filteredTransactions = computed(() => {
-      if (currentFilter.value === 'all') {
-        return transactions.value;
-      }
-      return transactions.value.filter(t => {
-        const type = t.transactionType?.toLowerCase();
-        if (currentFilter.value === 'recharge') return type === 'recharge';
-        if (currentFilter.value === 'withdraw') return type === 'withdraw';
-        if (currentFilter.value === 'payment') return type === 'payment';
-        if (currentFilter.value === 'received') return type === 'received' || type === 'received_payment';
-        return true;
-      });
+    // 统计信息计算
+    const totalIncome = computed(() => {
+      return transactions.value
+        .filter(t => t.inOrOut === 1) // 收入
+        .reduce((sum, t) => sum + t.amount, 0);
+    });
+
+    const totalExpense = computed(() => {
+      return transactions.value
+        .filter(t => t.inOrOut === 0) // 支出
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     });
 
     // 获取交易类型名称
     const getTransactionTypeName = (type) => {
       const typeMap = {
-        'recharge': '充值',
-        'withdraw': '提现',
-        'payment': '支付',
-        'received': '收款',
-        'received_payment': '收款',
-        'overdraft': '透支',
-        'repay': '还款',
-        'reward': '奖励',
-        'fee': '手续费'
+        0: '支付',
+        1: '收款',
+        2: '提现',
+        3: '充值',
+        4: '退款'
       };
-      return typeMap[type?.toLowerCase()] || type || '未知';
+      return typeMap[type] || '未知';
     };
 
     // 获取交易类型图标
     const getTransactionIcon = (type) => {
       const iconMap = {
-        'recharge': 'fas fa-plus-circle',
-        'withdraw': 'fas fa-minus-circle',
-        'payment': 'fas fa-arrow-right',
-        'received': 'fas fa-arrow-left',
-        'received_payment': 'fas fa-arrow-left',
-        'overdraft': 'fas fa-credit-card',
-        'repay': 'fas fa-undo',
-        'reward': 'fas fa-gift',
-        'fee': 'fas fa-coins'
+        0: 'fas fa-arrow-right', // 支付
+        1: 'fas fa-arrow-left',  // 收款
+        2: 'fas fa-minus-circle', // 提现
+        3: 'fas fa-plus-circle',  // 充值
+        4: 'fas fa-undo'          // 退款
       };
-      return iconMap[type?.toLowerCase()] || 'fas fa-exchange-alt';
+      return iconMap[type] || 'fas fa-exchange-alt';
     };
 
     // 获取交易类型样式类
     const getTransactionTypeClass = (type) => {
       const classMap = {
-        'recharge': 'type-recharge',
-        'withdraw': 'type-withdraw',
-        'payment': 'type-payment',
-        'received': 'type-received',
-        'received_payment': 'type-received',
-        'overdraft': 'type-overdraft',
-        'repay': 'type-repay',
-        'reward': 'type-reward',
-        'fee': 'type-fee'
+        0: 'type-payment',
+        1: 'type-received',
+        2: 'type-withdraw',
+        3: 'type-recharge',
+        4: 'type-refund'
       };
-      return classMap[type?.toLowerCase()] || 'type-default';
+      return classMap[type] || 'type-default';
+    };
+
+    // 获取状态名称
+    const getStatusName = (status) => {
+      return status === 1 ? '冻结' : '正常';
+    };
+
+    // 获取状态样式类
+    const getStatusClass = (status) => {
+      return status === 1 ? 'status-frozen' : 'status-normal';
     };
 
     // 获取金额前缀
-    const getAmountPrefix = (type) => {
-      const incomeTypes = ['recharge', 'received', 'received_payment', 'reward'];
-      const expenseTypes = ['withdraw', 'payment', 'overdraft', 'fee'];
-      if (incomeTypes.includes(type?.toLowerCase())) {
-        return '+';
-      }
-      if (expenseTypes.includes(type?.toLowerCase())) {
-        return '-';
-      }
-      return '';
+    const getAmountPrefix = (inOrOut) => {
+      return inOrOut === 1 ? '+' : '-';
     };
 
     // 获取金额样式类
-    const getAmountClass = (type) => {
-      const incomeTypes = ['recharge', 'received', 'received_payment', 'reward'];
-      if (incomeTypes.includes(type?.toLowerCase())) {
-        return 'amount-income';
-      }
-      return 'amount-expense';
+    const getAmountClass = (inOrOut) => {
+      return inOrOut === 1 ? 'amount-income' : 'amount-expense';
     };
 
     // 格式化时间
@@ -393,8 +462,7 @@ export default {
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        minute: '2-digit'
       });
     };
 
@@ -405,6 +473,7 @@ export default {
     };
 
     onMounted(() => {
+      // 默认不设置日期，加载所有交易记录
       fetchTransactions();
       // 监听交易更新事件
       eventBus.on('transactionUpdated', handleTransactionUpdate);
@@ -419,17 +488,26 @@ export default {
       loading,
       transactions,
       currentFilter,
-      filteredTransactions,
+      currentStatus,
+      startDate,
+      endDate,
+      totalIncome,
+      totalExpense,
       fetchTransactions,
-      getTypeFromNumber,
+      changeFilter,
+      changeStatus,
+      handleDateChange,
+      clearDates,
+      resetFilters,
       getTransactionTypeName,
       getTransactionIcon,
       getTransactionTypeClass,
+      getStatusName,
+      getStatusClass,
       getAmountPrefix,
       getAmountClass,
       formatTime,
-      viewDetail,
-      viewDetailByOrder
+      viewDetail
     };
   }
 };
@@ -477,53 +555,186 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.refresh-section {
+.date-filter {
+  display: flex;
+  gap: 2vw;
   margin-bottom: 3vw;
+  padding-bottom: 3vw;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: flex-end;
 }
 
-.refresh-btn {
-  background: #0097FF;
-  color: white;
-  border: none;
-  padding: 2.5vw 4vw;
-  border-radius: 2vw;
+.date-input-group {
+  flex: 1;
+}
+
+.date-input-group label {
+  display: block;
+  font-size: 3.2vw;
+  color: #666;
+  margin-bottom: 1vw;
+}
+
+.date-input {
+  width: 100%;
+  padding: 2.5vw;
+  border: 1px solid #ddd;
+  border-radius: 1.5vw;
   font-size: 3.4vw;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* 强制日期输入框显示 yyyy-mm-dd 格式 */
+.date-input::-webkit-datetime-edit {
+  color: transparent;
+}
+
+.date-input:focus::-webkit-datetime-edit,
+.date-input:valid::-webkit-datetime-edit {
+  color: #333;
+}
+
+.date-input::-webkit-datetime-edit-fields-wrapper {
+  color: #333;
+}
+
+/* Firefox 样式 */
+.date-input:invalid {
+  color: transparent;
+}
+
+.date-input:valid {
+  color: #333;
+}
+
+.clear-date-btn {
+  padding: 2.5vw 3vw;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 1.5vw;
+  font-size: 3.2vw;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 1.5vw;
-  cursor: pointer;
-  transition: all 0.3s;
+  gap: 1vw;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.refresh-btn:hover {
-  background: #0080e6;
-}
-
-.refresh-btn:active {
-  transform: scale(0.98);
+.clear-date-btn:active {
+  background: #e0e0e0;
 }
 
 .filter-tabs {
   display: flex;
   gap: 2vw;
+  margin-bottom: 3vw;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 1vw;
 }
 
 .filter-tab {
-  padding: 2vw 4vw;
+  padding: 2vw 3vw;
   border-radius: 4vw;
-  font-size: 3.6vw;
+  font-size: 3.4vw;
   color: #666;
   background: #f5f7fa;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.3s;
+  flex-shrink: 0;
 }
 
 .filter-tab.active {
   background: #0097FF;
   color: white;
+}
+
+.status-filter {
+  display: flex;
+  gap: 2vw;
+  margin-bottom: 3vw;
+}
+
+.status-tab {
+  padding: 1.5vw 3vw;
+  border-radius: 4vw;
+  font-size: 3.2vw;
+  color: #666;
+  background: #f5f7fa;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.status-tab.active {
+  background: #0097FF;
+  color: white;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 2vw;
+}
+
+.reset-btn {
+  flex: 1;
+  padding: 2.5vw;
+  border: none;
+  border-radius: 1.5vw;
+  font-size: 3.4vw;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5vw;
+  transition: all 0.3s;
+  background: #f5f5f5;
+  color: #666;
+}
+
+.reset-btn:active {
+  transform: scale(0.98);
+  background: #e0e0e0;
+}
+
+.stats-section {
+  background: white;
+  padding: 3vw 4vw;
+  margin: 0 4vw 3vw;
+  border-radius: 3vw;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vw;
+}
+
+.stat-label {
+  font-size: 3.2vw;
+  color: #666;
+}
+
+.stat-value {
+  font-size: 3.8vw;
+  font-weight: bold;
+}
+
+.stat-value.income {
+  color: #52c41a;
+}
+
+.stat-value.expense {
+  color: #ff4d4f;
 }
 
 .transactions-list {
@@ -538,6 +749,13 @@ export default {
   display: flex;
   align-items: flex-start;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.transaction-item:active {
+  background: #f8f9fa;
+  transform: scale(0.99);
 }
 
 .transaction-icon {
@@ -572,20 +790,8 @@ export default {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
-.type-overdraft {
+.type-refund {
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.type-repay {
-  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-}
-
-.type-reward {
-  background: linear-gradient(135deg, #fad961 0%, #f76b1c 100%);
-}
-
-.type-fee {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
 }
 
 .type-default {
@@ -616,13 +822,23 @@ export default {
   color: #333;
 }
 
-.transaction-type-badge {
+.transaction-status {
   font-size: 2.8vw;
   padding: 0.5vw 1.5vw;
-  background: #f0f0f0;
   border-radius: 1vw;
-  color: #666;
   font-weight: normal;
+}
+
+.status-normal {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.status-frozen {
+  background: #fff2f0;
+  color: #ff4d4f;
+  border: 1px solid #ffccc7;
 }
 
 .transaction-amount {
@@ -669,12 +885,23 @@ export default {
   color: #999;
 }
 
-.transaction-counterparty {
-  color: #999;
+.transaction-fee {
   margin-bottom: 1vw;
+  color: #999;
 }
 
-.transaction-order {
+.fee-amount {
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+.transaction-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vw;
+}
+
+.account-info {
   color: #999;
   font-size: 3vw;
 }
@@ -690,6 +917,7 @@ export default {
   justify-content: center;
   padding: 20vw;
   color: #999;
+  text-align: center;
 }
 
 .empty-state i {
@@ -700,6 +928,20 @@ export default {
 
 .empty-state p {
   font-size: 4vw;
+  margin-bottom: 4vw;
+}
+
+.retry-btn {
+  padding: 2.5vw 4vw;
+  background: #0097FF;
+  color: white;
+  border: none;
+  border-radius: 2vw;
+  font-size: 3.4vw;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
 }
 
 .loading-state {
@@ -726,4 +968,3 @@ export default {
   100% { transform: rotate(360deg); }
 }
 </style>
-

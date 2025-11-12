@@ -16,7 +16,7 @@ public interface VirtualWalletLoanMapper {
     @Insert("insert into virtual_wallet_loan (wallet_id,loan_amount) values (#{walletId},#{amount})")
     void load(Long walletId, BigDecimal amount);
 
-    @Update("update virtual_wallet_loan set repay_time = #{time}")
+    @Update("update virtual_wallet_loan set repay_time = #{time} where id = #{id}")
     void repay(Long id, LocalDateTime time);
 
     @Select("select * from virtual_wallet_loan where wallet_id = #{walletId}")

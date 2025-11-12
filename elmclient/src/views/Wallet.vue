@@ -29,6 +29,24 @@
         </div>
       </div>
 
+      <!-- 非VIP用户提示 -->
+      <div class="vip-promotion-card">
+        <div class="vip-promotion-content">
+          <i class="fas fa-crown vip-icon"></i>
+          <div class="vip-text">
+            <div class="vip-title">
+              <span v-if="!walletInfo.isVip">成为VIP享受透支额度</span>
+              <span v-else>升级VIP享受更多透支额度</span>
+            </div>
+          </div>
+        </div>
+        <button class="vip-btn" @click="showVipModal = true">
+          <i class="fas fa-star"></i>
+            <span v-if="!walletInfo.isVip">去成为VIP</span>
+            <span v-else>去升级VIP</span>
+        </button>
+      </div>
+
       <!-- VIP用户透支信息 -->
       <div v-if="walletInfo.isVip && walletInfo.overdraftLimit > 0" class="overdraft-card">
         <div class="overdraft-header">
@@ -36,37 +54,22 @@
           <span class="vip-badge">VIP</span>
         </div>
         <div class="overdraft-info">
-          <div class="overdraft-item">
+          <!-- <div class="overdraft-item">
             <span>剩余可透支：</span>
             <span class="overdraft-amount">¥{{ (walletInfo.overdraftLimit - walletInfo.usedOverdraft).toFixed(2) }}</span>
-          </div>
+          </div> -->
           <div class="overdraft-item">
             <span>可透支总额：</span>
             <span class="overdraft-total">¥{{ walletInfo.overdraftLimit?.toFixed(2) || '0.00' }}</span>
           </div>
-          <div v-if="walletInfo.usedOverdraft > 0" class="overdraft-item">
+          <div class="overdraft-item">
             <span>已使用透支：</span>
             <span class="overdraft-used">¥{{ walletInfo.usedOverdraft?.toFixed(2) || '0.00' }}</span>
           </div>
         </div>
-        <button v-if="walletInfo.usedOverdraft > 0" class="repay-btn" @click="showRepayModal = true">
+        <button v-if="walletInfo.usedOverdraft > 0" class="repay-btn" @click="navigateToLoans">
           <i class="fas fa-credit-card"></i>
           去还款
-        </button>
-      </div>
-
-      <!-- 非VIP用户提示 -->
-      <div v-if="!walletInfo.isVip" class="vip-promotion-card">
-        <div class="vip-promotion-content">
-          <i class="fas fa-crown vip-icon"></i>
-          <div class="vip-text">
-            <div class="vip-title">成为VIP享受透支额度</div>
-            <div class="vip-desc">开通VIP即可获得透支额度，享受更多权益</div>
-          </div>
-        </div>
-        <button class="vip-btn" @click="showVipModal = true">
-          <i class="fas fa-star"></i>
-          去成为VIP
         </button>
       </div>
 
@@ -77,6 +80,13 @@
             <i class="fas fa-list-alt"></i>
           </div>
           <span class="function-text">交易明细</span>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="function-item" @click="navigateToLoans">
+          <div class="function-icon">
+            <i class="fas fa-hand-holding-usd"></i>
+          </div>
+          <span class="function-text">贷款记录</span>
           <i class="fas fa-chevron-right"></i>
         </div>
       </div>
@@ -156,7 +166,7 @@
             </div>
             <div class="info-item" v-if="withdrawPreview">
               <span class="info-label">手续费率：</span>
-              <span class="highlight">{{ ((withdrawPreview.fee_rate || 0) * 100).toFixed(2) }}%</span>
+              <span class="highlight">{{ ((withdrawPreview.feeate || 0) * 100).toFixed(2) }}%</span>
             </div>
             <div class="info-item total" v-if="withdrawPreview">
               <span class="info-label">实际到账：</span>
@@ -165,9 +175,6 @@
             <div class="balance-info" v-if="withdrawPreview">
               <span class="info-label">当前余额：</span>
               <span class="info-value">¥{{ walletInfo.balance.toFixed(2) }}</span>
-              <span v-if="walletInfo.isVip" class="overdraft-info">
-                + 可透支¥{{ (walletInfo.overdraftLimit - walletInfo.usedOverdraft).toFixed(2) }}
-              </span>
             </div>
             <div class="loading-text" v-if="!withdrawPreview && withdrawAmount > 0">
               正在计算手续费...
@@ -184,57 +191,6 @@
           <button class="cancel-btn" @click="showWithdrawModal = false">取消</button>
           <button class="confirm-btn" @click="handleWithdraw" :disabled="!withdrawAmount || withdrawAmount <= 0">
             确认提现
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 还款弹窗 -->
-    <div v-if="showRepayModal" class="modal-overlay" @click.self="showRepayModal = false">
-      <div class="modal-content repay-modal">
-        <div class="modal-header">
-          <h3>还款</h3>
-          <i class="fas fa-times close-btn" @click="showRepayModal = false"></i>
-        </div>
-        <div class="modal-body">
-          <div class="repay-info">
-            <div class="info-item">
-              <span>待还金额：</span>
-              <span class="highlight">¥{{ walletInfo.usedOverdraft?.toFixed(2) || '0.00' }}</span>
-            </div>
-            <div class="info-item">
-              <span>钱包余额：</span>
-              <span>¥{{ walletInfo.balance?.toFixed(2) || '0.00' }}</span>
-            </div>
-          </div>
-          <div class="repay-method">
-            <label class="method-label">还款方式</label>
-            <div class="method-options">
-              <label class="method-option" :class="{ active: repayMethod === 'wallet' }">
-                <input type="radio" v-model="repayMethod" value="wallet" />
-                <div class="method-content">
-                  <i class="fas fa-wallet"></i>
-                  <span>钱包余额还款</span>
-                </div>
-              </label>
-              <label class="method-option" :class="{ active: repayMethod === 'thirdparty' }">
-                <input type="radio" v-model="repayMethod" value="thirdparty" />
-                <div class="method-content">
-                  <i class="fas fa-credit-card"></i>
-                  <span>第三方支付</span>
-                </div>
-              </label>
-            </div>
-            <div class="method-tip" v-if="repayMethod === 'wallet' && walletInfo.balance < walletInfo.usedOverdraft">
-              <i class="fas fa-exclamation-circle"></i>
-              <span>钱包余额不足，请使用第三方支付</span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="showRepayModal = false">取消</button>
-          <button class="confirm-btn" @click="handleRepay" :disabled="repayMethod === 'wallet' && walletInfo.balance < walletInfo.usedOverdraft">
-            确认还款
           </button>
         </div>
       </div>
@@ -322,10 +278,7 @@
               </div>
               
               <div class="level-benefits">
-                <div class="benefit-item" v-for="benefit in level.benefits" :key="benefit">
-                  <i class="fas fa-check-circle"></i>
-                  <span>{{ benefit }}</span>
-                </div>
+                <span>{{ level.description }}</span>
               </div>
               <div class="level-price">¥{{ level.price }}/月</div>
             </div>
@@ -361,17 +314,6 @@
               <span class="summary-label">可贷款额度：</span>
               <span class="summary-value loan-highlight">¥{{ (selectedVipLevel.loanAmount || 0).toLocaleString() }}</span>
             </div>
-            <div class="summary-item">
-              <span class="summary-label">当前余额：</span>
-              <span class="summary-value">¥{{ walletInfo.balance.toFixed(2) }}</span>
-            </div>
-          </div>
-          
-          <div class="payment-notice">
-            <i class="fas fa-info-circle"></i>
-            <span>
-              升级费用将从钱包余额中扣除，升级后可获得VIP透支额度
-            </span>
           </div>
         </div>
         
@@ -427,13 +369,11 @@ export default {
     });
     const showRechargeModal = ref(false);
     const showWithdrawModal = ref(false);
-    const showRepayModal = ref(false);
     const showRechargeRules = ref(false);
     const showWithdrawRules = ref(false);
     const showVipModal = ref(false);
     const rechargeAmount = ref(null);
     const withdrawAmount = ref(null);
-    const repayMethod = ref('wallet');
     const rechargeRules = ref(null);
     const withdrawRules = ref(null);
     const selectedVipLevel = ref(null);
@@ -498,38 +438,46 @@ export default {
     };
 
     // 获取VIP规则（后端）
-    const fetchVipRules = async () => {
-      try {
-        const response = await request.get('/api/wallet/vip/rule');
-        if (response && response.success && Array.isArray(response.data)) {
-          const palette = ['#FFD700', '#FF6B6B', '#9B59B6', '#3498DB'];
-          vipLevels.value = response.data.map((it, idx) => {
-            // 根据VIP等级设置对应的贷款额度（与后端逻辑保持一致）
-            const loanAmountMap = {
-              1: 1000000,    // VIP1: 100万
-              2: 2000000,    // VIP2: 200万  
-              3: 5000000,    // VIP3: 500万
-              4: 10000000    // VIP4: 1000万
-            };
-            const vipId = it.id ?? idx + 1;
-            const loanAmount = loanAmountMap[vipId] || 1000000;
-            
-            return {
-              id: vipId,
-              name: it.name ?? `VIP${vipId}`,
-              price: it.cost ?? 0,
-              color: palette[idx % palette.length],
-              loanAmount: loanAmount, // 贷款额度
-              benefits: it.description
-                ? it.description.split(/[,，；;]/).map(s => s.trim()).filter(Boolean)
-                : [`透支额度：¥${loanAmount.toLocaleString()}`, 'VIP专属服务', '优先客服支持']
-            };
-          });
-        }
-      } catch (error) {
-        console.error('获取VIP规则失败:', error);
+const fetchVipRules = async () => {
+  try {
+    const response = await request.get('/api/wallet/vip/rule');
+    console.log('VIP规则接口响应:', response);
+    
+    if (response && response.success && Array.isArray(response.data)) {
+      const palette = ['#FFD700', '#FF6B6B', '#9B59B6', '#3498DB'];
+      vipLevels.value = response.data.map((it, idx) => {
+        // 使用后端返回的实际数据
+        const vipId = it.id ?? idx + 1;
+        
+        return {
+          id: vipId,
+          name: it.name ?? `VIP${vipId}`,
+          price: it.cost ?? 0,
+          color: palette[idx % palette.length],
+          loanAmount: it.overdraftLimit ?? 0, // 使用后端的overdraftLimit字段
+          // benefits: it.description
+          //   ? it.description.split(/[,，；;]/).map(s => s.trim()).filter(Boolean)
+          //   : [`透支额度：¥${(it.overdraftLimit || 0).toLocaleString()}`, 'VIP专属服务', '优先客服支持'],
+          description: it.description // 保存原始描述
+        };
+      });
+      
+      // 如果有VIP等级数据，默认选择第一个
+      if (vipLevels.value.length > 0) {
+        selectedVipLevel.value = vipLevels.value[0];
       }
-    };
+    } else {
+      console.warn('VIP规则接口返回数据格式异常:', response);
+      // 如果接口异常，使用默认数据避免页面空白
+      vipLevels.value = getDefaultVipLevels();
+    }
+  } catch (error) {
+    console.error('获取VIP规则失败:', error);
+    toast.error('获取VIP信息失败');
+    // 出错时使用默认数据
+    vipLevels.value = getDefaultVipLevels();
+  }
+};
 
     // 获取钱包贷款列表
     const fetchWalletLoans = async () => {
@@ -727,40 +675,14 @@ export default {
       }
     };
 
-    // 处理还款（后端）
-    const handleRepay = async () => {
-      if (repayMethod.value === 'wallet') {
-        if (walletInfo.value.balance < walletInfo.value.usedOverdraft) {
-          toast.warning('钱包余额不足，请使用第三方支付');
-          return;
-        }
-        try {
-          // 需要传递贷款ID参数
-          const loanId = walletInfo.value.loanId || 1; // 假设有贷款ID，或使用默认值
-          const response = await request.get('/api/wallet/loan/repay', {
-            params: { id: loanId }
-          });
-          if (response && response.success) {
-            toast.success('还款成功');
-            showRepayModal.value = false;
-            await fetchWalletInfo();
-          } else {
-            toast.error('还款失败：' + (response.message || '未知错误'));
-          }
-        } catch (error) {
-          console.error('还款失败:', error);
-          toast.error('还款失败，请重试');
-        }
-      } else {
-        // 第三方支付还款
-        toast.info('第三方支付功能待开发');
-        // 这里可以跳转到第三方支付页面
-      }
-    };
-
     // 跳转到交易明细
     const navigateToTransactions = () => {
       router.push('/wallet/transactions');
+    };
+
+    // 跳转到贷款记录
+    const navigateToLoans = () => {
+      router.push('/wallet/loans');
     };
 
     // 处理VIP升级 - 第一步：选择支付方式
@@ -836,18 +758,16 @@ export default {
       walletInfo,
       showRechargeModal,
       showWithdrawModal,
-      showRepayModal,
       showRechargeRules,
       showWithdrawRules,
       rechargeAmount,
       withdrawAmount,
-      repayMethod,
       rechargeRules,
       withdrawRules,
       handleRecharge,
       handleWithdraw,
-      handleRepay,
       navigateToTransactions,
+      navigateToLoans,
       showVipModal,
       selectedVipLevel,
       vipLevels,
@@ -1803,4 +1723,3 @@ export default {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 </style>
-

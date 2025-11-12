@@ -18,4 +18,6 @@ public class WalletVipVO {
     private String description;
     @Schema(description = "申请费用/月")
     private BigDecimal cost;
+    @Schema(description = "可透支金额")
+    private BigDecimal overdraftLimit;
 }

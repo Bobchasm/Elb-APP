@@ -18,7 +18,7 @@ public class PreviewVO {
     @Schema(description = "总金额")
     private BigDecimal total;
     @Schema(description = "手续费率或奖励率")
-    private Float fee_rate;
+    private Float feeRate;
     @Schema(description = "对于提现，是否透支，无法提现超过余额的金额")
     private Boolean isOver;
 }

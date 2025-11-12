@@ -256,6 +256,11 @@ const routes = [
     path:'/admin/shop',
     name:'AdminShop',
     component:AdminShop
+  },
+  {
+    path: '/wallet/loans',
+    name: 'WalletLoan',
+    component: () => import('@/views/WalletLoan.vue') // 注意是 WalletLoans.vue（复数）
   }
   //
 
