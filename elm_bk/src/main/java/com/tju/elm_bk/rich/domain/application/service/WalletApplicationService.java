@@ -106,16 +106,22 @@ public class WalletApplicationService {
             throw new APIException(ResultCodeEnum.VIRTUAL_WALLET_MISSED);
         }
 
+        // 顾客出账
         BigDecimal loadAmount = fromWallet.pay(order.getOrderTotal());
         walletRepository.modifyWallet(fromWallet);
 
+        // 是否需要贷款，办理退款
         if (!loadAmount.equals(BigDecimal.ZERO)) {
             loanRepository.load(fromWallet.getId(),loadAmount);
         }
 
+        // 交易，此时商家账户还未进账，金额暂留在交易中
         Transaction transaction = new Transaction(TransactionType.PAYMENT,order.getOrderTotal(),fromWallet.getId(),toWallet.getId(), BigDecimal.ZERO,1);
         transactionRepository.payOrder(transaction,orderId);
+        // 设置订单已支付状态
         ordersMapper.setOrderState(orderId,1);
+        // 设置支付方式
+        ordersMapper.setOrderPaymentMethod(orderId,2);
 
         return true;
     }
