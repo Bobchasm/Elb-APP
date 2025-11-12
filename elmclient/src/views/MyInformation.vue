@@ -554,13 +554,8 @@ export default {
         // const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
         // if (savedWalletInfo) { router.push({ path: '/wallet' }); return; }
 
-        const token = getToken();
-        const response = await request.get('/api/wallet/info', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.success) {
+        const response = await request.get('/api/wallet/message');
+        if (response && response.success) {
           router.push({ path: '/wallet' });
         } else {
           showWalletActivateModal.value = true;
@@ -585,13 +580,8 @@ export default {
         // addTransactionRecord({ transactionType: 'create', amount: 0, reason: '钱包开通成功' });
         // toast.success('钱包开通成功'); showWalletActivateModal.value = false; router.push({ path: '/wallet' }); return;
 
-        const token = getToken();
-        const response = await request.post('/api/wallet/create', {}, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.success) {
+        const response = await request.get('/api/wallet/open');
+        if (response && response.success) {
           toast.success('钱包开通成功');
           showWalletActivateModal.value = false;
           router.push({ path: '/wallet' });

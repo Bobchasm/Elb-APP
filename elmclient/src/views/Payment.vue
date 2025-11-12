@@ -163,7 +163,7 @@ export default {
 				
 				console.log("订单详情响应:", response);
 				
-				if (response.success) {
+				if (response && response.success) {
 					// 正确的数据访问方式
 					orderDetail.value = response.data;
 				} else {
@@ -183,19 +183,25 @@ export default {
 		// 检查钱包是否存在（后端）
 		const checkWalletExists = async () => {
 			try {
-				const response = await request.get("/api/wallet/info");
-				if (response && response.success) {
+				const response = await request.get("/api/wallet/message");
+				
+				// 适配新的响应格式
+				if (response && response.success && response.data) {
 					walletExists.value = true;
 					return true;
 				}
-				walletExists.value = false;
-				return false;
-			} catch (error) {
-				if (error.response?.status === 404) {
+				
+				// 检查是否是钱包不存在的错误
+				if (response && response.code === 'VIRTUAL_WALLET_MISSED') {
 					walletExists.value = false;
 					return false;
 				}
+				
+				walletExists.value = false;
+				return false;
+			} catch (error) {
 				console.error('检查钱包失败:', error);
+				walletExists.value = false;
 				return false;
 			}
 		};
@@ -204,8 +210,10 @@ export default {
 		const handleCreateWallet = async () => {
 			try {
 				creatingWallet.value = true;
-				const response = await request.post("/api/wallet/create");
+				const response = await request.get("/api/wallet/open");
 				if (response && response.success) {
+					// 响应数据中的data字段是integer类型，表示钱包ID或状态
+					const walletId = response.data;
 					walletExists.value = true;
 					showWalletCreateModal.value = false;
 					toast.success('钱包开通成功');
@@ -213,7 +221,7 @@ export default {
 					toast.error("钱包开通失败：" + (response?.message || '未知错误'));
 				}
 			} catch (error) {
-				console.error('创建钱包失败:', error);
+				console.error('开通钱包失败:', error);
 				toast.error("钱包开通失败，请重试");
 			} finally {
 				creatingWallet.value = false;
@@ -254,7 +262,7 @@ export default {
 				try {
 					paying.value = true;
 					const response = await request.put("/api/orders/status?orderState=1&orderId=" + orderId.value);
-					if (response.success) {
+					if (response && response.success) {
 						// 支付成功，跳转到成功页面
 						router.push({
 							path: '/successfulPayment',

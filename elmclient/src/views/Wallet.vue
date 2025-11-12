@@ -94,23 +94,26 @@
             <label>充值金额</label>
             <input type="number" v-model.number="rechargeAmount" placeholder="请输入充值金额" min="0.01" step="0.01" />
           </div>
-          <div class="reward-info" v-if="rechargeRules && rechargeAmount">
-            <div class="info-section-title">充值信息</div>
+          <div class="preview-info" v-if="rechargeAmount && rechargeAmount > 0">
+            <div class="info-section-title">充值预览</div>
             <div class="info-item">
               <span class="info-label">充值金额：</span>
               <span class="info-value">¥{{ (rechargeAmount || 0).toFixed(2) }}</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">充值奖励率：</span>
-              <span class="highlight">{{ (rechargeRules.rewardRate * 100).toFixed(2) }}%</span>
+            <div class="info-item" v-if="rechargePreview">
+              <span class="info-label">奖励金额：</span>
+              <span class="highlight reward-amount">¥{{ (rechargePreview.fee || 0).toFixed(2) }}</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">充值奖励：</span>
-              <span class="highlight reward-amount">¥{{ ((rechargeAmount || 0) * rechargeRules.rewardRate).toFixed(2) }}</span>
+            <div class="info-item" v-if="rechargePreview">
+              <span class="info-label">奖励率：</span>
+              <span class="highlight">{{ ((rechargePreview.fee_rate || 0) * 100).toFixed(2) }}%</span>
             </div>
-            <div class="info-item total-item">
-              <span class="info-label">到账总额：</span>
-              <span class="highlight total-amount">¥{{ ((rechargeAmount || 0) * (1 + rechargeRules.rewardRate)).toFixed(2) }}</span>
+            <div class="info-item total" v-if="rechargePreview">
+              <span class="info-label">实际到账：</span>
+              <span class="total-amount">¥{{ (rechargePreview.total || 0).toFixed(2) }}</span>
+            </div>
+            <div class="loading-text" v-if="!rechargePreview && rechargeAmount > 0">
+              正在计算奖励...
             </div>
           </div>
           <div class="rules-link">
@@ -141,23 +144,33 @@
             <label>提现金额</label>
             <input type="number" v-model.number="withdrawAmount" placeholder="请输入提现金额" min="0.01" step="0.01" />
           </div>
-          <div class="fee-info" v-if="withdrawRules && withdrawAmount">
-            <div class="info-section-title">提现信息</div>
+          <div class="preview-info" v-if="withdrawAmount && withdrawAmount > 0">
+            <div class="info-section-title">提现预览</div>
             <div class="info-item">
               <span class="info-label">提现金额：</span>
               <span class="info-value">¥{{ (withdrawAmount || 0).toFixed(2) }}</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">提现手续费率：</span>
-              <span class="highlight">{{ (withdrawRules.feeRate * 100).toFixed(2) }}%</span>
-            </div>
-            <div class="info-item">
+            <div class="info-item" v-if="withdrawPreview">
               <span class="info-label">手续费：</span>
-              <span class="highlight fee-amount">¥{{ ((withdrawAmount || 0) * withdrawRules.feeRate).toFixed(2) }}</span>
+              <span class="highlight fee-amount">¥{{ (withdrawPreview.fee || 0).toFixed(2) }}</span>
             </div>
-            <div class="info-item total-item">
+            <div class="info-item" v-if="withdrawPreview">
+              <span class="info-label">手续费率：</span>
+              <span class="highlight">{{ ((withdrawPreview.fee_rate || 0) * 100).toFixed(2) }}%</span>
+            </div>
+            <div class="info-item total" v-if="withdrawPreview">
               <span class="info-label">实际到账：</span>
-              <span class="highlight total-amount">¥{{ ((withdrawAmount || 0) * (1 - withdrawRules.feeRate)).toFixed(2) }}</span>
+              <span class="total-amount">¥{{ (withdrawPreview.total || 0).toFixed(2) }}</span>
+            </div>
+            <div class="balance-info" v-if="withdrawPreview">
+              <span class="info-label">当前余额：</span>
+              <span class="info-value">¥{{ walletInfo.balance.toFixed(2) }}</span>
+              <span v-if="walletInfo.isVip" class="overdraft-info">
+                + 可透支¥{{ (walletInfo.overdraftLimit - walletInfo.usedOverdraft).toFixed(2) }}
+              </span>
+            </div>
+            <div class="loading-text" v-if="!withdrawPreview && withdrawAmount > 0">
+              正在计算手续费...
             </div>
           </div>
           <div class="rules-link">
@@ -298,6 +311,16 @@
                 <i class="fas fa-crown" :style="{ color: level.color }"></i>
                 <span class="level-name">{{ level.name }}</span>
               </div>
+              
+              <!-- 贷款额度显示 -->
+              <div class="loan-amount-section">
+                <div class="loan-title">
+                  <i class="fas fa-credit-card"></i>
+                  <span>可贷款额度</span>
+                </div>
+                <div class="loan-amount">¥{{ (level.loanAmount || 0).toLocaleString() }}</div>
+              </div>
+              
               <div class="level-benefits">
                 <div class="benefit-item" v-for="benefit in level.benefits" :key="benefit">
                   <i class="fas fa-check-circle"></i>
@@ -316,15 +339,63 @@
         </div>
       </div>
     </div>
+
+    <!-- VIP支付方式选择弹窗 -->
+    <div v-if="showVipPaymentModal" class="modal-overlay" @click.self="cancelVipPayment">
+      <div class="modal-content payment-modal">
+        <div class="modal-header">
+          <h3>VIP升级支付</h3>
+          <i class="fas fa-times close-btn" @click="cancelVipPayment"></i>
+        </div>
+        <div class="modal-body">
+          <div class="vip-summary" v-if="selectedVipLevel">
+            <div class="summary-item">
+              <span class="summary-label">选择等级：</span>
+              <span class="summary-value">{{ selectedVipLevel.name }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">升级费用：</span>
+              <span class="summary-value price">¥{{ selectedVipLevel.price }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">可贷款额度：</span>
+              <span class="summary-value loan-highlight">¥{{ (selectedVipLevel.loanAmount || 0).toLocaleString() }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">当前余额：</span>
+              <span class="summary-value">¥{{ walletInfo.balance.toFixed(2) }}</span>
+            </div>
+          </div>
+          
+          <div class="payment-notice">
+            <i class="fas fa-info-circle"></i>
+            <span>
+              升级费用将从钱包余额中扣除，升级后可获得VIP透支额度
+            </span>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="cancelVipPayment">取消</button>
+          <button 
+            class="confirm-btn" 
+            @click="confirmVipPayment"
+          >
+            确认支付
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
 import BackButton from '../components/BackButton.vue';
+import eventBus from '../utils/eventBus';
 
 export default {
   name: 'Wallet',
@@ -346,15 +417,7 @@ export default {
       return null;
     };
 
-    const getWalletInfoKey = () => {
-      const user = getCurrentUser();
-      return user ? `walletInfo_${user.id}` : 'walletInfo_guest';
-    };
-
-    const getWalletTransactionsKey = () => {
-      const user = getCurrentUser();
-      return user ? `walletTransactions_${user.id}` : 'walletTransactions_guest';
-    };
+    // 移除localStorage相关函数，只使用后端真实数据
     const loading = ref(true);
     const walletInfo = ref({
       balance: 0,
@@ -375,29 +438,11 @@ export default {
     const withdrawRules = ref(null);
     const selectedVipLevel = ref(null);
     const rulesText = ref(null); // 规则文本，可以从后端获取
-    const vipLevels = ref([
-      {
-        id: 1,
-        name: 'VIP1',
-        price: 9.9,
-        color: '#FFD700',
-        benefits: ['透支额度：¥100', '充值奖励率提升5%', '专属客服']
-      },
-      {
-        id: 2,
-        name: 'VIP2',
-        price: 19.9,
-        color: '#FF6B6B',
-        benefits: ['透支额度：¥500', '充值奖励率提升10%', '专属客服', '优先处理']
-      },
-      {
-        id: 3,
-        name: 'VIP3',
-        price: 39.9,
-        color: '#9B59B6',
-        benefits: ['透支额度：¥2000', '充值奖励率提升15%', '专属客服', '优先处理', '免提现手续费']
-      }
-    ]);
+    const showVipPaymentModal = ref(false); // VIP支付方式选择弹窗
+    const vipPaymentMethod = ref('wallet'); // VIP支付方式：wallet/thirdparty
+    const vipLevels = ref([]); // 从后端获取VIP等级数据
+    const rechargePreview = ref(null); // 充值预览数据
+    const withdrawPreview = ref(null); // 提现预览数据
 
     // 获取钱包信息（后端优先；本地模拟仅注释保留）
     const fetchWalletInfo = async () => {
@@ -409,17 +454,33 @@ export default {
 
         // 后端调用（Apifox: GET /api/wallet/message）
         const response = await request.get('/api/wallet/message');
-        if (response.success) {
+        
+        if (response && response.success) {
           const d = response.data || {};
           walletInfo.value = {
-            balance: d.balance ?? 0,
-            isVip: (d.vip_level ?? 0) > 0,
-            overdraftLimit: d.overdraft_amount ?? 0, // 可透支金额
-            usedOverdraft: d.overdrawn_amount ?? 0   // 已透支金额
+            id: d.id,
+            userId: d.userId,
+            createTime: d.createTime,
+            status: d.status, // 钱包状态 0-正常 1-冻结
+            vipLevel: d.vipLevel ?? 0, // vip级别 0-非vip
+            balance: d.balance ?? 0, // 余额
+            overdraftAmount: d.overdraftAmount ?? 0, // 可透支金额
+            overdrawnAmount: d.overdrawnAmount ?? 0, // 已透支金额
+            username: d.username, // 所属用户名
+            vipName: d.vipName, // vip名
+            vipDescription: d.vipDescription, // vip描述
+            overdraftLimit: d.overdraftAmount ?? 0, // 可透支金额
+            // 兼容旧版本字段
+            isVip: (d.vipLevel ?? 0) > 0,
+            usedOverdraft: d.overdrawnAmount ?? 0
           };
         } else {
-          if (response.message && response.message.includes('不存在')) {
-            await createWallet();
+          // 检查是否是钱包不存在的错误
+          if (response && (response.code === 'VIRTUAL_WALLET_MISSED' || 
+              (response.message && response.message.includes('不存在')))) {
+            // 钱包不存在，需要开通
+            console.log('钱包不存在，需要开通');
+            // 这里不自动开通，让用户手动选择
           } else {
             toast.error('获取钱包信息失败');
           }
@@ -439,22 +500,77 @@ export default {
     // 获取VIP规则（后端）
     const fetchVipRules = async () => {
       try {
-        const response = await request.get('/api/wallet/vip_rule');
-        if (response.success && Array.isArray(response.data)) {
+        const response = await request.get('/api/wallet/vip/rule');
+        if (response && response.success && Array.isArray(response.data)) {
           const palette = ['#FFD700', '#FF6B6B', '#9B59B6', '#3498DB'];
-          vipLevels.value = response.data.map((it, idx) => ({
-            id: it.id ?? idx + 1,
-            name: it.name ?? `VIP${idx + 1}`,
-            // 接口未返回价格与权益，给出合理默认值以满足现有UI结构
-            price: 0,
-            color: palette[idx % palette.length],
-            benefits: it.description
-              ? it.description.split(/[,，；;]/).map(s => s.trim()).filter(Boolean)
-              : ['VIP权益']
-          }));
+          vipLevels.value = response.data.map((it, idx) => {
+            // 根据VIP等级设置对应的贷款额度（与后端逻辑保持一致）
+            const loanAmountMap = {
+              1: 1000000,    // VIP1: 100万
+              2: 2000000,    // VIP2: 200万  
+              3: 5000000,    // VIP3: 500万
+              4: 10000000    // VIP4: 1000万
+            };
+            const vipId = it.id ?? idx + 1;
+            const loanAmount = loanAmountMap[vipId] || 1000000;
+            
+            return {
+              id: vipId,
+              name: it.name ?? `VIP${vipId}`,
+              price: it.cost ?? 0,
+              color: palette[idx % palette.length],
+              loanAmount: loanAmount, // 贷款额度
+              benefits: it.description
+                ? it.description.split(/[,，；;]/).map(s => s.trim()).filter(Boolean)
+                : [`透支额度：¥${loanAmount.toLocaleString()}`, 'VIP专属服务', '优先客服支持']
+            };
+          });
         }
       } catch (error) {
         console.error('获取VIP规则失败:', error);
+      }
+    };
+
+    // 获取钱包贷款列表
+    const fetchWalletLoans = async () => {
+      try {
+        const response = await request.get('/api/wallet/loan/list');
+        if (response && response.success && Array.isArray(response.data)) {
+          return response.data.map(loan => ({
+            id: loan.id,
+            walletId: loan.walletId,
+            createTime: loan.createTime,
+            repayTime: loan.repayTime,
+            loanAmount: loan.loanAmount,
+            status: loan.repayTime ? '已还款' : '未还款'
+          }));
+        }
+        return [];
+      } catch (error) {
+        console.error('获取钱包贷款列表失败:', error);
+        toast.error('获取贷款信息失败');
+        return [];
+      }
+    };
+
+    // 查看贷款详情
+    const viewLoanDetails = async () => {
+      try {
+        const loans = await fetchWalletLoans();
+        if (loans.length === 0) {
+          toast.info('暂无贷款记录');
+          return;
+        }
+        
+        // 简单展示贷款信息（可以后续改为弹窗或跳转到详情页）
+        const loanInfo = loans.map(loan => 
+          `贷款ID: ${loan.id}\n金额: ¥${loan.loanAmount}\n创建时间: ${loan.createTime}\n状态: ${loan.status}`
+        ).join('\n\n');
+        
+        alert(`贷款记录:\n\n${loanInfo}`);
+      } catch (error) {
+        console.error('查看贷款详情失败:', error);
+        toast.error('查看贷款详情失败');
       }
     };
 
@@ -468,33 +584,23 @@ export default {
         // addTransactionRecord({ transactionType: 'create', amount: 0, reason: '钱包开通成功' });
         // toast.success('钱包已激活'); return;
 
-        const response = await request.post('/api/wallet/create');
-        if (response.success) {
-          walletInfo.value = response.data;
-          toast.success('钱包已激活');
+        const response = await request.get('/api/wallet/open');
+        if (response && response.success) {
+          // 响应数据中的data字段是integer类型，表示钱包ID或状态
+          const walletId = response.data;
+          toast.success('钱包开通成功');
+          // 开通成功后重新获取钱包信息
+          await fetchWalletInfo();
         } else {
-          toast.error('激活钱包失败');
+          toast.error('钱包开通失败：' + (response.message || '未知错误'));
         }
       } catch (error) {
-        console.error('创建钱包失败:', error);
-        toast.error('激活钱包失败');
+        console.error('开通钱包失败:', error);
+        toast.error('钱包开通失败，请重试');
       }
     };
 
-    const addTransactionRecord = (record) => {
-      try {
-        const transactions = JSON.parse(localStorage.getItem(getWalletTransactionsKey()) || '[]');
-        const transaction = {
-          id: Date.now(),
-          transactionTime: new Date().toISOString(),
-          ...record
-        };
-        transactions.unshift(transaction);
-        localStorage.setItem(getWalletTransactionsKey(), JSON.stringify(transactions));
-      } catch (error) {
-        console.error('保存交易记录失败:', error);
-      }
-    };
+    // 移除假数据记录函数，只使用后端真实数据
 
     // 获取充值/提现规则（后端优先）
     const fetchRules = async () => {
@@ -505,19 +611,30 @@ export default {
         // rulesText.value = null; return;
 
         const response = await request.get('/api/wallet/rule');
-        if (response.success) {
-          const d = response.data || {};
-          // 兼容多种返回：
-          // 1) { rechargeRules:{rewardRate}, withdrawRules:{feeRate}, rulesText }
-          // 2) { recharge_rate, withdraw_fee, rulesText }
-          rechargeRules.value = d.rechargeRules || { rewardRate: d.recharge_rate ?? 0.1 };
-          withdrawRules.value = d.withdrawRules || { feeRate: d.withdraw_fee ?? 0.1 };
-          rulesText.value = d.rulesText || null;
+        if (response && response.success) {
+          // 根据接口规范，data字段是string类型，包含规则文本
+          const rulesString = response.data || '';
+          rulesText.value = rulesString;
+          
+          // 尝试解析规则文本中的数值，或使用默认值
+          // 这里可以根据实际返回的规则文本格式进行解析
+          try {
+            // 如果规则文本是JSON格式，尝试解析
+            const rulesObj = JSON.parse(rulesString);
+            rechargeRules.value = rulesObj.rechargeRules || { rewardRate: rulesObj.recharge_rate ?? 0.1 };
+            withdrawRules.value = rulesObj.withdrawRules || { feeRate: rulesObj.withdraw_fee ?? 0.1 };
+          } catch (parseError) {
+            // 如果不是JSON格式，使用默认规则
+            console.log('规则文本不是JSON格式，使用默认规则');
+            rechargeRules.value = { rewardRate: 0.1 };
+            withdrawRules.value = { feeRate: 0.1 };
+          }
         }
       } catch (error) {
         console.error('获取规则失败:', error);
         rechargeRules.value = { rewardRate: 0.1 };
         withdrawRules.value = { feeRate: 0.1 };
+        rulesText.value = '暂无规则信息';
       }
     };
 
@@ -527,7 +644,32 @@ export default {
       showWithdrawRules.value = false;
     };
 
-    // 处理充值（后端）
+    // 获取充值/提现预览信息
+    const getPreview = async (amount, option) => {
+      try {
+        const response = await request.get('/api/wallet/preview', {
+          params: { 
+            amount: amount,
+            option: option // 0-充值 1-提现
+          }
+        });
+        if (response && response.success && response.data) {
+          return {
+            amount: response.data.amount,
+            fee: response.data.fee,
+            total: response.data.total,
+            feeRate: response.data.fee_rate,
+            isOver: response.data.isOver || false
+          };
+        }
+        return null;
+      } catch (error) {
+        console.error('获取预览信息失败:', error);
+        return null;
+      }
+    };
+
+    // 处理充值
     const handleRecharge = async () => {
       if (!rechargeAmount.value || rechargeAmount.value <= 0) {
         toast.warning('请输入有效的充值金额');
@@ -535,37 +677,33 @@ export default {
       }
       
       try {
-        // 前端模拟备用见注释；后端调用如下：
+        console.log('发起充值请求:', rechargeAmount.value);
         const response = await request.get('/api/wallet/recharge', {
           params: { amount: rechargeAmount.value }
         });
-        if (response.success) {
+        console.log('充值接口响应:', response);
+        
+        if (response && response.success) {
           toast.success('充值成功');
           showRechargeModal.value = false;
           rechargeAmount.value = null;
           await fetchWalletInfo();
+          // 通知交易明细页面刷新
+          console.log('充值成功，触发交易明细刷新');
+          eventBus.emit('transactionUpdated');
         } else {
-          toast.error('充值失败：' + (response.message || '未知错误'));
+          console.log('充值失败:', response);
+          toast.error(response?.message || '充值失败');
         }
       } catch (error) {
-        console.error('充值失败:', error);
         toast.error('充值失败，请重试');
       }
     };
 
-    // 处理提现（后端）
+    // 处理提现
     const handleWithdraw = async () => {
       if (!withdrawAmount.value || withdrawAmount.value <= 0) {
         toast.warning('请输入有效的提现金额');
-        return;
-      }
-      
-      // 计算可用余额（包括透支额度）
-      const availableBalance = walletInfo.value.balance + 
-        (walletInfo.value.isVip ? (walletInfo.value.overdraftLimit - walletInfo.value.usedOverdraft) : 0);
-      
-      if (withdrawAmount.value > availableBalance) {
-        toast.warning('余额不足');
         return;
       }
       
@@ -573,16 +711,18 @@ export default {
         const response = await request.get('/api/wallet/withdrawal', {
           params: { amount: withdrawAmount.value }
         });
-        if (response.success) {
+        
+        if (response && response.success) {
           toast.success('提现成功');
           showWithdrawModal.value = false;
           withdrawAmount.value = null;
           await fetchWalletInfo();
+          // 通知交易明细页面刷新
+          eventBus.emit('transactionUpdated');
         } else {
-          toast.error('提现失败：' + (response.message || '未知错误'));
+          toast.error(response?.message || '提现失败');
         }
       } catch (error) {
-        console.error('提现失败:', error);
         toast.error('提现失败，请重试');
       }
     };
@@ -595,11 +735,12 @@ export default {
           return;
         }
         try {
-          const response = await request.post('/api/wallet/repay', {
-            method: 'wallet',
-            amount: walletInfo.value.usedOverdraft
+          // 需要传递贷款ID参数
+          const loanId = walletInfo.value.loanId || 1; // 假设有贷款ID，或使用默认值
+          const response = await request.get('/api/wallet/loan/repay', {
+            params: { id: loanId }
           });
-          if (response.success) {
+          if (response && response.success) {
             toast.success('还款成功');
             showRepayModal.value = false;
             await fetchWalletInfo();
@@ -622,30 +763,67 @@ export default {
       router.push('/wallet/transactions');
     };
 
-    // 处理VIP升级（后端）
+    // 处理VIP升级 - 第一步：选择支付方式
     const handleVipUpgrade = async () => {
       if (!selectedVipLevel.value) {
         toast.warning('请选择VIP等级');
         return;
       }
       
+      // 显示支付方式选择弹窗
+      showVipModal.value = false;
+      showVipPaymentModal.value = true;
+    };
+
+    // 确认VIP支付
+    const confirmVipPayment = async () => {
+      if (!selectedVipLevel.value) {
+        toast.warning('请选择VIP等级');
+        return;
+      }
+
       try {
-        const response = await request.post('/api/wallet/upgrade-vip', {
-          vipLevelId: selectedVipLevel.value.id
+        const response = await request.get('/api/wallet/vip/apply', {
+          params: { vipLevel: selectedVipLevel.value.id }
         });
-        if (response.success) {
-          toast.success('VIP升级成功');
-          showVipModal.value = false;
+        
+        if (response && response.success) {
+          toast.success('VIP升级成功！');
+          showVipPaymentModal.value = false;
           selectedVipLevel.value = null;
           await fetchWalletInfo();
         } else {
-          toast.error('VIP升级失败：' + (response.message || '未知错误'));
+          toast.error(response?.message || 'VIP升级失败');
         }
       } catch (error) {
-        console.error('VIP升级失败:', error);
         toast.error('VIP升级失败，请重试');
       }
     };
+
+    // 取消VIP支付
+    const cancelVipPayment = () => {
+      showVipPaymentModal.value = false;
+      selectedVipLevel.value = null;
+      vipPaymentMethod.value = 'wallet';
+    };
+
+    // 监听充值金额变化，自动获取预览
+    watch(rechargeAmount, async (newAmount) => {
+      if (newAmount && newAmount > 0) {
+        rechargePreview.value = await getPreview(newAmount, 0);
+      } else {
+        rechargePreview.value = null;
+      }
+    });
+
+    // 监听提现金额变化，自动获取预览
+    watch(withdrawAmount, async (newAmount) => {
+      if (newAmount && newAmount > 0) {
+        withdrawPreview.value = await getPreview(newAmount, 1);
+      } else {
+        withdrawPreview.value = null;
+      }
+    });
 
     onMounted(() => {
       fetchWalletInfo();
@@ -675,7 +853,16 @@ export default {
       vipLevels,
       handleVipUpgrade,
       rulesText,
-      closeRulesModal
+      closeRulesModal,
+      fetchWalletLoans,
+      viewLoanDetails,
+      getPreview,
+      showVipPaymentModal,
+      vipPaymentMethod,
+      confirmVipPayment,
+      cancelVipPayment,
+      rechargePreview,
+      withdrawPreview
     };
   }
 };
@@ -1364,6 +1551,256 @@ export default {
   font-size: 4.5vw;
   font-weight: bold;
   color: #0097FF;
+}
+
+/* VIP支付弹窗样式 */
+.payment-modal {
+  max-height: 85vh;
+}
+
+.vip-summary {
+  background: #f8f9fa;
+  border-radius: 2vw;
+  padding: 4vw;
+  margin-bottom: 4vw;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2vw;
+  font-size: 3.6vw;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-label {
+  color: #666;
+}
+
+.summary-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.summary-value.price {
+  color: #0097FF;
+  font-weight: bold;
+  font-size: 4vw;
+}
+
+.summary-value.loan-highlight {
+  color: #52c41a;
+  font-weight: bold;
+  font-size: 4vw;
+}
+
+.payment-methods {
+  margin-bottom: 4vw;
+}
+
+.method-title {
+  font-size: 4vw;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 3vw;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 3vw;
+}
+
+.payment-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4vw;
+  border: 2px solid #e9ecef;
+  border-radius: 2vw;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.payment-option.active {
+  border-color: #0097FF;
+  background: rgba(0, 151, 255, 0.05);
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 3vw;
+}
+
+.option-content i {
+  font-size: 5vw;
+  color: #0097FF;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-name {
+  font-size: 4vw;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 1vw;
+}
+
+.option-desc {
+  font-size: 3.2vw;
+  color: #666;
+}
+
+.check-icon {
+  font-size: 5vw;
+  color: #0097FF;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.payment-option.active .check-icon {
+  opacity: 1;
+}
+
+.payment-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 2vw;
+  padding: 3vw;
+  background: #e6f7ff;
+  border-radius: 2vw;
+  font-size: 3.4vw;
+  color: #0050b3;
+}
+
+.payment-notice i {
+  font-size: 4vw;
+  margin-top: 0.5vw;
+}
+
+.payment-notice .insufficient {
+  color: #ff4d4f;
+}
+
+/* 预览信息样式 */
+.preview-info {
+  background: #f8f9fa;
+  border-radius: 2vw;
+  padding: 4vw;
+  margin: 4vw 0;
+  border: 1px solid #e9ecef;
+}
+
+.info-section-title {
+  font-size: 4vw;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 3vw;
+  text-align: center;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2vw;
+  font-size: 3.6vw;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #666;
+}
+
+.info-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.highlight {
+  color: #0097FF;
+  font-weight: 600;
+}
+
+.reward-amount {
+  color: #52c41a;
+}
+
+.fee-amount {
+  color: #ff4d4f;
+}
+
+.total-amount {
+  color: #333;
+  font-weight: bold;
+  font-size: 4vw;
+}
+
+.info-item.total {
+  border-top: 1px solid #e9ecef;
+  padding-top: 2vw;
+  margin-top: 2vw;
+}
+
+.balance-info {
+  background: #e6f7ff;
+  padding: 3vw;
+  border-radius: 1.5vw;
+  margin-top: 2vw;
+  font-size: 3.4vw;
+}
+
+.overdraft-info {
+  color: #0097FF;
+  font-weight: 500;
+}
+
+.loading-text {
+  text-align: center;
+  color: #999;
+  font-size: 3.4vw;
+  padding: 2vw 0;
+}
+
+/* 贷款额度样式 */
+.loan-amount-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2vw;
+  padding: 3vw;
+  margin: 3vw 0;
+  color: white;
+  text-align: center;
+}
+
+.loan-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5vw;
+  font-size: 3.4vw;
+  margin-bottom: 2vw;
+  opacity: 0.9;
+}
+
+.loan-title i {
+  font-size: 3.8vw;
+}
+
+.loan-amount {
+  font-size: 5.5vw;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 </style>
 

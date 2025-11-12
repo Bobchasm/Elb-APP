@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 1. 创建 Axios 实例
 const request = axios.create({
-  baseURL: 'http://127.0.0.1:4523/m1/7148986-6872865-default', // 这里填你的后端基础路径（如 http://localhost:8080），如果和前端同域可留空
+  baseURL: 'http://REDACTED_IP:8080', // 这里填你的后端基础路径（如 http://localhost:8080），如果和前端同域可留空
   timeout: 15000, // 请求超时时间增加到15秒
   headers: {
     'Content-Type': 'application/json' // 默认请求格式
@@ -20,7 +20,7 @@ request.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`; // 拼接 Bearer 格式
         // 临时注释掉token头，避免CORS问题
-        //config.headers.token = token; // 添加 token 头
+        // config.headers.token = token; // 添加 token 头
       }
     }
     //【【------------ 为了上传图片，需要在请求头中添加 'Content-Type': 'application/x-www-form-urlencoded'，否则会报错。
@@ -48,13 +48,7 @@ request.interceptors.request.use(
 // 3. 响应拦截器：统一处理错误（如 token 过期）
 request.interceptors.response.use(
   (response) => {
-    // 统一适配为 { success, data, message }
-    const raw = response?.data ?? {};
-    const success =
-      raw.success ?? (raw.code === 0 || raw.code === 200 || raw.status === 200 || raw.status === 'OK');
-    const data = raw.data ?? raw.result ?? null;
-    const message = raw.message ?? raw.msg ?? '';
-    return { success, data, message };
+    return response.data; // 直接返回响应体，简化后续处理
   },
   (error) => {
     // 示例：token 过期时跳转登录页

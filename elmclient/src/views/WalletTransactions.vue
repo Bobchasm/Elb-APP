@@ -15,6 +15,12 @@
     <div v-else class="transactions-content">
       <!-- 筛选器 -->
       <div class="filter-section">
+        <div class="refresh-section">
+          <button class="refresh-btn" @click="fetchTransactions">
+            <i class="fas fa-sync-alt"></i>
+            刷新交易记录
+          </button>
+        </div>
         <div class="filter-tabs">
           <div 
             class="filter-tab" 
@@ -109,11 +115,12 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
 import BackButton from '../components/BackButton.vue';
+import eventBus from '../utils/eventBus';
 
 export default {
   name: 'WalletTransactions',
@@ -130,37 +137,103 @@ export default {
     const fetchTransactions = async () => {
       try {
         loading.value = true;
-        // Apifox 定义：GET /api/wallet/transaction/list，需要 type/status/startDate/endDate 四个必填查询参数
+        // 直接调用交易明细接口，获取真实数据
         const params = {
-          // -1 代表全部（若后端不支持，可按需要调整为具体值）
-          type: -1,
-          status: -1,
+          type: -1, // 全部类型
+          status: -1, // 全部状态
           startDate: '1970-01-01',
-          endDate: new Date().toISOString()
+          endDate: new Date().toISOString().split('T')[0]
         };
+        
+        console.log('调用交易明细接口，参数:', params);
+        const response = await request.get('/api/wallet/transaction/list', { params });
+        console.log('交易明细接口响应:', response);
+        
+        if (response && response.success) {
+          const list = Array.isArray(response.data) ? response.data : [];
+          console.log('交易明细原始数据:', list);
+          
+          // 直接使用后端返回的真实数据，不添加任何假数据
+          transactions.value = list.map(it => ({
+            id: it.id,
+            transactionType: getTypeFromNumber(it.type),
+            amount: it.amount ?? 0,
+            fee: it.fee ?? 0,
+            transactionTime: it.createTime,
+            inOrOut: it.inOrOut, // 0-支出 1-收入
+            reason: it.reason ?? ''
+          }));
+          
+          // 不显示任何提示，让用户看到真实的数据状态
+        } else {
+          toast.error('获取交易明细失败: ' + (response?.message || '接口调用失败'));
+        }
+      } catch (error) {
+        console.error('获取交易明细失败:', error);
+        toast.error('获取交易明细失败');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // 根据数字类型转换为字符串类型
+    const getTypeFromNumber = (typeNum) => {
+      const typeMap = {
+        0: 'payment',   // 支付
+        1: 'received',  // 收款
+        2: 'withdraw',  // 提现
+        3: 'recharge'   // 充值
+      };
+      return typeMap[typeNum] || 'unknown';
+    };
 
     const viewDetailByOrder = async (orderId) => {
       try {
         const response = await request.get('/api/wallet/transaction/detail/order', {
           params: { orderId }
         });
-        if (response.success && response.data) {
+        if (response && response.success && response.data) {
           const d = response.data;
-          const mapType = (n) => ({ 0: 'payment', 1: 'received', 2: 'withdraw', 3: 'recharge' }[n] ?? 'unknown');
           const detail = {
             id: d.id,
-            transactionType: mapType(d.type),
-            amount: d.amount,
-            fee: d.fee,
-            transactionTime: d.createTime,
-            status: d.status,
-            fromAccount: d.from_account,
-            toAccount: d.to_account,
-            fromAccountName: d.from_account_name,
-            toAccountName: d.to_account_name,
-            feeRate: d.fee_rate
+            type: d.type, // 交易类型 0-支付 1-收款 2-提现 3-充值
+            amount: d.amount, // 操作金额
+            fee: d.fee, // 手续费或奖励
+            createTime: d.createTime, // 交易时间
+            inOrOut: d.inOrOut, // 支出还是收入 0-支出 1-收入
+            status: d.status, // 操作金额是否为冻结 0-否 1-是
+            fromAccount: d.from_account, // 转出钱包 交易类型为充值时值为0
+            toAccount: d.to_account, // 转入钱包 交易类型为提现时值为0
+            fromAccountName: d.from_account_name, // 转出钱包用户姓名 交易类型为充值时值为null
+            toAccountName: d.to_account_name, // 转入钱包用户姓名 交易类型为提现时值为null
+            feeRate: d.fee_rate // 手续费率或奖励率
           };
-          alert(`订单明细#${detail.id}\n类型: ${getTransactionTypeName(detail.transactionType)}\n金额: ${detail.amount}\n时间: ${detail.transactionTime}`);
+          
+          // 格式化显示订单详情
+          const typeNames = { 0: '支付', 1: '收款', 2: '提现', 3: '充值' };
+          const inOutNames = { 0: '支出', 1: '收入' };
+          const statusNames = { 0: '正常', 1: '冻结' };
+          
+          let detailInfo = `订单交易详情#${detail.id}\n`;
+          detailInfo += `订单ID: ${orderId}\n`;
+          detailInfo += `类型: ${typeNames[detail.type] || '未知'}\n`;
+          detailInfo += `金额: ¥${detail.amount}\n`;
+          detailInfo += `手续费: ¥${detail.fee}\n`;
+          detailInfo += `收支: ${inOutNames[detail.inOrOut] || '未知'}\n`;
+          detailInfo += `状态: ${statusNames[detail.status] || '未知'}\n`;
+          detailInfo += `时间: ${detail.createTime}\n`;
+          
+          if (detail.fromAccountName) {
+            detailInfo += `转出方: ${detail.fromAccountName}\n`;
+          }
+          if (detail.toAccountName) {
+            detailInfo += `转入方: ${detail.toAccountName}\n`;
+          }
+          if (detail.feeRate) {
+            detailInfo += `费率: ${(detail.feeRate * 100).toFixed(2)}%\n`;
+          }
+          
+          alert(detailInfo);
         } else {
           toast.error('获取订单明细失败');
         }
@@ -176,55 +249,53 @@ export default {
         const response = await request.get('/api/wallet/transaction/detail', {
           params: { transactionId: id }
         });
-        if (response.success && response.data) {
+        if (response && response.success && response.data) {
           const d = response.data;
-          const mapType = (n) => ({ 0: 'payment', 1: 'received', 2: 'withdraw', 3: 'recharge' }[n] ?? 'unknown');
           const detail = {
             id: d.id,
-            transactionType: mapType(d.type),
-            amount: d.amount,
-            fee: d.fee,
-            transactionTime: d.createTime,
-            status: d.status,
-            fromAccount: d.from_account,
-            toAccount: d.to_account,
-            fromAccountName: d.from_account_name,
-            toAccountName: d.to_account_name,
-            feeRate: d.fee_rate
+            type: d.type, // 交易类型 0-支付 1-收款 2-提现 3-充值
+            amount: d.amount, // 操作金额
+            fee: d.fee, // 手续费或奖励
+            createTime: d.createTime, // 交易时间
+            inOrOut: d.inOrOut, // 支出还是收入 0-支出 1-收入
+            status: d.status, // 操作金额是否为冻结 0-否 1-是
+            fromAccount: d.from_account, // 转出钱包 交易类型为充值时值为0
+            toAccount: d.to_account, // 转入钱包 交易类型为提现时值为0
+            fromAccountName: d.from_account_name, // 转出钱包用户姓名 交易类型为充值时值为null
+            toAccountName: d.to_account_name, // 转入钱包用户姓名 交易类型为提现时值为null
+            feeRate: d.fee_rate // 手续费率或奖励率
           };
-          // 简易演示：弹窗查看（后续可改为独立详情页/弹窗）
-          alert(`明细#${detail.id}\n类型: ${getTransactionTypeName(detail.transactionType)}\n金额: ${detail.amount}\n时间: ${detail.transactionTime}`);
+          
+          // 格式化显示详情
+          const typeNames = { 0: '支付', 1: '收款', 2: '提现', 3: '充值' };
+          const inOutNames = { 0: '支出', 1: '收入' };
+          const statusNames = { 0: '正常', 1: '冻结' };
+          
+          let detailInfo = `交易详情#${detail.id}\n`;
+          detailInfo += `类型: ${typeNames[detail.type] || '未知'}\n`;
+          detailInfo += `金额: ¥${detail.amount}\n`;
+          detailInfo += `手续费: ¥${detail.fee}\n`;
+          detailInfo += `收支: ${inOutNames[detail.inOrOut] || '未知'}\n`;
+          detailInfo += `状态: ${statusNames[detail.status] || '未知'}\n`;
+          detailInfo += `时间: ${detail.createTime}\n`;
+          
+          if (detail.fromAccountName) {
+            detailInfo += `转出方: ${detail.fromAccountName}\n`;
+          }
+          if (detail.toAccountName) {
+            detailInfo += `转入方: ${detail.toAccountName}\n`;
+          }
+          if (detail.feeRate) {
+            detailInfo += `费率: ${(detail.feeRate * 100).toFixed(2)}%\n`;
+          }
+          
+          alert(detailInfo);
         } else {
           toast.error('获取明细详情失败');
         }
       } catch (e) {
         console.error('获取明细详情失败:', e);
         toast.error('获取明细详情失败');
-      }
-    };
-        const response = await request.get('/api/wallet/transaction/list', { params });
-        if (response.success) {
-          const list = Array.isArray(response.data) ? response.data : [];
-          const mapType = (n) => {
-            const m = { 0: 'payment', 1: 'received', 2: 'withdraw', 3: 'recharge' };
-            return m[n] ?? 'unknown';
-          };
-          transactions.value = list.map(it => ({
-            id: it.id,
-            transactionType: mapType(it.type),
-            amount: it.amount ?? 0,
-            fee: it.fee ?? 0,
-            transactionTime: it.createTime,
-            reason: it.reason ?? ''
-          }));
-        } else {
-          toast.error('获取交易明细失败');
-        }
-      } catch (error) {
-        console.error('获取交易明细失败:', error);
-        toast.error('获取交易明细失败');
-      } finally {
-        loading.value = false;
       }
     };
 
@@ -327,8 +398,21 @@ export default {
       });
     };
 
+    // 监听交易更新事件
+    const handleTransactionUpdate = () => {
+      console.log('收到交易更新事件，开始刷新交易明细');
+      fetchTransactions();
+    };
+
     onMounted(() => {
       fetchTransactions();
+      // 监听交易更新事件
+      eventBus.on('transactionUpdated', handleTransactionUpdate);
+    });
+
+    onUnmounted(() => {
+      // 清理事件监听
+      eventBus.off('transactionUpdated', handleTransactionUpdate);
     });
 
     return {
@@ -336,6 +420,8 @@ export default {
       transactions,
       currentFilter,
       filteredTransactions,
+      fetchTransactions,
+      getTypeFromNumber,
       getTransactionTypeName,
       getTransactionIcon,
       getTransactionTypeClass,
@@ -389,6 +475,32 @@ export default {
   padding: 3vw 4vw;
   margin-bottom: 2vw;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.refresh-section {
+  margin-bottom: 3vw;
+}
+
+.refresh-btn {
+  background: #0097FF;
+  color: white;
+  border: none;
+  padding: 2.5vw 4vw;
+  border-radius: 2vw;
+  font-size: 3.4vw;
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background: #0080e6;
+}
+
+.refresh-btn:active {
+  transform: scale(0.98);
 }
 
 .filter-tabs {
