@@ -65,6 +65,13 @@
           <span class="menu-text">我的收藏</span>
           <i class="fas fa-chevron-right menu-arrow"></i>
         </div>
+        <div class="menu-item" @click="navigateTo('wallet')">
+          <div class="menu-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <span class="menu-text">虚拟钱包</span>
+          <i class="fas fa-chevron-right menu-arrow"></i>
+        </div>
         <div class="menu-item message-item" @click="navigateTo('notifications')">
           <div class="menu-icon">
             <i class="fas fa-bell"></i>
@@ -134,6 +141,21 @@
         </div>
       </div>
     </div>
+
+    <!-- 钱包激活弹窗 -->
+    <div v-if="showWalletActivateModal" class="modal-overlay">
+      <div class="modal-content wallet-activate-modal">
+        <div class="modal-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <h3>开通虚拟钱包</h3>
+        <p class="modal-message">您还没有虚拟钱包账户，是否现在开通？</p>
+        <div class="modal-buttons">
+          <button class="apply-btn" @click="activateWallet">确认开通</button>
+          <button class="cancel-btn" @click="showWalletActivateModal = false">取消</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -159,6 +181,29 @@ export default {
     const errorMessage = ref('');
     const showEditModal = ref(false);
     const showMerchantApplyModal = ref(false);
+    const showWalletActivateModal = ref(false);
+
+    const getCurrentUser = () => {
+      try {
+        const localUser = localStorage.getItem('userInfo');
+        if (localUser) return JSON.parse(localUser);
+        const sessionUser = sessionStorage.getItem('userInfo');
+        if (sessionUser) return JSON.parse(sessionUser);
+      } catch (error) {
+        console.error('解析用户信息失败:', error);
+      }
+      return null;
+    };
+
+    const getWalletInfoKey = () => {
+      const user = getCurrentUser();
+      return user ? `walletInfo_${user.id}` : 'walletInfo_guest';
+    };
+
+    const getWalletTransactionsKey = () => {
+      const user = getCurrentUser();
+      return user ? `walletTransactions_${user.id}` : 'walletTransactions_guest';
+    };
     const showAddressSection = ref(false);
     const unreadMessageCount = ref(0);
     const uploading = ref(false);
@@ -467,17 +512,85 @@ export default {
     const myfavorite = () => {
       router.push({ path: '/favorites' });
     };
-    const navigateTo = (page) => {
+    const navigateTo = async (page) => {
       const pageRoutes = {
+        'wallet': '/wallet',
         'notifications': '/notifications'
       };
       if (pageRoutes[page]) {
-        router.push({ path: pageRoutes[page] });
+        if (page === 'wallet') {
+          // 检测钱包是否存在
+          await checkAndCreateWallet();
+        } else {
+          router.push({ path: pageRoutes[page] });
+        }
         if (page === 'notifications') {
           unreadMessageCount.value = 0;
         }
       } else {
         toast.warning('功能待开发');
+      }
+    };
+
+    const addTransactionRecord = (record) => {
+      try {
+        const transactions = JSON.parse(localStorage.getItem(getWalletTransactionsKey()) || '[]');
+        const transaction = {
+          id: Date.now(),
+          transactionTime: new Date().toISOString(),
+          ...record
+        };
+        transactions.unshift(transaction);
+        localStorage.setItem(getWalletTransactionsKey(), JSON.stringify(transactions));
+      } catch (error) {
+        console.error('保存交易记录失败:', error);
+      }
+    };
+
+    // 检测并创建钱包（后端优先；本地模拟保留为注释）
+    const checkAndCreateWallet = async () => {
+      try {
+        // 前端模拟备用：
+        // const savedWalletInfo = localStorage.getItem(getWalletInfoKey());
+        // if (savedWalletInfo) { router.push({ path: '/wallet' }); return; }
+
+        const response = await request.get('/api/wallet/message');
+        if (response && response.success) {
+          router.push({ path: '/wallet' });
+        } else {
+          showWalletActivateModal.value = true;
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          showWalletActivateModal.value = true;
+        } else {
+          console.error('检查钱包失败:', error);
+          toast.error('检查钱包状态失败');
+        }
+      }
+    };
+
+    // 激活钱包（后端；本地模拟保留为注释）
+    const activateWallet = async () => {
+      try {
+        // 前端模拟备用：
+        // await new Promise(r => setTimeout(r, 400));
+        // const newWalletInfo = { balance: 0, isVip: false, overdraftLimit: 0, usedOverdraft: 0 };
+        // localStorage.setItem(getWalletInfoKey(), JSON.stringify(newWalletInfo));
+        // addTransactionRecord({ transactionType: 'create', amount: 0, reason: '钱包开通成功' });
+        // toast.success('钱包开通成功'); showWalletActivateModal.value = false; router.push({ path: '/wallet' }); return;
+
+        const response = await request.get('/api/wallet/open');
+        if (response && response.success) {
+          toast.success('钱包开通成功');
+          showWalletActivateModal.value = false;
+          router.push({ path: '/wallet' });
+        } else {
+          toast.error('钱包开通失败：' + (response.message || '未知错误'));
+        }
+      } catch (error) {
+        console.error('激活钱包失败:', error);
+        toast.error('钱包开通失败，请重试');
       }
     };
     return {
@@ -502,7 +615,9 @@ export default {
       showAddressSection,
       triggerFileInput,
       handleFileUpload,
-      unreadMessageCount
+      unreadMessageCount,
+      showWalletActivateModal,
+      activateWallet
     };
   },
 };
