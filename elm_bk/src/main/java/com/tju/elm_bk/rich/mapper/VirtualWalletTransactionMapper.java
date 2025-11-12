@@ -64,8 +64,8 @@ public interface VirtualWalletTransactionMapper {
     TransactionRecordDetailVO queryTransactionByOrder(Long orderId);
 
     @Insert("""
-        insert into virtual_wallet_transaction (type, status, amount, from_account, to_account, fee, fee_rate) 
-        values (#{type}, #{status}, #{amount}, #{fromAccount}, #{toAccount}, #{fee}, #{feeRate})
+        insert into virtual_wallet_transaction (type, status, amount, from_account, to_account, fee, fee_rate,order_id) 
+        values (#{type}, #{status}, #{amount}, #{fromAccount}, #{toAccount}, #{fee}, #{feeRate},#{orderId})
     """)
     void createTransaction(VirtualWalletTransaction transaction);
 

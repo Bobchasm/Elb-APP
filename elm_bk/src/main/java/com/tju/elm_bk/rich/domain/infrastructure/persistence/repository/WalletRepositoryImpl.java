@@ -30,7 +30,7 @@ public class WalletRepositoryImpl implements WalletRepository {
 
     @Override
     public void modifyWallet(Wallet wallet) {
-        virtualWalletMapper.updateWallet(wallet.getId(),walletAssembler.toPO(wallet));
+        virtualWalletMapper.updateWallet(walletAssembler.toPO(wallet));
     }
 
     @Override

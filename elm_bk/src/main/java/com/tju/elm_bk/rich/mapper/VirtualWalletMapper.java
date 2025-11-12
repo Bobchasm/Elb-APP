@@ -27,6 +27,6 @@ public interface VirtualWalletMapper {
     @Select("select * from virtual_wallet where user_id = #{userId} and is_deleted = 0")
     VirtualWallet getWalletById(Long userId);
 
-    @Update("update virtual_wallet_vip_rule set status = #{status}, vip_level = #{vipLevel}, balance = #{balance}, overdraft_amount = #{overdraftAmount}, overdrawn_amount = #{overdrawnAmount} where id = #{walletId}")
-    void updateWallet(Long walletId,VirtualWallet wallet);
+    @Update("update virtual_wallet set status = #{status}, vip_level = #{vipLevel}, balance = #{balance}, overdraft_amount = #{overdraftAmount}, overdrawn_amount = #{overdrawnAmount} where id = #{id}")
+    void updateWallet(VirtualWallet wallet);
 }

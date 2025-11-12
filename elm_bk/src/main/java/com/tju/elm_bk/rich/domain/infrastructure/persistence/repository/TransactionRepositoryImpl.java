@@ -44,7 +44,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
     @Override
     public void payOrder(Transaction transaction,Long orderId) {
-        VirtualWalletTransaction virtualWalletTransaction = transactionAssembler.toPO(transaction);
+        VirtualWalletTransaction virtualWalletTransaction = transactionAssembler.toPO(transaction,null);
         virtualWalletTransaction.setOrderId(orderId);
         virtualWalletTransactionMapper.createTransaction(virtualWalletTransaction);
     }
@@ -55,8 +55,8 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     }
 
     @Override
-    public void createTransaction(Transaction transaction) {
-        VirtualWalletTransaction virtualWalletTransaction = transactionAssembler.toPO(transaction);
+    public void createTransaction(Transaction transaction,Float feeRate) {
+        VirtualWalletTransaction virtualWalletTransaction = transactionAssembler.toPO(transaction,feeRate);
         virtualWalletTransactionMapper.createTransaction(virtualWalletTransaction);
     }
 

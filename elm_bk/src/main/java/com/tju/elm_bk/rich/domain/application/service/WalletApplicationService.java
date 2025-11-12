@@ -93,7 +93,7 @@ public class WalletApplicationService {
         if (null == order) {
             throw new APIException(ResultCodeEnum.ORDER_MISSED);
         }
-        Business business = businessMapper.selectBusinessById(order.getId());
+        Business business = businessMapper.selectBusinessById(order.getBusinessId());
         if (null == business) {
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
@@ -133,13 +133,14 @@ public class WalletApplicationService {
         if (null == wallet) {
             throw new APIException(ResultCodeEnum.VIRTUAL_WALLET_MISSED);
         }
-        wallet.collection(amount);
-        walletRepository.modifyWallet(wallet);
 
         BigDecimal fee = amount.multiply(BigDecimal.valueOf(RECHARGE_RATE));
 
+        wallet.collection(amount.add(fee));
+        walletRepository.modifyWallet(wallet);
+
         Transaction transaction = new Transaction(TransactionType.RECHARGE,amount.add(fee),0L,wallet.getId(),fee,0);
-        transactionRepository.createTransaction(transaction);
+        transactionRepository.createTransaction(transaction,RECHARGE_RATE);
 
         return true;
     }
@@ -154,14 +155,14 @@ public class WalletApplicationService {
 
         BigDecimal fee = amount.multiply(BigDecimal.valueOf(WITHDRAWAL_RATE));
 
-        if (wallet.getBalance().canAfford(amount.add(fee))) {
-            throw new APIException(ResultCodeEnum.BALANCE_LIMIT.getMessage() + "余额：" + wallet.getBalance());
+        if (!wallet.getBalance().canAfford(amount.add(fee))) {
+            throw new APIException(ResultCodeEnum.BALANCE_LIMIT.getMessage());
         }
 
         wallet.pay(amount.add(fee));
         walletRepository.modifyWallet(wallet);
         Transaction transaction = new Transaction(TransactionType.WITHDRAWAL,amount.add(fee),wallet.getId(),0L,fee,0);
-        transactionRepository.createTransaction(transaction);
+        transactionRepository.createTransaction(transaction,WITHDRAWAL_RATE);
 
         return true;
     }
@@ -191,16 +192,15 @@ public class WalletApplicationService {
         Wallet wallet = walletRepository.findByUserId(user.getId());
         VipInfo vip = vipInfoRepository.findByLevel(toVipLevel);
 
-        if (wallet.compareVipLevel(vip)) {
+        if (!wallet.compareVipLevel(vip)) {
             throw new APIException("您已经拥有该项vip的权益");
         }
 
-        Transaction transaction = new Transaction(TransactionType.PAYMENT,vip.getCost(),wallet.getId(),0L,BigDecimal.ZERO,0);
         setVipInfo(wallet,vip);
 
         wallet.upgrade(vip.getOverdraftLimit());
         walletRepository.modifyWallet(wallet);
-        transactionRepository.createTransaction(transaction);
+
         return true;
     }
 

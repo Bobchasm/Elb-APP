@@ -22,7 +22,8 @@ public class WalletAssembler {
         po.setId(wallet.getId());
         po.setUserId(wallet.getUserId());
         po.setBalance(wallet.getBalance().getAmount());
-        po.setOverdraftAmount(wallet.getOverdrawnAmount());
+        po.setOverdraftAmount(wallet.getOverdraftLimit().getAmount());  // 透支限制，注意这里领域对象和数据库对象透支限制和已透支混乱了
+        po.setOverdrawnAmount(wallet.getOverdrawnAmount());
         po.setStatus(wallet.getStatus().getCode());
         po.setVipLevel(wallet.getVipInfo().getLevel());
         po.setCreateTime(wallet.getCreateTime());
@@ -40,7 +41,7 @@ public class WalletAssembler {
         setId(wallet, po.getId());
         setField(wallet, "balance", new Balance(po.getBalance()));
         setField(wallet, "overdraftLimit", new OverdraftLimit(po.getOverdraftAmount() != null ? po.getOverdraftAmount() : BigDecimal.ZERO));
-        setField(wallet, "overdrawnAmount", po.getOverdraftAmount() != null ? po.getOverdraftAmount() : BigDecimal.ZERO);
+        setField(wallet, "overdrawnAmount", po.getOverdrawnAmount() != null ? po.getOverdrawnAmount() : BigDecimal.ZERO);
         setField(wallet, "status", WalletStatus.fromCode(po.getStatus()));
         setField(wallet, "vipInfo", new VipInfo(po.getVipLevel(),BigDecimal.ZERO,BigDecimal.ZERO));
         setField(wallet, "createTime", po.getCreateTime());

@@ -34,6 +34,25 @@ public class Transaction {
         this.status = status;
     }
 
+    public Transaction(TransactionType type, BigDecimal amount,
+                       Long fromWalletId, Long toWalletId, BigDecimal fee, Integer status,LocalDateTime createTime) {
+
+        if (type == null) {
+            throw new IllegalArgumentException("交易类型不能为空");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("交易金额必须大于0");
+        }
+
+        this.type = type;
+        this.amount = amount.setScale(2, BigDecimal.ROUND_HALF_UP);
+        this.fromWalletId = fromWalletId;
+        this.toWalletId = toWalletId;
+        this.fee = fee;
+        this.status = status;
+        this.createTime = createTime;
+    }
+
     public Long getId() { return id; }
     public TransactionType getType() { return type; }
     public BigDecimal getAmount() { return amount; }
@@ -44,5 +63,7 @@ public class Transaction {
         return fee;
     }
 
-
+    public Integer getStatus() {
+        return status;
+    }
 }

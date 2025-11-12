@@ -13,13 +13,13 @@ public class Wallet {
     private final Long userId;
 
     private Balance balance;
-    private OverdraftLimit overdraftLimit;
+    private OverdraftLimit overdraftLimit; // 透支限制
     private BigDecimal overdrawnAmount; // 已透支金额
 
     private WalletStatus status;
     private VipInfo vipInfo;
 
-    private final LocalDateTime createTime;
+    private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
     public Wallet(Long userId) {
@@ -72,9 +72,6 @@ public class Wallet {
         if (overdraftPayment.compareTo(BigDecimal.ZERO) > 0) {
             overdrawnAmount = overdrawnAmount.add(overdraftPayment);
         }
-
-        balance = balance.subtract(balancePayment);
-        overdrawnAmount = overdrawnAmount.add(overdraftPayment);
 
         return overdraftPayment;
     }

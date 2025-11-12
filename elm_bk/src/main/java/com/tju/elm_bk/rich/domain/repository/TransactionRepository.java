@@ -20,7 +20,7 @@ public interface TransactionRepository {
 
     void thawTransaction(Long transactionId, Integer status);
 
-    void createTransaction(Transaction transaction);
+    void createTransaction(Transaction transaction,Float feeRate);
 
 
 

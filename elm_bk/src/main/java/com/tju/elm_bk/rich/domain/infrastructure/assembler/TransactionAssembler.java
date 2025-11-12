@@ -18,7 +18,7 @@ public class TransactionAssembler {
     /**
      * Transaction领域对象 → VirtualWalletTransaction持久化对象
      */
-    public VirtualWalletTransaction toPO(Transaction transaction) {
+    public VirtualWalletTransaction toPO(Transaction transaction,Float feeRate) {
         if (transaction == null) return null;
 
         VirtualWalletTransaction po = new VirtualWalletTransaction();
@@ -27,6 +27,8 @@ public class TransactionAssembler {
         po.setFromAccount(transaction.getFromWalletId());
         po.setToAccount(transaction.getToWalletId());
         po.setFee(transaction.getFee());
+        po.setStatus(transaction.getStatus());
+        po.setFeeRate(feeRate);
 
         return po;
     }
@@ -43,10 +45,10 @@ public class TransactionAssembler {
                 po.getFromAccount(),
                 po.getToAccount(),
                 po.getFee(),
-                po.getStatus()
+                po.getStatus(),
+                po.getCreateTime()
         );
         setId(transaction, po.getId());
-        setField(transaction, "createTime", po.getCreateTime());
         return transaction;
     }
 
