@@ -11,6 +11,11 @@ import com.tju.elm_bk.pojo.vo.CartItemVO;
 import com.tju.elm_bk.pojo.vo.OrderItemDetailVO;
 import com.tju.elm_bk.pojo.vo.OrderItemVO;
 import com.tju.elm_bk.pojo.vo.OrderVO;
+import com.tju.elm_bk.rich.domain.model.Transaction;
+import com.tju.elm_bk.rich.domain.model.Wallet;
+import com.tju.elm_bk.rich.domain.model.enums.TransactionType;
+import com.tju.elm_bk.rich.domain.repository.TransactionRepository;
+import com.tju.elm_bk.rich.domain.repository.WalletRepository;
 import com.tju.elm_bk.websocket.WebSocketServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +44,11 @@ public class OrderServiceImpl implements OrderService {
     private DeliveryAddressMapper deliveryAddressMapper;
     @Autowired
     private WebSocketServer webSocketServer;
+
+    @Autowired
+    private WalletRepository walletRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     // 订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
@@ -172,6 +182,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public Long setOrderState(Long orderId, Integer orderState) {
         if (!orderStatusList.contains(orderState)) {
             throw new APIException(ResultCodeEnum.ORDER_STATUS_UNMATCHED);
@@ -199,6 +210,17 @@ public class OrderServiceImpl implements OrderService {
             if (order.getOrderState() != 2 || (!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId))) {
                 throw new APIException(ResultCodeEnum.ORDER_ACCEPT_FAILED);
             }
+
+            if (order.getPaymentMethod() == 2) {
+                // 商家用户钱包
+                Wallet wallet = walletRepository.findByUserId(business.getUserId());
+                // 订单交易
+                Transaction transaction = transactionRepository.getTransactionByOrder(orderId);
+                // 交易金额解冻
+                transactionRepository.thawTransaction(transaction.getId(), 0);
+                wallet.collection(transaction.getAmount());
+                walletRepository.modifyWallet(wallet);
+            }
         }
         if (orderState == 4) {
             if (order.getOrderState() != 0 && order.getOrderState() != 1) {
@@ -206,6 +228,23 @@ public class OrderServiceImpl implements OrderService {
             }
             if ((!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId))) {
                 throw new APIException(ResultCodeEnum.ORDER_CANCEL_FAILED);
+            }
+
+            if (order.getPaymentMethod() == 2) {
+                Wallet my_wallet = walletRepository.findByUserId(userId);
+                Wallet bu_wallet = walletRepository.findByUserId(business.getUserId());
+
+                // 该订单支付交易永久冻结标记
+                Transaction transaction = transactionRepository.getTransactionByOrder(orderId);
+                transactionRepository.thawTransaction(transaction.getId(), 3);
+
+                // 退款交易
+                Transaction back_transaction = new Transaction(TransactionType.REFUND, transaction.getAmount(), bu_wallet.getId(), my_wallet.getId(), BigDecimal.ZERO, 0);
+                transactionRepository.payOrder(back_transaction, orderId);
+
+                // 钱包退款到账
+                my_wallet.collection(order.getOrderTotal());
+                walletRepository.modifyWallet(my_wallet);
             }
         }
         ordersMapper.setOrderState(orderId, orderState);

@@ -82,6 +82,9 @@ public interface OrdersMapper {
     @Update("update orders set order_state = #{orderState} where id = #{orderId}")
     Integer setOrderState(Long orderId, Integer orderState);
 
+    @Update("update orders set payment_method = #{method} where id = #{orderId}")
+    Integer setOrderPaymentMethod(Long orderId, Integer method);
+
     @Select("select * from orders where id = #{orderId}")
     Order getOrderById(Long orderId);
 

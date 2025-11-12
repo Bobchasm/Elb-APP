@@ -11,6 +11,7 @@ public enum ResultCodeEnum {
 
     COMMON_ERROR("COMMON_ERROR","通用返回失败"),
 
+    KEY_MISSED("KEY_MISSED","配置键不存在"),
     CLIENT_ABORT("CLIENT_ABORT","异常中止"),
     PARAM_NOT_MATCHED_GET("PARAM_NOT_MATCHED_GET","GET参数有误"),
     PARAM_NOT_MATCHED_POST("PARAM_NOT_MATCHED_POST","POST参数有误"),
@@ -46,6 +47,12 @@ public enum ResultCodeEnum {
     BUSINESS_MISSED("BUSINESS_MISSED","商家不存在"),
     UNAUTHORIZED("UNAUTHORIZED","无权限"),
     USER_UNMATCHED("USER_UNMATCHED","无法查看其他用户信息"),
+
+
+    VIRTUAL_WALLET_MISSED("VIRTUAL_WALLET_MISSED","您还未开通钱包"),
+    VIRTUAL_WALLET_OPENED("VIRTUAL_WALLET_MISSED","您的钱包已开通"),
+    TOUSER_VIRTUAL_WALLET_MISSED("TOUSER_VIRTUAL_WALLET_MISSED","收款方还未开通钱包，请尝试其他支付方式"),
+    BALANCE_LIMIT("BALANCE_LIMIT","钱包余额不足"),
 
     /*** 这里可以根据不同模块用不同的区级分开错误码，例如:  ***/
 

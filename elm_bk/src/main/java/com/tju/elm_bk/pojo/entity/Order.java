@@ -56,6 +56,9 @@ public class Order {
     @Schema(description = "订单配送费")
     private BigDecimal deliveryPrice;
 
+    @Schema(description = "支付方式 0-微信支付 1-支付宝支付 2-虚拟钱包支付")
+    private Integer paymentMethod;
+
 //    // 关联字段
 //    @Schema(description = "下单客户")
 //    private User customer;

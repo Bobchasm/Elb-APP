@@ -19,7 +19,9 @@ mybatis:
     #开启驼峰命名
     map-underscore-to-camel-case: true
   # 指定XML映射文件位置
-  mapper-locations: classpath:com/tju/elm_bk/mapper/*.xml
+  mapper-locations:
+    - classpath*:com/tju/elm_bk/mapper/*.xml
+    - classpath*:com/tju/elm_bk/wallet/mapper/*.xml
 
 
 jwt:
