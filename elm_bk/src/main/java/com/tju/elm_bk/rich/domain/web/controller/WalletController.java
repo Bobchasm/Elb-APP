@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -40,7 +41,10 @@ public class WalletController {
 
     @GetMapping("/transaction/list")
     @Operation(summary = "获取用户钱包明细列表")
-    public HttpResult<List<TransactionRecordVO>> transactionList(Integer type, Integer status, LocalDate startDate, LocalDate endDate) {
+    public HttpResult<List<TransactionRecordVO>> transactionList(@RequestParam(required = false) Integer type,
+                                                                 @RequestParam(required = false) Integer status,
+                                                                 @RequestParam(required = false) LocalDate startDate,
+                                                                 @RequestParam(required = false) LocalDate endDate) {
         return HttpResult.success(walletApplicationService.transactionRecord(type,status,startDate,endDate));
     }
 

@@ -30,8 +30,8 @@ public interface VirtualWalletTransactionMapper {
                 <if test="status!=null">
                     and vmt.status = #{status}
                 </if>
-                <if test="startTime!=null and endTime!=null">
-                    and vmt.create_time &gt;= #{startTime} and vmt.create_time &lt;= #{endTime}
+                <if test="startDate!=null and endDate!=null">
+                    and vmt.create_time &gt;= #{startDate} and vmt.create_time &lt;= #{endDate}
                 </if>
             </where>
         </script>
