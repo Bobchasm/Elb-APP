@@ -155,11 +155,12 @@ public class WalletApplicationService {
 
         BigDecimal fee = amount.multiply(BigDecimal.valueOf(WITHDRAWAL_RATE));
 
-        if (!wallet.getBalance().canAfford(amount.add(fee))) {
-            throw new APIException(ResultCodeEnum.BALANCE_LIMIT.getMessage());
-        }
+//        if (!wallet.getBalance().canAfford(amount.add(fee))) {
+//            throw new APIException(ResultCodeEnum.BALANCE_LIMIT.getMessage());
+//        }
 
-        wallet.pay(amount.add(fee));
+//        wallet.pay(amount.add(fee));
+        wallet.pay(amount);
         walletRepository.modifyWallet(wallet);
         Transaction transaction = new Transaction(TransactionType.WITHDRAWAL,amount.add(fee),wallet.getId(),0L,fee,0);
         transactionRepository.createTransaction(transaction,WITHDRAWAL_RATE);
