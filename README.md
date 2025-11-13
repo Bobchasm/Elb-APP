@@ -62,57 +62,47 @@ MySQL版本信息：
 
 ##### 部署运行
 
-- 如果仅在本地测试后端接口
-  
-  检查完版本(重点检查jdk)并修改数据库配置信息后，在idea中启动项目后端部分:
-  
-  ```
-  frontend-comprehension/elm_bk
-  ```
+1.打包
 
-- 如果需要部署
-  
-  1.打包
-  
-  若使用IDEA打包项目，先 clean，再 package，成功控制台如图![Alt](./gra/success_package.png)
-  
-  若使用命令行打包：
-  
-  在 /frontend-comprehension/elm_bk 中打开cmd，执行：
-  
-  ```bash
-  mvn clean package
-  ```
-  
-  成功如下图：
-  
-  ![Alt](./gra/success_cmd_package.png)
-  
-  生成的项目jar包路径在:
-  
-  ```
-  frontend-comprehension/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
-  ```
-  
-  2.命令行在jar包存放的目录中执行:
-  
-  ```bash
-  java -jar elm_bk-0.0.1-SNAPSHOT.jar
-  ```
-  
-  如果出现报错 "error='页面文件太小，无法完成操作。' (DOS error/errno=1455)" 请重新执行以下命令:
-  
-  ```bash
-  java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.1-SNAPSHOT.jar
-  ```
-  
-  注：该命令进行了内存配置
-  
-  后端配置端口为 8080，请注意端口占用
-  
-  3.当终端出现以下界面，则启动成功：
-  
-  ![Alt](./gra/success_bk_start.png)
+若使用IDEA打包项目，先 clean，再 package，成功控制台如图![Alt](./gra/success_package.png)
+
+若使用命令行打包：
+
+在 /frontend-comprehension/elm_bk 中打开cmd，执行：
+
+```bash
+mvn clean package
+```
+
+成功如下图：
+
+![Alt](./gra/success_cmd_package.png)
+
+生成的项目jar包路径在:
+
+```
+frontend-comprehension/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
+```
+
+2.命令行在jar包存放的目录中执行:
+
+```bash
+java -jar elm_bk-0.0.1-SNAPSHOT.jar
+```
+
+如果出现报错 "error='页面文件太小，无法完成操作。' (DOS error/errno=1455)" 请重新执行以下命令:
+
+```bash
+java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.1-SNAPSHOT.jar
+```
+
+注：该命令进行了内存配置
+
+后端配置端口为 8080，请注意端口占用
+
+3.当终端出现以下界面，则启动成功：
+
+![Alt](./gra/success_bk_start.png)
 
 如使用IDEA在启动或打包项目时遇到控制台报错如 "找不到符号"，请确保以下位置选择正确
 
@@ -249,7 +239,7 @@ MySQL版本信息：
 
 以下将说明对于老师需要测试的接口我们的设计，具体设计在什么情况下响应为 *false* 或验证点
 
-### POST /api/users - 新增用户(仅登录账号)
+(1) POST /api/users - 新增用户(仅登录账号)
 
 - 请求头中未携带有效的认证token，或token已过期、签名无效
 
@@ -263,14 +253,14 @@ MySQL版本信息：
 
 - 用户保存成功后查询用户详情时返回null
 
-### GET /api/user - 获取当前登录用户
+(2) GET /api/user - 获取当前登录用户
 
 - 请求头中未携带有效的认证token，或token已过期、签名无效
 - 当前用户已被删除（is_deleted=true）
 - 当前用户已被禁用（activated=false）
 - 从SecurityContextHolder中获取用户信息失败
 
-### POST /api/password - 修改密码
+(3) POST /api/password - 修改密码
 
 - 请求头中未携带有效的认证token，或token已过期、签名无效
 
@@ -280,7 +270,7 @@ MySQL版本信息：
 
 - 请求中指定的目标用户名不存在
 
-### POST /api/persons - 新增自然人用户
+(4) POST /api/persons - 新增自然人用户
 
 - 请求头中未携带有效的认证token，或token已过期、签名无效
 
@@ -296,7 +286,7 @@ MySQL版本信息：
 
 - 用户创建成功但自然人信息插入失败导致数据不一致
 
-### POST /api/register - 顾客注册接口
+(5) POST /api/register - 顾客注册接口
 
 - 注册时用户名已被其他用户占用
 - 用户名长度不在**1-100**个字符之间
@@ -305,7 +295,7 @@ MySQL版本信息：
 - 数据库authority表中USER角色被意外删除或禁用
 - 事务处理过程中出现回滚情况
 
-### POST /api/auth - 身份认证获取令牌
+(6) POST /api/auth - 身份认证获取令牌
 
 - 用户名或密码为null
 - 用户名长度不在**1-100**个字符之间
@@ -315,7 +305,7 @@ MySQL版本信息：
 - 用户账户被标记为已删除（is_deleted=true）
 - 令牌生成过程中出现加密异常
 
-### POST /api/addresses - 新增地址
+(7) POST /api/addresses - 新增地址
 
 - 请求头中未携带有效的认证token，或token已过期、签名无效
 - 联系人电话不符合手机号格式
@@ -324,7 +314,7 @@ MySQL版本信息：
 - 目标关联用户在数据库中不存在
 - 普通用户尝试为其他用户创建地址（非管理员权限）
 
-### GET /api/businesses/{id} - 根据ID获取店铺详情
+(8) GET /api/businesses/{id} - 根据ID获取店铺详情
 
 - 传入的id 为空或≤ 0，抛异常
 
@@ -332,7 +322,7 @@ MySQL版本信息：
 
 - 考虑到现实生活场景，未设置权限验证
 
-### PUT&PATCH /api/businesses/{id} - 更新某店铺信息
+(9) PUT&PATCH /api/businesses/{id} - 更新某店铺信息
 
 - 传入的id 为空或≤ 0，抛异常
 
@@ -348,7 +338,7 @@ MySQL版本信息：
 
 - 如果传入的BusinessOwner的username字段为空，抛异常（根据教师的apifox文档说明设置的）
 
-### DELETE /api/businesses/{id} - 删除某商家
+(10) DELETE /api/businesses/{id} - 删除某商家
 
 - 传入的id 为空或≤ 0，抛异常
 
@@ -358,11 +348,11 @@ MySQL版本信息：
 
 - 如果数据库执行的结果返回0，抛商铺不存在
 
-### GET /api/businesses - 获取所有商铺列表
+(11) GET /api/businesses - 获取所有商铺列表
 
 考虑到现实生活场景，未设置权限验证
 
-### POST /api/businesses - 新增商铺
+(12) POST /api/businesses - 新增商铺
 
 - 如果当前用户不在users表里面，抛用户不存在
 
@@ -370,11 +360,11 @@ MySQL版本信息：
 
 - 是商家：传入的username对应的user_id与currentUser的user_id是否一致
 
-### GET /api/foods 获取某商家或某订单的商品列表
+(13) GET /api/foods 获取某商家或某订单的商品列表
 
 考虑到现实生活场景，未设置特别验证
 
-### PATCH /api/foods/{id} 修改商品的信息
+(14) PATCH /api/foods/{id} 修改商品的信息
 
 - 管理员可以修改所有的商品信息
 
@@ -382,7 +372,7 @@ MySQL版本信息：
 
 - 若传入的id不存在对应食品，抛异常
 
-### POST /api/foods - 添加商品
+(15) POST /api/foods - 添加商品
 
 - 管理员可以为指定商铺添加
 
@@ -392,22 +382,22 @@ MySQL版本信息：
 
 - 价格不能为负
 
-### GET /api/foods/{id} - 返回查询到的一条商品记录
+(16) GET /api/foods/{id} - 返回查询到的一条商品记录
 
 考虑到现实生活场景，未设置特别验证
 
-### POST /api/carts - 向用户购物车添加商品
+(17) POST /api/carts - 向用户购物车添加商品
 
 - 不能向别的用户的购物车添加商品
 
-### GET /api/orders - 获取某用户的订单列表
+(18) GET /api/orders - 获取某用户的订单列表
 
 - 非管理员不能查看别的用户的订单
 
-### POST /api/orders - 创建订单
+(19) POST /api/orders - 创建订单
 
 - 不能为别的用户创建订单
 
-### GET /api/orders/{id} - 根据id获取指定订单信息
+(10) GET /api/orders/{id} - 根据id获取指定订单信息
 
 - 不能查看不是自己下的订单，商家用户不能查看非本商家的订单
