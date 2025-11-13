@@ -8,10 +8,12 @@ import com.tju.elm_bk.pojo.entity.Business;
 import com.tju.elm_bk.pojo.entity.Order;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.rich.domain.infrastructure.assembler.LoanAssembler;
 import com.tju.elm_bk.rich.domain.model.Loan;
 import com.tju.elm_bk.rich.domain.model.VipInfo;
 import com.tju.elm_bk.rich.domain.repository.LoanRepository;
 import com.tju.elm_bk.rich.domain.repository.VipInfoRepository;
+import com.tju.elm_bk.rich.domain.web.vo.LoanVO;
 import com.tju.elm_bk.rich.domain.web.vo.PreviewVO;
 import com.tju.elm_bk.rich.entity.VirtualWalletLoan;
 import com.tju.elm_bk.utils.SecurityUtils;
@@ -22,6 +24,7 @@ import com.tju.elm_bk.rich.domain.repository.TransactionRepository;
 import com.tju.elm_bk.rich.domain.repository.WalletRepository;
 import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordDetailVO;
 import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +55,9 @@ public class WalletApplicationService {
 
     public final static float RECHARGE_RATE = 0.01f;
     public final static float WITHDRAWAL_RATE = 0.05f;
+    @Autowired
+    private LoanAssembler loanAssembler;
+
 
     public List<TransactionRecordVO> transactionRecord(Integer type, Integer status, LocalDate startDate, LocalDate endDate) {
         User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
@@ -229,7 +235,7 @@ public class WalletApplicationService {
         return loanRepository.getWalletLoanList(wallet.getId());
     }
 
-    public Boolean repayLoan(Long id) {
+    public Boolean repayLoan(Long id,Integer option) {
         User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
         Wallet wallet = walletRepository.findByUserId(user.getId());
         Loan loan = loanRepository.getWalletLoan(id);
@@ -237,11 +243,27 @@ public class WalletApplicationService {
             throw new APIException("操作失败");
         }
 
+        if (option == 1) {
+            if (!wallet.getBalance().canAfford(loan.getLoanAmount())) {
+                throw new APIException(ResultCodeEnum.BALANCE_LIMIT);
+            }
+            Transaction transaction = new Transaction(TransactionType.PAYMENT,loan.getLoanAmount(),wallet.getId(),0L,loan.countInterest(),0);
+            transactionRepository.createTransaction(transaction,loan.getLoanInterestRate());
+        }
+
         loanRepository.repay(id);
-        wallet.repay(loan.getLoanAmount());
+        wallet.repay(loan.getLoanAmount(),option);
         walletRepository.modifyWallet(wallet);
 
         return true;
     }
 
+    public LoanVO getWalletLoanById(Long loanId) {
+        Loan loan = loanRepository.getWalletLoan(loanId);
+        VirtualWalletLoan po = loanAssembler.toPO(loan);
+        LoanVO loanVO = new LoanVO();
+        BeanUtils.copyProperties(po,loanVO);
+        loanVO.setLoanAmount(loan.countInterest());
+        return loanVO;
+    }
 }

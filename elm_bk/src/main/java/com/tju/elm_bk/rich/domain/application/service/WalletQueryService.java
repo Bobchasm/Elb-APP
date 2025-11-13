@@ -6,7 +6,9 @@ import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.pojo.entity.SystemConfig;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.rich.domain.model.Loan;
 import com.tju.elm_bk.rich.domain.model.Wallet;
+import com.tju.elm_bk.rich.domain.web.vo.LoanVO;
 import com.tju.elm_bk.rich.entity.VirtualWallet;
 import com.tju.elm_bk.rich.entity.VirtualWalletLoan;
 import com.tju.elm_bk.rich.mapper.VirtualWalletLoanMapper;
@@ -16,6 +18,7 @@ import com.tju.elm_bk.rich.domain.web.vo.WalletVO;
 import com.tju.elm_bk.rich.domain.web.vo.WalletVipVO;
 import com.tju.elm_bk.rich.mapper.VirtualWalletMapper;
 import com.tju.elm_bk.rich.mapper.VirtualWalletTransactionMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +34,7 @@ public class WalletQueryService {
     private VirtualWalletMapper virtualWalletMapper;
     @Autowired
     private VirtualWalletVipRuleMapper virtualWalletVipRuleMapper;
+    private VirtualWalletLoanMapper virtualWalletLoanMapper;
 
     public String walletRule() {
 

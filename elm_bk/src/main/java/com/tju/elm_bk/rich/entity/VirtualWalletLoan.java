@@ -24,5 +24,6 @@ public class VirtualWalletLoan {
     private LocalDateTime repayTime;
     @Schema(description = "金额")
     private BigDecimal loanAmount;
-
+    @Schema(description = "月利息")
+    private Float rate;
 }

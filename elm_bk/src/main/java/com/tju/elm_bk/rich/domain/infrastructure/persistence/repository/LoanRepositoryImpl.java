@@ -1,10 +1,13 @@
 package com.tju.elm_bk.rich.domain.infrastructure.persistence.repository;
 
+import com.tju.elm_bk.rich.domain.infrastructure.assembler.LoanAssembler;
 import com.tju.elm_bk.rich.domain.model.Loan;
 import com.tju.elm_bk.rich.domain.repository.LoanRepository;
+import com.tju.elm_bk.rich.domain.web.vo.LoanVO;
 import com.tju.elm_bk.rich.entity.VirtualWallet;
 import com.tju.elm_bk.rich.entity.VirtualWalletLoan;
 import com.tju.elm_bk.rich.mapper.VirtualWalletLoanMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +20,8 @@ public class LoanRepositoryImpl implements LoanRepository {
 
     @Autowired
     private VirtualWalletLoanMapper virtualWalletLoanMapper;
+    @Autowired
+    private LoanAssembler loanAssembler;
 
     @Override
     public void load(Long walletId, BigDecimal amount) {
@@ -36,6 +41,6 @@ public class LoanRepositoryImpl implements LoanRepository {
     @Override
     public Loan getWalletLoan(Long id) {
         VirtualWalletLoan virtualWalletLoan = virtualWalletLoanMapper.getLoan(id);
-        return new Loan(virtualWalletLoan.getWalletId(),virtualWalletLoan.getLoanAmount());
+        return loanAssembler.toDomain(virtualWalletLoan);
     }
 }

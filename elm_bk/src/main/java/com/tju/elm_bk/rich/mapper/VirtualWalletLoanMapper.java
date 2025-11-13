@@ -1,5 +1,6 @@
 package com.tju.elm_bk.rich.mapper;
 
+import com.tju.elm_bk.rich.domain.web.vo.LoanVO;
 import com.tju.elm_bk.rich.entity.VirtualWalletLoan;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;

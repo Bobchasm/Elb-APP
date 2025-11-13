@@ -81,8 +81,11 @@ public class Wallet {
         balance = balance.add(amount);
     }
 
-    public void repay(BigDecimal amount) {
+    public void repay(BigDecimal amount,Integer option) {
         overdrawnAmount = overdrawnAmount.subtract(amount);
+        if (option == 1) {
+            balance = balance.subtract(amount);
+        }
     }
 
 

@@ -103,15 +103,21 @@ public class WalletController {
     }
 
     @GetMapping("/loan/repay")
-    @Operation(summary = "还贷款")
-    public HttpResult<Boolean> repayLoan(Long id) {
-        return HttpResult.success(walletApplicationService.repayLoan(id));
+    @Operation(summary = "还贷款",description = "option 0-第三方支付 1-钱包")
+    public HttpResult<Boolean> repayLoan(Long id,Integer option) {
+        return HttpResult.success(walletApplicationService.repayLoan(id,option));
     }
 
     @GetMapping("/loan/list")
     @Operation(summary = "查看钱包贷款",description = "LocalDateTime不为null就是还了的")
     public HttpResult<List<VirtualWalletLoan>> listLoan() {
         return HttpResult.success(walletApplicationService.getWalletLoanList());
+    }
+
+    @GetMapping("/loan/detail")
+    @Operation(summary = "查看钱包某项贷款")
+    public HttpResult<LoanVO> preLoan(Long loanId) {
+        return HttpResult.success(walletApplicationService.getWalletLoanById(loanId));
     }
 
 }
