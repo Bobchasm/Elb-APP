@@ -420,14 +420,12 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 3. 提交代码并编写测试
 4. 提交Pull Request
 
----
-
 ### 4.3 联系方式
 
 如有问题或建议，请通过以下方式联系：
 
 - **邮箱**：<br>
-tel: 17850362981 <br>
+Tel: 17850362981 <br>
 zengyicydd@tju.edu.cn <br>
 gaocan@tju.edu.cn <br>
 yxy641121@gmail.com <br>
