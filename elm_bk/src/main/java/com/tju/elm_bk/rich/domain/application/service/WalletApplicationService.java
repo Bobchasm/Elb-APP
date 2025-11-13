@@ -263,7 +263,7 @@ public class WalletApplicationService {
         VirtualWalletLoan po = loanAssembler.toPO(loan);
         LoanVO loanVO = new LoanVO();
         BeanUtils.copyProperties(po,loanVO);
-        loanVO.setLoanAmount(loan.countInterest());
+        loanVO.setInterestAmount(loan.countInterest());
         return loanVO;
     }
 }

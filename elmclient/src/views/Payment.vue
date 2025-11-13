@@ -74,7 +74,7 @@
 						<div class="payment-option" :class="{ active: selectedPayment === 'wallet' }"
 							@click="selectPayment('wallet')">
 							<div class="wallet-icon">
-								<i class="fa fa-wallet"></i>
+								<i class="fa fa-wallet"></i>&nbsp;&nbsp;
 								<span>虚拟钱包</span>
 							</div>
 							<i class="fa fa-check-circle"></i>
@@ -125,6 +125,48 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- 余额不足透支确认对话框 -->
+	<div v-if="showOverdraftConfirmModal" class="modal-overlay" @click.self="showOverdraftConfirmModal = false">
+		<div class="modal-content overdraft-modal">
+			<div class="modal-header">
+				<h3>余额不足提示</h3>
+				<i class="fa fa-times close-btn" @click="showOverdraftConfirmModal = false"></i>
+			</div>
+			<div class="modal-body">
+				<div class="overdraft-info">
+					<i class="fa fa-exclamation-triangle warning-icon"></i>
+					<p class="overdraft-tip">钱包余额不足，可能需要透支</p>
+					<div class="balance-details">
+						<div class="balance-item">
+							<span class="label">当前余额：</span>
+							<span class="value">&#165;{{ walletInfo?.balance?.toFixed(2) || '0.00' }}</span>
+						</div>
+						<div class="balance-item">
+							<span class="label">订单金额：</span>
+							<span class="value amount">&#165;{{ orderDetail?.orderTotal?.toFixed(2) || '0.00' }}</span>
+						</div>
+						<div class="balance-item">
+							<span class="label">透支额度：</span>
+							<span class="value">&#165;{{ walletInfo?.overdraftLimit?.toFixed(2) || '0.00' }}</span>
+						</div>
+						<div class="balance-item">
+							<span class="label">已透支：</span>
+							<span class="value">&#165;{{ walletInfo?.overdrawnAmount?.toFixed(2) || '0.00' }}</span>
+						</div>
+					</div>
+					<p class="overdraft-desc">继续支付将使用透支功能，可能会产生额外费用</p>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="cancel-btn" @click="cancelOverdraftPayment">取消支付</button>
+				<button class="confirm-btn" @click="confirmOverdraftPayment" :disabled="paying">
+					<span v-if="paying">支付中...</span>
+					<span v-else>确认支付</span>
+				</button>
+			</div>
+		</div>
+	</div>
 </template>
   
 <script>
@@ -152,6 +194,8 @@ export default {
 		const showWalletCreateModal = ref(false);
 		const creatingWallet = ref(false);
 		const walletExists = ref(false);
+		const showOverdraftConfirmModal = ref(false);
+		const walletInfo = ref(null);
 
 		// 获取订单详情
 		const fetchOrderDetails = async () => {
@@ -188,21 +232,40 @@ export default {
 				// 适配新的响应格式
 				if (response && response.success && response.data) {
 					walletExists.value = true;
+					walletInfo.value = response.data; // 保存钱包信息
 					return true;
 				}
 				
 				// 检查是否是钱包不存在的错误
 				if (response && response.code === 'VIRTUAL_WALLET_MISSED') {
 					walletExists.value = false;
+					walletInfo.value = null;
 					return false;
 				}
 				
 				walletExists.value = false;
+				walletInfo.value = null;
 				return false;
 			} catch (error) {
 				console.error('检查钱包失败:', error);
 				walletExists.value = false;
+				walletInfo.value = null;
 				return false;
+			}
+		};
+
+		// 获取钱包余额信息
+		const fetchWalletBalance = async () => {
+			try {
+				const response = await request.get("/api/wallet/message");
+				if (response && response.success) {
+					walletInfo.value = response.data;
+					return response.data;
+				}
+				return null;
+			} catch (error) {
+				console.error('获取钱包余额失败:', error);
+				return null;
 			}
 		};
 
@@ -217,6 +280,8 @@ export default {
 					walletExists.value = true;
 					showWalletCreateModal.value = false;
 					toast.success('钱包开通成功');
+					// 开通后重新获取钱包信息
+					await fetchWalletBalance();
 				} else {
 					toast.error("钱包开通失败：" + (response?.message || '未知错误'));
 				}
@@ -251,12 +316,57 @@ export default {
 			}
 		};
 
+		// 检查余额是否足够
+		const checkBalanceSufficient = () => {
+			if (!walletInfo.value || !orderDetail.value) {
+				return false;
+			}
+			const balance = walletInfo.value.balance || 0;
+			const orderTotal = orderDetail.value.orderTotal || 0;
+			return balance >= orderTotal;
+		};
+
+		// 处理钱包支付前的余额检查
+		const handleWalletPayment = async () => {
+			// 先获取最新的钱包信息
+			const walletData = await fetchWalletBalance();
+			if (!walletData) {
+				toast.error("获取钱包信息失败");
+				return;
+			}
+
+			// 检查余额是否足够
+			if (checkBalanceSufficient()) {
+				// 余额足够，直接支付
+				await performWalletPayment();
+			} else {
+				// 余额不足，显示透支确认对话框
+				showOverdraftConfirmModal.value = true;
+			}
+		};
+
+		// 确认透支支付
+		const confirmOverdraftPayment = async () => {
+			showOverdraftConfirmModal.value = false;
+			await performWalletPayment();
+		};
+
+		// 取消透支支付
+		const cancelOverdraftPayment = () => {
+			showOverdraftConfirmModal.value = false;
+			paying.value = false;
+			toast.info("已取消支付");
+		};
+
 		// 支付处理
 		const handlePayment = async () => {
 			if (selectedPayment.value === 'wallet') {
 				const exists = await checkWalletExists();
-				if (!exists) { showWalletCreateModal.value = true; return; }
-				await performWalletPayment();
+				if (!exists) { 
+					showWalletCreateModal.value = true; 
+					return; 
+				}
+				await handleWalletPayment();
 			} else {
 				// 原有的第三方支付逻辑
 				try {
@@ -308,6 +418,10 @@ export default {
 			showWalletCreateModal,
 			creatingWallet,
 			handleCreateWallet,
+			showOverdraftConfirmModal,
+			walletInfo,
+			confirmOverdraftPayment,
+			cancelOverdraftPayment,
 		};
 	}
 }
@@ -448,8 +562,9 @@ export default {
 
 .payment-options {
 	display: flex;
-	gap: 3vw;
+	gap: 10vw;
 	margin-top: 4vw;
+	display: inline-block;
 }
 
 .payment-option {
@@ -463,6 +578,7 @@ export default {
 	cursor: pointer;
 	transition: all 0.3s ease;
 	background: #f9f9f9;
+	width: 80vw;
 }
 
 .payment-option img {
@@ -659,6 +775,138 @@ export default {
 }
 
 .wallet-modal .confirm-btn:disabled {
+	background: #ccc;
+	cursor: not-allowed;
+}
+
+/* 透支确认对话框样式 */
+.overdraft-modal {
+	background: white;
+	border-radius: 4vw;
+	width: 85%;
+	max-width: 500px;
+}
+
+.overdraft-modal .modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 4vw;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.overdraft-modal .modal-header h3 {
+	font-size: 4.5vw;
+	margin: 0;
+	color: #333;
+}
+
+.overdraft-modal .close-btn {
+	font-size: 5vw;
+	color: #999;
+	cursor: pointer;
+}
+
+.overdraft-modal .modal-body {
+	padding: 4vw;
+}
+
+.overdraft-info {
+	text-align: center;
+}
+
+.warning-icon {
+	font-size: 10vw;
+	color: #faad14;
+	margin-bottom: 3vw;
+}
+
+.overdraft-tip {
+	font-size: 4.2vw;
+	color: #333;
+	font-weight: 500;
+	margin-bottom: 4vw;
+}
+
+.balance-details {
+	background: #f8f9fa;
+	border-radius: 2vw;
+	padding: 3vw;
+	margin-bottom: 3vw;
+}
+
+.balance-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 2vw 0;
+	font-size: 3.6vw;
+	color: #666;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.balance-item:last-child {
+	border-bottom: none;
+}
+
+.balance-item .label {
+	color: #999;
+}
+
+.balance-item .value {
+	color: #333;
+	font-weight: 500;
+}
+
+.balance-item .value.amount {
+	color: #ff4d4f;
+	font-weight: bold;
+}
+
+.overdraft-desc {
+	font-size: 3.4vw;
+	color: #faad14;
+	line-height: 1.6;
+	text-align: center;
+}
+
+.overdraft-modal .modal-footer {
+	display: flex;
+	gap: 3vw;
+	padding: 4vw;
+	border-top: 1px solid #f0f0f0;
+}
+
+.overdraft-modal .modal-footer button {
+	flex: 1;
+	padding: 3.5vw;
+	border: none;
+	border-radius: 2vw;
+	font-size: 4vw;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.3s;
+}
+
+.overdraft-modal .cancel-btn {
+	background: #f5f5f5;
+	color: #666;
+}
+
+.overdraft-modal .cancel-btn:active {
+	background: #e0e0e0;
+}
+
+.overdraft-modal .confirm-btn {
+	background: #ff4d4f;
+	color: white;
+}
+
+.overdraft-modal .confirm-btn:active {
+	background: #d9363e;
+}
+
+.overdraft-modal .confirm-btn:disabled {
 	background: #ccc;
 	cursor: not-allowed;
 }

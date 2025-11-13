@@ -191,10 +191,10 @@
         <div v-if="transactions.length === 0" class="empty-state">
           <i class="fas fa-inbox"></i>
           <p>暂无交易记录</p>
-          <button class="retry-btn" @click="fetchTransactions">
+          <!-- <button class="retry-btn" @click="fetchTransactions">
             <i class="fas fa-redo"></i>
             重新加载
-          </button>
+          </button> -->
         </div>
       </div>
     </div>
@@ -739,6 +739,7 @@ export default {
 
 .transactions-list {
   padding: 0 4vw;
+  padding-bottom: 20vw; 
 }
 
 .transaction-item {

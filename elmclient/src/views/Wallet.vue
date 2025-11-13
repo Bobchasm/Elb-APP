@@ -51,7 +51,7 @@
       <div v-if="walletInfo.isVip && walletInfo.overdraftLimit > 0" class="overdraft-card">
         <div class="overdraft-header">
           <span class="overdraft-label">可透支额度</span>
-          <span class="vip-badge">VIP</span>
+          <span class="vip-badge">{{walletInfo.vipName}}</span>
         </div>
         <div class="overdraft-info">
           <!-- <div class="overdraft-item">

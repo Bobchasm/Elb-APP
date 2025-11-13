@@ -16,5 +16,5 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class LoanVO extends VirtualWalletLoan {
     @Schema(description = "当前利息")
-    private BigDecimal loanAmount;
+    private BigDecimal interestAmount;
 }
