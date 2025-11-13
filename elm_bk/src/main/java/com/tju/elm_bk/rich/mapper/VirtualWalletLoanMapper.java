@@ -14,8 +14,8 @@ import java.util.List;
 @Mapper
 public interface VirtualWalletLoanMapper {
 
-    @Insert("insert into virtual_wallet_loan (wallet_id,loan_amount) values (#{walletId},#{amount})")
-    void load(Long walletId, BigDecimal amount);
+    @Insert("insert into virtual_wallet_loan (wallet_id,loan_amount,rate) values (#{walletId},#{amount},#{rate})")
+    void load(Long walletId, BigDecimal amount,Float rate);
 
     @Update("update virtual_wallet_loan set repay_time = #{time} where id = #{id}")
     void repay(Long id, LocalDateTime time);

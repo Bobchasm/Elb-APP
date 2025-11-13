@@ -24,8 +24,8 @@ public class LoanRepositoryImpl implements LoanRepository {
     private LoanAssembler loanAssembler;
 
     @Override
-    public void load(Long walletId, BigDecimal amount) {
-        virtualWalletLoanMapper.load(walletId,amount);
+    public void load(Long walletId, BigDecimal amount,Float rate) {
+        virtualWalletLoanMapper.load(walletId,amount,rate);
     }
 
     @Override

@@ -55,6 +55,8 @@ public class WalletApplicationService {
 
     public final static float RECHARGE_RATE = 0.01f;
     public final static float WITHDRAWAL_RATE = 0.05f;
+    public final static float LOAD_RATE = 0.02f;
+
     @Autowired
     private LoanAssembler loanAssembler;
 
@@ -116,9 +118,9 @@ public class WalletApplicationService {
         BigDecimal loadAmount = fromWallet.pay(order.getOrderTotal());
         walletRepository.modifyWallet(fromWallet);
 
-        // 是否需要贷款，办理退款
+        // 是否需要贷款，办理贷款
         if (!loadAmount.equals(BigDecimal.ZERO)) {
-            loanRepository.load(fromWallet.getId(),loadAmount);
+            loanRepository.load(fromWallet.getId(),loadAmount,LOAD_RATE);
         }
 
         // 交易，此时商家账户还未进账，金额暂留在交易中
