@@ -104,11 +104,58 @@
             <label>充值金额</label>
             <input type="number" v-model.number="rechargeAmount" placeholder="请输入充值金额" min="0.01" step="0.01" />
           </div>
+
+          <!-- 支付方式选择 -->
+          <div class="payment-methods">
+            <div class="method-title">选择支付方式</div>
+            <div class="payment-options">
+              <!-- 微信支付 -->
+              <div 
+                class="payment-option" 
+                :class="{ active: rechargePaymentMethod === 'wechat' }"
+                @click="rechargePaymentMethod = 'wechat'"
+              >
+                <div class="option-content">
+                  <i class="fab fa-weixin" style="color: #09BB07;"></i>
+                  <div class="option-info">
+                    <div class="option-name">微信支付</div>
+                    <div class="option-desc">使用微信进行支付</div>
+                  </div>
+                </div>
+                <i class="fas fa-check-circle check-icon"></i>
+              </div>
+              
+              <!-- 支付宝支付 -->
+              <div 
+                class="payment-option" 
+                :class="{ active: rechargePaymentMethod === 'alipay' }"
+                @click="rechargePaymentMethod = 'alipay'"
+              >
+                <div class="option-content">
+                  <i class="fab fa-alipay" style="color: #1677FF;"></i>
+                  <div class="option-info">
+                    <div class="option-name">支付宝支付</div>
+                    <div class="option-desc">使用支付宝进行支付</div>
+                  </div>
+                </div>
+                <i class="fas fa-check-circle check-icon"></i>
+              </div>
+            </div>
+          </div>
+
           <div class="preview-info" v-if="rechargeAmount && rechargeAmount > 0">
             <div class="info-section-title">充值预览</div>
             <div class="info-item">
               <span class="info-label">充值金额：</span>
               <span class="info-value">¥{{ (rechargeAmount || 0).toFixed(2) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">支付方式：</span>
+              <span class="info-value payment-method-display">
+                <i v-if="rechargePaymentMethod === 'wechat'" class="fab fa-weixin" style="color: #09BB07;"></i>
+                <i v-if="rechargePaymentMethod === 'alipay'" class="fab fa-alipay" style="color: #1677FF;"></i>
+                {{ rechargePaymentMethod === 'wechat' ? '微信支付' : '支付宝支付' }}
+              </span>
             </div>
             <div class="info-item" v-if="rechargePreview">
               <span class="info-label">奖励金额：</span>
@@ -154,11 +201,58 @@
             <label>提现金额</label>
             <input type="number" v-model.number="withdrawAmount" placeholder="请输入提现金额" min="0.01" step="0.01" />
           </div>
+
+          <!-- 提现方式选择 -->
+          <div class="payment-methods">
+            <div class="method-title">选择提现方式</div>
+            <div class="payment-options">
+              <!-- 提现到微信 -->
+              <div 
+                class="payment-option" 
+                :class="{ active: withdrawPaymentMethod === 'wechat' }"
+                @click="withdrawPaymentMethod = 'wechat'"
+              >
+                <div class="option-content">
+                  <i class="fab fa-weixin" style="color: #09BB07;"></i>
+                  <div class="option-info">
+                    <div class="option-name">提现到微信</div>
+                    <div class="option-desc">提现到微信钱包</div>
+                  </div>
+                </div>
+                <i class="fas fa-check-circle check-icon"></i>
+              </div>
+              
+              <!-- 提现到支付宝 -->
+              <div 
+                class="payment-option" 
+                :class="{ active: withdrawPaymentMethod === 'alipay' }"
+                @click="withdrawPaymentMethod = 'alipay'"
+              >
+                <div class="option-content">
+                  <i class="fab fa-alipay" style="color: #1677FF;"></i>
+                  <div class="option-info">
+                    <div class="option-name">提现到支付宝</div>
+                    <div class="option-desc">提现到支付宝账户</div>
+                  </div>
+                </div>
+                <i class="fas fa-check-circle check-icon"></i>
+              </div>
+            </div>
+          </div>
+
           <div class="preview-info" v-if="withdrawAmount && withdrawAmount > 0">
             <div class="info-section-title">提现预览</div>
             <div class="info-item">
               <span class="info-label">提现金额：</span>
               <span class="info-value">¥{{ (withdrawAmount || 0).toFixed(2) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">提现方式：</span>
+              <span class="info-value payment-method-display">
+                <i v-if="withdrawPaymentMethod === 'wechat'" class="fab fa-weixin" style="color: #09BB07;"></i>
+                <i v-if="withdrawPaymentMethod === 'alipay'" class="fab fa-alipay" style="color: #1677FF;"></i>
+                {{ withdrawPaymentMethod === 'wechat' ? '微信钱包' : '支付宝账户' }}
+              </span>
             </div>
             <div class="info-item" v-if="withdrawPreview">
               <span class="info-label">手续费：</span>
@@ -383,6 +477,8 @@ export default {
     const vipLevels = ref([]); // 从后端获取VIP等级数据
     const rechargePreview = ref(null); // 充值预览数据
     const withdrawPreview = ref(null); // 提现预览数据
+    const rechargePaymentMethod = ref('wechat'); // 充值支付方式：wechat/alipay，默认微信
+    const withdrawPaymentMethod = ref('wechat'); // 提现方式：wechat/alipay，默认微信
 
     // 获取钱包信息（后端优先；本地模拟仅注释保留）
     const fetchWalletInfo = async () => {
@@ -625,14 +721,16 @@ const fetchVipRules = async () => {
       }
       
       try {
-        console.log('发起充值请求:', rechargeAmount.value);
+        const paymentMethodName = rechargePaymentMethod.value === 'wechat' ? '微信支付' : '支付宝支付';
+        console.log('发起充值请求:', rechargeAmount.value, '支付方式:', paymentMethodName);
+        
         const response = await request.get('/api/wallet/recharge', {
           params: { amount: rechargeAmount.value }
         });
         console.log('充值接口响应:', response);
         
         if (response && response.success) {
-          toast.success('充值成功');
+          toast.success(`充值成功！已通过${paymentMethodName}充值`);
           showRechargeModal.value = false;
           rechargeAmount.value = null;
           await fetchWalletInfo();
@@ -656,12 +754,15 @@ const fetchVipRules = async () => {
       }
       
       try {
+        const withdrawMethodName = withdrawPaymentMethod.value === 'wechat' ? '微信钱包' : '支付宝账户';
+        console.log('发起提现请求:', withdrawAmount.value, '提现方式:', withdrawMethodName);
+        
         const response = await request.get('/api/wallet/withdrawal', {
           params: { amount: withdrawAmount.value }
         });
         
         if (response && response.success) {
-          toast.success('提现成功');
+          toast.success(`提现成功！将提现至${withdrawMethodName}`);
           showWithdrawModal.value = false;
           withdrawAmount.value = null;
           await fetchWalletInfo();
@@ -782,7 +883,9 @@ const fetchVipRules = async () => {
       confirmVipPayment,
       cancelVipPayment,
       rechargePreview,
-      withdrawPreview
+      withdrawPreview,
+      rechargePaymentMethod,
+      withdrawPaymentMethod
     };
   }
 };
@@ -1608,6 +1711,17 @@ const fetchVipRules = async () => {
 
 .payment-notice .insufficient {
   color: #ff4d4f;
+}
+
+/* 支付方式显示样式 */
+.payment-method-display {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+}
+
+.payment-method-display i {
+  font-size: 4vw;
 }
 
 /* 预览信息样式 */
