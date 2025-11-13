@@ -401,3 +401,37 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 (10) GET /api/orders/{id} - 根据id获取指定订单信息
 
 - 不能查看不是自己下的订单，商家用户不能查看非本商家的订单
+
+## 4 一些说明
+
+欢迎贡献代码、报告问题或提出建议！
+
+### 4.1 提交问题
+
+- 描述问题现象
+- 提供复现步骤
+- 附上错误日志
+- 说明环境信息
+
+### 4.2 提交代码
+
+1. Fork本仓库
+2. 创建功能分支
+3. 提交代码并编写测试
+4. 提交Pull Request
+
+---
+
+### 4.3 联系方式
+
+如有问题或建议，请通过以下方式联系：
+
+- **邮箱**：<br>
+tel: 17850362981 <br>
+zengyicydd@tju.edu.cn <br>
+gaocan@tju.edu.cn <br>
+yxy641121@gmail.com <br>
+daimingjing142857@tju.edu.cn <br>
+jsyy@tju.edu.cn
+
+- **Gitee Issues**：提交问题到项目仓库
