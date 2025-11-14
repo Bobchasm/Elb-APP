@@ -8,13 +8,21 @@
 
 ## 2 项目部署
 
-注：
+**本项目已部署至小组的服务器上** 
 
-1.如需验收整个项目(即前后端完整效果)，请使用我们提供的sql建库并在配置文件中使用它，以下会详细说明
+- 如果想直接查看效果请访问：[http://REDACTED_IP:8081/](http://REDACTED_IP:8081/)
 
-2.以下部署说明主要针对win系统，Linux系统部署方法命令行操作类似
+- 后端部分接口前缀：[http://REDACTED_IP:8080](http://REDACTED_IP:8080) 
 
-可参考 [从0开始在linux服务器上部署SpringBoot和Vue_vue项目linux部署-CSDN博客](https://blog.csdn.net/m0_53140426/article/details/144745031?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522061248a22aceb1ff2288a8b50a813a59%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=061248a22aceb1ff2288a8b50a813a59&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-2-144745031-null-null.142^v102^pc_search_result_base7&utm_term=Linux%E9%83%A8%E7%BD%B2spingboot%E5%92%8Cvue&spm=1018.2226.3001.4187)
+- 接口文档路径：[http://REDACTED_IP:8080/swagger-ui/index.html](http://REDACTED_IP:8080/swagger-ui/index.html)
+
+**若自己部署请注意：**
+
+1. 如需验收整个项目(即前后端完整效果)，请使用我们提供的sql建库并在配置文件中使用它，以下会详细说明
+
+2. 以下部署说明主要针对win系统，Linux系统部署方法命令行操作类似
+   
+   可参考 [从0开始在linux服务器上部署SpringBoot和Vue_vue项目linux部署-CSDN博客](https://blog.csdn.net/m0_53140426/article/details/144745031?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522061248a22aceb1ff2288a8b50a813a59%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=061248a22aceb1ff2288a8b50a813a59&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-2-144745031-null-null.142^v102^pc_search_result_base7&utm_term=Linux%E9%83%A8%E7%BD%B2spingboot%E5%92%8Cvue&spm=1018.2226.3001.4187)
 
 #### 2.1 后端部分
 
@@ -425,11 +433,11 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 如有问题或建议，请通过以下方式联系：
 
 - **邮箱**：<br>
-Tel: 17850362981 <br>
-zengyicydd@tju.edu.cn <br>
-gaocan@tju.edu.cn <br>
-yxy641121@gmail.com <br>
-daimingjing142857@tju.edu.cn <br>
-jsyy@tju.edu.cn
+  Tel: 17850362981 <br>
+  zengyicydd@tju.edu.cn <br>
+  gaocan@tju.edu.cn <br>
+  yxy641121@gmail.com <br>
+  daimingjing142857@tju.edu.cn <br>
+  jsyy@tju.edu.cn
 
 - **Gitee Issues**：提交问题到项目仓库
