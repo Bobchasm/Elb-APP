@@ -406,7 +406,7 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 
 - 不能为别的用户创建订单
 
-(10) GET /api/orders/{id} - 根据id获取指定订单信息
+(20) GET /api/orders/{id} - 根据id获取指定订单信息
 
 - 不能查看不是自己下的订单，商家用户不能查看非本商家的订单
 
