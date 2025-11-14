@@ -36,3 +36,5 @@ build/
 ### Project ###
 # 镜像包
 elm_backend_1.0.tar
+
+logs/
