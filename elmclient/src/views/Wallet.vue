@@ -163,7 +163,7 @@
             </div>
             <div class="info-item" v-if="rechargePreview">
               <span class="info-label">奖励率：</span>
-              <span class="highlight">{{ ((rechargePreview.fee_rate || 0) * 100).toFixed(2) }}%</span>
+              <span class="highlight">{{ ((rechargePreview.feeRate || 0) * 100).toFixed(2) }}%</span>
             </div>
             <div class="info-item total" v-if="rechargePreview">
               <span class="info-label">实际到账：</span>
@@ -260,7 +260,7 @@
             </div>
             <div class="info-item" v-if="withdrawPreview">
               <span class="info-label">手续费率：</span>
-              <span class="highlight">{{ ((withdrawPreview.feeate || 0) * 100).toFixed(2) }}%</span>
+              <span class="highlight">{{ ((withdrawPreview.feeRate || 0) * 100).toFixed(2) }}%</span>
             </div>
             <div class="info-item total" v-if="withdrawPreview">
               <span class="info-label">实际到账：</span>
@@ -702,7 +702,7 @@ const fetchVipRules = async () => {
             amount: response.data.amount,
             fee: response.data.fee,
             total: response.data.total,
-            feeRate: response.data.fee_rate,
+            feeRate: response.data.feeRate,
             isOver: response.data.isOver || false
           };
         }
