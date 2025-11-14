@@ -418,7 +418,7 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 
 **前端开发技术实践**
 
-- 2025-06-16 前端开发技术实践最终版
+- 2025-06-15 前端开发技术实践最终版
 
   855118c99b6b834de79cd181daa44fb3a8da8745
 
