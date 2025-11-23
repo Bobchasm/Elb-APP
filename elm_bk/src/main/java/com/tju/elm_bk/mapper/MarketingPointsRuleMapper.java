@@ -88,13 +88,16 @@ public interface MarketingPointsRuleMapper {
     MarketingPointsRule selectLevelRule(Integer memberLevel);
     
     /**
-     * 查询适用的行为积分规则
+     * 查询适用的行为积分规则（根据会员等级）
+     * 优先匹配精确的会员等级，如果没有则匹配通用规则（member_level IS NULL）
      */
     @Select("SELECT * FROM marketing_points_rule WHERE rule_type = 3 AND rule_status = 1 " +
             "AND is_deleted = 0 AND behavior_type = #{behaviorType} " +
+            "AND (member_level = #{memberLevel} OR member_level IS NULL) " +
             "AND (start_time IS NULL OR start_time <= NOW()) " +
             "AND (end_time IS NULL OR end_time >= NOW()) " +
-            "ORDER BY priority DESC LIMIT 1")
-    MarketingPointsRule selectBehaviorRule(String behaviorType);
+            "ORDER BY CASE WHEN member_level = #{memberLevel} THEN 0 ELSE 1 END, priority DESC LIMIT 1")
+    MarketingPointsRule selectBehaviorRule(@Param("behaviorType") String behaviorType, 
+                                          @Param("memberLevel") Integer memberLevel);
 }
 

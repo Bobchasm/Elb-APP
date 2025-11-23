@@ -24,6 +24,9 @@ import com.tju.elm_bk.rich.domain.repository.TransactionRepository;
 import com.tju.elm_bk.rich.domain.repository.WalletRepository;
 import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordDetailVO;
 import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordVO;
+import com.tju.elm_bk.service.PointsService;
+import com.tju.elm_bk.service.MarketingPointsRuleService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @Transactional
 public class WalletApplicationService {
@@ -51,6 +55,10 @@ public class WalletApplicationService {
     private VipInfoRepository vipInfoRepository;
     @Autowired
     private LoanRepository loanRepository;
+    @Autowired
+    private PointsService pointsService;
+    @Autowired
+    private MarketingPointsRuleService marketingPointsRuleService;
 
 
     public final static float RECHARGE_RATE = 0.01f;
@@ -217,6 +225,18 @@ public class WalletApplicationService {
 
         wallet.upgrade(vip.getOverdraftLimit());
         walletRepository.modifyWallet(wallet);
+        
+        // 会员升级，增加等级积分并更新积分账户的会员等级
+        try {
+            // 使用 vip.getLevel() 获取会员等级（这是数据库表中的 id）
+            Integer memberLevel = vip.getLevel();
+            if (memberLevel != null && memberLevel >= 1 && memberLevel <= 3) {
+                pointsService.upgradeMemberLevel(user.getId(), memberLevel);
+            }
+        } catch (Exception e) {
+            // 积分处理失败不影响会员升级，记录日志
+            System.err.println("会员升级积分处理失败: userId=" + user.getId() + ", vipLevel=" + toVipLevel + ", error=" + e.getMessage());
+        }
 
         return true;
     }
@@ -256,6 +276,15 @@ public class WalletApplicationService {
         loanRepository.repay(id);
         wallet.repay(loan.getLoanAmount(),option);
         walletRepository.modifyWallet(wallet);
+        
+        // 还贷款行为积分奖励
+        try {
+            marketingPointsRuleService.calculateBehaviorPoints(user.getId(), "repay_loan");
+            log.info("用户{}还贷款，获得行为积分", user.getId());
+        } catch (Exception e) {
+            // 积分处理失败不影响还贷款，记录日志
+            log.error("还贷款行为积分处理失败: userId={}, error={}", user.getId(), e.getMessage());
+        }
 
         return true;
     }

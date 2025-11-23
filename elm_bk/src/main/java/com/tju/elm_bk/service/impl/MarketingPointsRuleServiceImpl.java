@@ -269,8 +269,13 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
     @Override
     @Transactional
     public Long calculateBehaviorPoints(Long userId, String behaviorType) {
-        // 查询行为积分规则
-        MarketingPointsRule behaviorRule = marketingPointsRuleMapper.selectBehaviorRule(behaviorType);
+        // 查询用户会员等级
+        PointsAccount pointsAccount = pointsAccountMapper.selectByUserId(userId);
+        Integer memberLevel = (pointsAccount != null && pointsAccount.getMemberLevel() != null) 
+            ? pointsAccount.getMemberLevel() : 0; // 默认为普通会员（0）
+        
+        // 根据会员等级查询行为积分规则
+        MarketingPointsRule behaviorRule = marketingPointsRuleMapper.selectBehaviorRule(behaviorType, memberLevel);
         if (behaviorRule == null || behaviorRule.getPointsAmount() == null) {
             return 0L;
         }
@@ -286,9 +291,9 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         addDTO.setDescription(getBehaviorDescription(behaviorType));
 
         // 计算过期时间（所有积分都必须有有效期）
-        // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（365天）
+        // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
         Integer expireDays = (behaviorRule.getExpireDays() != null) 
-            ? behaviorRule.getExpireDays() : 365; // 默认365天有效期
+            ? behaviorRule.getExpireDays() : 30; // 默认30天有效期
         addDTO.setExpireTime(LocalDateTime.now().plusDays(expireDays));
 
         pointsService.addPoints(addDTO);

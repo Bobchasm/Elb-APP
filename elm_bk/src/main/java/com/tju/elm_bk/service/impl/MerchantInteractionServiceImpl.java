@@ -6,6 +6,7 @@ import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.mapper.MerchantInteractionMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.service.MerchantInteractionService;
+import com.tju.elm_bk.service.MarketingPointsRuleService;
 import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
 import com.tju.elm_bk.pojo.vo.BusinessVO;
 import com.tju.elm_bk.pojo.vo.MerchantInteractionVO;
@@ -34,6 +35,8 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
     private MerchantInteractionMapper interactionMapper;
     @Autowired
     private BusinessMapper businessMapper;
+    @Autowired
+    private MarketingPointsRuleService marketingPointsRuleService;
 
     @Override
     @Transactional
@@ -51,6 +54,10 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
             MerchantInteraction interaction = interactionMapper.selectByUserAndMerchant(
                     dto.getUserId(), dto.getMerchantId());
 
+            // 记录旧状态（用于判断是否是首次点赞/收藏）
+            Boolean oldLiked = null;
+            Boolean oldCollected = null;
+            
             if (interaction == null) {
                 // 创建新记录
                 interaction = new MerchantInteraction();
@@ -59,8 +66,15 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
                 interaction.setLiked(dto.getLiked() != null ? dto.getLiked() : false);
                 interaction.setCollected(dto.getCollected() != null ? dto.getCollected() : false);
                 interactionMapper.insert(interaction);
+                
+                // 新记录，旧状态都是 false
+                oldLiked = false;
+                oldCollected = false;
             } else {
-                // 更新现有记录
+                // 更新现有记录，记录旧状态
+                oldLiked = interaction.getLiked();
+                oldCollected = interaction.getCollected();
+                
                 if (dto.getLiked() != null) {
                     interaction.setLiked(dto.getLiked());
                 }
@@ -68,6 +82,27 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
                     interaction.setCollected(dto.getCollected());
                 }
                 interactionMapper.update(interaction);
+            }
+
+            // 行为积分奖励：只有当从 false 变为 true 时才奖励积分（首次点赞/收藏）
+            try {
+                // 判断是否是首次点赞（从 false 变为 true）
+                if (dto.getLiked() != null && dto.getLiked() && 
+                    (oldLiked == null || !oldLiked)) {
+                    marketingPointsRuleService.calculateBehaviorPoints(dto.getUserId(), "like");
+                    log.info("用户{}首次点赞商家{}，获得行为积分", dto.getUserId(), dto.getMerchantId());
+                }
+                
+                // 判断是否是首次收藏（从 false 变为 true）
+                if (dto.getCollected() != null && dto.getCollected() && 
+                    (oldCollected == null || !oldCollected)) {
+                    marketingPointsRuleService.calculateBehaviorPoints(dto.getUserId(), "collect");
+                    log.info("用户{}首次收藏商家{}，获得行为积分", dto.getUserId(), dto.getMerchantId());
+                }
+            } catch (Exception e) {
+                // 积分处理失败不影响互动状态更新，记录日志
+                log.error("行为积分处理失败: userId={}, merchantId={}, error={}", 
+                    dto.getUserId(), dto.getMerchantId(), e.getMessage());
             }
 
             log.info("用户{}对商家{}的互动状态更新成功", dto.getUserId(), dto.getMerchantId());

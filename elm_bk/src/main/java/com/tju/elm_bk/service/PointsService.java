@@ -77,5 +77,13 @@ public interface PointsService {
      * @return 是否成功
      */
     Boolean cancelRewardPoints(Long userId, Long orderId);
+    
+    /**
+     * 更新会员等级并增加等级积分
+     * @param userId 用户ID
+     * @param newMemberLevel 新会员等级（1-白银，2-黄金，3-钻石）
+     * @return 是否成功
+     */
+    Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel);
 }
 

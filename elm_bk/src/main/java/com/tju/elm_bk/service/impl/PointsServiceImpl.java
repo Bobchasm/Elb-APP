@@ -10,6 +10,7 @@ import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.Objects;
  * 2. 依赖注入 - 通过@Autowired注入Mapper
  * 3. 事务管理 - 使用@Transactional保证数据一致性
  */
+@Slf4j
 @Service
 public class PointsServiceImpl implements PointsService {
 
@@ -43,6 +45,9 @@ public class PointsServiceImpl implements PointsService {
 
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private MarketingPointsRuleMapper marketingPointsRuleMapper;
 
     /**
      * 增加积分
@@ -110,13 +115,12 @@ public class PointsServiceImpl implements PointsService {
         PointsTransaction transaction = new PointsTransaction();
         transaction.setUserId(pointsAddDTO.getUserId());
         transaction.setAccountId(account.getId());
+        transaction.setTransactionType(0); // 0-获得
         if (isOrderReward) {
             // 订单奖励积分：记录为获得类型，但积分是冻结的
-            transaction.setTransactionType(0); // 0-获得
             transaction.setDescription(pointsAddDTO.getDescription() + "（冻结中，订单完成后解冻）");
         } else {
             // 其他积分：正常获得
-            transaction.setTransactionType(0); // 0-获得
             transaction.setDescription(pointsAddDTO.getDescription());
         }
         transaction.setPointsSource(pointsAddDTO.getPointsSource());
@@ -543,6 +547,98 @@ public class PointsServiceImpl implements PointsService {
         Long currentUserId = userMapper.getUserIdByUsername(
                 SecurityUtils.getCurrentUsername().orElse(null));
         return currentUserId;
+    }
+    
+    /**
+     * 更新会员等级并增加等级积分
+     * 设计原则：
+     * 1. 单一职责原则 - 只负责积分账户的会员等级更新和积分增加
+     * 2. 事务管理 - 保证会员等级更新和积分增加的一致性
+     * 3. 依赖注入 - 从数据库查询等级积分规则，而不是硬编码
+     * 
+     * 积分奖励规则从 marketing_points_rule 表中查询（rule_type = 2，member_level = 目标等级）
+     */
+    @Override
+    @Transactional
+    public Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel) {
+        // 1. 参数校验
+        if (userId == null || newMemberLevel == null) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+        
+        if (newMemberLevel < 1 || newMemberLevel > 3) {
+            throw new APIException("PARAM_NOT_MATCHED", "会员等级必须在1-3之间");
+        }
+        
+        // 2. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            // 如果账户不存在，创建新账户
+            account = new PointsAccount();
+            account.setUserId(userId);
+            account.setTotalPoints(0L);
+            account.setAvailablePoints(0L);
+            account.setFrozenPoints(0L);
+            account.setMemberLevel(0); // 默认普通用户
+            account.setCreateTime(LocalDateTime.now());
+            account.setUpdateTime(LocalDateTime.now());
+            account.setIsDeleted(false);
+            Long currentUserId = getCurrentUserId();
+            account.setCreator(currentUserId);
+            account.setUpdater(currentUserId);
+            pointsAccountMapper.insert(account);
+        }
+        
+        // 3. 获取当前会员等级
+        Integer currentLevel = account.getMemberLevel() != null ? account.getMemberLevel() : 0;
+        
+        // 4. 检查是否可以升级
+        if (newMemberLevel <= currentLevel) {
+            throw new APIException("PARAM_NOT_MATCHED", "新会员等级必须大于当前等级");
+        }
+        
+        // 5. 从数据库查询等级积分规则（rule_type = 2，member_level = 目标等级）
+        MarketingPointsRule levelRule = marketingPointsRuleMapper.selectLevelRule(newMemberLevel);
+        
+        if (levelRule == null) {
+            log.warn("未找到会员等级 {} 的积分规则，跳过积分奖励", newMemberLevel);
+            // 如果没有配置规则，只更新会员等级，不增加积分
+        } else {
+            // 6. 获取积分数量和有效期
+            Long pointsToAdd = levelRule.getPointsAmount() != null ? levelRule.getPointsAmount() : 0L;
+            String levelName = getMemberLevelName(newMemberLevel);
+            
+            // 7. 增加等级积分（如果积分大于0）
+            if (pointsToAdd > 0) {
+                PointsAddDTO addDTO = new PointsAddDTO();
+                addDTO.setUserId(userId);
+                addDTO.setPoints(pointsToAdd);
+                addDTO.setPointsSource(2); // 2-等级积分
+                addDTO.setRelatedRuleId(levelRule.getId());
+                addDTO.setDescription("升级为" + levelName + "获得积分");
+                
+                // 计算过期时间
+                // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
+                Integer expireDays = (levelRule.getExpireDays() != null) 
+                    ? levelRule.getExpireDays() : 30; // 默认30天有效期
+                addDTO.setExpireTime(LocalDateTime.now().plusDays(expireDays));
+                
+                addPoints(addDTO);
+                
+                log.info("用户 {} 升级到会员等级 {}，获得 {} 积分", userId, newMemberLevel, pointsToAdd);
+            } else {
+                log.warn("会员等级 {} 的积分规则中 points_amount 为 0 或 NULL，不增加积分", newMemberLevel);
+            }
+        }
+        
+        // 8. 更新会员等级
+        account.setMemberLevel(newMemberLevel);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+        
+        return true;
     }
 }
 

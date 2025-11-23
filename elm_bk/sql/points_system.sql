@@ -90,7 +90,7 @@ CREATE TABLE `marketing_points_rule` (
   `rule_status` tinyint NOT NULL DEFAULT 1 COMMENT '规则状态 0-禁用 1-启用',
   `points_ratio` decimal(10, 4) NULL DEFAULT NULL COMMENT '积分比例（如0.1表示消费1元获得0.1积分）',
   `points_multiplier` decimal(10, 4) NULL DEFAULT NULL COMMENT '积分倍数（促销时使用，如2.0表示双倍积分）',
-  `member_level` tinyint NULL DEFAULT NULL COMMENT '适用会员等级（NULL表示所有等级）',
+  `member_level` tinyint NULL DEFAULT NULL COMMENT '适用会员等级（NULL表示所有等级）。对于等级积分(rule_type=2)，表示升级到的目标会员等级（1-白银 2-黄金 3-钻石）',
   `min_order_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '最低订单金额（促销积分使用）',
   `max_order_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '最高订单金额（促销积分使用）',
   `food_id` bigint NULL DEFAULT NULL COMMENT '指定商品ID（关联food表，促销积分使用）',
@@ -98,7 +98,7 @@ CREATE TABLE `marketing_points_rule` (
   `holiday_start` date NULL DEFAULT NULL COMMENT '节假日开始日期',
   `holiday_end` date NULL DEFAULT NULL COMMENT '节假日结束日期',
   `behavior_type` varchar(50) NULL DEFAULT NULL COMMENT '行为类型（like-点赞 collect-收藏 repay_loan-还贷款）',
-  `points_amount` bigint NULL DEFAULT NULL COMMENT '固定积分数量（行为积分使用）',
+  `points_amount` bigint NULL DEFAULT NULL COMMENT '固定积分数量（行为积分和等级积分使用。对于等级积分(rule_type=2)，表示升级到该会员等级获得的积分数量）',
   `expire_days` int NULL DEFAULT NULL COMMENT '积分有效期（天数，NULL表示永久有效）',
   `start_time` timestamp NULL DEFAULT NULL COMMENT '规则生效开始时间',
   `end_time` timestamp NULL DEFAULT NULL COMMENT '规则生效结束时间',
@@ -222,9 +222,74 @@ ADD COLUMN `points_amount` bigint NULL DEFAULT 0 COMMENT '获得积分数量' AF
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_ratio`, `priority`, `creator`, `updater`) 
 VALUES ('基础消费积分规则', 0, 1, 1.0000, 0, 1, 1);
 
--- 积分+现金兑换规则：10积分=1元
+-- 积分+现金兑换规则：100积分=1元
 INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `exchange_ratio`, `creator`, `updater`) 
-VALUES ('积分+现金兑换规则', 0, 1, 10.0000, 1, 1);
+VALUES ('积分+现金兑换规则', 0, 1, 100.0000, 1, 1);
+
+-- 等级积分规则：升级到不同会员等级获得的积分
+-- 升级到白银会员（1）：获得100积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('升级到白银会员积分规则', 2, 1, 1, 100, 30, 0, 1, 1);
+
+-- 升级到黄金会员（2）：获得200积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('升级到黄金会员积分规则', 2, 1, 2, 200, 30, 0, 1, 1);
+
+-- 升级到钻石会员（3）：获得300积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('升级到钻石会员积分规则', 2, 1, 3, 300, 30, 0, 1, 1);
+
+-- 行为积分规则：不同行为、不同会员等级获得的积分
+-- 点赞商家积分规则（按会员等级）
+-- 普通用户（0）：获得10积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('点赞商家积分规则-普通用户', 3, 1, 'like', 0, 10, 30, 0, 1, 1);
+
+-- 白银会员（1）：获得15积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('点赞商家积分规则-白银会员', 3, 1, 'like', 1, 15, 30, 0, 1, 1);
+
+-- 黄金会员（2）：获得20积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('点赞商家积分规则-黄金会员', 3, 1, 'like', 2, 20, 30, 0, 1, 1);
+
+-- 钻石会员（3）：获得30积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('点赞商家积分规则-钻石会员', 3, 1, 'like', 3, 30, 30, 0, 1, 1);
+
+-- 收藏商家积分规则（按会员等级）
+-- 普通用户（0）：获得20积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('收藏商家积分规则-普通用户', 3, 1, 'collect', 0, 20, 30, 0, 1, 1);
+
+-- 白银会员（1）：获得30积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('收藏商家积分规则-白银会员', 3, 1, 'collect', 1, 30, 30, 0, 1, 1);
+
+-- 黄金会员（2）：获得40积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('收藏商家积分规则-黄金会员', 3, 1, 'collect', 2, 40, 30, 0, 1, 1);
+
+-- 钻石会员（3）：获得60积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('收藏商家积分规则-钻石会员', 3, 1, 'collect', 3, 60, 30, 0, 1, 1);
+
+-- 还贷款积分规则（按会员等级）
+-- 普通用户（0）：获得50积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('还贷款积分规则-普通用户', 3, 1, 'repay_loan', 0, 50, 30, 0, 1, 1);
+
+-- 白银会员（1）：获得75积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('还贷款积分规则-白银会员', 3, 1, 'repay_loan', 1, 75, 30, 0, 1, 1);
+
+-- 黄金会员（2）：获得100积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('还贷款积分规则-黄金会员', 3, 1, 'repay_loan', 2, 100, 30, 0, 1, 1);
+
+-- 钻石会员（3）：获得150积分
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('还贷款积分规则-钻石会员', 3, 1, 'repay_loan', 3, 150, 30, 0, 1, 1);
 
 -- 默认预警配置：提前7天预警，每天预警一次
 INSERT INTO `points_expiration_alert_config` (`alert_days`, `alert_cycle`, `sms_template`, `is_enabled`) 
