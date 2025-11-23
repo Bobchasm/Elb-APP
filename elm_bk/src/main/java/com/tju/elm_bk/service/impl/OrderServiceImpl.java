@@ -1,13 +1,17 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.pojo.dto.OrderDTO;
+import com.tju.elm_bk.pojo.dto.OrderPaidMessage;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.*;
 import com.tju.elm_bk.pojo.entity.*;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.service.OrderMessageService;
 import com.tju.elm_bk.service.OrderService;
+import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.pojo.vo.CartItemVO;
+import com.tju.elm_bk.pojo.vo.OrderFoodVO;
 import com.tju.elm_bk.pojo.vo.OrderItemDetailVO;
 import com.tju.elm_bk.pojo.vo.OrderItemVO;
 import com.tju.elm_bk.pojo.vo.OrderVO;
@@ -24,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,6 +54,10 @@ public class OrderServiceImpl implements OrderService {
     private WalletRepository walletRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private OrderMessageService orderMessageService;
+    @Autowired
+    private PointsService pointsService;
 
     // 订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
@@ -200,6 +209,9 @@ public class OrderServiceImpl implements OrderService {
             if (order.getOrderState() != 0 || !Objects.equals(userId, order.getCustomerId())) {
                 throw new APIException(ResultCodeEnum.ORDER_PAY_FAILED);
             }
+            
+            // 订单支付完成，发送消息到RabbitMQ（异步通知营销系统）
+            sendOrderPaidMessage(orderId, order);
         }
         if (orderState == 2) {
             if (order.getOrderState() != 1 || !Objects.equals(business.getUserId(),userId)) {
@@ -220,6 +232,14 @@ public class OrderServiceImpl implements OrderService {
                 transactionRepository.thawTransaction(transaction.getId(), 0);
                 wallet.collection(transaction.getAmount());
                 walletRepository.modifyWallet(wallet);
+            }
+            
+            // 订单完成，解冻奖励积分（订单支付时已发放但冻结，现在解冻）
+            try {
+                pointsService.unfreezeRewardPoints(order.getCustomerId(), orderId);
+            } catch (Exception e) {
+                // 解冻失败不影响订单完成，记录日志
+                System.err.println("解冻奖励积分失败: orderId=" + orderId + ", error=" + e.getMessage());
             }
         }
         if (orderState == 4) {
@@ -246,6 +266,19 @@ public class OrderServiceImpl implements OrderService {
                 my_wallet.collection(order.getOrderTotal());
                 walletRepository.modifyWallet(my_wallet);
             }
+            
+            // 订单取消，取消奖励积分（如果已发放）和解冻用户支付的积分（如果使用了积分+现金）
+            try {
+                // 取消奖励积分（如果订单支付时已发放）
+                pointsService.cancelRewardPoints(order.getCustomerId(), orderId);
+                // 解冻用户支付的积分（如果使用了积分+现金支付）
+                if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
+                    pointsService.unfreezePoints(order.getCustomerId(), orderId);
+                }
+            } catch (Exception e) {
+                // 积分处理失败不影响订单取消，记录日志
+                System.err.println("处理积分失败: orderId=" + orderId + ", error=" + e.getMessage());
+            }
         }
         ordersMapper.setOrderState(orderId, orderState);
         // 订单状态更新后，推送消息给相关用户
@@ -265,6 +298,47 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return order.getId();
+    }
+    
+    /**
+     * 发送订单支付完成消息到RabbitMQ
+     * 设计原则：封装与抽象 - 封装消息构建和发送逻辑
+     */
+    private void sendOrderPaidMessage(Long orderId, Order order) {
+        try {
+            // 1. 查询订单详情（商品列表）
+            List<OrderFoodVO> orderFoodList = orderDetailetMapper.selectOrderDetailList(orderId);
+            
+            // 2. 构建商品详情列表
+            List<OrderPaidMessage.OrderFoodDetail> foodDetails = new ArrayList<>();
+            List<Long> foodIds = new ArrayList<>();
+            
+            for (OrderFoodVO foodVO : orderFoodList) {
+                OrderPaidMessage.OrderFoodDetail detail = new OrderPaidMessage.OrderFoodDetail();
+                detail.setFoodId(foodVO.getFoodId());
+                detail.setFoodPrice(foodVO.getFoodPrice());
+                detail.setQuantity(foodVO.getQuantity());
+                foodDetails.add(detail);
+                foodIds.add(foodVO.getFoodId());
+            }
+            
+            // 3. 构建订单支付完成消息
+            OrderPaidMessage message = new OrderPaidMessage();
+            message.setOrderId(orderId);
+            message.setUserId(order.getCustomerId());
+            message.setOrderAmount(order.getOrderTotal());
+            message.setOrderDate(order.getOrderDate());
+            message.setFoodIds(foodIds);
+            message.setFoodDetails(foodDetails);
+            
+            // 4. 发送消息到RabbitMQ（异步，不阻塞订单状态更新）
+            orderMessageService.sendOrderPaidMessage(message);
+        } catch (Exception e) {
+            // 消息发送失败不影响订单状态更新
+            // 可以考虑记录日志或发送到死信队列
+            // 这里暂时只记录日志
+            System.err.println("发送订单支付完成消息失败: orderId=" + orderId + ", error=" + e.getMessage());
+        }
     }
 
     @Override

@@ -9,6 +9,12 @@ spring:
     url: jdbc:mysql://REDACTED_IP:3306/elm_v2
     username: root
     password: 123456
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
 
 logging:
   level:

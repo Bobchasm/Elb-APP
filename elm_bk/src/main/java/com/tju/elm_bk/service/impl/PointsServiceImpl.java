@@ -1,0 +1,548 @@
+package com.tju.elm_bk.service.impl;
+
+import com.tju.elm_bk.exception.APIException;
+import com.tju.elm_bk.mapper.*;
+import com.tju.elm_bk.pojo.dto.PointsAddDTO;
+import com.tju.elm_bk.pojo.dto.PointsDeductDTO;
+import com.tju.elm_bk.pojo.entity.*;
+import com.tju.elm_bk.pojo.vo.PointsAccountVO;
+import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
+import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.service.PointsService;
+import com.tju.elm_bk.utils.SecurityUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * 积分系统核心服务实现类
+ * 职责：积分账户操作（增加、减少、查询、查询明细）
+ * 设计原则：
+ * 1. 单一职责原则 - 只负责积分账户操作
+ * 2. 依赖注入 - 通过@Autowired注入Mapper
+ * 3. 事务管理 - 使用@Transactional保证数据一致性
+ */
+@Service
+public class PointsServiceImpl implements PointsService {
+
+    @Autowired
+    private PointsAccountMapper pointsAccountMapper;
+
+    @Autowired
+    private PointsTransactionMapper pointsTransactionMapper;
+
+    @Autowired
+    private PointsExpirationMapper pointsExpirationMapper;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    /**
+     * 增加积分
+     * 设计原则：事务管理 - 保证积分账户和明细的一致性
+     */
+    @Override
+    @Transactional
+    public Long addPoints(PointsAddDTO pointsAddDTO) {
+        // 1. 参数校验
+        if (pointsAddDTO.getUserId() == null || pointsAddDTO.getPoints() == null || 
+            pointsAddDTO.getPoints() <= 0) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+
+        if (pointsAddDTO.getExpireTime() == null) {
+            pointsAddDTO.setExpireTime(LocalDateTime.now().plusMonths(1));
+        }
+
+        // 2. 查询或创建积分账户（带行锁，保证并发安全）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(pointsAddDTO.getUserId());
+        if (account == null) {
+            // 如果账户不存在，创建新账户
+            account = new PointsAccount();
+            account.setUserId(pointsAddDTO.getUserId());
+            account.setTotalPoints(0L);
+            account.setAvailablePoints(0L);
+            account.setFrozenPoints(0L);
+            account.setMemberLevel(0);
+            account.setCreateTime(LocalDateTime.now());
+            account.setUpdateTime(LocalDateTime.now());
+            account.setIsDeleted(false);
+            // 获取当前用户ID作为创建人
+            Long currentUserId = getCurrentUserId();
+            account.setCreator(currentUserId);
+            account.setUpdater(currentUserId);
+            pointsAccountMapper.insert(account);
+        }
+
+        // 3. 更新积分余额
+        // 判断是否是订单奖励积分（需要冻结）
+        boolean isOrderReward = (pointsAddDTO.getPointsSource() == 0 && 
+                                pointsAddDTO.getRelatedOrderId() != null);
+        
+        Long newTotalPoints = account.getTotalPoints() + pointsAddDTO.getPoints();
+        Long newAvailablePoints = account.getAvailablePoints();
+        Long newFrozenPoints = account.getFrozenPoints();
+        
+        if (isOrderReward) {
+            // 订单奖励积分：增加总积分和冻结积分，不增加可用积分
+            newFrozenPoints = account.getFrozenPoints() + pointsAddDTO.getPoints();
+        } else {
+            // 其他积分（行为积分等）：直接增加可用积分
+            newAvailablePoints = account.getAvailablePoints() + pointsAddDTO.getPoints();
+        }
+        
+        account.setTotalPoints(newTotalPoints);
+        account.setAvailablePoints(newAvailablePoints);
+        account.setFrozenPoints(newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 4. 记录积分明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(pointsAddDTO.getUserId());
+        transaction.setAccountId(account.getId());
+        if (isOrderReward) {
+            // 订单奖励积分：记录为获得类型，但积分是冻结的
+            transaction.setTransactionType(0); // 0-获得
+            transaction.setDescription(pointsAddDTO.getDescription() + "（冻结中，订单完成后解冻）");
+        } else {
+            // 其他积分：正常获得
+            transaction.setTransactionType(0); // 0-获得
+            transaction.setDescription(pointsAddDTO.getDescription());
+        }
+        transaction.setPointsSource(pointsAddDTO.getPointsSource());
+        transaction.setPointsChange(pointsAddDTO.getPoints());
+        transaction.setPointsBalance(newAvailablePoints);
+        transaction.setExpireTime(pointsAddDTO.getExpireTime());
+        transaction.setRelatedOrderId(pointsAddDTO.getRelatedOrderId());
+        transaction.setRelatedFoodId(pointsAddDTO.getRelatedFoodId());
+        transaction.setRelatedRuleId(pointsAddDTO.getRelatedRuleId());
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        // 5. 创建过期记录（所有积分都必须有有效期）
+        PointsExpiration expiration = new PointsExpiration();
+        expiration.setUserId(pointsAddDTO.getUserId());
+        expiration.setTransactionId(transaction.getId());
+        expiration.setPointsAmount(pointsAddDTO.getPoints());
+        expiration.setExpireTime(pointsAddDTO.getExpireTime());
+        expiration.setExpireDate(pointsAddDTO.getExpireTime().toLocalDate());
+        expiration.setIsExpired(false);
+        expiration.setCreateTime(LocalDateTime.now());
+        pointsExpirationMapper.insert(expiration);
+
+        return transaction.getId();
+    }
+
+    /**
+     * 减少积分（优先扣减即将过期的积分）
+     * 设计原则：
+     * 1. 优先扣减即将过期的积分算法
+     * 2. 事务管理 - 保证数据一致性
+     */
+    @Override
+    @Transactional
+    public Boolean deductPoints(PointsDeductDTO pointsDeductDTO) {
+        // 1. 参数校验
+        if (pointsDeductDTO.getUserId() == null || pointsDeductDTO.getPoints() == null || 
+            pointsDeductDTO.getPoints() <= 0) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+
+        // 2. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(pointsDeductDTO.getUserId());
+        if (account == null || account.getAvailablePoints() < pointsDeductDTO.getPoints()) {
+            throw new APIException("POINTS_INSUFFICIENT", "积分不足");
+        }
+
+        // 3. 优先扣减即将过期的积分
+        Long remainingPoints = pointsDeductDTO.getPoints();
+        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(
+            pointsDeductDTO.getUserId());
+
+        // 按过期时间升序扣减
+        for (PointsExpiration exp : expiringPoints) {
+            if (remainingPoints <= 0) {
+                break;
+            }
+
+            Long deductAmount = Math.min(remainingPoints, exp.getPointsAmount());
+            exp.setPointsAmount(exp.getPointsAmount() - deductAmount);
+            
+            if (exp.getPointsAmount() <= 0) {
+                exp.setIsExpired(true);
+            }
+            pointsExpirationMapper.updateById(exp);
+            
+            remainingPoints -= deductAmount;
+        }
+
+        // 4. 如果还有剩余积分需要扣减，说明即将过期的积分不足
+        // 由于所有积分都有有效期，如果即将过期的积分不足，说明积分不足
+        if (remainingPoints > 0) {
+            throw new APIException("POINTS_INSUFFICIENT", "可用积分不足，请检查积分有效期");
+        }
+
+        // 5. 更新积分账户余额
+        Long newAvailablePoints = account.getAvailablePoints() - pointsDeductDTO.getPoints();
+        Long newTotalPoints = account.getTotalPoints() - pointsDeductDTO.getPoints();
+        account.setAvailablePoints(newAvailablePoints);
+        account.setTotalPoints(newTotalPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = userMapper.getUserIdByUsername(
+            SecurityUtils.getCurrentUsername().orElse(null));
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateBalance(account);
+
+        // 6. 记录积分明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(pointsDeductDTO.getUserId());
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(1); // 1-消费
+        transaction.setPointsSource(pointsDeductDTO.getPointsSource());
+        transaction.setPointsChange(-pointsDeductDTO.getPoints()); // 负数表示减少
+        transaction.setPointsBalance(newAvailablePoints);
+        transaction.setRelatedOrderId(pointsDeductDTO.getRelatedOrderId());
+        transaction.setRelatedFoodId(pointsDeductDTO.getRelatedFoodId());
+        transaction.setDescription(pointsDeductDTO.getDescription());
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        return true;
+    }
+
+    /**
+     * 查询用户积分账户
+     */
+    @Override
+    public PointsAccountVO getPointsAccount(Long userId) {
+        PointsAccount account = pointsAccountMapper.selectByUserId(userId);
+        if (account == null) {
+            // 如果账户不存在，返回默认值
+            PointsAccountVO vo = new PointsAccountVO();
+            vo.setUserId(userId);
+            vo.setTotalPoints(0L);
+            vo.setAvailablePoints(0L);
+            vo.setFrozenPoints(0L);
+            vo.setMemberLevel(0);
+            vo.setMemberLevelName(getMemberLevelName(0));
+            return vo;
+        }
+
+        PointsAccountVO vo = new PointsAccountVO();
+        BeanUtils.copyProperties(account, vo);
+        vo.setMemberLevelName(getMemberLevelName(account.getMemberLevel()));
+        return vo;
+    }
+
+    /**
+     * 查询积分明细
+     */
+    @Override
+    public List<PointsTransactionVO> getPointsTransactions(Long userId, Integer pageNum, 
+                                                           Integer pageSize, Integer transactionType) {
+        if (pageNum == null || pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+
+        Integer offset = (pageNum - 1) * pageSize;
+        List<PointsTransaction> transactions = pointsTransactionMapper.selectByUserId(
+            userId, transactionType, offset, pageSize);
+
+        List<PointsTransactionVO> voList = new ArrayList<>();
+        for (PointsTransaction trans : transactions) {
+            PointsTransactionVO vo = new PointsTransactionVO();
+            BeanUtils.copyProperties(trans, vo);
+            vo.setTransactionTypeName(getTransactionTypeName(trans.getTransactionType()));
+            vo.setPointsSourceName(getPointsSourceName(trans.getPointsSource()));
+            voList.add(vo);
+        }
+
+        return voList;
+    }
+
+    /**
+     * 冻结积分（用于订单处理）
+     */
+    @Override
+    @Transactional
+    public Boolean freezePoints(Long userId, Long points, Long orderId) {
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null || account.getAvailablePoints() < points) {
+            throw new APIException("POINTS_INSUFFICIENT", "积分不足");
+        }
+
+        account.setAvailablePoints(account.getAvailablePoints() - points);
+        account.setFrozenPoints(account.getFrozenPoints() + points);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = userMapper.getUserIdByUsername(
+            SecurityUtils.getCurrentUsername().orElse(null));
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 记录冻结明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(3); // 3-冻结
+        transaction.setPointsSource(5); // 5-积分+现金消费
+        transaction.setPointsChange(-points);
+        transaction.setPointsBalance(account.getAvailablePoints());
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单冻结积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        return true;
+    }
+
+    /**
+     * 解冻积分（订单取消时）
+     * 设计原则：直接查询指定订单的冻结记录，提高查询效率
+     */
+    @Override
+    @Transactional
+    public Boolean unfreezePoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+
+        // 2. 直接查询该订单的冻结交易记录（transaction_type = 3）
+        List<PointsTransaction> freezeTransactions = pointsTransactionMapper.selectByOrderIdAndType(
+            orderId, 3); // 3-冻结
+        
+        // 3. 计算需要解冻的积分总数
+        Long totalFrozen = 0L;
+        for (PointsTransaction trans : freezeTransactions) {
+            // 确保是当前用户的冻结记录
+            if (Objects.equals(trans.getUserId(), userId)) {
+                totalFrozen += Math.abs(trans.getPointsChange());
+            }
+        }
+
+        // 4. 如果没有冻结记录，直接返回
+        if (totalFrozen == 0) {
+            return true;
+        }
+
+        // 5. 更新积分账户（解冻积分）
+        account.setAvailablePoints(account.getAvailablePoints() + totalFrozen);
+        account.setFrozenPoints(account.getFrozenPoints() - totalFrozen);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = userMapper.getUserIdByUsername(
+            SecurityUtils.getCurrentUsername().orElse(null));
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 6. 记录解冻明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(4); // 4-解冻
+        transaction.setPointsSource(5); // 5-积分+现金消费
+        transaction.setPointsChange(totalFrozen);
+        transaction.setPointsBalance(account.getAvailablePoints());
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单取消解冻积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        return true;
+    }
+    
+    /**
+     * 解冻奖励积分（订单完成时）
+     * 设计原则：将订单奖励积分从冻结状态转为可用状态
+     */
+    @Override
+    @Transactional
+    public Boolean unfreezeRewardPoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+        
+        // 2. 查询该订单的奖励积分记录（points_source = 0, related_order_id = orderId）
+        List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
+            orderId, 0); // 0-消费积分
+        
+        // 3. 计算需要解冻的积分总数
+        Long totalRewardPoints = 0L;
+        for (PointsTransaction trans : rewardTransactions) {
+            // 确保是当前用户的奖励积分记录
+            if (Objects.equals(trans.getUserId(), userId) && 
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                totalRewardPoints += trans.getPointsChange();
+            }
+        }
+        
+        // 4. 如果没有奖励积分记录，直接返回
+        if (totalRewardPoints == 0) {
+            return true;
+        }
+        
+        // 5. 更新积分账户（解冻积分：从冻结积分转为可用积分）
+        account.setAvailablePoints(account.getAvailablePoints() + totalRewardPoints);
+        account.setFrozenPoints(account.getFrozenPoints() - totalRewardPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+        
+        // 6. 记录解冻明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(4); // 4-解冻
+        transaction.setPointsSource(0); // 0-消费积分
+        transaction.setPointsChange(totalRewardPoints);
+        transaction.setPointsBalance(account.getAvailablePoints());
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单完成解冻奖励积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+        
+        return true;
+    }
+    
+    /**
+     * 取消奖励积分（订单取消时）
+     * 设计原则：删除订单奖励积分，减少总积分和冻结积分
+     */
+    @Override
+    @Transactional
+    public Boolean cancelRewardPoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+        
+        // 2. 查询该订单的奖励积分记录
+        List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
+            orderId, 0); // 0-消费积分
+        
+        // 3. 计算需要取消的积分总数
+        Long totalRewardPoints = 0L;
+        for (PointsTransaction trans : rewardTransactions) {
+            // 确保是当前用户的奖励积分记录
+            if (Objects.equals(trans.getUserId(), userId) && 
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                totalRewardPoints += trans.getPointsChange();
+            }
+        }
+        
+        // 4. 如果没有奖励积分记录，直接返回
+        if (totalRewardPoints == 0) {
+            return true;
+        }
+        
+        // 5. 更新积分账户（减少总积分和冻结积分）
+        account.setTotalPoints(account.getTotalPoints() - totalRewardPoints);
+        account.setFrozenPoints(account.getFrozenPoints() - totalRewardPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+        
+        // 6. 标记相关积分明细和过期记录为已删除
+        for (PointsTransaction trans : rewardTransactions) {
+            if (Objects.equals(trans.getUserId(), userId) && 
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                // 标记积分明细为已删除
+                pointsTransactionMapper.deleteById(trans.getId(), LocalDateTime.now(), currentUserId);
+                
+                // 标记过期记录为已删除
+                pointsExpirationMapper.deleteByTransactionId(trans.getId());
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 获取会员等级名称
+     */
+    private String getMemberLevelName(Integer memberLevel) {
+        if (memberLevel == null) {
+            return "普通用户";
+        }
+        switch (memberLevel) {
+            case 0: return "普通用户";
+            case 1: return "白银会员";
+            case 2: return "黄金会员";
+            case 3: return "钻石会员";
+            default: return "普通用户";
+        }
+    }
+
+    /**
+     * 获取交易类型名称
+     */
+    private String getTransactionTypeName(Integer transactionType) {
+        if (transactionType == null) {
+            return "未知";
+        }
+        switch (transactionType) {
+            case 0: return "获得";
+            case 1: return "消费";
+            case 2: return "过期";
+            case 3: return "冻结";
+            case 4: return "解冻";
+            default: return "未知";
+        }
+    }
+
+    /**
+     * 获取积分来源名称
+     */
+    private String getPointsSourceName(Integer pointsSource) {
+        if (pointsSource == null) {
+            return "未知";
+        }
+        switch (pointsSource) {
+            case 0: return "消费积分";
+            case 1: return "促销积分";
+            case 2: return "等级积分";
+            case 3: return "行为积分";
+            case 4: return "兑换商品";
+            case 5: return "积分+现金消费";
+            default: return "未知";
+        }
+    }
+
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        Long currentUserId = userMapper.getUserIdByUsername(
+                SecurityUtils.getCurrentUsername().orElse(null));
+        return currentUserId;
+    }
+}
+

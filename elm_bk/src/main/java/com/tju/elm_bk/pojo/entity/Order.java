@@ -59,6 +59,12 @@ public class Order {
     @Schema(description = "支付方式 0-微信支付 1-支付宝支付 2-虚拟钱包支付")
     private Integer paymentMethod;
 
+    @Schema(description = "使用积分数量")
+    private Long pointsUsed;
+
+    @Schema(description = "获得积分数量")
+    private Long pointsAmount;
+
 //    // 关联字段
 //    @Schema(description = "下单客户")
 //    private User customer;

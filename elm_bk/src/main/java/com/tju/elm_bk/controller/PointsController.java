@@ -1,0 +1,121 @@
+package com.tju.elm_bk.controller;
+
+import com.tju.elm_bk.pojo.dto.PointsExchangeDTO;
+import com.tju.elm_bk.pojo.dto.PointsPaymentDTO;
+import com.tju.elm_bk.pojo.vo.PointsAccountVO;
+import com.tju.elm_bk.pojo.vo.PointsExchangeGoodsVO;
+import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
+import com.tju.elm_bk.result.HttpResult;
+import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
+import com.tju.elm_bk.service.PointsService;
+import com.tju.elm_bk.utils.SecurityUtils;
+import com.tju.elm_bk.mapper.UserMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 积分系统Controller
+ * 职责：处理用户端积分相关HTTP请求
+ * 设计原则：
+ * 1. 单一职责原则 - 只负责HTTP请求处理
+ * 2. 依赖注入 - 注入Service接口
+ * 3. 基于接口编程 - 依赖Service接口而非实现
+ */
+@RestController
+@RequestMapping("/api/points")
+@Tag(name = "积分系统", description = "用户端积分相关接口")
+public class PointsController {
+
+    @Autowired
+    private PointsService pointsService;
+
+    @Autowired
+    private MarketingPointsExchangeRuleService exchangeRuleService;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    /**
+     * 查询积分账户
+     */
+    @GetMapping("/account")
+    @Operation(summary = "查询积分账户", description = "查询当前用户的积分账户信息")
+    public HttpResult<PointsAccountVO> getAccount() {
+        Long userId = getCurrentUserId();
+        PointsAccountVO account = pointsService.getPointsAccount(userId);
+        return HttpResult.success(account);
+    }
+
+    /**
+     * 查询积分明细
+     */
+    @GetMapping("/transactions")
+    @Operation(summary = "查询积分明细", description = "分页查询当前用户的积分明细")
+    public HttpResult<List<PointsTransactionVO>> getTransactions(
+            @RequestParam(required = false, defaultValue = "1") Integer pageNum,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) Integer transactionType) {
+        Long userId = getCurrentUserId();
+        List<PointsTransactionVO> transactions = pointsService.getPointsTransactions(
+            userId, pageNum, pageSize, transactionType);
+        return HttpResult.success(transactions);
+    }
+
+    /**
+     * 积分兑换商品
+     */
+    @PostMapping("/exchange")
+    @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
+    public HttpResult<Long> exchangeGoods(@RequestBody PointsExchangeDTO dto) {
+        Long userId = getCurrentUserId();
+        Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
+        return HttpResult.success(orderId);
+    }
+
+    /**
+     * 积分+现金支付
+     */
+    @PostMapping("/payment")
+    @Operation(summary = "积分+现金支付", description = "使用积分+现金支付订单")
+    public HttpResult<Boolean> pointsPayment(@RequestBody PointsPaymentDTO dto) {
+        // 这里简化处理，实际应该调用订单服务处理支付
+        // 积分扣减在订单服务中处理
+        return HttpResult.success(true);
+    }
+
+    /**
+     * 获取可兑换商品列表
+     */
+    @GetMapping("/exchange-goods")
+    @Operation(summary = "获取可兑换商品列表", description = "查询所有可兑换的商品（包含商品信息和所需积分）")
+    public HttpResult<List<PointsExchangeGoodsVO>> getExchangeGoodsList() {
+        List<PointsExchangeGoodsVO> goodsList =
+            exchangeRuleService.getExchangeGoodsList();
+        return HttpResult.success(goodsList);
+    }
+
+    /**
+     * 获取积分+现金兑换比例
+     */
+    @GetMapping("/exchange-ratio")
+    @Operation(summary = "获取积分+现金兑换比例", description = "查询积分兑换现金的比例")
+    public HttpResult<java.math.BigDecimal> getExchangeRatio() {
+        java.math.BigDecimal ratio = exchangeRuleService.getCashExchangeRatio();
+        return HttpResult.success(ratio);
+    }
+
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        String username = SecurityUtils.getCurrentUsername()
+            .orElseThrow(() -> new com.tju.elm_bk.exception.APIException(
+                com.tju.elm_bk.result.ResultCodeEnum.VALUE_MISSED));
+        return userMapper.getUserIdByUsername(username);
+    }
+}
+
