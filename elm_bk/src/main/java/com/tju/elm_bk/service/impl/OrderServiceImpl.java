@@ -63,6 +63,8 @@ public class OrderServiceImpl implements OrderService {
     private PointsService pointsService;
     @Autowired
     private MarketingPointsExchangeRuleService exchangeRuleService;
+    @Autowired
+    private PointsExchangeOrderMapper pointsExchangeOrderMapper;
 
     // 订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
@@ -215,10 +217,15 @@ public class OrderServiceImpl implements OrderService {
                 throw new APIException(ResultCodeEnum.ORDER_PAY_FAILED);
             }
             
-            // 积分+现金支付：根据usePoints参数决定是否使用积分抵扣
-            // usePoints=true 或 null（默认）：使用积分抵扣
-            // usePoints=false：不使用积分，只用现金支付
-            try {
+            // 检查是否是积分兑换订单，积分兑换订单的积分已在兑换时扣除，不需要再次处理
+            if (isPointsExchangeOrder(orderId)) {
+                // 积分兑换订单不需要处理积分冻结，直接跳过
+                log.info("订单{}是积分兑换订单，跳过积分冻结处理", orderId);
+            } else {
+                // 积分+现金支付：根据usePoints参数决定是否使用积分抵扣
+                // usePoints=true 或 null（默认）：使用积分抵扣
+                // usePoints=false：不使用积分，只用现金支付
+                try {
                 // 判断是否使用积分（默认使用积分）
                 boolean shouldUsePoints = (usePoints == null || usePoints);
                 
@@ -258,12 +265,16 @@ public class OrderServiceImpl implements OrderService {
             } catch (Exception e) {
                 // 积分处理失败不影响订单支付，记录日志
                 log.error("订单{}支付时积分处理失败: {}", orderId, e.getMessage());
-                // 如果积分处理失败，只使用现金支付
-                ordersMapper.updateOrderPoints(orderId, 0L, BigDecimal.ZERO);
+                    // 如果积分处理失败，只使用现金支付
+                    ordersMapper.updateOrderPoints(orderId, 0L, BigDecimal.ZERO);
+                }
             }
             
             // 订单支付完成，发送消息到RabbitMQ（异步通知营销系统）
-            sendOrderPaidMessage(orderId, order);
+            // 注意：积分兑换订单不需要发送消息，因为积分已扣除，不需要再发放奖励积分
+            if (!isPointsExchangeOrder(orderId)) {
+                sendOrderPaidMessage(orderId, order);
+            }
         }
         if (orderState == 2) {
             if (order.getOrderState() != 1 || !Objects.equals(business.getUserId(),userId)) {
@@ -288,20 +299,36 @@ public class OrderServiceImpl implements OrderService {
             
             // 订单完成，处理积分相关逻辑
             try {
-                // 1. 真正扣除用户支付的积分（如果使用了积分+现金支付）
-                if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
-                    pointsService.deductFrozenPoints(order.getCustomerId(), orderId);
-                    log.info("订单{}完成：扣除积分{}", orderId, order.getPointsUsed());
+                // 检查是否是积分兑换订单
+                if (isPointsExchangeOrder(orderId)) {
+                    // 积分兑换订单：更新积分兑换订单状态为已完成
+                    PointsExchangeOrder exchangeOrder = pointsExchangeOrderMapper.selectByOrderId(orderId);
+                    if (exchangeOrder != null) {
+                        pointsExchangeOrderMapper.updateStatus(exchangeOrder.getId(), 1, LocalDateTime.now()); // 1-已完成
+                        log.info("订单{}完成：积分兑换订单状态已更新为已完成", orderId);
+                    }
+                } else {
+                    // 普通订单：处理积分相关逻辑
+                    // 1. 真正扣除用户支付的积分（如果使用了积分+现金支付）
+                    if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
+                        pointsService.deductFrozenPoints(order.getCustomerId(), orderId);
+                        log.info("订单{}完成：扣除积分{}", orderId, order.getPointsUsed());
+                    }
+                    
+                    // 2. 解冻奖励积分（订单支付时已发放但冻结，现在解冻）
+                    pointsService.unfreezeRewardPoints(order.getCustomerId(), orderId);
                 }
-                
-                // 2. 解冻奖励积分（订单支付时已发放但冻结，现在解冻）
-                pointsService.unfreezeRewardPoints(order.getCustomerId(), orderId);
             } catch (Exception e) {
                 // 积分处理失败不影响订单完成，记录日志
                 log.error("订单{}完成时积分处理失败: {}", orderId, e.getMessage());
             }
         }
         if (orderState == 4) {
+            // 检查是否是积分兑换订单，积分兑换订单不允许取消
+            if (isPointsExchangeOrder(orderId)) {
+                throw new APIException("POINTS_EXCHANGE_ORDER_CANNOT_CANCEL", "积分兑换订单不允许取消");
+            }
+            
             if (order.getOrderState() != 0 && order.getOrderState() != 1) {
                 throw new APIException(ResultCodeEnum.ORDER_CANCEL_DENY);
             }
@@ -357,6 +384,23 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return order.getId();
+    }
+    
+    /**
+     * 检查订单是否是积分兑换订单
+     * @param orderId 订单ID
+     * @return 是否是积分兑换订单
+     */
+    private boolean isPointsExchangeOrder(Long orderId) {
+        // 方法1：通过支付方式判断（payment_method = 3 表示积分兑换）
+        Order order = ordersMapper.getOrderById(orderId);
+        if (order != null && order.getPaymentMethod() != null && order.getPaymentMethod() == 3) {
+            return true;
+        }
+        
+        // 方法2：通过积分兑换订单表判断
+        PointsExchangeOrder exchangeOrder = pointsExchangeOrderMapper.selectByOrderId(orderId);
+        return exchangeOrder != null;
     }
     
     /**

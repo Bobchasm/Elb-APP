@@ -15,5 +15,8 @@ public class PointsExchangeDTO {
 
     @Schema(description = "兑换数量", required = true)
     private Integer quantity;
+    
+    @Schema(description = "配送地址ID", required = true)
+    private Long addressId;
 }
 

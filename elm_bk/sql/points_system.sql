@@ -152,11 +152,10 @@ DROP TABLE IF EXISTS `points_exchange_order`;
 CREATE TABLE `points_exchange_order` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `user_id` bigint NOT NULL COMMENT '用户ID（关联users表）',
-  `order_id` bigint NULL DEFAULT NULL COMMENT '关联订单ID（关联orders表，积分+现金消费时使用）',
-  `exchange_type` tinyint NOT NULL COMMENT '兑换类型 0-积分+现金 1-纯积分兑换商品',
+  `order_id` bigint NULL DEFAULT NULL COMMENT '关联订单ID（关联orders表）',
   `food_id` bigint NULL DEFAULT NULL COMMENT '兑换商品ID（关联food表）',
   `points_used` bigint NOT NULL COMMENT '使用积分数量',
-  `cash_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '现金金额（积分+现金消费时使用）',
+  `cash_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '现金金额（预留字段，当前纯积分兑换为0）',
   `exchange_ratio` decimal(10, 4) NOT NULL COMMENT '兑换比例',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态 0-待处理 1-已完成 2-已取消',
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -169,7 +168,7 @@ CREATE TABLE `points_exchange_order` (
   CONSTRAINT `fk_points_exchange_order_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_points_exchange_order_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_points_exchange_order_food` FOREIGN KEY (`food_id`) REFERENCES `food` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='积分兑换订单表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='积分兑换订单表（仅用于纯积分兑换商品，积分+现金支付不使用此表）';
 
 -- ----------------------------
 -- 7. 积分到期预警配置表 (points_expiration_alert_config)

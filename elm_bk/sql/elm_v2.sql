@@ -227,7 +227,7 @@ CREATE TABLE `orders`  (
   `customer_id` bigint NOT NULL,
   `address_id` bigint NOT NULL,
   `delivery_price` decimal(10, 2) NOT NULL,
-  `payment_method` tinyint NULL DEFAULT NULL COMMENT '支付方式 0-微信支付 1-支付宝支付 2-虚拟钱包支付',
+  `payment_method` tinyint NULL DEFAULT NULL COMMENT '支付方式 0-微信支付 1-支付宝支付 2-虚拟钱包支付 3-积分兑换',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `business_id`(`business_id` ASC) USING BTREE,
   INDEX `customer_id`(`customer_id` ASC) USING BTREE,

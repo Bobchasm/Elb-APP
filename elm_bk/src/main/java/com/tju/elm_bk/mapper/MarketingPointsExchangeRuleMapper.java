@@ -82,10 +82,10 @@ public interface MarketingPointsExchangeRuleMapper {
     MarketingPointsExchangeRule selectByFoodId(Long foodId);
     
     /**
-     * 更新商品库存
+     * 更新商品库存（减少指定数量）
      */
-    @Update("UPDATE marketing_points_exchange_rule SET stock_quantity = stock_quantity - 1 " +
-            "WHERE id = #{id} AND stock_quantity > 0")
-    int decreaseStock(Long id);
+    @Update("UPDATE marketing_points_exchange_rule SET stock_quantity = stock_quantity - #{quantity} " +
+            "WHERE id = #{id} AND stock_quantity >= #{quantity}")
+    int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 }
 

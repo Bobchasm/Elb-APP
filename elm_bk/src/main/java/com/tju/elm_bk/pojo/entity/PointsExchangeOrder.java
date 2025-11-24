@@ -21,11 +21,8 @@ public class PointsExchangeOrder {
     @Schema(description = "用户ID（关联users表）")
     private Long userId;
 
-    @Schema(description = "关联订单ID（关联orders表，积分+现金消费时使用）")
+    @Schema(description = "关联订单ID（关联orders表）")
     private Long orderId;
-
-    @Schema(description = "兑换类型 0-积分+现金 1-纯积分兑换商品")
-    private Integer exchangeType;
 
     @Schema(description = "兑换商品ID（关联food表）")
     private Long foodId;

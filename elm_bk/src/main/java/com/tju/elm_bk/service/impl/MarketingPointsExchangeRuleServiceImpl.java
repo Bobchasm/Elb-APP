@@ -1,10 +1,10 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.exception.APIException;
-import com.tju.elm_bk.mapper.FoodMapper;
-import com.tju.elm_bk.mapper.MarketingPointsExchangeRuleMapper;
-import com.tju.elm_bk.mapper.PointsExchangeOrderMapper;
-import com.tju.elm_bk.mapper.UserMapper;
+import com.tju.elm_bk.mapper.*;
+import com.tju.elm_bk.pojo.entity.DeliveryAddress;
+import com.tju.elm_bk.pojo.entity.Order;
+import com.tju.elm_bk.pojo.entity.OrderDetailet;
 import com.tju.elm_bk.pojo.dto.PointsDeductDTO;
 import com.tju.elm_bk.pojo.dto.PointsExchangeDTO;
 import com.tju.elm_bk.pojo.dto.PointsExchangeRuleCreateDTO;
@@ -49,6 +49,18 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
 
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private OrdersMapper ordersMapper;
+    
+    @Autowired
+    private DeliveryAddressMapper deliveryAddressMapper;
+    
+    @Autowired
+    private OrderDetailetMapper orderDetailetMapper;
+    
+    @Autowired
+    private BusinessMapper businessMapper;
 
     @Override
     @Transactional
@@ -177,38 +189,91 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
             throw new APIException("STOCK_INSUFFICIENT", "库存不足");
         }
 
-        // 3. 计算所需积分
+        // 3. 查询商品信息，获取商家ID和商品价格
+        Food food = foodMapper.selectFoodById(dto.getFoodId());
+        if (food == null) {
+            throw new APIException("FOOD_NOT_FOUND", "商品不存在");
+        }
+
+        // 4. 计算所需积分
         Long requiredPoints = rule.getRequiredPoints() * dto.getQuantity();
 
-        // 4. 扣减积分
+        // 5. 先减少库存（减少兑换数量），避免积分扣除后库存不足
+        // 注意：使用事务保证原子性，如果后续步骤失败，库存会自动回滚
+        int updateCount = exchangeRuleMapper.decreaseStock(rule.getId(), dto.getQuantity());
+        if (updateCount == 0) {
+            throw new APIException("STOCK_INSUFFICIENT", "库存不足，无法完成兑换");
+        }
+
+        // 6. 扣减积分（库存已减少，如果积分不足，库存会自动回滚）
         PointsDeductDTO deductDTO = new PointsDeductDTO();
         deductDTO.setUserId(userId);
         deductDTO.setPoints(requiredPoints);
         deductDTO.setPointsSource(4); // 4-兑换商品
         deductDTO.setRelatedFoodId(dto.getFoodId());
-        deductDTO.setDescription("兑换商品：" + dto.getFoodId());
+        deductDTO.setDescription("兑换商品：" + food.getFoodName() + " x" + dto.getQuantity());
         pointsService.deductPoints(deductDTO);
-
-        // 5. 减少库存
-        int updateCount = exchangeRuleMapper.decreaseStock(rule.getId());
-        if (updateCount == 0) {
-            throw new APIException("STOCK_UPDATE_FAILED", "库存更新失败");
+        
+        // 7. 验证配送地址（必须提供，与普通订单创建逻辑保持一致）
+        Long addressId = dto.getAddressId();
+        if (addressId == null) {
+            throw new APIException("ADDRESS_MISSED", "请选择配送地址");
         }
-
-        // 6. 创建兑换订单
-        PointsExchangeOrder order = new PointsExchangeOrder();
-        order.setUserId(userId);
-        order.setExchangeType(1); // 1-纯积分兑换商品
-        order.setFoodId(dto.getFoodId());
-        order.setPointsUsed(requiredPoints);
-        order.setExchangeRatio(rule.getExchangeRatio());
-        order.setStatus(0); // 0-待处理
+        
+        // 验证地址是否属于当前用户
+        DeliveryAddress address = deliveryAddressMapper.getDeliveryAddressById(addressId);
+        if (address == null || !address.getUserId().equals(userId)) {
+            throw new APIException("ADDRESS_MISSED", "配送地址不存在或不属于当前用户");
+        }
+        
+        // 8. 创建普通订单（供商家查看和处理）
+        Order order = new Order();
+        order.setBusinessId(food.getBusinessId());
+        order.setCustomerId(userId);
+        order.setAddressId(addressId);
+        order.setOrderDate(LocalDateTime.now());
+        order.setOrderState(1); // 1-已支付（积分已扣除，相当于已支付）
+        order.setOrderTotal(BigDecimal.ZERO); // 积分兑换，订单金额为0
+        order.setDeliveryPrice(BigDecimal.ZERO); // 积分兑换商品免配送费
+        order.setPaymentMethod(3); // 3-积分兑换（新增支付方式）
+        order.setPointsUsed(requiredPoints); // 使用的积分数量
+        order.setPointsAmount(0L); // 积分兑换不获得积分
+        order.setPointsDiscountAmount(BigDecimal.ZERO);
+        order.setCreator(userId);
+        order.setUpdater(userId);
         order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
-        exchangeOrderMapper.insert(order);
+        ordersMapper.insertOrderPlus(order);
+        
+        // 9. 创建订单详情
+        OrderDetailet orderDetailet = new OrderDetailet();
+        orderDetailet.setOrderId(order.getId());
+        orderDetailet.setFoodId(dto.getFoodId());
+        orderDetailet.setQuantity(dto.getQuantity());
+        orderDetailet.setFoodPrice(food.getFoodPrice()); // 保存商品原价
+        orderDetailet.setCreator(userId);
+        orderDetailet.setUpdater(userId);
+        orderDetailet.setCreateTime(LocalDateTime.now());
+        orderDetailet.setUpdateTime(LocalDateTime.now());
+        orderDetailet.setIsDeleted(false);
+        orderDetailetMapper.saveOrderDetailPlus(orderDetailet);
+        
+        // 10. 创建积分兑换订单记录
+        PointsExchangeOrder exchangeOrder = new PointsExchangeOrder();
+        exchangeOrder.setUserId(userId);
+        exchangeOrder.setOrderId(order.getId()); // 关联普通订单
+        exchangeOrder.setFoodId(dto.getFoodId());
+        exchangeOrder.setPointsUsed(requiredPoints);
+        exchangeOrder.setCashAmount(BigDecimal.ZERO); // 纯积分兑换，现金为0
+        exchangeOrder.setExchangeRatio(rule.getExchangeRatio());
+        exchangeOrder.setStatus(0); // 0-待处理（对应订单状态1-已支付）
+        exchangeOrder.setCreateTime(LocalDateTime.now());
+        exchangeOrder.setUpdateTime(LocalDateTime.now());
+        exchangeOrder.setIsDeleted(false);
+        exchangeOrderMapper.insert(exchangeOrder);
 
-        return order.getId();
+        return order.getId(); // 返回普通订单ID，这样商家可以在订单列表中看到
     }
 
     @Override

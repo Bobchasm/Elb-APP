@@ -210,8 +210,7 @@ public class PointsServiceImpl implements PointsService {
         account.setAvailablePoints(newAvailablePoints);
         account.setTotalPoints(newTotalPoints);
         account.setUpdateTime(LocalDateTime.now());
-        Long currentUserId = userMapper.getUserIdByUsername(
-            SecurityUtils.getCurrentUsername().orElse(null));
+        Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
         pointsAccountMapper.updateBalance(account);
 
@@ -301,8 +300,7 @@ public class PointsServiceImpl implements PointsService {
         account.setAvailablePoints(account.getAvailablePoints() - points);
         account.setFrozenPoints(account.getFrozenPoints() + points);
         account.setUpdateTime(LocalDateTime.now());
-        Long currentUserId = userMapper.getUserIdByUsername(
-            SecurityUtils.getCurrentUsername().orElse(null));
+        Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
         pointsAccountMapper.updateById(account);
 
@@ -359,8 +357,7 @@ public class PointsServiceImpl implements PointsService {
         account.setAvailablePoints(account.getAvailablePoints() + totalFrozen);
         account.setFrozenPoints(account.getFrozenPoints() - totalFrozen);
         account.setUpdateTime(LocalDateTime.now());
-        Long currentUserId = userMapper.getUserIdByUsername(
-            SecurityUtils.getCurrentUsername().orElse(null));
+        Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
         pointsAccountMapper.updateById(account);
 
