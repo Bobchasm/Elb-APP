@@ -43,10 +43,17 @@ public interface PointsExpirationMapper {
     void updateById(PointsExpiration expiration);
     
     /**
-     * 查询已过期的积分
+     * 查询已过期的积分（所有用户）
      */
     @Select("SELECT * FROM points_expiration WHERE expire_time < NOW() AND is_expired = 0")
     List<PointsExpiration> selectExpiredPoints();
+    
+    /**
+     * 查询指定用户已过期的积分
+     */
+    @Select("SELECT * FROM points_expiration WHERE user_id = #{userId} AND expire_time < NOW() " +
+            "AND is_expired = 1 ORDER BY expire_time DESC")
+    List<PointsExpiration> selectExpiredPointsByUserId(Long userId);
     
     /**
      * 标记为已过期

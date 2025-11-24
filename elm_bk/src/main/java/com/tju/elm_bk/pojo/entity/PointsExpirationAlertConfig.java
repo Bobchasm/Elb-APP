@@ -19,7 +19,7 @@ public class PointsExpirationAlertConfig {
     @Schema(description = "提前预警天数（如7表示提前7天预警）")
     private Integer alertDays;
 
-    @Schema(description = "预警周期（天数，如每天、每3天）")
+    @Schema(description = "预警周期（天数，如每天、每3天）。NULL表示只预警一次")
     private Integer alertCycle;
 
     @Schema(description = "短信模板（支持变量：{username}, {points}, {expireDate}）")

@@ -16,7 +16,7 @@ public interface PointsExpirationAlertLogMapper {
     @Insert("INSERT INTO points_expiration_alert_log (user_id, points_amount, expire_date, " +
             "alert_time, next_alert_time, is_sent, phone, create_time) " +
             "VALUES (#{userId}, #{pointsAmount}, #{expireDate}, #{alertTime}, " +
-            "#{nextAlertTime}, #{isSent}, #{phone}, #{createTime})")
+            "#{nextAlertTime, jdbcType=TIMESTAMP}, #{isSent}, #{phone}, #{createTime})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(PointsExpirationAlertLog log);
     
@@ -32,7 +32,7 @@ public interface PointsExpirationAlertLogMapper {
      * 更新预警记录
      */
     @Update("UPDATE points_expiration_alert_log SET alert_time = #{alertTime}, " +
-            "next_alert_time = #{nextAlertTime}, is_sent = #{isSent} WHERE id = #{id}")
+            "next_alert_time = #{nextAlertTime, jdbcType=TIMESTAMP}, is_sent = #{isSent} WHERE id = #{id}")
     void updateById(PointsExpirationAlertLog log);
     
     /**

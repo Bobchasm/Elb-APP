@@ -177,7 +177,7 @@ DROP TABLE IF EXISTS `points_expiration_alert_config`;
 CREATE TABLE `points_expiration_alert_config` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `alert_days` int NOT NULL COMMENT '提前预警天数（如7表示提前7天预警）',
-  `alert_cycle` int NOT NULL DEFAULT 1 COMMENT '预警周期（天数，如每天、每3天）',
+  `alert_cycle` int NULL DEFAULT NULL COMMENT '预警周期（天数，如每天、每3天）。NULL表示只预警一次',
   `sms_template` varchar(500) NULL DEFAULT NULL COMMENT '短信模板（支持变量：{username}, {points}, {expireDate}）',
   `is_enabled` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否启用 0-禁用 1-启用',
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -291,9 +291,9 @@ VALUES ('还贷款积分规则-黄金会员', 3, 1, 'repay_loan', 2, 100, 30, 0,
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `behavior_type`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
 VALUES ('还贷款积分规则-钻石会员', 3, 1, 'repay_loan', 3, 150, 30, 0, 1, 1);
 
--- 默认预警配置：提前7天预警，每天预警一次
+-- 默认预警配置：提前3天预警，仅预警一次
 INSERT INTO `points_expiration_alert_config` (`alert_days`, `alert_cycle`, `sms_template`, `is_enabled`) 
-VALUES (7, 1, '尊敬的{username}，您有{points}积分将于{expireDate}过期，请及时使用。', 1);
+VALUES (3, NULL, '尊敬的{username}，您有{points}积分将于{expireDate}过期，请及时使用。', 1);
 
 -- ============================================
 -- 数据库设计说明

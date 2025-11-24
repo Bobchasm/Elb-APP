@@ -175,7 +175,7 @@ DROP TABLE IF EXISTS `notification`;
 CREATE TABLE `notification`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '消息唯一ID',
   `user_id` bigint NOT NULL COMMENT '接收用户ID（关联users表id）',
-  `notification_type` tinyint NOT NULL COMMENT '消息类型：0=商家申请审核，1=开店申请审核',
+  `notification_type` tinyint NOT NULL COMMENT '消息类型：0=商家申请审核，1=开店申请审核，2=积分过期预警',
   `notification_content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '消息内容',
   `audit_result` tinyint NOT NULL COMMENT '审核结果：1=通过，2=拒绝',
   `is_read` tinyint NOT NULL DEFAULT 0 COMMENT '阅读状态：0=未读，1=已读',

@@ -1,14 +1,17 @@
 package com.tju.elm_bk.service.impl;
 
+import com.tju.elm_bk.mapper.NotificationMapper;
 import com.tju.elm_bk.mapper.PersonMapper;
 import com.tju.elm_bk.mapper.PointsExpirationAlertConfigMapper;
 import com.tju.elm_bk.mapper.PointsExpirationAlertLogMapper;
 import com.tju.elm_bk.mapper.PointsExpirationMapper;
+import com.tju.elm_bk.pojo.entity.Notification;
 import com.tju.elm_bk.pojo.entity.Person;
 import com.tju.elm_bk.pojo.entity.PointsExpiration;
 import com.tju.elm_bk.pojo.entity.PointsExpirationAlertConfig;
 import com.tju.elm_bk.pojo.entity.PointsExpirationAlertLog;
 import com.tju.elm_bk.service.PointsExpirationAlertService;
+import com.tju.elm_bk.websocket.WebSocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,12 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
 
     @Autowired
     private PersonMapper personMapper;
+    
+    @Autowired
+    private NotificationMapper notificationMapper;
+    
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     @Override
     public PointsExpirationAlertConfig getAlertConfig() {
@@ -93,6 +102,9 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
                 if (existingLog == null) {
                     // 第一次预警
                     shouldSend = true;
+                } else if (config.getAlertCycle() == null) {
+                    // alert_cycle 为 null 表示只预警一次，已有记录则不发送
+                    shouldSend = false;
                 } else if (existingLog.getNextAlertTime() != null && 
                           existingLog.getNextAlertTime().isBefore(LocalDateTime.now())) {
                     // 到了下次预警时间
@@ -109,32 +121,63 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
     }
 
     /**
-     * 发送预警短信
+     * 发送预警通知（创建 notification 记录并通过 WebSocket 推送）
      * 设计原则：封装与抽象 - 封装发送逻辑
      */
     private void sendAlert(Long userId, Long pointsAmount, LocalDate expireDate, 
                           PointsExpirationAlertConfig config, PointsExpirationAlertLog existingLog) {
-        // 1. 获取用户信息
+        // 1. 获取用户信息（用于模板变量替换）
         Person person = personMapper.getPersonByUserId(userId);
-        if (person == null || person.getPhone() == null) {
-            log.warn("用户不存在或未设置手机号，用户ID: {}", userId);
-            return;
+        String username = "用户";
+        String phone = null;
+        if (person != null) {
+            username = person.getFirstName() != null ? person.getFirstName() : "用户";
+            phone = person.getPhone();
         }
 
-        // 2. 替换模板变量
-        String smsContent = config.getSmsTemplate()
-            .replace("{username}", person.getFirstName() != null ? person.getFirstName() : "用户")
+        // 2. 替换模板变量生成通知内容
+        String notificationContent = config.getSmsTemplate()
+            .replace("{username}", username)
             .replace("{points}", String.valueOf(pointsAmount))
             .replace("{expireDate}", expireDate.toString());
 
-        // 3. 发送短信（这里简化处理，实际应该调用短信服务）
-        log.info("发送积分到期预警短信，用户: {}, 手机号: {}, 内容: {}", 
-            userId, person.getPhone(), smsContent);
-        // TODO: 调用短信服务发送短信
+        // 3. 创建站内通知（存储在 notification 表中）
+        try {
+            Notification notification = new Notification();
+            notification.setUserId(userId);
+            notification.setNotificationType(2); // 2=积分过期预警
+            notification.setNotificationContent(notificationContent);
+            notification.setAuditResult(null); // 积分预警不需要审核结果
+            notification.setIsRead(0);
+            notification.setIsDeleted(0);
+            notification.setCreateTime(LocalDateTime.now());
+            notificationMapper.insert(notification);
+            
+            log.info("积分到期预警通知已创建，用户: {}, 内容: {}", userId, notificationContent);
+            
+            // 4. 通过WebSocket推送通知
+            try {
+                String wsMessage = String.format("{\"type\": \"points_expiration_alert\", " +
+                    "\"notificationId\": %d, \"points\": %d, \"expireDate\": \"%s\"}", 
+                    notification.getId(), pointsAmount, expireDate.toString());
+                webSocketServer.sendToClient(userId.toString(), wsMessage);
+                log.info("积分到期预警WebSocket通知已推送，用户: {}", userId);
+            } catch (Exception e) {
+                log.warn("积分到期预警WebSocket通知推送失败，用户: {}, 错误: {}", userId, e.getMessage());
+                // WebSocket推送失败不影响整体流程
+            }
+        } catch (Exception e) {
+            log.error("创建积分到期预警通知失败，用户: {}, 错误: {}", userId, e.getMessage(), e);
+            // 通知创建失败不影响预警日志记录
+        }
 
-        // 4. 记录预警日志
+        // 5. 记录预警日志
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime nextAlertTime = now.plusDays(config.getAlertCycle());
+        // 如果 alert_cycle 为 null，表示只预警一次，next_alert_time 设置为 null
+        LocalDateTime nextAlertTime = null;
+        if (config.getAlertCycle() != null) {
+            nextAlertTime = now.plusDays(config.getAlertCycle());
+        }
         
         if (existingLog == null) {
             // 创建新记录
@@ -143,15 +186,15 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
             log.setPointsAmount(pointsAmount);
             log.setExpireDate(expireDate);
             log.setAlertTime(now);
-            log.setNextAlertTime(nextAlertTime);
+            log.setNextAlertTime(nextAlertTime); // 可能为 null（只预警一次）
             log.setIsSent(true);
-            log.setPhone(person.getPhone());
+            log.setPhone(phone); // 可能为null
             log.setCreateTime(now);
             alertLogMapper.insert(log);
         } else {
             // 更新现有记录
             existingLog.setAlertTime(now);
-            existingLog.setNextAlertTime(nextAlertTime);
+            existingLog.setNextAlertTime(nextAlertTime); // 可能为 null（只预警一次）
             existingLog.setIsSent(true);
             alertLogMapper.updateById(existingLog);
         }

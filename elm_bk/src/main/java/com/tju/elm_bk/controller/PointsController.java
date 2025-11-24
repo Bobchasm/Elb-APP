@@ -4,9 +4,11 @@ import com.tju.elm_bk.pojo.dto.PointsExchangeDTO;
 import com.tju.elm_bk.pojo.dto.PointsPaymentDTO;
 import com.tju.elm_bk.pojo.vo.PointsAccountVO;
 import com.tju.elm_bk.pojo.vo.PointsExchangeGoodsVO;
+import com.tju.elm_bk.pojo.vo.PointsExpirationVO;
 import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
+import com.tju.elm_bk.service.PointsExpirationService;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.mapper.UserMapper;
@@ -35,6 +37,9 @@ public class PointsController {
 
     @Autowired
     private MarketingPointsExchangeRuleService exchangeRuleService;
+
+    @Autowired
+    private PointsExpirationService pointsExpirationService;
 
     @Autowired
     private UserMapper userMapper;
@@ -118,6 +123,39 @@ public class PointsController {
         Long userId = getCurrentUserId();
         java.math.BigDecimal deductibleAmount = pointsService.calculateDeductibleAmount(userId, orderAmount);
         return HttpResult.success(deductibleAmount);
+    }
+
+    /**
+     * 查询即将过期的积分记录
+     */
+    @GetMapping("/expiring")
+    @Operation(summary = "查询即将过期的积分记录", description = "查询当前用户即将过期的积分记录（按过期时间升序）")
+    public HttpResult<List<PointsExpirationVO>> getExpiringPoints() {
+        Long userId = getCurrentUserId();
+        List<PointsExpirationVO> expiringList = pointsExpirationService.getExpiringPoints(userId);
+        return HttpResult.success(expiringList);
+    }
+
+    /**
+     * 查询已过期的积分记录
+     */
+    @GetMapping("/expired")
+    @Operation(summary = "查询已过期的积分记录", description = "查询当前用户已过期的积分记录")
+    public HttpResult<List<PointsExpirationVO>> getExpiredPoints() {
+        Long userId = getCurrentUserId();
+        List<PointsExpirationVO> expiredList = pointsExpirationService.getExpiredPoints(userId);
+        return HttpResult.success(expiredList);
+    }
+
+    /**
+     * 统计即将过期的积分总数
+     */
+    @GetMapping("/expiring/count")
+    @Operation(summary = "统计即将过期的积分总数", description = "统计当前用户即将过期的积分总数")
+    public HttpResult<Long> countExpiringPoints() {
+        Long userId = getCurrentUserId();
+        Long count = pointsExpirationService.countExpiringPoints(userId);
+        return HttpResult.success(count);
     }
 
     /**
