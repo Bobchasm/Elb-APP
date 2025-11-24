@@ -5,6 +5,7 @@ import com.tju.elm_bk.mapper.PointsExpirationMapper;
 import com.tju.elm_bk.pojo.entity.PointsAccount;
 import com.tju.elm_bk.pojo.entity.PointsExpiration;
 import com.tju.elm_bk.pojo.vo.PointsExpirationVO;
+import com.tju.elm_bk.service.PointsCacheService;
 import com.tju.elm_bk.service.PointsExpirationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -32,11 +33,28 @@ public class PointsExpirationServiceImpl implements PointsExpirationService {
     
     @Autowired
     private PointsAccountMapper pointsAccountMapper;
+    
+    @Autowired
+    private PointsCacheService pointsCacheService;
 
     @Override
     public List<PointsExpirationVO> getExpiringPoints(Long userId) {
+        // 1. 先查缓存
+        List<?> cached = pointsCacheService.getExpiringPointsCache(userId);
+        if (cached != null) {
+            @SuppressWarnings("unchecked")
+            List<PointsExpirationVO> result = (List<PointsExpirationVO>) cached;
+            return result;
+        }
+        
+        // 2. 缓存未命中，查数据库
         List<PointsExpiration> expiringList = pointsExpirationMapper.selectExpiringPoints(userId);
-        return convertToVOList(expiringList);
+        List<PointsExpirationVO> voList = convertToVOList(expiringList);
+        
+        // 3. 写入缓存
+        pointsCacheService.setExpiringPointsCache(userId, voList);
+        
+        return voList;
     }
 
     @Override

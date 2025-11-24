@@ -15,6 +15,7 @@ import com.tju.elm_bk.pojo.vo.PointsExchangeGoodsVO;
 import com.tju.elm_bk.pojo.vo.PointsExchangeRuleVO;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
+import com.tju.elm_bk.service.PointsCacheService;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import org.springframework.beans.BeanUtils;
@@ -46,6 +47,9 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
 
     @Autowired
     private PointsService pointsService; // 依赖注入积分服务接口
+
+    @Autowired
+    private PointsCacheService pointsCacheService;
 
     @Autowired
     private UserMapper userMapper;
@@ -278,6 +282,13 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
 
     @Override
     public BigDecimal getCashExchangeRatio() {
+        // 1. 先查缓存
+        BigDecimal cached = pointsCacheService.getExchangeRatioCache();
+        if (cached != null) {
+            return cached;
+        }
+        
+        // 2. 缓存未命中，查数据库
         MarketingPointsExchangeRule rule = exchangeRuleMapper.selectCashExchangeRule();
         if (rule == null) {
             return BigDecimal.valueOf(100); // 默认100积分=1元

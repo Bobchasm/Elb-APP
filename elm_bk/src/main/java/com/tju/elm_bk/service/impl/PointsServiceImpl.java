@@ -8,6 +8,7 @@ import com.tju.elm_bk.pojo.entity.*;
 import com.tju.elm_bk.pojo.vo.PointsAccountVO;
 import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.service.PointsCacheService;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,9 @@ public class PointsServiceImpl implements PointsService {
     
     @Autowired
     private MarketingPointsExchangeRuleMapper exchangeRuleMapper;
+    
+    @Autowired
+    private PointsCacheService pointsCacheService;
 
     /**
      * 增加积分
@@ -151,6 +155,9 @@ public class PointsServiceImpl implements PointsService {
         expiration.setCreateTime(LocalDateTime.now());
         pointsExpirationMapper.insert(expiration);
 
+        // 6. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(pointsAddDTO.getUserId());
+
         return transaction.getId();
     }
 
@@ -229,30 +236,45 @@ public class PointsServiceImpl implements PointsService {
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
+        // 7. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(pointsDeductDTO.getUserId());
+
         return true;
     }
 
     /**
-     * 查询用户积分账户
+     * 查询用户积分账户（带缓存）
+     * 设计原则：Cache-Aside 模式 - 先查缓存，未命中查数据库
      */
     @Override
     public PointsAccountVO getPointsAccount(Long userId) {
+        // 1. 先查缓存
+        PointsAccountVO cached = pointsCacheService.getAccountCache(userId);
+        if (cached != null) {
+            log.debug("从缓存获取积分账户，userId: {}", userId);
+            return cached;
+        }
+        
+        // 2. 缓存未命中，查数据库
         PointsAccount account = pointsAccountMapper.selectByUserId(userId);
+        PointsAccountVO vo;
         if (account == null) {
             // 如果账户不存在，返回默认值
-            PointsAccountVO vo = new PointsAccountVO();
+            vo = new PointsAccountVO();
             vo.setUserId(userId);
             vo.setTotalPoints(0L);
             vo.setAvailablePoints(0L);
             vo.setFrozenPoints(0L);
             vo.setMemberLevel(0);
             vo.setMemberLevelName(getMemberLevelName(0));
-            return vo;
+        } else {
+            vo = new PointsAccountVO();
+            BeanUtils.copyProperties(account, vo);
+            vo.setMemberLevelName(getMemberLevelName(account.getMemberLevel()));
         }
-
-        PointsAccountVO vo = new PointsAccountVO();
-        BeanUtils.copyProperties(account, vo);
-        vo.setMemberLevelName(getMemberLevelName(account.getMemberLevel()));
+        
+        // 3. 写入缓存
+        pointsCacheService.setAccountCache(userId, vo);
         return vo;
     }
 
@@ -318,6 +340,9 @@ public class PointsServiceImpl implements PointsService {
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteAccountCache(userId);
+
         return true;
     }
 
@@ -375,9 +400,12 @@ public class PointsServiceImpl implements PointsService {
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteAccountCache(userId);
+
         return true;
     }
-    
+
     /**
      * 解冻奖励积分（订单完成时）
      * 设计原则：将订单奖励积分从冻结状态转为可用状态
@@ -433,6 +461,9 @@ public class PointsServiceImpl implements PointsService {
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
         
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteAccountCache(userId);
+        
         return true;
     }
     
@@ -487,6 +518,9 @@ public class PointsServiceImpl implements PointsService {
                 pointsExpirationMapper.deleteByTransactionId(trans.getId());
             }
         }
+
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(userId);
 
         return true;
     }
@@ -640,6 +674,9 @@ public class PointsServiceImpl implements PointsService {
         account.setUpdater(currentUserId);
         pointsAccountMapper.updateById(account);
         
+        // 9. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(userId);
+        
         return true;
     }
     
@@ -649,21 +686,27 @@ public class PointsServiceImpl implements PointsService {
      */
     @Override
     public BigDecimal calculateDeductibleAmount(Long userId, BigDecimal orderAmount) {
-        // 1. 查询用户积分账户
-        PointsAccount account = pointsAccountMapper.selectByUserId(userId);
-        if (account == null || account.getAvailablePoints() == null || account.getAvailablePoints() <= 0) {
+        // 1. 查询用户积分账户（使用缓存）
+        PointsAccountVO accountVO = getPointsAccount(userId);
+        if (accountVO == null || accountVO.getAvailablePoints() == null || accountVO.getAvailablePoints() <= 0) {
             return BigDecimal.ZERO;
         }
         
-        // 2. 获取积分兑换比例（直接查询数据库，避免循环依赖）
-        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectCashExchangeRule();
-        BigDecimal exchangeRatio = (rule != null && rule.getExchangeRatio() != null) 
-            ? rule.getExchangeRatio() 
-            : BigDecimal.valueOf(100); // 默认100积分=1元
+        // 2. 获取积分兑换比例（使用缓存）
+        BigDecimal exchangeRatio = pointsCacheService.getExchangeRatioCache();
+        if (exchangeRatio == null) {
+            // 缓存未命中，查数据库
+            MarketingPointsExchangeRule rule = exchangeRuleMapper.selectCashExchangeRule();
+            exchangeRatio = (rule != null && rule.getExchangeRatio() != null) 
+                ? rule.getExchangeRatio() 
+                : BigDecimal.valueOf(100); // 默认100积分=1元
+            // 写入缓存
+            pointsCacheService.setExchangeRatioCache(exchangeRatio);
+        }
         
         // 3. 计算可用积分可以抵扣的最大金额
         // 可用积分 / 兑换比例 = 可抵扣金额（元）
-        BigDecimal maxDeductibleAmount = BigDecimal.valueOf(account.getAvailablePoints())
+        BigDecimal maxDeductibleAmount = BigDecimal.valueOf(accountVO.getAvailablePoints())
             .divide(exchangeRatio, 2, RoundingMode.DOWN);
         
         // 4. 可抵扣金额不能超过订单金额
@@ -748,6 +791,9 @@ public class PointsServiceImpl implements PointsService {
         transaction.setCreator(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
+        
+        // 8. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(userId);
         
         return true;
     }
