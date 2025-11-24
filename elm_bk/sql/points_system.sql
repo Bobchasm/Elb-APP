@@ -296,6 +296,54 @@ INSERT INTO `points_expiration_alert_config` (`alert_days`, `alert_cycle`, `sms_
 VALUES (3, NULL, '尊敬的{username}，您有{points}积分将于{expireDate}过期，请及时使用。', 1);
 
 -- ============================================
+-- 促销积分规则（rule_type = 1）
+-- ============================================
+
+-- 1. 节假日双倍积分促销（如十一黄金周）
+-- 说明：在2025年10月1日至10月7日期间下单，所有订单获得双倍积分（积分倍数为2.0）
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('十一黄金周双倍积分', 1, 1, 2.0, '2025-10-01', '2025-10-07', 30, 10, 1, 1);
+
+-- 2. 高额订单双倍积分促销
+-- 说明：订单金额达到200元及以上时，获得双倍积分（积分倍数为2.0）
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `min_order_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('满200元双倍积分', 1, 1, 2.0, 200.00, 30, 8, 1, 1);
+
+-- 3. 指定商品双倍积分促销
+-- 说明：购买商品ID为1的商品时，获得双倍积分（积分倍数为2.0）
+-- 注意：food_id需要根据实际商品ID调整
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `food_id`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('指定商品双倍积分', 1, 1, 2.0, 1, 30, 7, 1, 1);
+
+-- 4. 商品价格阈值双倍积分促销
+-- 说明：购买价格超过200元的商品时，获得双倍积分（积分倍数为2.0）
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `food_price_threshold`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('高价商品双倍积分', 1, 1, 2.0, 200.00, 30, 6, 1, 1);
+
+-- 5. 订单金额区间促销（1.5倍积分）
+-- 说明：订单金额在100元到300元之间时，获得1.5倍积分（积分倍数为1.5）
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `min_order_amount`, `max_order_amount`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('100-300元1.5倍积分', 1, 1, 1.5, 100.00, 300.00, 30, 5, 1, 1);
+
+-- 6. 会员等级专属促销（黄金会员三倍积分）
+-- 说明：黄金会员（member_level=2）在节假日期间下单，获得三倍积分（积分倍数为3.0）
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `member_level`, `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('黄金会员节假日三倍积分', 1, 1, 3.0, 2, '2024-12-24', '2024-12-26', 30, 9, 1, 1);
+
+-- 7. 综合条件促销（节假日+高额订单+指定商品）
+-- 说明：在节假日期间，订单金额达到150元，且购买了指定商品时，获得2.5倍积分
+-- 注意：food_id需要根据实际商品ID调整
+INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
+    `min_order_amount`, `food_id`, `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('节假日高额订单指定商品2.5倍积分', 1, 1, 2.5, 150.00, 1, '2024-12-20', '2024-12-31', 30, 11, 1, 1);
+
+-- ============================================
 -- 数据库设计说明
 -- ============================================
 -- 1. 所有表遵循现有数据库的命名规范和字段设计风格
