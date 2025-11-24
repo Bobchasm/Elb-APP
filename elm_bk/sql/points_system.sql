@@ -213,7 +213,8 @@ CREATE TABLE `points_expiration_alert_log` (
 -- ----------------------------
 ALTER TABLE `orders` 
 ADD COLUMN `points_used` bigint NULL DEFAULT 0 COMMENT '使用积分数量' AFTER `payment_method`,
-ADD COLUMN `points_amount` bigint NULL DEFAULT 0 COMMENT '获得积分数量' AFTER `points_used`;
+ADD COLUMN `points_amount` bigint NULL DEFAULT 0 COMMENT '获得积分数量' AFTER `points_used`,
+ADD COLUMN `points_discount_amount` decimal(10, 2) NULL DEFAULT 0 COMMENT '积分抵扣的现金金额（元）' AFTER `points_amount`;
 
 -- ----------------------------
 -- 10. 初始化默认积分规则（可选）

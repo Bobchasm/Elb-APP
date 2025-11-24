@@ -2,6 +2,7 @@ package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.MarketingPointsRuleMapper;
+import com.tju.elm_bk.mapper.OrdersMapper;
 import com.tju.elm_bk.mapper.PointsAccountMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.pojo.dto.OrderPaidMessage;
@@ -47,6 +48,9 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
 
     @Autowired
     private PointsService pointsService; // 依赖注入积分服务接口
+    
+    @Autowired
+    private OrdersMapper ordersMapper;
 
     @Autowired
     private UserMapper userMapper;
@@ -258,6 +262,12 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
             addDTO.setExpireTime(orderDate.plusDays(expireDays));
 
             pointsService.addPoints(addDTO);
+            
+            // 更新订单的获得积分数量
+            ordersMapper.updateOrderPointsAmount(orderId, totalPoints);
+        } else {
+            // 如果没有获得积分，也要更新订单的points_amount为0
+            ordersMapper.updateOrderPointsAmount(orderId, 0L);
         }
 
         return totalPoints;

@@ -65,6 +65,9 @@ public class Order {
     @Schema(description = "获得积分数量")
     private Long pointsAmount;
 
+    @Schema(description = "积分抵扣的现金金额（元）")
+    private BigDecimal pointsDiscountAmount;
+
 //    // 关联字段
 //    @Schema(description = "下单客户")
 //    private User customer;

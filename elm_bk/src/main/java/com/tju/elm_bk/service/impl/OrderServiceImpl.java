@@ -6,9 +6,11 @@ import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.*;
 import com.tju.elm_bk.pojo.entity.*;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
 import com.tju.elm_bk.service.OrderMessageService;
 import com.tju.elm_bk.service.OrderService;
 import com.tju.elm_bk.service.PointsService;
+import lombok.extern.slf4j.Slf4j;
 import com.tju.elm_bk.utils.SecurityUtils;
 import com.tju.elm_bk.pojo.vo.CartItemVO;
 import com.tju.elm_bk.pojo.vo.OrderFoodVO;
@@ -32,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -58,6 +61,8 @@ public class OrderServiceImpl implements OrderService {
     private OrderMessageService orderMessageService;
     @Autowired
     private PointsService pointsService;
+    @Autowired
+    private MarketingPointsExchangeRuleService exchangeRuleService;
 
     // 订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
     public static final List<Integer> orderStatusList;
@@ -192,7 +197,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Long setOrderState(Long orderId, Integer orderState) {
+    public Long setOrderState(Long orderId, Integer orderState, Boolean usePoints) {
         if (!orderStatusList.contains(orderState)) {
             throw new APIException(ResultCodeEnum.ORDER_STATUS_UNMATCHED);
         }
@@ -208,6 +213,53 @@ public class OrderServiceImpl implements OrderService {
         if (orderState == 1) {
             if (order.getOrderState() != 0 || !Objects.equals(userId, order.getCustomerId())) {
                 throw new APIException(ResultCodeEnum.ORDER_PAY_FAILED);
+            }
+            
+            // 积分+现金支付：根据usePoints参数决定是否使用积分抵扣
+            // usePoints=true 或 null（默认）：使用积分抵扣
+            // usePoints=false：不使用积分，只用现金支付
+            try {
+                // 判断是否使用积分（默认使用积分）
+                boolean shouldUsePoints = (usePoints == null || usePoints);
+                
+                if (shouldUsePoints) {
+                    // 1. 计算可抵扣金额
+                    BigDecimal deductibleAmount = pointsService.calculateDeductibleAmount(
+                        order.getCustomerId(), order.getOrderTotal());
+                    
+                    // 2. 如果可抵扣金额大于0，则冻结积分
+                    if (deductibleAmount.compareTo(BigDecimal.ZERO) > 0) {
+                    // 获取积分兑换比例
+                    BigDecimal exchangeRatio = exchangeRuleService.getCashExchangeRatio();
+                    if (exchangeRatio == null || exchangeRatio.compareTo(BigDecimal.ZERO) <= 0) {
+                        exchangeRatio = BigDecimal.valueOf(100); // 默认100积分=1元
+                    }
+                    
+                    // 计算需要冻结的积分数量
+                    Long pointsToFreeze = deductibleAmount.multiply(exchangeRatio).longValue();
+                    
+                    // 冻结积分（优先扣减即将过期的积分）
+                    pointsService.freezePoints(order.getCustomerId(), pointsToFreeze, orderId);
+                    
+                    // 更新订单的积分使用信息
+                    ordersMapper.updateOrderPoints(orderId, pointsToFreeze, deductibleAmount);
+                    
+                        log.info("订单{}支付：使用积分{}，抵扣金额{}元", orderId, pointsToFreeze, deductibleAmount);
+                    } else {
+                        // 没有可用积分，只使用现金支付
+                        ordersMapper.updateOrderPoints(orderId, 0L, BigDecimal.ZERO);
+                        log.info("订单{}支付：没有可用积分，只使用现金支付", orderId);
+                    }
+                } else {
+                    // 用户选择不使用积分，只使用现金支付
+                    ordersMapper.updateOrderPoints(orderId, 0L, BigDecimal.ZERO);
+                    log.info("订单{}支付：用户选择不使用积分，只使用现金支付", orderId);
+                }
+            } catch (Exception e) {
+                // 积分处理失败不影响订单支付，记录日志
+                log.error("订单{}支付时积分处理失败: {}", orderId, e.getMessage());
+                // 如果积分处理失败，只使用现金支付
+                ordersMapper.updateOrderPoints(orderId, 0L, BigDecimal.ZERO);
             }
             
             // 订单支付完成，发送消息到RabbitMQ（异步通知营销系统）
@@ -234,12 +286,19 @@ public class OrderServiceImpl implements OrderService {
                 walletRepository.modifyWallet(wallet);
             }
             
-            // 订单完成，解冻奖励积分（订单支付时已发放但冻结，现在解冻）
+            // 订单完成，处理积分相关逻辑
             try {
+                // 1. 真正扣除用户支付的积分（如果使用了积分+现金支付）
+                if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
+                    pointsService.deductFrozenPoints(order.getCustomerId(), orderId);
+                    log.info("订单{}完成：扣除积分{}", orderId, order.getPointsUsed());
+                }
+                
+                // 2. 解冻奖励积分（订单支付时已发放但冻结，现在解冻）
                 pointsService.unfreezeRewardPoints(order.getCustomerId(), orderId);
             } catch (Exception e) {
-                // 解冻失败不影响订单完成，记录日志
-                System.err.println("解冻奖励积分失败: orderId=" + orderId + ", error=" + e.getMessage());
+                // 积分处理失败不影响订单完成，记录日志
+                log.error("订单{}完成时积分处理失败: {}", orderId, e.getMessage());
             }
         }
         if (orderState == 4) {

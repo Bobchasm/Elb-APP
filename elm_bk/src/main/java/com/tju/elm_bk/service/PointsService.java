@@ -85,5 +85,21 @@ public interface PointsService {
      * @return 是否成功
      */
     Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel);
+    
+    /**
+     * 计算可用积分可以抵扣的现金金额
+     * @param userId 用户ID
+     * @param orderAmount 订单金额（用于计算最大可抵扣金额）
+     * @return 可抵扣金额（元）
+     */
+    java.math.BigDecimal calculateDeductibleAmount(Long userId, java.math.BigDecimal orderAmount);
+    
+    /**
+     * 真正扣除冻结的积分（订单完成时）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean deductFrozenPoints(Long userId, Long orderId);
 }
 

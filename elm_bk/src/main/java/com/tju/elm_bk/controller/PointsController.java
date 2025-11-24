@@ -109,6 +109,18 @@ public class PointsController {
     }
 
     /**
+     * 计算可抵扣金额（用于前端显示"已优惠xx元"）
+     */
+    @GetMapping("/deductible-amount")
+    @Operation(summary = "计算可抵扣金额", description = "根据订单金额和用户可用积分，计算可抵扣的现金金额")
+    public HttpResult<java.math.BigDecimal> calculateDeductibleAmount(
+            @RequestParam java.math.BigDecimal orderAmount) {
+        Long userId = getCurrentUserId();
+        java.math.BigDecimal deductibleAmount = pointsService.calculateDeductibleAmount(userId, orderAmount);
+        return HttpResult.success(deductibleAmount);
+    }
+
+    /**
      * 获取当前用户ID
      */
     private Long getCurrentUserId() {

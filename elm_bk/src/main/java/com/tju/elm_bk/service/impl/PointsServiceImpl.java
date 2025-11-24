@@ -8,6 +8,7 @@ import com.tju.elm_bk.pojo.entity.*;
 import com.tju.elm_bk.pojo.vo.PointsAccountVO;
 import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
 import com.tju.elm_bk.result.ResultCodeEnum;
+import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,6 +51,9 @@ public class PointsServiceImpl implements PointsService {
     
     @Autowired
     private MarketingPointsRuleMapper marketingPointsRuleMapper;
+    
+    @Autowired
+    private MarketingPointsExchangeRuleService exchangeRuleService;
 
     /**
      * 增加积分
@@ -637,6 +643,116 @@ public class PointsServiceImpl implements PointsService {
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
         pointsAccountMapper.updateById(account);
+        
+        return true;
+    }
+    
+    /**
+     * 计算可用积分可以抵扣的现金金额
+     * 设计原则：优先使用即将过期的积分，计算最大可抵扣金额
+     */
+    @Override
+    public BigDecimal calculateDeductibleAmount(Long userId, BigDecimal orderAmount) {
+        // 1. 查询用户积分账户
+        PointsAccount account = pointsAccountMapper.selectByUserId(userId);
+        if (account == null || account.getAvailablePoints() == null || account.getAvailablePoints() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 2. 获取积分兑换比例
+        BigDecimal exchangeRatio = exchangeRuleService.getCashExchangeRatio();
+        if (exchangeRatio == null || exchangeRatio.compareTo(BigDecimal.ZERO) <= 0) {
+            // 默认100积分=1元
+            exchangeRatio = BigDecimal.valueOf(100);
+        }
+        
+        // 3. 计算可用积分可以抵扣的最大金额
+        // 可用积分 / 兑换比例 = 可抵扣金额（元）
+        BigDecimal maxDeductibleAmount = BigDecimal.valueOf(account.getAvailablePoints())
+            .divide(exchangeRatio, 2, RoundingMode.DOWN);
+        
+        // 4. 可抵扣金额不能超过订单金额
+        BigDecimal deductibleAmount = maxDeductibleAmount.min(orderAmount);
+        
+        return deductibleAmount;
+    }
+    
+    /**
+     * 真正扣除冻结的积分（订单完成时）
+     * 设计原则：将冻结的积分从冻结状态转为已扣除状态
+     */
+    @Override
+    @Transactional
+    public Boolean deductFrozenPoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+        
+        // 2. 查询该订单的冻结积分记录（transaction_type = 3, points_source = 5）
+        List<PointsTransaction> freezeTransactions = pointsTransactionMapper.selectByOrderIdAndType(
+            orderId, 3); // 3-冻结
+        
+        // 3. 过滤出积分+现金消费的冻结记录（points_source = 5）
+        Long totalFrozen = 0L;
+        for (PointsTransaction trans : freezeTransactions) {
+            // 确保是积分+现金消费的冻结记录（points_source = 5）
+            if (Objects.equals(trans.getPointsSource(), 5) && 
+                Objects.equals(trans.getUserId(), userId) && 
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                totalFrozen += Math.abs(trans.getPointsChange()); // 冻结时是负数，取绝对值
+            }
+        }
+        
+        // 4. 如果没有冻结积分记录，直接返回
+        if (totalFrozen == 0) {
+            return true;
+        }
+        
+        // 5. 真正扣除积分：从冻结积分转为已扣除（减少总积分和冻结积分）
+        account.setFrozenPoints(account.getFrozenPoints() - totalFrozen);
+        account.setTotalPoints(account.getTotalPoints() - totalFrozen);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+        
+        // 6. 优先扣减即将过期的积分（更新过期记录）
+        Long remainingPoints = totalFrozen;
+        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(userId);
+        
+        // 按过期时间升序扣减
+        for (PointsExpiration exp : expiringPoints) {
+            if (remainingPoints <= 0) {
+                break;
+            }
+            
+            Long deductAmount = Math.min(remainingPoints, exp.getPointsAmount());
+            exp.setPointsAmount(exp.getPointsAmount() - deductAmount);
+            
+            if (exp.getPointsAmount() <= 0) {
+                exp.setIsExpired(true);
+            }
+            pointsExpirationMapper.updateById(exp);
+            
+            remainingPoints -= deductAmount;
+        }
+        
+        // 7. 记录消费明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(1); // 1-消费
+        transaction.setPointsSource(5); // 5-积分+现金消费
+        transaction.setPointsChange(-totalFrozen); // 负数表示减少
+        transaction.setPointsBalance(account.getAvailablePoints()); // 可用积分不变（因为已经从可用转为冻结了）
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单完成扣除积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
         
         return true;
     }

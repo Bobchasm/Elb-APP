@@ -84,6 +84,15 @@ public interface OrdersMapper {
 
     @Update("update orders set payment_method = #{method} where id = #{orderId}")
     Integer setOrderPaymentMethod(Long orderId, Integer method);
+    
+    @Update("update orders set points_used = #{pointsUsed}, points_discount_amount = #{pointsDiscountAmount} where id = #{orderId}")
+    Integer updateOrderPoints(@Param("orderId") Long orderId, 
+                              @Param("pointsUsed") Long pointsUsed, 
+                              @Param("pointsDiscountAmount") java.math.BigDecimal pointsDiscountAmount);
+    
+    @Update("update orders set points_amount = #{pointsAmount} where id = #{orderId}")
+    Integer updateOrderPointsAmount(@Param("orderId") Long orderId, 
+                                     @Param("pointsAmount") Long pointsAmount);
 
     @Select("select * from orders where id = #{orderId}")
     Order getOrderById(Long orderId);
