@@ -8,7 +8,6 @@ import com.tju.elm_bk.pojo.entity.*;
 import com.tju.elm_bk.pojo.vo.PointsAccountVO;
 import com.tju.elm_bk.pojo.vo.PointsTransactionVO;
 import com.tju.elm_bk.result.ResultCodeEnum;
-import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +52,7 @@ public class PointsServiceImpl implements PointsService {
     private MarketingPointsRuleMapper marketingPointsRuleMapper;
     
     @Autowired
-    private MarketingPointsExchangeRuleService exchangeRuleService;
+    private MarketingPointsExchangeRuleMapper exchangeRuleMapper;
 
     /**
      * 增加积分
@@ -656,12 +655,11 @@ public class PointsServiceImpl implements PointsService {
             return BigDecimal.ZERO;
         }
         
-        // 2. 获取积分兑换比例
-        BigDecimal exchangeRatio = exchangeRuleService.getCashExchangeRatio();
-        if (exchangeRatio == null || exchangeRatio.compareTo(BigDecimal.ZERO) <= 0) {
-            // 默认100积分=1元
-            exchangeRatio = BigDecimal.valueOf(100);
-        }
+        // 2. 获取积分兑换比例（直接查询数据库，避免循环依赖）
+        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectCashExchangeRule();
+        BigDecimal exchangeRatio = (rule != null && rule.getExchangeRatio() != null) 
+            ? rule.getExchangeRatio() 
+            : BigDecimal.valueOf(100); // 默认100积分=1元
         
         // 3. 计算可用积分可以抵扣的最大金额
         // 可用积分 / 兑换比例 = 可抵扣金额（元）
