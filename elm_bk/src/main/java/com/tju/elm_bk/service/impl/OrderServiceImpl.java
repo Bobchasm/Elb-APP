@@ -292,6 +292,15 @@ public class OrderServiceImpl implements OrderService {
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
 
+        DeliveryAddress deliveryAddress = deliveryAddressMapper.getDeliveryAddressById(addressId);
+        if (null == deliveryAddress) {
+            throw new APIException(ResultCodeEnum.ADDRESS_MISSED);
+        }
+        order.setAddress(deliveryAddress.getAddress());
+        order.setContactName(deliveryAddress.getContactName());
+        order.setContactSex(deliveryAddress.getContactSex());
+        order.setContactTel(deliveryAddress.getContactTel());
+
         // 计算总价
         double totalPrice = 0.0;
         for (CartItemVO cartItemVO : cartItemsInBusiness) {

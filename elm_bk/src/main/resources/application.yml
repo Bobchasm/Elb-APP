@@ -9,6 +9,8 @@ spring:
     url: jdbc:mysql://REDACTED_IP:3306/elm_v2
     username: root
     password: 123456
+    hikari: # 配置连接池读已提交
+      transaction-isolation: TRANSACTION_READ_COMMITTED
 
 logging:
   level:

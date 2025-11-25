@@ -59,6 +59,19 @@ public class Order {
     @Schema(description = "支付方式 0-微信支付 1-支付宝支付 2-虚拟钱包支付")
     private Integer paymentMethod;
 
+
+    @Schema(description = "地址")
+    private String address;
+
+    @Schema(description = "联系人性别")
+    private Integer contactSex;
+
+    @Schema(description = "联系人姓名")
+    private String contactName;
+
+    @Schema(description = "联系方式")
+    private String contactTel;
+
 //    // 关联字段
 //    @Schema(description = "下单客户")
 //    private User customer;

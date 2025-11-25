@@ -226,7 +226,7 @@
 
 
     <insert id="insertOrderPlus" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO orders (create_time, creator, is_deleted, update_time, updater, order_date, order_state, order_total, business_id, customer_id, address_id,delivery_price)
-        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{orderDate}, #{orderState}, #{orderTotal}, #{businessId}, #{customerId}, #{addressId},#{deliveryPrice})
+        INSERT INTO orders (create_time, creator, is_deleted, update_time, updater, order_date, order_state, order_total, business_id, customer_id, address_id,delivery_price,address,contact_sex,contact_name,contact_tel)
+        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{orderDate}, #{orderState}, #{orderTotal}, #{businessId}, #{customerId}, #{addressId},#{deliveryPrice},#{address},#{contactSex},#{contactName},#{contactTel})
     </insert>
 </mapper>
