@@ -60,9 +60,12 @@ public class OrderController {
     }
 
     @PutMapping("/status")
-    @Operation(summary = "设置订单状态",description = "订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消)")
-    public HttpResult<Long> setOrderStatus(@RequestParam Integer orderState,@RequestParam Long orderId) {
-        return HttpResult.success(orderService.setOrderState(orderId,orderState));
+    @Operation(summary = "设置订单状态",description = "订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消)。当orderState=1时，usePoints参数控制是否使用积分抵扣（true-使用积分，false-不使用积分，不传-默认使用积分）")
+    public HttpResult<Long> setOrderStatus(
+            @RequestParam Integer orderState,
+            @RequestParam Long orderId,
+            @RequestParam(required = false) Boolean usePoints) {
+        return HttpResult.success(orderService.setOrderState(orderId, orderState, usePoints));
     }
 
     @GetMapping("/submit")

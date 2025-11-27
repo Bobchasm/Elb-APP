@@ -3,10 +3,12 @@ package com.tju.elm_bk.controller;
 import com.tju.elm_bk.pojo.dto.*;
 import com.tju.elm_bk.pojo.entity.Authority;
 import com.tju.elm_bk.pojo.entity.Person;
+import com.tju.elm_bk.pojo.entity.PointsAccount;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.AuthorityMapper;
 import com.tju.elm_bk.mapper.PersonMapper;
+import com.tju.elm_bk.mapper.PointsAccountMapper;
 import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.PersonService;
@@ -48,6 +50,8 @@ public class UserRestController {
     private PersonService personService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PointsAccountMapper pointsAccountMapper;
     @Autowired
     private PersonMapper personMapper;
 
@@ -289,6 +293,21 @@ public class UserRestController {
 //                userMapper.insertUserAuthority(user.getId(), authority.getName());
 //            }
 //        }
+
+        // 创建积分账户
+        PointsAccount pointsAccount = new PointsAccount();
+        pointsAccount.setUserId(user.getId());
+        pointsAccount.setTotalPoints(0L);
+        pointsAccount.setAvailablePoints(0L);
+        pointsAccount.setFrozenPoints(0L);
+        pointsAccount.setMemberLevel(0); // 0-普通会员
+        pointsAccount.setCreateTime(now);
+        pointsAccount.setUpdateTime(now);
+        pointsAccount.setCreator(user.getId());
+        pointsAccount.setUpdater(user.getId());
+        pointsAccount.setIsDeleted(false);
+        pointsAccountMapper.insert(pointsAccount);
+        log.info("为新用户 {} 创建积分账户成功，账户ID: {}", user.getId(), pointsAccount.getId());
 
         User user1 = userService.getUserWithAuthorities(user.getUsername());
         log.info("user1:{}",user1);

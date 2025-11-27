@@ -18,13 +18,13 @@ public class Notification {
     @Schema(description = "用户ID")
     private Long userId;
 
-    @Schema(description = "消息类型：0=商家申请审核，1=开店申请审核")
+    @Schema(description = "消息类型：0=商家申请审核，1=开店申请审核，2=积分过期预警")
     private Integer notificationType;
 
     @Schema(description = "消息内容")
     private String notificationContent;
 
-    @Schema(description = "审核结果：1=通过，2=拒绝")
+    @Schema(description = "审核结果：1=通过，2=拒绝（对于积分过期预警notification_type=2时，此字段为NULL）")
     private Integer auditResult;
 
     @Schema(description = "是否已读：0=未读，1=已读")

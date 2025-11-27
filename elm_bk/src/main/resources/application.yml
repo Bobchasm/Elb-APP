@@ -11,6 +11,25 @@ spring:
     password: 123456
     hikari: # 配置连接池读已提交
       transaction-isolation: TRANSACTION_READ_COMMITTED
+  rabbitmq:
+    host: REDACTED_IP
+    port: 5672
+    username: rabbit
+    password: rabbit
+    virtual-host: /
+  data:
+    redis:
+      host: REDACTED_IP
+      port: 6379
+      password: # 无密码，留空
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 
 logging:
   level:

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tju.elm_bk.mapper.MarketingPointsRuleMapper">
+
+    <resultMap id="BaseResultMap" type="com.tju.elm_bk.pojo.entity.MarketingPointsRule">
+        <id column="id" property="id"/>
+        <result column="rule_name" property="ruleName"/>
+        <result column="rule_type" property="ruleType"/>
+        <result column="rule_status" property="ruleStatus"/>
+        <result column="points_ratio" property="pointsRatio"/>
+        <result column="points_multiplier" property="pointsMultiplier"/>
+        <result column="member_level" property="memberLevel"/>
+        <result column="min_order_amount" property="minOrderAmount"/>
+        <result column="max_order_amount" property="maxOrderAmount"/>
+        <result column="food_id" property="foodId"/>
+        <result column="holiday_start" property="holidayStart"/>
+        <result column="holiday_end" property="holidayEnd"/>
+        <result column="behavior_type" property="behaviorType"/>
+        <result column="points_amount" property="pointsAmount"/>
+        <result column="expire_days" property="expireDays"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="priority" property="priority"/>
+        <result column="create_time" property="createTime"/>
+        <result column="creator" property="creator"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="updater" property="updater"/>
+    </resultMap>
+
+    <update id="updateById" parameterType="com.tju.elm_bk.pojo.entity.MarketingPointsRule">
+        UPDATE marketing_points_rule
+        <set>
+            <if test="ruleName != null">rule_name = #{ruleName},</if>
+            <if test="ruleStatus != null">rule_status = #{ruleStatus},</if>
+            <if test="pointsRatio != null">points_ratio = #{pointsRatio},</if>
+            <if test="pointsMultiplier != null">points_multiplier = #{pointsMultiplier},</if>
+            <if test="memberLevel != null">member_level = #{memberLevel},</if>
+            <if test="minOrderAmount != null">min_order_amount = #{minOrderAmount},</if>
+            <if test="maxOrderAmount != null">max_order_amount = #{maxOrderAmount},</if>
+            <if test="foodId != null">food_id = #{foodId},</if>
+            <if test="holidayStart != null">holiday_start = #{holidayStart},</if>
+            <if test="holidayEnd != null">holiday_end = #{holidayEnd},</if>
+            <if test="behaviorType != null">behavior_type = #{behaviorType},</if>
+            <if test="pointsAmount != null">points_amount = #{pointsAmount},</if>
+            <if test="expireDays != null">expire_days = #{expireDays},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updater != null">updater = #{updater}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectRules" resultMap="BaseResultMap">
+        SELECT * FROM marketing_points_rule
+        <where>
+            is_deleted = 0
+            <if test="ruleType != null">
+                AND rule_type = #{ruleType}
+            </if>
+            <if test="ruleStatus != null">
+                AND rule_status = #{ruleStatus}
+            </if>
+        </where>
+        ORDER BY priority DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectPromotionRules" resultMap="BaseResultMap">
+        SELECT * FROM marketing_points_rule
+        <where>
+            rule_type = 1 AND rule_status = 1 AND is_deleted = 0
+            AND (member_level IS NULL OR member_level = #{memberLevel})
+            AND (start_time IS NULL OR start_time &lt;= NOW())
+            AND (end_time IS NULL OR end_time &gt;= NOW())
+            <if test="orderDate != null">
+                AND (holiday_start IS NULL OR holiday_start &lt;= #{orderDate})
+                AND (holiday_end IS NULL OR holiday_end &gt;= #{orderDate})
+            </if>
+            <if test="orderAmount != null">
+                AND (min_order_amount IS NULL OR min_order_amount &lt;= #{orderAmount})
+                AND (max_order_amount IS NULL OR max_order_amount &gt;= #{orderAmount})
+            </if>
+            <if test="foodIds != null and foodIds.size() > 0">
+                AND (food_id IS NULL OR food_id IN
+                <foreach collection="foodIds" item="foodId" open="(" separator="," close=")">
+                    #{foodId}
+                </foreach>
+                )
+            </if>
+        </where>
+        ORDER BY priority DESC
+    </select>
+
+</mapper>
+
