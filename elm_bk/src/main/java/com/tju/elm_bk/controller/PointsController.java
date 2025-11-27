@@ -59,14 +59,15 @@ public class PointsController {
      * 查询积分明细
      */
     @GetMapping("/transactions")
-    @Operation(summary = "查询积分明细", description = "分页查询当前用户的积分明细")
+    @Operation(summary = "查询积分明细", description = "分页查询当前用户的积分明细，支持按交易类型和积分来源筛选")
     public HttpResult<List<PointsTransactionVO>> getTransactions(
             @RequestParam(required = false, defaultValue = "1") Integer pageNum,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) Integer transactionType) {
+            @RequestParam(required = false) Integer transactionType,
+            @RequestParam(required = false) Integer pointsSource) {
         Long userId = getCurrentUserId();
         List<PointsTransactionVO> transactions = pointsService.getPointsTransactions(
-            userId, pageNum, pageSize, transactionType);
+            userId, pageNum, pageSize, transactionType, pointsSource);
         return HttpResult.success(transactions);
     }
 
@@ -80,18 +81,7 @@ public class PointsController {
         Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
         return HttpResult.success(orderId);
     }
-
-    /**
-     * 积分+现金支付
-     */
-    @PostMapping("/payment")
-    @Operation(summary = "积分+现金支付", description = "使用积分+现金支付订单")
-    public HttpResult<Boolean> pointsPayment(@RequestBody PointsPaymentDTO dto) {
-        // 这里简化处理，实际应该调用订单服务处理支付
-        // 积分扣减在订单服务中处理
-        return HttpResult.success(true);
-    }
-
+    
     /**
      * 获取可兑换商品列表
      */

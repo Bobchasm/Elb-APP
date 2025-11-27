@@ -445,7 +445,7 @@ const initWebSocket = () => {
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   // 注意：这里的地址需要根据你的后端实际域名/端口修改
   //const wsUrl = `${wsProtocol}//${window.location.host}/ws/${sid}`;
-  const wsUrl = `${wsProtocol}//REDACTED_IP:8080/ws/${sid}`;
+  const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`;
 
   webSocket.value = new WebSocket(wsUrl);
 

@@ -23,7 +23,7 @@ public class PointsExchangeRuleCreateDTO {
     @Schema(description = "规则状态 0-禁用 1-启用")
     private Integer ruleStatus;
 
-    @Schema(description = "兑换比例（如10表示10积分=1元）", required = true)
+    @Schema(description = "兑换比例（如10表示10积分=1元，仅积分+现金规则需要，兑换商品规则不需要）")
     private BigDecimal exchangeRatio;
 
     @Schema(description = "最小使用积分数量")

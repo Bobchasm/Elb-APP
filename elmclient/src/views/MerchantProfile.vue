@@ -127,7 +127,7 @@ export default {
     // 修改：加载商家统计数据，现在获取的是商铺列表
     const loadMerchantStats = async (userId) => {
       try {
-        const response = await request.get(`http://REDACTED_IP:8080/api/merchant/interaction/statsByUserId/${userId}`);
+        const response = await request.get(`http://localhost:8080/api/merchant/interaction/statsByUserId/${userId}`);
         
         if (response && response.success && response.data) {
           stores.value = response.data;

@@ -44,6 +44,8 @@ CREATE TABLE `points_transaction` (
   `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '交易描述',
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `creator` bigint NULL DEFAULT NULL COMMENT '创建人ID',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `updater` bigint NULL DEFAULT NULL COMMENT '更新人ID',
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否删除',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id` (`user_id`) USING BTREE COMMENT '用户ID索引',
@@ -94,7 +96,6 @@ CREATE TABLE `marketing_points_rule` (
   `min_order_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '最低订单金额（促销积分使用）',
   `max_order_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '最高订单金额（促销积分使用）',
   `food_id` bigint NULL DEFAULT NULL COMMENT '指定商品ID（关联food表，促销积分使用）',
-  `food_price_threshold` decimal(10, 2) NULL DEFAULT NULL COMMENT '商品价格阈值（如200元）',
   `holiday_start` date NULL DEFAULT NULL COMMENT '节假日开始日期',
   `holiday_end` date NULL DEFAULT NULL COMMENT '节假日结束日期',
   `behavior_type` varchar(50) NULL DEFAULT NULL COMMENT '行为类型（like-点赞 collect-收藏 repay_loan-还贷款）',
@@ -125,7 +126,7 @@ CREATE TABLE `marketing_points_exchange_rule` (
   `rule_name` varchar(100) NOT NULL COMMENT '规则名称',
   `rule_type` tinyint NOT NULL COMMENT '规则类型 0-积分+现金 1-兑换商品',
   `rule_status` tinyint NOT NULL DEFAULT 1 COMMENT '规则状态 0-禁用 1-启用',
-  `exchange_ratio` decimal(10, 4) NOT NULL COMMENT '兑换比例（如10表示10积分=1元）',
+  `exchange_ratio` decimal(10, 4) NULL DEFAULT NULL COMMENT '兑换比例（如10表示10积分=1元，仅积分+现金规则需要）',
   `min_points` bigint NULL DEFAULT NULL COMMENT '最小使用积分数量',
   `max_points` bigint NULL DEFAULT NULL COMMENT '最大使用积分数量（NULL表示不限制）',
   `food_id` bigint NULL DEFAULT NULL COMMENT '商品ID（关联food表，兑换商品时使用）',
@@ -156,7 +157,6 @@ CREATE TABLE `points_exchange_order` (
   `food_id` bigint NULL DEFAULT NULL COMMENT '兑换商品ID（关联food表）',
   `points_used` bigint NOT NULL COMMENT '使用积分数量',
   `cash_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '现金金额（预留字段，当前纯积分兑换为0）',
-  `exchange_ratio` decimal(10, 4) NOT NULL COMMENT '兑换比例',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态 0-待处理 1-已完成 2-已取消',
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -226,6 +226,27 @@ VALUES ('基础消费积分规则', 0, 1, 1.0000, 0, 1, 1);
 INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `exchange_ratio`, `creator`, `updater`) 
 VALUES ('积分+现金兑换规则', 0, 1, 100.0000, 1, 1);
 
+-- 积分兑换商品规则（rule_type = 1）
+-- 商品ID为1，需要40积分
+INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `food_id`, `required_points`, `stock_quantity`, `creator`, `updater`) 
+VALUES ('积分兑换商品', 1, 1, 1, 40, 100, 1, 1);
+
+-- 商品ID为2，需要50积分
+INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `food_id`, `required_points`, `stock_quantity`, `creator`, `updater`) 
+VALUES ('积分兑换商品', 1, 1, 2, 50, 100, 1, 1);
+
+-- 商品ID为3，需要60积分
+INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `food_id`, `required_points`, `stock_quantity`, `creator`, `updater`) 
+VALUES ('积分兑换商品', 1, 1, 3, 60, 100, 1, 1);
+
+-- 商品ID为4，需要70积分
+INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `food_id`, `required_points`, `stock_quantity`, `creator`, `updater`) 
+VALUES ('积分兑换商品', 1, 1, 4, 70, 100, 1, 1);
+
+-- 商品ID为5，需要80积分
+INSERT INTO `marketing_points_exchange_rule` (`rule_name`, `rule_type`, `rule_status`, `food_id`, `required_points`, `stock_quantity`, `creator`, `updater`) 
+VALUES ('积分兑换商品', 1, 1, 5, 80, 100, 1, 1);
+
 -- 等级积分规则：升级到不同会员等级获得的积分
 -- 升级到白银会员（1）：获得100积分
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `member_level`, `points_amount`, `expire_days`, `priority`, `creator`, `updater`) 
@@ -293,7 +314,7 @@ VALUES ('还贷款积分规则-钻石会员', 3, 1, 'repay_loan', 3, 150, 30, 0,
 
 -- 默认预警配置：提前3天预警，仅预警一次
 INSERT INTO `points_expiration_alert_config` (`alert_days`, `alert_cycle`, `sms_template`, `is_enabled`) 
-VALUES (3, NULL, '尊敬的{username}，您有{points}积分将于{expireDate}过期，请及时使用。', 1);
+VALUES (3, NULL, '尊敬的{username}先生/女士，您有{points}积分将于{expireDate}过期，请及时使用。', 1);
 
 -- ============================================
 -- 促销积分规则（rule_type = 1）
@@ -318,25 +339,19 @@ INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `p
     `food_id`, `expire_days`, `priority`, `creator`, `updater`) 
 VALUES ('指定商品双倍积分', 1, 1, 2.0, 1, 30, 7, 1, 1);
 
--- 4. 商品价格阈值双倍积分促销
--- 说明：购买价格超过200元的商品时，获得双倍积分（积分倍数为2.0）
-INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
-    `food_price_threshold`, `expire_days`, `priority`, `creator`, `updater`) 
-VALUES ('高价商品双倍积分', 1, 1, 2.0, 200.00, 30, 6, 1, 1);
-
--- 5. 订单金额区间促销（1.5倍积分）
+-- 4. 订单金额区间促销（1.5倍积分）
 -- 说明：订单金额在100元到300元之间时，获得1.5倍积分（积分倍数为1.5）
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
     `min_order_amount`, `max_order_amount`, `expire_days`, `priority`, `creator`, `updater`) 
 VALUES ('100-300元1.5倍积分', 1, 1, 1.5, 100.00, 300.00, 30, 5, 1, 1);
 
--- 6. 会员等级专属促销（黄金会员三倍积分）
+-- 5. 会员等级专属促销（黄金会员三倍积分）
 -- 说明：黄金会员（member_level=2）在节假日期间下单，获得三倍积分（积分倍数为3.0）
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
     `member_level`, `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
 VALUES ('黄金会员节假日三倍积分', 1, 1, 3.0, 2, '2024-12-24', '2024-12-26', 30, 9, 1, 1);
 
--- 7. 综合条件促销（节假日+高额订单+指定商品）
+-- 6. 综合条件促销（节假日+高额订单+指定商品）
 -- 说明：在节假日期间，订单金额达到150元，且购买了指定商品时，获得2.5倍积分
 -- 注意：food_id需要根据实际商品ID调整
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 

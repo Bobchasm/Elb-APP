@@ -236,7 +236,7 @@ export default {
       try {
         const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//REDACTED_IP:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+        const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
 
         webSocket.value = new WebSocket(wsUrl);
 

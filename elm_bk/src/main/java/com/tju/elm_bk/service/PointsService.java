@@ -41,9 +41,10 @@ public interface PointsService {
      * @param pageNum 页码
      * @param pageSize 每页大小
      * @param transactionType 交易类型（可选）
+     * @param pointsSource 积分来源（可选）
      * @return 积分明细列表
      */
-    List<PointsTransactionVO> getPointsTransactions(Long userId, Integer pageNum, Integer pageSize, Integer transactionType);
+    List<PointsTransactionVO> getPointsTransactions(Long userId, Integer pageNum, Integer pageSize, Integer transactionType, Integer pointsSource);
     
     /**
      * 冻结积分（用于订单处理）

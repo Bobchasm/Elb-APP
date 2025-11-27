@@ -15,10 +15,10 @@ public interface MarketingPointsRuleMapper {
      */
     @Insert("INSERT INTO marketing_points_rule (rule_name, rule_type, rule_status, points_ratio, " +
             "points_multiplier, member_level, min_order_amount, max_order_amount, food_id, " +
-            "food_price_threshold, holiday_start, holiday_end, behavior_type, points_amount, " +
+            "holiday_start, holiday_end, behavior_type, points_amount, " +
             "expire_days, start_time, end_time, priority, create_time, creator, updater, is_deleted) " +
             "VALUES (#{ruleName}, #{ruleType}, #{ruleStatus}, #{pointsRatio}, #{pointsMultiplier}, " +
-            "#{memberLevel}, #{minOrderAmount}, #{maxOrderAmount}, #{foodId}, #{foodPriceThreshold}, " +
+            "#{memberLevel}, #{minOrderAmount}, #{maxOrderAmount}, #{foodId}, " +
             "#{holidayStart}, #{holidayEnd}, #{behaviorType}, #{pointsAmount}, #{expireDays}, " +
             "#{startTime}, #{endTime}, #{priority}, #{createTime}, #{creator}, #{updater}, #{isDeleted})")
     @Options(useGeneratedKeys = true, keyProperty = "id")

@@ -5,6 +5,7 @@ import com.tju.elm_bk.pojo.dto.OrderPaidMessage;
 import com.tju.elm_bk.exception.APIException;
 import com.tju.elm_bk.mapper.*;
 import com.tju.elm_bk.pojo.entity.*;
+import com.tju.elm_bk.pojo.entity.PointsExpiration;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.MarketingPointsExchangeRuleService;
 import com.tju.elm_bk.service.OrderMessageService;
@@ -513,5 +514,127 @@ public class OrderServiceImpl implements OrderService {
         cartMapper.clearCart(userId,businessId);
 
         return order.getId();
+    }
+    
+    /**
+     * 自动完成订单（系统调用，用于定时任务）
+     * 订单支付七天后自动完成
+     * 设计原则：封装与抽象 - 封装自动完成逻辑
+     */
+    @Override
+    @Transactional
+    public void autoCompleteOrders() {
+        log.info("========== 开始自动完成订单（支付7天后） ==========");
+        LocalDateTime startTime = LocalDateTime.now();
+        
+        // 1. 计算7天前的时间
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        log.info("【时间计算】当前时间: {}, 7天前时间: {}", LocalDateTime.now(), sevenDaysAgo);
+        
+        // 2. 查询已支付（orderState=1）且支付时间超过7天的订单
+        List<Order> paidOrders = ordersMapper.selectPaidOrdersBeforeTime(1, sevenDaysAgo);
+        log.info("【查询结果】查询到 {} 条已支付超过7天的订单", paidOrders.size());
+        
+        if (paidOrders.isEmpty()) {
+            log.info("【自动完成】没有需要自动完成的订单");
+            return;
+        }
+        
+        // 2. 统计信息
+        int totalOrders = 0;
+        int completedCount = 0;
+        int errorCount = 0;
+        
+        // 3. 处理每个订单
+        for (Order order : paidOrders) {
+            totalOrders++;
+            try {
+                log.info("【处理订单】订单ID: {}, 用户ID: {}, 商家ID: {}, 订单金额: {}, 支付时间: {}", 
+                        order.getId(), order.getCustomerId(), order.getBusinessId(), 
+                        order.getOrderTotal(), order.getOrderDate());
+                
+                // 检查订单状态，确保是已支付状态
+                if (order.getOrderState() != 1) {
+                    log.warn("【跳过订单】订单ID: {} 的状态不是已支付（当前状态: {}），跳过", 
+                            order.getId(), order.getOrderState());
+                    continue;
+                }
+                
+                // 调用内部方法完成订单（绕过权限检查）
+                completeOrderInternal(order.getId(), order);
+                completedCount++;
+                log.info("【完成成功】订单ID: {} 已自动完成", order.getId());
+                
+            } catch (Exception e) {
+                errorCount++;
+                log.error("【完成失败】订单ID: {} 自动完成失败，错误: {}", 
+                        order.getId(), e.getMessage(), e);
+                // 继续处理下一个订单，不中断整个流程
+            }
+        }
+        
+        // 4. 输出统计信息
+        LocalDateTime endTime = LocalDateTime.now();
+        long duration = java.time.Duration.between(startTime, endTime).toMillis();
+        log.info("========== 自动完成订单任务完成 ==========");
+        log.info("【统计信息】总订单数: {}, 成功完成: {}, 失败: {}, 耗时: {}ms", 
+                totalOrders, completedCount, errorCount, duration);
+    }
+    
+    /**
+     * 内部方法：完成订单（系统调用，绕过权限检查）
+     * 设计原则：封装与抽象 - 封装订单完成逻辑
+     */
+    private void completeOrderInternal(Long orderId, Order order) {
+        // 1. 处理虚拟钱包支付（如果使用）
+        if (order.getPaymentMethod() != null && order.getPaymentMethod() == 2) {
+            try {
+                Business business = businessMapper.selectBusinessById(order.getBusinessId());
+                if (business != null && business.getUserId() != null) {
+                    Wallet wallet = walletRepository.findByUserId(business.getUserId());
+                    Transaction transaction = transactionRepository.getTransactionByOrder(orderId);
+                    if (transaction != null) {
+                        transactionRepository.thawTransaction(transaction.getId(), 0);
+                        wallet.collection(transaction.getAmount());
+                        walletRepository.modifyWallet(wallet);
+                        log.info("【钱包处理】订单ID: {} 的虚拟钱包交易已解冻并到账", orderId);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("【钱包处理失败】订单ID: {} 的虚拟钱包处理失败: {}", orderId, e.getMessage());
+                // 钱包处理失败不影响订单完成
+            }
+        }
+        
+        // 2. 处理积分相关逻辑
+        try {
+            // 检查是否是积分兑换订单
+            if (isPointsExchangeOrder(orderId)) {
+                // 积分兑换订单：更新积分兑换订单状态为已完成
+                PointsExchangeOrder exchangeOrder = pointsExchangeOrderMapper.selectByOrderId(orderId);
+                if (exchangeOrder != null) {
+                    pointsExchangeOrderMapper.updateStatus(exchangeOrder.getId(), 1, LocalDateTime.now()); // 1-已完成
+                    log.info("【积分兑换订单】订单ID: {} 的积分兑换订单状态已更新为已完成", orderId);
+                }
+            } else {
+                // 普通订单：处理积分相关逻辑
+                // 1. 真正扣除用户支付的积分（如果使用了积分+现金支付）
+                if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
+                    pointsService.deductFrozenPoints(order.getCustomerId(), orderId);
+                    log.info("【积分扣除】订单ID: {} 扣除积分{}", orderId, order.getPointsUsed());
+                }
+                
+                // 2. 解冻奖励积分（订单支付时已发放但冻结，现在解冻）
+                pointsService.unfreezeRewardPoints(order.getCustomerId(), orderId);
+                log.info("【积分解冻】订单ID: {} 的奖励积分已解冻", orderId);
+            }
+        } catch (Exception e) {
+            // 积分处理失败不影响订单完成，记录日志
+            log.error("【积分处理失败】订单ID: {} 的积分处理失败: {}", orderId, e.getMessage());
+        }
+        
+        // 3. 更新订单状态为已完成
+        ordersMapper.setOrderState(orderId, 3);
+        log.info("【状态更新】订单ID: {} 的状态已更新为已完成", orderId);
     }
 }

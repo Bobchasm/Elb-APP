@@ -177,7 +177,7 @@ CREATE TABLE `notification`  (
   `user_id` bigint NOT NULL COMMENT '接收用户ID（关联users表id）',
   `notification_type` tinyint NOT NULL COMMENT '消息类型：0=商家申请审核，1=开店申请审核，2=积分过期预警',
   `notification_content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '消息内容',
-  `audit_result` tinyint NOT NULL COMMENT '审核结果：1=通过，2=拒绝',
+  `audit_result` tinyint NULL DEFAULT NULL COMMENT '审核结果：1=通过，2=拒绝（对于积分过期预警notification_type=2时，此字段为NULL）',
   `is_read` tinyint NOT NULL DEFAULT 0 COMMENT '阅读状态：0=未读，1=已读',
   `create_time` datetime NOT NULL COMMENT '消息创建时间',
   `read_time` datetime NULL DEFAULT NULL COMMENT '消息阅读时间',

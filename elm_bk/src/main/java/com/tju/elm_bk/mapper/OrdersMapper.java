@@ -107,4 +107,15 @@ public interface OrdersMapper {
     @Select("SELECT * FROM orders WHERE customer_id = #{userId} AND is_deleted = 0 " +
             "ORDER BY order_date DESC LIMIT #{limit}")
     List<Order> selectRecentOrdersByUserId(@Param("userId") Long userId, @Param("limit") Integer limit);
+    
+    /**
+     * 查询已支付且支付时间早于指定时间的订单（用于自动完成）
+     * @param orderState 订单状态（1-已支付）
+     * @param beforeTime 早于该时间的订单（通常是7天前）
+     * @return 订单列表
+     */
+    @Select("SELECT * FROM orders WHERE order_state = #{orderState} AND is_deleted = 0 " +
+            "AND order_date <= #{beforeTime}")
+    List<Order> selectPaidOrdersBeforeTime(@Param("orderState") Integer orderState, 
+                                           @Param("beforeTime") java.time.LocalDateTime beforeTime);
 }

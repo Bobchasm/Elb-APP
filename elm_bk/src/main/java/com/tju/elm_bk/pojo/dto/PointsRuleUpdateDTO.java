@@ -39,9 +39,6 @@ public class PointsRuleUpdateDTO {
     @Schema(description = "指定商品ID")
     private Long foodId;
 
-    @Schema(description = "商品价格阈值")
-    private BigDecimal foodPriceThreshold;
-
     @Schema(description = "节假日开始日期")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate holidayStart;

@@ -46,9 +46,6 @@ public class MarketingPointsRule {
     @Schema(description = "指定商品ID（关联food表，促销积分使用）")
     private Long foodId;
 
-    @Schema(description = "商品价格阈值（如200元）")
-    private BigDecimal foodPriceThreshold;
-
     @Schema(description = "节假日开始日期")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate holidayStart;

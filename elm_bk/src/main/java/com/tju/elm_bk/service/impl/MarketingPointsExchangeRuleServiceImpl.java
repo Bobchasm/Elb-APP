@@ -69,6 +69,14 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
     @Override
     @Transactional
     public Long createRule(PointsExchangeRuleCreateDTO dto) {
+        // 参数验证：积分+现金规则（rule_type=0）必须提供 exchange_ratio
+        if (dto.getRuleType() != null && dto.getRuleType() == 0) {
+            if (dto.getExchangeRatio() == null) {
+                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+            }
+        }
+        // 兑换商品规则（rule_type=1）不需要 exchange_ratio，可以为空
+        
         MarketingPointsExchangeRule rule = new MarketingPointsExchangeRule();
         BeanUtils.copyProperties(dto, rule);
         
@@ -93,6 +101,15 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
         if (rule == null) {
             throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        // 参数验证：如果更新为积分+现金规则（rule_type=0），必须提供 exchange_ratio
+        Integer newRuleType = dto.getRuleType() != null ? dto.getRuleType() : rule.getRuleType();
+        if (newRuleType == 0) {
+            BigDecimal newExchangeRatio = dto.getExchangeRatio() != null ? dto.getExchangeRatio() : rule.getExchangeRatio();
+            if (newExchangeRatio == null) {
+                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+            }
         }
 
         BeanUtils.copyProperties(dto, rule);
@@ -208,17 +225,8 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         if (updateCount == 0) {
             throw new APIException("STOCK_INSUFFICIENT", "库存不足，无法完成兑换");
         }
-
-        // 6. 扣减积分（库存已减少，如果积分不足，库存会自动回滚）
-        PointsDeductDTO deductDTO = new PointsDeductDTO();
-        deductDTO.setUserId(userId);
-        deductDTO.setPoints(requiredPoints);
-        deductDTO.setPointsSource(4); // 4-兑换商品
-        deductDTO.setRelatedFoodId(dto.getFoodId());
-        deductDTO.setDescription("兑换商品：" + food.getFoodName() + " x" + dto.getQuantity());
-        pointsService.deductPoints(deductDTO);
         
-        // 7. 验证配送地址（必须提供，与普通订单创建逻辑保持一致）
+        // 6. 验证配送地址（必须提供，与普通订单创建逻辑保持一致）
         Long addressId = dto.getAddressId();
         if (addressId == null) {
             throw new APIException("ADDRESS_MISSED", "请选择配送地址");
@@ -230,7 +238,7 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
             throw new APIException("ADDRESS_MISSED", "配送地址不存在或不属于当前用户");
         }
         
-        // 8. 创建普通订单（供商家查看和处理）
+        // 7. 创建普通订单（供商家查看和处理）
         Order order = new Order();
         order.setBusinessId(food.getBusinessId());
         order.setCustomerId(userId);
@@ -249,8 +257,9 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
         ordersMapper.insertOrderPlus(order);
+        ordersMapper.setOrderPaymentMethod(order.getId(),3);
         
-        // 9. 创建订单详情
+        // 8. 创建订单详情
         OrderDetailet orderDetailet = new OrderDetailet();
         orderDetailet.setOrderId(order.getId());
         orderDetailet.setFoodId(dto.getFoodId());
@@ -262,6 +271,16 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         orderDetailet.setUpdateTime(LocalDateTime.now());
         orderDetailet.setIsDeleted(false);
         orderDetailetMapper.saveOrderDetailPlus(orderDetailet);
+
+        // 9. 扣减积分（库存已减少，如果积分不足，库存会自动回滚）
+        PointsDeductDTO deductDTO = new PointsDeductDTO();
+        deductDTO.setRelatedOrderId(order.getId());
+        deductDTO.setUserId(userId);
+        deductDTO.setPoints(requiredPoints);
+        deductDTO.setPointsSource(4); // 4-兑换商品
+        deductDTO.setRelatedFoodId(dto.getFoodId());
+        deductDTO.setDescription("兑换商品：" + food.getFoodName() + " x" + dto.getQuantity());
+        pointsService.deductPoints(deductDTO);
         
         // 10. 创建积分兑换订单记录
         PointsExchangeOrder exchangeOrder = new PointsExchangeOrder();
@@ -270,7 +289,6 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         exchangeOrder.setFoodId(dto.getFoodId());
         exchangeOrder.setPointsUsed(requiredPoints);
         exchangeOrder.setCashAmount(BigDecimal.ZERO); // 纯积分兑换，现金为0
-        exchangeOrder.setExchangeRatio(rule.getExchangeRatio());
         exchangeOrder.setStatus(0); // 0-待处理（对应订单状态1-已支付）
         exchangeOrder.setCreateTime(LocalDateTime.now());
         exchangeOrder.setUpdateTime(LocalDateTime.now());

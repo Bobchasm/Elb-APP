@@ -34,4 +34,10 @@ public interface OrderService {
     Long setOrderState(Long orderId, Integer orderState, Boolean usePoints);
 
     Long orderSubmit(Long businessId,Long addressId);
+    
+    /**
+     * 自动完成订单（系统调用，用于定时任务）
+     * 订单支付七天后自动完成
+     */
+    void autoCompleteOrders();
 }

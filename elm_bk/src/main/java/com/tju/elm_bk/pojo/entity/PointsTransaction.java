@@ -58,6 +58,13 @@ public class PointsTransaction {
     @Schema(description = "创建人ID")
     private Long creator;
 
+    @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateTime;
+
+    @Schema(description = "更新人ID")
+    private Long updater;
+
     @Schema(description = "是否删除")
     @JsonProperty("deleted")
     private Boolean isDeleted;

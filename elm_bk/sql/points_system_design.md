@@ -75,7 +75,6 @@
 **促销积分规则字段**：
 - `holiday_start/end`：节假日日期范围
 - `food_id`：指定商品ID
-- `food_price_threshold`：商品价格阈值
 - `min_order_amount/max_order_amount`：订单金额区间
 
 **行为积分规则字段**：
@@ -107,16 +106,16 @@
 **作用**：记录积分兑换订单
 
 **关键字段**：
-- `order_id`：关联订单ID（积分+现金消费时使用）
-- `exchange_type`：兑换类型（0-积分+现金，1-纯积分兑换商品）
+- `order_id`：关联订单ID（关联 orders 表）
 - `food_id`：兑换商品ID
 - `points_used`：使用积分数量
-- `cash_amount`：现金金额（积分+现金消费时使用）
+- `cash_amount`：现金金额（预留字段，当前纯积分兑换为0）
 - `status`：状态（0-待处理，1-已完成，2-已取消）
 
 **设计要点**：
-- 积分+现金消费：关联到原订单
-- 纯积分兑换：独立订单，不关联原订单
+- 仅用于纯积分兑换商品（rule_type=1）
+- 积分+现金消费不使用此表，直接使用 orders 表
+- 通过 `points_used` 字段记录使用的积分数量
 
 ### 2.7 积分到期预警配置表 (points_expiration_alert_config)
 

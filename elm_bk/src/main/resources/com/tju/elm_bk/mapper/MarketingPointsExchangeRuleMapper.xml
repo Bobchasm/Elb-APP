@@ -23,6 +23,40 @@
         <result column="updater" property="updater"/>
     </resultMap>
 
+    <insert id="insert" parameterType="com.tju.elm_bk.pojo.entity.MarketingPointsExchangeRule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO marketing_points_exchange_rule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            rule_name, rule_type, rule_status,
+            <if test="exchangeRatio != null">exchange_ratio,</if>
+            <if test="minPoints != null">min_points,</if>
+            <if test="maxPoints != null">max_points,</if>
+            <if test="foodId != null">food_id,</if>
+            <if test="requiredPoints != null">required_points,</if>
+            <if test="stockQuantity != null">stock_quantity,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="creator != null">creator,</if>
+            <if test="updater != null">updater,</if>
+            is_deleted
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            #{ruleName}, #{ruleType}, #{ruleStatus},
+            <if test="exchangeRatio != null">#{exchangeRatio},</if>
+            <if test="minPoints != null">#{minPoints},</if>
+            <if test="maxPoints != null">#{maxPoints},</if>
+            <if test="foodId != null">#{foodId},</if>
+            <if test="requiredPoints != null">#{requiredPoints},</if>
+            <if test="stockQuantity != null">#{stockQuantity},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="creator != null">#{creator},</if>
+            <if test="updater != null">#{updater},</if>
+            #{isDeleted}
+        </trim>
+    </insert>
+
     <update id="updateById" parameterType="com.tju.elm_bk.pojo.entity.MarketingPointsExchangeRule">
         UPDATE marketing_points_exchange_rule
         <set>

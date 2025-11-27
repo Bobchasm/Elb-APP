@@ -41,18 +41,25 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
     @Override
     @Transactional
     public void updateInteraction(MerchantInteractionDTO dto) {
+        log.info("========== 开始更新用户商家互动状态 ==========");
+        log.info("接收到的参数: userId={}, merchantId={}, liked={}, collected={}", 
+            dto.getUserId(), dto.getMerchantId(), dto.getLiked(), dto.getCollected());
+        
         try {
             // 参数验证
             if (dto.getUserId() == null) {
+                log.error("参数验证失败: userId 为空");
                 throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
             }
             if (dto.getMerchantId() == null) {
+                log.error("参数验证失败: merchantId 为空");
                 throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
             }
 
             // 查询现有记录
             MerchantInteraction interaction = interactionMapper.selectByUserAndMerchant(
                     dto.getUserId(), dto.getMerchantId());
+            log.info("查询到的互动记录: {}", interaction != null ? "存在" : "不存在");
 
             // 记录旧状态（用于判断是否是首次点赞/收藏）
             Boolean oldLiked = null;
@@ -60,6 +67,7 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
             
             if (interaction == null) {
                 // 创建新记录
+                log.info("创建新的互动记录");
                 interaction = new MerchantInteraction();
                 interaction.setUserId(dto.getUserId());
                 interaction.setMerchantId(dto.getMerchantId());
@@ -70,10 +78,12 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
                 // 新记录，旧状态都是 false
                 oldLiked = false;
                 oldCollected = false;
+                log.info("新记录创建完成: liked={}, collected={}", interaction.getLiked(), interaction.getCollected());
             } else {
                 // 更新现有记录，记录旧状态
                 oldLiked = interaction.getLiked();
                 oldCollected = interaction.getCollected();
+                log.info("更新现有记录，旧状态: oldLiked={}, oldCollected={}", oldLiked, oldCollected);
                 
                 if (dto.getLiked() != null) {
                     interaction.setLiked(dto.getLiked());
@@ -82,36 +92,68 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
                     interaction.setCollected(dto.getCollected());
                 }
                 interactionMapper.update(interaction);
+                log.info("记录更新完成，新状态: liked={}, collected={}", interaction.getLiked(), interaction.getCollected());
             }
 
             // 行为积分奖励：只有当从 false 变为 true 时才奖励积分（首次点赞/收藏）
+            log.info("开始判断是否需要奖励行为积分: oldLiked={}, newLiked={}, oldCollected={}, newCollected={}", 
+                oldLiked, dto.getLiked(), oldCollected, dto.getCollected());
+            
             try {
                 // 判断是否是首次点赞（从 false 变为 true）
-                if (dto.getLiked() != null && dto.getLiked() && 
-                    (oldLiked == null || !oldLiked)) {
-                    marketingPointsRuleService.calculateBehaviorPoints(dto.getUserId(), "like");
-                    log.info("用户{}首次点赞商家{}，获得行为积分", dto.getUserId(), dto.getMerchantId());
+                boolean shouldRewardLike = dto.getLiked() != null && dto.getLiked() && 
+                    (oldLiked == null || !oldLiked);
+                log.info("点赞积分判断: shouldRewardLike={}, dto.getLiked()={}, oldLiked={}", 
+                    shouldRewardLike, dto.getLiked(), oldLiked);
+                
+                if (shouldRewardLike) {
+                    log.info("检测到用户{}首次点赞商家{}，准备奖励行为积分", dto.getUserId(), dto.getMerchantId());
+                    Long points = marketingPointsRuleService.calculateBehaviorPoints(dto.getUserId(), "like");
+                    if (points > 0) {
+                        log.info("用户{}首次点赞商家{}，成功获得{}积分", dto.getUserId(), dto.getMerchantId(), points);
+                    } else {
+                        log.warn("用户{}首次点赞商家{}，但未获得积分（可能未配置规则）", dto.getUserId(), dto.getMerchantId());
+                    }
+                } else {
+                    log.info("用户{}点赞商家{}，但非首次点赞（oldLiked={}, newLiked={}），不奖励积分",
+                        dto.getUserId(), dto.getMerchantId(), oldLiked, dto.getLiked());
                 }
                 
                 // 判断是否是首次收藏（从 false 变为 true）
-                if (dto.getCollected() != null && dto.getCollected() && 
-                    (oldCollected == null || !oldCollected)) {
-                    marketingPointsRuleService.calculateBehaviorPoints(dto.getUserId(), "collect");
-                    log.info("用户{}首次收藏商家{}，获得行为积分", dto.getUserId(), dto.getMerchantId());
+                boolean shouldRewardCollect = dto.getCollected() != null && dto.getCollected() && 
+                    (oldCollected == null || !oldCollected);
+                log.info("收藏积分判断: shouldRewardCollect={}, dto.getCollected()={}, oldCollected={}", 
+                    shouldRewardCollect, dto.getCollected(), oldCollected);
+                
+                if (shouldRewardCollect) {
+                    log.info("检测到用户{}首次收藏商家{}，准备奖励行为积分", dto.getUserId(), dto.getMerchantId());
+                    Long points = marketingPointsRuleService.calculateBehaviorPoints(dto.getUserId(), "collect");
+                    if (points > 0) {
+                        log.info("用户{}首次收藏商家{}，成功获得{}积分", dto.getUserId(), dto.getMerchantId(), points);
+                    } else {
+                        log.warn("用户{}首次收藏商家{}，但未获得积分（可能未配置规则）", dto.getUserId(), dto.getMerchantId());
+                    }
+                } else {
+                    log.info("用户{}收藏商家{}，但非首次收藏（oldCollected={}, newCollected={}），不奖励积分",
+                        dto.getUserId(), dto.getMerchantId(), oldCollected, dto.getCollected());
                 }
             } catch (Exception e) {
-                // 积分处理失败不影响互动状态更新，记录日志
-                log.error("行为积分处理失败: userId={}, merchantId={}, error={}", 
-                    dto.getUserId(), dto.getMerchantId(), e.getMessage());
+                // 积分处理失败不影响互动状态更新，但记录详细错误日志
+                log.error("行为积分处理失败: userId={}, merchantId={}, liked={}, collected={}, oldLiked={}, oldCollected={}, error={}",
+                    dto.getUserId(), dto.getMerchantId(), dto.getLiked(), dto.getCollected(), 
+                    oldLiked, oldCollected, e.getMessage(), e);
+                e.printStackTrace(); // 打印完整堆栈信息
             }
 
-            log.info("用户{}对商家{}的互动状态更新成功", dto.getUserId(), dto.getMerchantId());
+            log.info("========== 用户{}对商家{}的互动状态更新成功 ==========", dto.getUserId(), dto.getMerchantId());
 
         } catch (APIException e) {
-            log.warn("业务异常: {}", e.getMessage());
+            log.error("业务异常: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("更新用户商家互动失败: userId={}, merchantId={}", dto.getUserId(), dto.getMerchantId(), e);
+            log.error("更新用户商家互动失败: userId={}, merchantId={}, error={}",
+                dto.getUserId(), dto.getMerchantId(), e.getMessage(), e);
+            e.printStackTrace(); // 打印完整堆栈信息
             throw new APIException(ResultCodeEnum.SERVER_ERROR);
         }
     }

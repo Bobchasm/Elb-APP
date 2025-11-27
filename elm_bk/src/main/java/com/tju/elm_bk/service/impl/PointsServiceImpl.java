@@ -112,9 +112,8 @@ public class PointsServiceImpl implements PointsService {
             newAvailablePoints = account.getAvailablePoints() + pointsAddDTO.getPoints();
         }
         
-        account.setTotalPoints(newTotalPoints);
-        account.setAvailablePoints(newAvailablePoints);
-        account.setFrozenPoints(newFrozenPoints);
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -141,6 +140,8 @@ public class PointsServiceImpl implements PointsService {
         transaction.setRelatedRuleId(pointsAddDTO.getRelatedRuleId());
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
@@ -184,8 +185,9 @@ public class PointsServiceImpl implements PointsService {
 
         // 3. 优先扣减即将过期的积分
         Long remainingPoints = pointsDeductDTO.getPoints();
+        LocalDateTime currentTime=LocalDateTime.now();
         List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(
-            pointsDeductDTO.getUserId());
+            pointsDeductDTO.getUserId(),currentTime);
 
         // 按过期时间升序扣减
         for (PointsExpiration exp : expiringPoints) {
@@ -213,8 +215,8 @@ public class PointsServiceImpl implements PointsService {
         // 5. 更新积分账户余额
         Long newAvailablePoints = account.getAvailablePoints() - pointsDeductDTO.getPoints();
         Long newTotalPoints = account.getTotalPoints() - pointsDeductDTO.getPoints();
-        account.setAvailablePoints(newAvailablePoints);
-        account.setTotalPoints(newTotalPoints);
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, account.getFrozenPoints());
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -233,6 +235,8 @@ public class PointsServiceImpl implements PointsService {
         transaction.setDescription(pointsDeductDTO.getDescription());
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
@@ -283,7 +287,7 @@ public class PointsServiceImpl implements PointsService {
      */
     @Override
     public List<PointsTransactionVO> getPointsTransactions(Long userId, Integer pageNum, 
-                                                           Integer pageSize, Integer transactionType) {
+                                                           Integer pageSize, Integer transactionType, Integer pointsSource) {
         if (pageNum == null || pageNum < 1) {
             pageNum = 1;
         }
@@ -293,7 +297,7 @@ public class PointsServiceImpl implements PointsService {
 
         Integer offset = (pageNum - 1) * pageSize;
         List<PointsTransaction> transactions = pointsTransactionMapper.selectByUserId(
-            userId, transactionType, offset, pageSize);
+            userId, transactionType, pointsSource, offset, pageSize);
 
         List<PointsTransactionVO> voList = new ArrayList<>();
         for (PointsTransaction trans : transactions) {
@@ -318,8 +322,10 @@ public class PointsServiceImpl implements PointsService {
             throw new APIException("POINTS_INSUFFICIENT", "积分不足");
         }
 
-        account.setAvailablePoints(account.getAvailablePoints() - points);
-        account.setFrozenPoints(account.getFrozenPoints() + points);
+        Long newAvailablePoints = account.getAvailablePoints() - points;
+        Long newFrozenPoints = account.getFrozenPoints() + points;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -337,6 +343,8 @@ public class PointsServiceImpl implements PointsService {
         transaction.setDescription("订单冻结积分");
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
@@ -378,8 +386,10 @@ public class PointsServiceImpl implements PointsService {
         }
 
         // 5. 更新积分账户（解冻积分）
-        account.setAvailablePoints(account.getAvailablePoints() + totalFrozen);
-        account.setFrozenPoints(account.getFrozenPoints() - totalFrozen);
+        Long newAvailablePoints = account.getAvailablePoints() + totalFrozen;
+        Long newFrozenPoints = account.getFrozenPoints() - totalFrozen;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -397,6 +407,8 @@ public class PointsServiceImpl implements PointsService {
         transaction.setDescription("订单取消解冻积分");
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 
@@ -439,8 +451,10 @@ public class PointsServiceImpl implements PointsService {
         }
         
         // 5. 更新积分账户（解冻积分：从冻结积分转为可用积分）
-        account.setAvailablePoints(account.getAvailablePoints() + totalRewardPoints);
-        account.setFrozenPoints(account.getFrozenPoints() - totalRewardPoints);
+        Long newAvailablePoints = account.getAvailablePoints() + totalRewardPoints;
+        Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -458,6 +472,8 @@ public class PointsServiceImpl implements PointsService {
         transaction.setDescription("订单完成解冻奖励积分");
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
         
@@ -500,8 +516,10 @@ public class PointsServiceImpl implements PointsService {
         }
         
         // 5. 更新积分账户（减少总积分和冻结积分）
-        account.setTotalPoints(account.getTotalPoints() - totalRewardPoints);
-        account.setFrozenPoints(account.getFrozenPoints() - totalRewardPoints);
+        Long newTotalPoints = account.getTotalPoints() - totalRewardPoints;
+        Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, account.getAvailablePoints(), newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -525,6 +543,51 @@ public class PointsServiceImpl implements PointsService {
         return true;
     }
 
+    /**
+     * 验证并设置积分账户的值，确保不小于0
+     * 设计原则：Fail-Fast - 发现问题立即抛出异常，而不是掩盖问题
+     */
+    private void validateAndSetAccountValues(PointsAccount account, Long totalPoints, 
+                                             Long availablePoints, Long frozenPoints) {
+        // 验证总积分
+        if (totalPoints < 0) {
+            log.error("【数据异常】用户{}的总积分计算结果为负数: {}, 账户ID: {}", 
+                    account.getUserId(), totalPoints, account.getId());
+            throw new APIException("POINTS_DATA_INCONSISTENT", 
+                    String.format("积分账户数据异常：总积分为负数 %d，请联系管理员", totalPoints));
+        }
+        
+        // 验证可用积分
+        if (availablePoints < 0) {
+            log.error("【数据异常】用户{}的可用积分计算结果为负数: {}, 账户ID: {}", 
+                    account.getUserId(), availablePoints, account.getId());
+            throw new APIException("POINTS_DATA_INCONSISTENT", 
+                    String.format("积分账户数据异常：可用积分为负数 %d，请联系管理员", availablePoints));
+        }
+        
+        // 验证冻结积分
+        if (frozenPoints < 0) {
+            log.error("【数据异常】用户{}的冻结积分计算结果为负数: {}, 账户ID: {}", 
+                    account.getUserId(), frozenPoints, account.getId());
+            throw new APIException("POINTS_DATA_INCONSISTENT", 
+                    String.format("积分账户数据异常：冻结积分为负数 %d，请联系管理员", frozenPoints));
+        }
+        
+        // 验证业务逻辑：总积分 = 可用积分 + 冻结积分
+        if (!totalPoints.equals(availablePoints + frozenPoints)) {
+            log.error("【数据异常】用户{}的积分账户数据不一致: 总积分={}, 可用积分={}, 冻结积分={}, 账户ID: {}", 
+                    account.getUserId(), totalPoints, availablePoints, frozenPoints, account.getId());
+            throw new APIException("POINTS_DATA_INCONSISTENT", 
+                    String.format("积分账户数据不一致：总积分(%d)不等于可用积分(%d)+冻结积分(%d)，请联系管理员", 
+                            totalPoints, availablePoints, frozenPoints));
+        }
+        
+        // 设置值
+        account.setTotalPoints(totalPoints);
+        account.setAvailablePoints(availablePoints);
+        account.setFrozenPoints(frozenPoints);
+    }
+    
     /**
      * 获取会员等级名称
      */
@@ -749,8 +812,10 @@ public class PointsServiceImpl implements PointsService {
         }
         
         // 5. 真正扣除积分：从冻结积分转为已扣除（减少总积分和冻结积分）
-        account.setFrozenPoints(account.getFrozenPoints() - totalFrozen);
-        account.setTotalPoints(account.getTotalPoints() - totalFrozen);
+        Long newFrozenPoints = account.getFrozenPoints() - totalFrozen;
+        Long newTotalPoints = account.getTotalPoints() - totalFrozen;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, account.getAvailablePoints(), newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
@@ -758,7 +823,8 @@ public class PointsServiceImpl implements PointsService {
         
         // 6. 优先扣减即将过期的积分（更新过期记录）
         Long remainingPoints = totalFrozen;
-        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(userId);
+        LocalDateTime currentTime=LocalDateTime.now();
+        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(userId,currentTime);
         
         // 按过期时间升序扣减
         for (PointsExpiration exp : expiringPoints) {
@@ -789,6 +855,8 @@ public class PointsServiceImpl implements PointsService {
         transaction.setDescription("订单完成扣除积分");
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
         

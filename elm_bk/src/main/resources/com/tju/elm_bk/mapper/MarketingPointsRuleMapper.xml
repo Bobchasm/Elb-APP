@@ -14,7 +14,6 @@
         <result column="min_order_amount" property="minOrderAmount"/>
         <result column="max_order_amount" property="maxOrderAmount"/>
         <result column="food_id" property="foodId"/>
-        <result column="food_price_threshold" property="foodPriceThreshold"/>
         <result column="holiday_start" property="holidayStart"/>
         <result column="holiday_end" property="holidayEnd"/>
         <result column="behavior_type" property="behaviorType"/>
@@ -41,7 +40,6 @@
             <if test="minOrderAmount != null">min_order_amount = #{minOrderAmount},</if>
             <if test="maxOrderAmount != null">max_order_amount = #{maxOrderAmount},</if>
             <if test="foodId != null">food_id = #{foodId},</if>
-            <if test="foodPriceThreshold != null">food_price_threshold = #{foodPriceThreshold},</if>
             <if test="holidayStart != null">holiday_start = #{holidayStart},</if>
             <if test="holidayEnd != null">holiday_end = #{holidayEnd},</if>
             <if test="behaviorType != null">behavior_type = #{behaviorType},</if>

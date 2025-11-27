@@ -24,8 +24,9 @@ public interface PointsExpirationMapper {
      * 查询用户即将过期的积分（按过期时间升序）
      */
     @Select("SELECT * FROM points_expiration WHERE user_id = #{userId} AND is_expired = 0 " +
-            "AND expire_time > NOW() ORDER BY expire_time ASC")
-    List<PointsExpiration> selectExpiringPoints(Long userId);
+            "AND expire_time > #{currentTime} ORDER BY expire_time ASC")
+    List<PointsExpiration> selectExpiringPoints(@Param("userId") Long userId, 
+                                                 @Param("currentTime") LocalDateTime currentTime);
     
     /**
      * 根据过期日期查询即将过期的积分
@@ -45,15 +46,16 @@ public interface PointsExpirationMapper {
     /**
      * 查询已过期的积分（所有用户）
      */
-    @Select("SELECT * FROM points_expiration WHERE expire_time < NOW() AND is_expired = 0")
-    List<PointsExpiration> selectExpiredPoints();
+    @Select("SELECT * FROM points_expiration WHERE expire_time < #{currentTime} AND is_expired = 0")
+    List<PointsExpiration> selectExpiredPoints(@Param("currentTime") LocalDateTime currentTime);
     
     /**
      * 查询指定用户已过期的积分
      */
-    @Select("SELECT * FROM points_expiration WHERE user_id = #{userId} AND expire_time < NOW() " +
+    @Select("SELECT * FROM points_expiration WHERE user_id = #{userId} AND expire_time < #{currentTime} " +
             "AND is_expired = 1 ORDER BY expire_time DESC")
-    List<PointsExpiration> selectExpiredPointsByUserId(Long userId);
+    List<PointsExpiration> selectExpiredPointsByUserId(@Param("userId") Long userId, 
+                                                        @Param("currentTime") LocalDateTime currentTime);
     
     /**
      * 标记为已过期

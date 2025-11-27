@@ -10,14 +10,8 @@ public interface MarketingPointsExchangeRuleMapper {
     
     /**
      * 插入积分兑换规则
+     * 注意：exchange_ratio 在 rule_type=1（兑换商品）时可以为 NULL
      */
-    @Insert("INSERT INTO marketing_points_exchange_rule (rule_name, rule_type, rule_status, exchange_ratio, " +
-            "min_points, max_points, food_id, required_points, stock_quantity, start_time, end_time, " +
-            "create_time, creator, updater, is_deleted) " +
-            "VALUES (#{ruleName}, #{ruleType}, #{ruleStatus}, #{exchangeRatio}, #{minPoints}, " +
-            "#{maxPoints}, #{foodId}, #{requiredPoints}, #{stockQuantity}, #{startTime}, #{endTime}, " +
-            "#{createTime}, #{creator}, #{updater}, #{isDeleted})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(MarketingPointsExchangeRule rule);
     
     /**

@@ -13,10 +13,10 @@ public interface PointsTransactionMapper {
      */
     @Insert("INSERT INTO points_transaction (user_id, account_id, transaction_type, points_source, " +
             "points_change, points_balance, expire_time, related_order_id, related_food_id, related_rule_id, " +
-            "description, create_time, creator, is_deleted) " +
+            "description, create_time, creator, update_time, updater, is_deleted) " +
             "VALUES (#{userId}, #{accountId}, #{transactionType}, #{pointsSource}, #{pointsChange}, " +
             "#{pointsBalance}, #{expireTime}, #{relatedOrderId}, #{relatedFoodId}, #{relatedRuleId}, " +
-            "#{description}, #{createTime}, #{creator}, #{isDeleted})")
+            "#{description}, #{createTime}, #{creator}, #{updateTime}, #{updater}, #{isDeleted})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(PointsTransaction transaction);
     
@@ -31,6 +31,7 @@ public interface PointsTransactionMapper {
      */
     List<PointsTransaction> selectByUserId(@Param("userId") Long userId, 
                                            @Param("transactionType") Integer transactionType,
+                                           @Param("pointsSource") Integer pointsSource,
                                            @Param("offset") Integer offset, 
                                            @Param("limit") Integer limit);
     

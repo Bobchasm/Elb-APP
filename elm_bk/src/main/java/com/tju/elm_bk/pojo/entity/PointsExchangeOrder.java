@@ -33,9 +33,6 @@ public class PointsExchangeOrder {
     @Schema(description = "现金金额（积分+现金消费时使用）")
     private BigDecimal cashAmount;
 
-    @Schema(description = "兑换比例")
-    private BigDecimal exchangeRatio;
-
     @Schema(description = "状态 0-待处理 1-已完成 2-已取消")
     private Integer status;
 
