@@ -330,7 +330,7 @@ export default {
       if (!userId.value) return;
 
       // 连接WebSocket（假设后端地址是 ws://localhost:8080/ws/{userId}）
-      socket.value = new WebSocket(`ws://localhost:8080/ws/${userId.value}`);
+      socket.value = new WebSocket(`ws://REDACTED_IP:8080/ws/${userId.value}`);
 
       socket.value.onopen = () => {
         console.log("WebSocket 连接成功");
