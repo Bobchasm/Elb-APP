@@ -26,6 +26,7 @@ CREATE TABLE `virtual_wallet_loan`  (
                                         `loan_amount` decimal(10, 2) NOT NULL,
                                         `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                         `repay_time` timestamp NULL DEFAULT NULL,
+                                        `rate` decimal(10, 2) NULL DEFAULT NULL,
                                         PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
