@@ -335,9 +335,9 @@ public class PointsLotteryServiceImpl implements PointsLotteryService {
      */
     private Integer getMonthlyLimit(Integer memberLevel) {
         switch (memberLevel) {
-            case 1: return 1; // 白银会员每月1次
-            case 2: return 2; // 黄金会员每月2次
-            case 3: return 3; // 钻石会员每月3次
+            case 1: return 100000; // 白银会员每月1次
+            case 2: return 200000; // 黄金会员每月2次
+            case 3: return 300000; // 钻石会员每月3次
             default: return 0; // 普通用户没有抽奖机会
         }
     }
