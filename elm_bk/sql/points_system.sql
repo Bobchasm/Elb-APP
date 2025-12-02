@@ -358,6 +358,91 @@ INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `p
     `min_order_amount`, `food_id`, `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
 VALUES ('节假日高额订单指定商品2.5倍积分', 1, 1, 2.5, 150.00, 1, '2024-12-20', '2024-12-31', 30, 11, 1, 1);
 
+-- ----------------------------
+-- 11. 积分抽奖规则表 (points_lottery_rule)
+-- ----------------------------
+DROP TABLE IF EXISTS `points_lottery_rule`;
+CREATE TABLE `points_lottery_rule` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `rule_name` varchar(100) NOT NULL COMMENT '规则名称',
+  `member_level` tinyint NOT NULL COMMENT '适用会员等级 1-白银 2-黄金 3-钻石',
+  `prize_type` tinyint NOT NULL COMMENT '奖品类型 0-没中奖 1-固定积分 2-积分翻倍',
+  `prize_points` bigint NULL DEFAULT NULL COMMENT '固定积分数量（仅prize_type=1时有效）',
+  `prize_multiplier` decimal(10, 2) NULL DEFAULT NULL COMMENT '积分翻倍倍数（仅prize_type=2时有效，如2.0表示翻倍）',
+  `probability` int NOT NULL COMMENT '中奖概率（百分比，0-100）',
+  `prize_order` int NOT NULL DEFAULT 0 COMMENT '奖品排序（数字越小越靠前，用于前端展示）',
+  `prize_description` varchar(200) NULL DEFAULT NULL COMMENT '奖品描述（用于前端展示）',
+  `rule_status` tinyint NOT NULL DEFAULT 1 COMMENT '规则状态 0-禁用 1-启用',
+  `start_time` timestamp NULL DEFAULT NULL COMMENT '规则生效开始时间',
+  `end_time` timestamp NULL DEFAULT NULL COMMENT '规则生效结束时间',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `creator` bigint NULL DEFAULT NULL COMMENT '创建人ID',
+  `updater` bigint NULL DEFAULT NULL COMMENT '更新人ID',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_member_level` (`member_level`) USING BTREE COMMENT '会员等级索引',
+  INDEX `idx_prize_type` (`prize_type`) USING BTREE COMMENT '奖品类型索引',
+  INDEX `idx_rule_status` (`rule_status`) USING BTREE COMMENT '规则状态索引',
+  INDEX `idx_member_status` (`member_level`, `rule_status`) USING BTREE COMMENT '会员等级和状态联合索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='积分抽奖规则表';
+
+-- ----------------------------
+-- 初始化抽奖规则数据
+-- ----------------------------
+
+-- 白银会员抽奖规则
+INSERT INTO `points_lottery_rule` (`rule_name`, `member_level`, `prize_type`, `prize_points`, `probability`, `prize_order`, `prize_description`, `rule_status`, `creator`, `updater`) 
+VALUES 
+('白银会员-没中奖', 1, 0, 0, 50, 1, '感谢参与', 1, 1, 1),
+('白银会员-20积分', 1, 1, 20, 30, 2, '+ 20 积分', 1, 1, 1),
+('白银会员-50积分', 1, 1, 50, 15, 3, '+ 50 积分', 1, 1, 1),
+('白银会员-100积分', 1, 1, 100, 5, 4, '+ 100 积分', 1, 1, 1);
+
+-- 黄金会员抽奖规则
+INSERT INTO `points_lottery_rule` (`rule_name`, `member_level`, `prize_type`, `prize_points`, `prize_multiplier`, `probability`, `prize_order`, `prize_description`, `rule_status`, `creator`, `updater`) 
+VALUES 
+('黄金会员-没中奖', 2, 0, 0, NULL, 40, 1, '感谢参与', 1, 1, 1),
+('黄金会员-50积分', 2, 1, 50, NULL, 30, 2, '+ 50 积分', 1, 1, 1),
+('黄金会员-100积分', 2, 1, 100, NULL, 20, 3, '+ 100 积分', 1, 1, 1),
+('黄金会员-积分翻倍', 2, 2, NULL, 2.0, 10, 4, '积分翻倍', 1, 1, 1);
+
+-- 钻石会员抽奖规则
+INSERT INTO `points_lottery_rule` (`rule_name`, `member_level`, `prize_type`, `prize_points`, `prize_multiplier`, `probability`, `prize_order`, `prize_description`, `rule_status`, `creator`, `updater`) 
+VALUES 
+('钻石会员-没中奖', 3, 0, 0, NULL, 30, 1, '感谢参与', 1, 1, 1),
+('钻石会员-100积分', 3, 1, 100, NULL, 30, 2, '+ 100 积分', 1, 1, 1),
+('钻石会员-200积分', 3, 1, 200, NULL, 25, 3, '+ 200 积分', 1, 1, 1),
+('钻石会员-积分翻倍', 3, 2, NULL, 2.0, 15, 4, '积分翻倍', 1, 1, 1);
+
+-- ----------------------------
+-- 12. 积分抽奖记录表 (points_lottery_record)
+-- ----------------------------
+DROP TABLE IF EXISTS `points_lottery_record`;
+CREATE TABLE `points_lottery_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID（关联users表）',
+  `member_level` tinyint NOT NULL COMMENT '抽奖时的会员等级 0-普通 1-白银 2-黄金 3-钻石',
+  `lottery_type` tinyint NOT NULL COMMENT '抽奖类型 0-没中奖 1-固定积分 2-积分翻倍',
+  `points_reward` bigint NULL DEFAULT NULL COMMENT '获得的积分数量（没中奖时为0，积分翻倍时为NULL）',
+  `points_multiplier` decimal(10, 2) NULL DEFAULT NULL COMMENT '积分翻倍倍数（仅积分翻倍时使用）',
+  `original_points` bigint NULL DEFAULT NULL COMMENT '翻倍前的积分数量（仅积分翻倍时使用）',
+  `lottery_month` varchar(7) NOT NULL COMMENT '抽奖月份（格式：YYYY-MM，用于统计每月抽奖次数）',
+  `transaction_id` bigint NULL DEFAULT NULL COMMENT '关联积分明细ID（关联points_transaction表，中奖时记录）',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `creator` bigint NULL DEFAULT NULL COMMENT '创建人ID',
+  `updater` bigint NULL DEFAULT NULL COMMENT '更新人ID',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id` (`user_id`) USING BTREE COMMENT '用户ID索引',
+  INDEX `idx_lottery_month` (`lottery_month`) USING BTREE COMMENT '抽奖月份索引',
+  INDEX `idx_user_month` (`user_id`, `lottery_month`) USING BTREE COMMENT '用户月份联合索引（用于统计每月抽奖次数）',
+  INDEX `idx_create_time` (`create_time`) USING BTREE COMMENT '创建时间索引',
+  CONSTRAINT `fk_points_lottery_record_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_points_lottery_record_transaction` FOREIGN KEY (`transaction_id`) REFERENCES `points_transaction` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='积分抽奖记录表';
+
 -- ============================================
 -- 数据库设计说明
 -- ============================================

@@ -321,7 +321,6 @@ public class PointsServiceImpl implements PointsService {
         if (account == null || account.getAvailablePoints() < points) {
             throw new APIException("POINTS_INSUFFICIENT", "积分不足");
         }
-
         Long newAvailablePoints = account.getAvailablePoints() - points;
         Long newFrozenPoints = account.getFrozenPoints() + points;
         // 验证并设置积分账户的值，确保不小于0
@@ -330,7 +329,6 @@ public class PointsServiceImpl implements PointsService {
         Long currentUserId = getCurrentUserId();
         account.setUpdater(currentUserId);
         pointsAccountMapper.updateById(account);
-
         // 记录冻结明细
         PointsTransaction transaction = new PointsTransaction();
         transaction.setUserId(userId);
@@ -340,17 +338,15 @@ public class PointsServiceImpl implements PointsService {
         transaction.setPointsChange(-points);
         transaction.setPointsBalance(account.getAvailablePoints());
         transaction.setRelatedOrderId(orderId);
-        transaction.setDescription("订单冻结积分");
+        transaction.setDescription("订单支付冻结积分");
         transaction.setCreateTime(LocalDateTime.now());
         transaction.setCreator(currentUserId);
         transaction.setUpdateTime(LocalDateTime.now());
         transaction.setUpdater(currentUserId);
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
-
         // 删除相关缓存（写操作后清除缓存，保证数据一致性）
         pointsCacheService.deleteAccountCache(userId);
-
         return true;
     }
 
@@ -430,7 +426,7 @@ public class PointsServiceImpl implements PointsService {
         if (account == null) {
             return false;
         }
-        
+
         // 2. 查询该订单的奖励积分记录（points_source = 0, related_order_id = orderId）
         List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
             orderId, 0); // 0-消费积分
@@ -495,11 +491,9 @@ public class PointsServiceImpl implements PointsService {
         if (account == null) {
             return false;
         }
-        
         // 2. 查询该订单的奖励积分记录
         List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
             orderId, 0); // 0-消费积分
-        
         // 3. 计算需要取消的积分总数
         Long totalRewardPoints = 0L;
         for (PointsTransaction trans : rewardTransactions) {
@@ -509,12 +503,10 @@ public class PointsServiceImpl implements PointsService {
                 totalRewardPoints += trans.getPointsChange();
             }
         }
-        
         // 4. 如果没有奖励积分记录，直接返回
         if (totalRewardPoints == 0) {
             return true;
         }
-        
         // 5. 更新积分账户（减少总积分和冻结积分）
         Long newTotalPoints = account.getTotalPoints() - totalRewardPoints;
         Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
