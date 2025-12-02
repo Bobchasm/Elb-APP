@@ -41,7 +41,7 @@ export default {
       if (route.path.startsWith('/merchant') || route.path.startsWith('/admin')) {
         return false;
       }
-      return !['BusinessInfo', 'Payment', 'SuccessfulPayment', 'Orders', 'Cart','Favorites','Notifications','UserAddress','ListDetail','Register','Login','EditUserAddress'].includes(route.name);
+      return !['BusinessInfo', 'Payment', 'SuccessfulPayment', 'Orders', 'Cart','Favorites','Notifications','UserAddress','ListDetail','Register','Login','EditUserAddress','Points'].includes(route.name);
     });
 
     const showBusinessFooter = computed(() => {

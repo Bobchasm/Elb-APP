@@ -3,36 +3,41 @@
     <div class="card">
       <div class="header-section">
         <div class="icon-section">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="check-icon"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-8.82"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
         </div>
         <h2 class="title">支付成功</h2>
       </div>
+
       <div class="details">
         <div class="detail-item">
           <span class="label">商家名称</span>
           <span class="value">{{ paymentDetails.business?.businessName || '未知商家' }}</span>
         </div>
-        <div class="detail-item">
-          <span class="label">支付金额</span>
-          <span class="value amount">¥{{ paymentDetails.orderTotal }}</span>
+
+        <div class="detail-item total-section">
+          <span class="label">订单总额</span>
+          <span class="value">¥{{ paymentDetails.orderTotal }}</span>
         </div>
+
+        <div class="detail-item deduction-section">
+          <span class="label deduction-label">积分抵扣</span>
+          <span class="value deduction-value">- ¥{{ pointsDeductionAmount }}</span>
+        </div>
+
+        <div class="detail-item actual-paid-section">
+          <span class="label actual-paid-label">实付金额</span>
+          <span class="value actual-paid-amount">¥{{ actualPaidAmount }}</span>
+        </div>
+
         <div class="detail-item">
           <span class="label">支付时间</span>
           <span class="value">{{ paymentDetails.orderDate }}</span>
         </div>
       </div>
+
       <div class="actions">
         <button @click="goBack" class="btn-back">去查看订单</button>
       </div>
@@ -41,7 +46,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '@/utils/request';
 
@@ -50,45 +55,101 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const paymentDetails = ref({});
-    
     const orderId = ref(route.query.orderId);
 
-    onMounted(async () => {
-      if (!orderId.value) {
-        console.error('缺少订单ID参数，无法查询支付详情。');
-        return;
-      }
-      
-      try {
-        const response = await request.get(`/api/orders/${orderId.value}`);
-        if (response.success && response.data) {
-          paymentDetails.value = {
-            business: response.data.business,
-            orderTotal: response.data.orderTotal,
-            orderDate: response.data.orderDate
-          };
-        } else {
-          console.error('API 请求失败或返回数据格式不正确', response.message);
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
+    const actualPaidAmount = computed(() => {
+      const total = parseFloat(paymentDetails.value.orderTotal) || 0;
+      const deduction = parseFloat(paymentDetails.value.pointsDeduction) || 0;
+      return Math.max(0, total - deduction).toFixed(2);
     });
 
-    const goBack = () => {
-      router.push('/orderList');
+    const pointsDeductionAmount = computed(() =>
+      (parseFloat(paymentDetails.value.pointsDeduction) || 0).toFixed(2)
+    );
+
+    onMounted(async () => {
+  if (!orderId.value) {
+    console.error('缺少订单ID');
+    return;
+  }
+
+  try {
+    // 1. 查询订单信息
+    const orderResponse = await request.get(`/api/orders/${orderId.value}`);
+    if (!orderResponse.success || !orderResponse.data) {
+      console.error('订单 API 返回异常', orderResponse.message);
+      return;
+    }
+
+    const orderData = orderResponse.data;
+    const totalAmount = parseFloat(orderData.orderTotal) || 0;
+
+    // 2. 查询积分明细（取最近一条 pointsSource = 5）
+    let latestPointsSource5 = null;
+    try {
+      const pointsResp = await request.get(`/api/points/transactions`, {
+        params: {
+          pageNum: 1,
+          pageSize: 20,
+          pointsSource: 5,     // 只查积+现消费来源
+        }
+      });
+
+      if (pointsResp.success && Array.isArray(pointsResp.data)) {
+        // 根据 createTime 降序排序，取最新
+        latestPointsSource5 = pointsResp.data
+          .sort((a, b) => new Date(b.createTime) - new Date(a.createTime))[0];
+      }
+    } catch (e) {
+      console.error('积分明细查询失败:', e);
+    }
+
+    // 没查到积分，不抵扣
+    let deductionAmount = 0;
+
+    // 3. 如果查到了积分来源=5，则算可抵扣金额
+    if (latestPointsSource5) {
+      try {
+        const deductionResp = await request.get('/api/points/deductible-amount', {
+          params: {
+            orderAmount: totalAmount
+          }
+        });
+
+        if (deductionResp.success && deductionResp.data !== undefined) {
+          deductionAmount = parseFloat(deductionResp.data) || 0;
+        }
+      } catch (e) {
+        console.error('积分抵扣计算失败:', e);
+      }
+    }
+
+    // 4. 写入页面数据
+    paymentDetails.value = {
+      business: orderData.business,
+      orderTotal: totalAmount.toFixed(2),
+      pointsDeduction: deductionAmount.toFixed(2),
+      orderDate: orderData.orderDate
     };
+  } catch (err) {
+    console.error('Error fetching orders:', err);
+  }
+});
+
+
+    const goBack = () => router.push('/orderList');
 
     return {
       paymentDetails,
       goBack,
+      actualPaidAmount,
+      pointsDeductionAmount
     };
   }
 };
 </script>
 
 <style scoped>
-/* 全局和基础容器 */
 :root {
   --primary-color: #2e7d32;
   --secondary-color: #f5f7fa;
@@ -103,7 +164,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "PingFang SC", "Microsoft YaHei", sans-serif;
   background-color: var(--secondary-color);
 }
 
@@ -116,7 +177,6 @@ html, body {
   box-sizing: border-box;
 }
 
-/* 核心卡片样式 */
 .card {
   background-color: var(--card-bg-color);
   border-radius: 20px;
@@ -130,7 +190,6 @@ html, body {
   gap: 2rem;
 }
 
-/* 头部：图标和标题 */
 .header-section {
   display: flex;
   flex-direction: column;
@@ -138,7 +197,6 @@ html, body {
   gap: 1.25rem;
 }
 
-/* 修改后的图标样式 */
 .icon-section {
   display: flex;
   justify-content: center;
@@ -147,14 +205,14 @@ html, body {
   height: 90px;
   border-radius: 50%;
   background-color: #e6f6e8;
-  animation: scale-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: scale-in 0.5s ease both;
 }
 
 .check-icon {
   width: 55px;
   height: 55px;
   color: #2e7d32;
-  animation: fade-in 0.8s ease-out 0.2s both;
+  animation: fade-in 0.8s ease 0.2s both;
 }
 
 .title {
@@ -163,10 +221,9 @@ html, body {
   color: var(--text-color-primary);
   margin: 0;
   white-space: nowrap;
-  animation: slide-up 0.6s ease-out 0.3s both;
+  animation: slide-up 0.6s ease 0.3s both;
 }
 
-/* 交易详情 */
 .details {
   display: flex;
   flex-direction: column;
@@ -193,13 +250,28 @@ html, body {
   font-weight: 600;
 }
 
-.value.amount {
-  font-size: 1.25rem;
-  color: var(--primary-color);
+.deduction-value {
+  color: #f56565;
+}
+
+.actual-paid-section {
+  border-top: 2px solid #e2e8f0;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
+.actual-paid-label {
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
-/* 按钮 */
+.actual-paid-amount {
+  font-size: 2.8rem;
+  color: var(--primary-color);
+  font-weight: 900;
+  line-height: 1;
+}
+
 .actions {
   margin-top: 0.5rem;
 }
@@ -207,7 +279,7 @@ html, body {
 .btn-back {
   width: 100%;
   padding: 1rem;
-  background-color:  #0493f2da;
+  background-color: #0493f2da;
   color: #e2e8f0;
   border: none;
   border-radius: 12px;
@@ -223,45 +295,23 @@ html, body {
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
-/* 动画效果 */
 @keyframes scale-in {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes slide-up {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
 
-/* 媒体查询：适配大屏幕设备 */
 @media (min-width: 600px) {
-  .card {
-    padding: 3rem;
-  }
-  .title {
-    font-size: 2.5rem;
-  }
+  .card { padding: 3rem; }
+  .title { font-size: 2.5rem; }
 }
 </style>

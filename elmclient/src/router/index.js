@@ -25,6 +25,10 @@ import SubmitItems from '@/views/SubmitItems.vue'
 import AiChat from '@/views/AiChat.vue'
 import Wallet from '@/views/Wallet.vue'
 import WalletTransactions from '@/views/WalletTransactions.vue'
+import Points from '@/views/Points.vue'
+import PointsDetails from '@/views/PointsDetails.vue'
+import PointsLottery from '@/views/PointsLottery.vue'
+
 
 //商家端路由配置
 import MerchantProfile from '../views/MerchantProfile.vue';
@@ -36,6 +40,7 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 import AdminHome from '../views/AdminHome.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
 import AdminShop from '@/views/AdminShop.vue'
+//import PointsDetails from '../views/PointsDetails.vue'   这是什么？(⊙o⊙)？
 //import { pa } from 'element-plus/es/locale'
 
 // 定义路由
@@ -234,6 +239,24 @@ const routes = [
     name: 'WalletTransactions',
     component: WalletTransactions,
     meta: { title: '交易明细' }
+  },
+  {
+    path: '/points',
+    name: 'Points',
+    component: Points,
+    meta: { title: '我的积分' }
+  },
+  {
+    path: '/points/lottery', 
+    name: 'PointsLottery',
+    component: PointsLottery,
+    meta: { title: '积分抽奖' }
+    },
+  {
+    path: '/points/details',
+    name: 'PointsDetails',
+    component: PointsDetails,
+    meta: { title: '积分明细' }
   },
  //
 //管理端
