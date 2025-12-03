@@ -1,16 +1,22 @@
 <template>
   <div class="simple-lottery-page">
     <div class="header">
-      <h3>积分抽奖 (精简版)</h3>
+      <h3>积分抽奖</h3>
       <span class="rules-link" @click="openRules">活动规则</span>
     </div>
 
     <div class="points-balance-card card">
       <div class="points-info">
-        <span class="label">我的当前积分</span>
-        <span class="value">{{ formatPoints(currentPoints) }}</span>
+        <div class="points-row">
+          <span class="label">当前积分</span>
+          <span class="value">{{ formatPoints(lotteryInfo.totalPoints || 0) }}</span>
+        </div>
+        <div class="points-row">
+          <span class="label">可用积分</span>
+          <span class="value">{{ formatPoints(lotteryInfo.availablePoints || 0) }}</span>
+        </div>
       </div>
-      <button class="earn-btn" @click="goToPointsPage">赚取积分</button>
+      <button class="earn-btn" @click="goToPointsPage">更多抽奖机会</button>
     </div>
 
     <div class="member-info-card card">
@@ -68,7 +74,7 @@
             <template v-else>
               <div class="prize-content">
                 <span class="prize-icon">{{ getPrizeIcon(prize.lotteryType) }}</span>
-                <span class="prize-name">{{ prize.name }}</span>
+                <span class="prize-name">{{ prize.name || 'N/A' }}</span>
                 <span class="prize-points" v-if="prize.pointsReward > 0">
                     {{ formatPoints(prize.pointsReward) }} 积分
                 </span>
@@ -93,7 +99,6 @@
       </ul>
     </div>
     
-    <!-- 内联 modal 替换组件 -->
     <teleport to="body">
         <div v-if="showRules" class="modal-mask" @click="showRules = false">
             <div class="modal-wrapper">
@@ -103,11 +108,16 @@
                         <button class="close-btn" @click="showRules = false">×</button>
                     </div>
                     <div class="modal-body">
-                        <p>1. <span class="rule-title">会员免费机会：</span>{{ memberRules }}</p>
+                        <p>1. <span class="rule-title">会员免费机会：</span></p>
+                        <p class="rule-content" v-html="memberRules"></p>
+
                         <p>2. <span class="rule-title">抽奖消耗：</span>免费机会用完后，每次抽奖需消耗 100 积分。</p>
-                        <p>3. <span class="rule-title">当前奖池：</span>您的专属奖池包含：{{ prizeDescriptions }}</p>
+
+                        <p>3. <span class="rule-title">当前奖池：</span>{{ prizeDescriptions }}。</p>
+
                         <p>4. <span class="rule-title">积分有效期：</span>活动中获得的积分有效期为 15 天。</p>
                         <p>5. <span class="rule-title">其他：</span>中奖记录仅显示最近 5 条。最终解释权归本公司所有。</p>
+
                         <p class="level-info">当前等级：<span style="color: #ff4d4f;">{{ lotteryInfo.memberLevelName || '加载中...' }}</span></p>
                     </div>
                 </div>
@@ -118,91 +128,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineComponent } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+// 假设这是你的自定义请求和提示工具
 import request from '@/utils/request'; 
 import { toast } from '@/utils/toast'; 
 
-// --- 规则弹窗组件定义 (需求 1 优化) ---
-const RulesModal = defineComponent({
-    props: {
-        visible: Boolean,
-        memberLevelName: String,
-        prizes: { // 接收奖池数据
-            type: Array,
-            default: () => []
-        }
-    },
-    emits: ['close'],
-    setup(props, { emit }) {
-        console.log('RulesModal setup called with visible:', props.visible);
-        // 整理奖池说明
-        const prizeDescriptions = computed(() => {
-            if (props.prizes.length === 0) {
-                return '奖池信息加载中或未配置。';
-            }
-            // 排除没中奖（LotteryType=0）的项，整理奖品名称
-            const names = props.prizes
-                .filter(p => p.lotteryType !== 0)
-                .map(p => {
-                    if (p.lotteryType === 1 && p.pointsReward > 0) {
-                        return `+${(p.pointsReward).toLocaleString()} 积分`;
-                    }
-                    return p.lotteryTypeName;
-                });
-            
-            // 使用中文连接符连接奖品名称
-            return names.join('、');
-        });
-
-        // 生成会员规则说明
-        const memberRules = computed(() => {
-             const level = props.memberLevelName;
-             switch (level) {
-                case '白银会员': return '每月有 **1** 次免费抽奖机会。';
-                case '黄金会员': return '每月有 **2** 次免费抽奖机会。';
-                case '钻石会员': return '每月有 **3** 次免费抽奖机会。';
-                case '普通会员': 
-                default: return '当前为普通用户，暂无免费抽奖机会。';
-             }
-        });
-
-        return {
-            prizeDescriptions,
-            memberRules,
-        };
-    },
-    template: `
-        <teleport to="body">
-            <div v-if="visible" class="modal-mask" @click="$emit('close')">
-                <div class="modal-wrapper">
-                    <div class="modal-container" @click.stop>
-                        <div class="modal-header">
-                            <h3>活动规则</h3>
-                            <button class="close-btn" @click="$emit('close')">×</button>
-                        </div>
-                        <div class="modal-body">
-                            <p>1. <span class="rule-title">会员免费机会：</span></p>
-                            <p class="rule-content">{{ memberRules }} 免费机会每月重置，请及时使用。</p>
-
-                            <p>2. <span class="rule-title">抽奖消耗：</span>免费机会用完后，每次抽奖需消耗 100 积分。</p>
-
-                            <p>3. <span class="rule-title">当前奖池：</span>您的专属奖池包含：{{ prizeDescriptions }}。</p>
-
-                            <p>4. <span class="rule-title">积分有效期：</span>活动中获得的积分有效期为 15 天。</p>
-                            <p>5. <span class="rule-title">其他：</span>中奖记录仅显示最近 5 条。最终解释权归本公司所有。</p>
-
-                            <p class="level-info">当前等级：<span style="color: #ff4d4f;">{{ memberLevelName || '加载中...' }}</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </teleport>
-    `
-});
-
-// --- 状态管理 (保持不变) ---
+// --- 状态管理 ---
 const showRules = ref(false); 
-const currentPoints = ref(0); 
 const loading = ref({
     info: true, 
     records: true, 
@@ -216,104 +148,89 @@ const lotteryRecords = ref([]);
 const winningResult = ref(null); 
 
 const lotteryInfo = ref({
+    totalPoints: 0, 
+    availablePoints: 0, 
     memberLevel: 0,
-    memberLevelName: '普通会员',
+    memberLevelName: '普通用户',
     monthlyLimit: 0,
     usedChances: 0,
     remainingChances: 0,
     canLottery: false,
-    prizes: [],
+    prizes: [], // 存储后端返回的奖品列表
 });
 
-// 计算属性 (保持不变)
+// --- 计算属性 (规则和抽奖状态) ---
 const canStartLottery = computed(() => {
     const neededCost = lotteryInfo.value.remainingChances > 0 ? 0 : 100;
-    return lotteryInfo.value.remainingChances > 0 || currentPoints.value >= neededCost; 
+    return lotteryInfo.value.remainingChances > 0 || lotteryInfo.value.availablePoints >= neededCost; 
 });
-
 
 const drawCost = computed(() => {
     return lotteryInfo.value.remainingChances > 0 ? '免费机会' : '100 积分'; 
 });
 
 const simplePrizes = computed(() => {
+    // 奖池概览只展示非谢谢参与的奖品，取前三个
     return lotteryInfo.value.prizes
-        .filter(p => p.lotteryType !== 0)
+        .filter(p => p.lotteryType !== 0 && p.lotteryTypeName !== '没中奖')
         .slice(0, 3)
         .map(p => ({ name: p.lotteryTypeName }));
 });
 
-// 计算属性用于内联 modal
-const prizeDescriptions = computed(() => {
-    if (lotteryInfo.value.prizes.length === 0) {
-        return '奖池信息加载中或未配置。';
-    }
-    // 排除没中奖（LotteryType=0）的项，整理奖品名称
-    const names = lotteryInfo.value.prizes
-        .filter(p => p.lotteryType !== 0)
-        .map(p => {
-            if (p.lotteryType === 1 && p.pointsReward > 0) {
-                return `+${(p.pointsReward).toLocaleString()} 积分`;
-            }
-            return p.lotteryTypeName;
-        });
-
-    // 使用中文连接符连接奖品名称
-    return names.join('、');
-});
-
+// 规则弹窗-会员机会描述
 const memberRules = computed(() => {
-     const level = lotteryInfo.value.memberLevelName;
-     switch (level) {
-        case '白银会员': return '每月有 **1** 次免费抽奖机会。';
-        case '黄金会员': return '每月有 **2** 次免费抽奖机会。';
-        case '钻石会员': return '每月有 **3** 次免费抽奖机会。';
-        case '普通会员':
-        default: return '当前为普通用户，暂无免费抽奖机会。';
-     }
+    const level = lotteryInfo.value.memberLevel;
+    let limitText = '暂无免费抽奖机会';
+    switch (level) {
+        case 1: limitText = '每月有 1 次免费抽奖机会'; break;
+        case 2: limitText = '每月有 2 次免费抽奖机会'; break;
+        case 3: limitText = '每月有 3 次免费抽奖机会'; break;
+    }
+    return limitText + '。免费机会每月重置，请及时使用。';
 });
 
-// --- 辅助函数：赚取积分跳转 (需求 2) ---
-
-const goToPointsPage = () => {
-    // 假设存在一个全局的 router 对象或跳转方法
-    if (typeof window.router !== 'undefined' && typeof window.router.push === 'function') {
-        window.router.push('/points');
-    } else {
-        // 在没有 Vue Router 环境下，使用 toast 模拟跳转行为
-        toast.info('跳转到 /points 页面逻辑已触发。');
-        console.log('Navigate to /points');
+// 规则弹窗-奖池描述
+const prizeDescriptions = computed(() => {
+    const level = lotteryInfo.value.memberLevel;
+    let pool = '';
+    
+    switch (level) {
+        case 1: 
+            pool = '没中奖、+20积分、+50积分、+100积分'; 
+            break;
+        case 2: 
+            pool = '没中奖、+50积分、+100积分、积分翻倍'; 
+            break;
+        case 3: 
+            pool = '没中奖、+100积分、+200积分、积分翻倍'; 
+            break;
+        case 0:
+        default: 
+            pool = '没中奖。'; 
+            break;
     }
-};
+    
+    return `当前奖池包含：${pool} `;
+});
 
-// --- 调试函数：打开规则弹窗 ---
+// --- 辅助函数：赚取积分跳转 ---
+const goToPointsPage = () => {
+    // 模拟跳转逻辑
+    toast.info('跳转到赚取积分页面...');
+};
 
 const openRules = () => {
-    console.log('点击活动规则按钮');
-    console.log('当前 showRules 值:', showRules.value);
     showRules.value = true;
-    console.log('设置后 showRules 值:', showRules.value);
-
-    // 检查 DOM 中是否有 modal 元素
-    setTimeout(() => {
-        const modalMask = document.querySelector('.modal-mask');
-        console.log('modal-mask 元素:', modalMask);
-        if (modalMask) {
-            console.log('modal-mask 样式:', window.getComputedStyle(modalMask));
-        }
-    }, 100);
 };
 
-// --- 生命周期和数据获取函数 (保持不变) ---
-onMounted(() => {
-    fetchInitialData();
-});
+// --- 数据获取函数 ---
 
 const fetchPointsAccount = async () => {
     try {
-        const res = await request.get('/api/points/account');
+        const res = await request.get('/api/points/account'); 
         if (res.success && res.data) {
-            currentPoints.value = res.data.totalPoints || 0; 
+            lotteryInfo.value.totalPoints = res.data.totalPoints || 0; 
+            lotteryInfo.value.availablePoints = res.data.availablePoints || 0; 
         } else {
             console.warn('获取积分账户失败:', res.message);
         }
@@ -322,39 +239,67 @@ const fetchPointsAccount = async () => {
     }
 };
 
+/**
+ * ❗ 需求 1 修复: 确保 8 个格子都有数据
+ * 将后端返回的奖品数据格式化并填充到九宫格中。
+ * @param {Array} apiPrizes 后端返回的奖品列表
+ */
 const formatPrizesToGrid = (apiPrizes) => {
     const grid = [];
-    const prizePositions = [0, 1, 2, 5, 8, 7, 6, 3]; 
+    // 九宫格的非按钮格子顺序 (顺时针，从 0 开始)
+    const GRID_SEQUENCE_MAP = [0, 1, 2, 5, 8, 7, 6, 3]; 
     
-    const defaultPrize = { id: 'N_A', lotteryTypeName: '再接再厉', lotteryType: 0, pointsReward: 0 };
-    const prizesToFill = apiPrizes.slice(0, 8); 
-    if (prizesToFill.length < 8) {
-        for (let i = prizesToFill.length; i < 8; i++) {
-            prizesToFill.push({...defaultPrize, id: `DEF_${i}`}); 
-        }
+    // 优化后的默认占位奖品模板（用于填充不足 8 个的情况）
+    const defaultPrizeTemplates = [
+        { id: 'EMPTY_1', lotteryTypeName: '今日好运', lotteryType: 0, pointsReward: 0 },
+        { id: 'EMPTY_2', lotteryTypeName: '幸运加持', lotteryType: 0, pointsReward: 0 },
+        { id: 'EMPTY_3', lotteryTypeName: '谢谢参与', lotteryType: 0, pointsReward: 0 },
+        { id: 'EMPTY_4', lotteryTypeName: '再来一次', lotteryType: 0, pointsReward: 0 },
+    ];
+    
+    // 准备 8 个奖品数据 (优先使用后端返回的，不足则使用默认占位)
+    let prizesToUse = [...apiPrizes];
+    let defaultIndex = 0;
+    while (prizesToUse.length < 8) {
+        prizesToUse.push(defaultPrizeTemplates[defaultIndex % defaultPrizeTemplates.length]);
+        defaultIndex++;
     }
-        
-    let prizeIndex = 0; 
 
+    // 填充九宫格
+    let prizeDataIndex = 0;
     for (let i = 0; i < 9; i++) {
         if (i === 4) {
+            // 中心格：抽奖按钮
             grid.push({ index: 4, isButton: true, name: '抽奖' }); 
         } else {
-            const prizeData = prizesToFill[prizeIndex];
+            // 根据 GRID_SEQUENCE_MAP 确定当前格子对应的奖品数据索引
+            // ❗ 修复核心逻辑：根据当前格子的索引 i，找到它在 GRID_SEQUENCE_MAP 中的位置，
+            // 然后再用这个位置去取 prizesToUse 数组中的数据。
+            const sequenceIndex = GRID_SEQUENCE_MAP.findIndex(seq => seq === i);
+            const finalPrizeData = prizesToUse[sequenceIndex]; 
 
+            // 优化：根据奖励类型优化显示名称
+            let prizeName = finalPrizeData?.lotteryTypeName || 'N/A';
+            if (finalPrizeData?.lotteryType === 1 && finalPrizeData?.pointsReward > 0) {
+                 prizeName = `+${formatPoints(finalPrizeData.pointsReward)} 积分`;
+            } else if (finalPrizeData?.lotteryType === 2) {
+                 prizeName = '积分翻倍';
+            }
+            
             grid.push({
                 index: i,
                 isButton: false,
-                name: prizeData?.lotteryTypeName || 'N/A',
-                lotteryType: prizeData?.lotteryType,
-                pointsReward: prizeData?.pointsReward || 0,
-                prizeId: prizeData?.id,
+                name: prizeName, // ❗ 确保这里使用 prizeName
+                lotteryType: finalPrizeData?.lotteryType,
+                pointsReward: finalPrizeData?.pointsReward || 0,
+                prizeId: finalPrizeData?.id,
             });
-            prizeIndex++;
+            prizeDataIndex++;
         }
     }
     prizeGrid.value = grid;
 };
+
 
 const fetchInitialData = async () => {
     errorMessage.value = '';
@@ -365,7 +310,12 @@ const fetchInitialData = async () => {
     try {
         const res = await request.get('/api/points/lottery/info');
         if (res.success && res.data) {
-            lotteryInfo.value = res.data;
+            Object.assign(lotteryInfo.value, res.data);
+            
+            // 确保积分不被丢失（如果 /lottery/info 接口不返回积分）
+            if (!res.data.totalPoints) lotteryInfo.value.totalPoints = lotteryInfo.value.totalPoints;
+            if (!res.data.availablePoints) lotteryInfo.value.availablePoints = lotteryInfo.value.availablePoints;
+            
             formatPrizesToGrid(res.data.prizes || []);
         } else {
             errorMessage.value = res.message || '获取抽奖信息失败';
@@ -393,7 +343,7 @@ const fetchInitialData = async () => {
     }
 };
 
-// --- 抽奖动画逻辑 (保持不变) ---
+// --- 抽奖动画逻辑 ---
 const GRID_SEQUENCE = [0, 1, 2, 5, 8, 7, 6, 3]; 
 
 const animateLottery = (finalPrizeSeqIndex) => {
@@ -429,15 +379,18 @@ const animateLottery = (finalPrizeSeqIndex) => {
     });
 };
 
+/**
+ * ❗ 需求 2 修复：确保动画终点是随机的（即中奖的格子）
+ */
 const startLottery = async () => {
     if (!canStartLottery.value) {
-        toast.warn('您的抽奖机会已用完或积分不足。');
+        toast.warn(lotteryInfo.value.remainingChances > 0 ? '免费机会已用完，积分不足 100。' : '您的积分不足 100。');
         return;
     }
     if (loading.value.draw) return;
 
     loading.value.draw = true;
-    activeIndex.value = 4; 
+    activeIndex.value = 4; // 选中中心按钮
     finalPrizeIndex.value = -1; 
 
     try {
@@ -446,31 +399,36 @@ const startLottery = async () => {
         if (res.success && res.data) {
             const result = res.data;
             
-            let winningPrize;
-            if (result.prizeId) {
-                 winningPrize = prizeGrid.value.find(p => p.prizeId === result.prizeId);
-            }
-            if (!winningPrize) {
-                winningPrize = prizeGrid.value.find(p => 
-                    p.lotteryType === result.lotteryType
-                );
+            // ❗ 核心修复点 2：根据后端返回的 prizeId 准确找到九宫格中的中奖格子
+            const winningPrize = prizeGrid.value.find(p => p.prizeId === result.prizeId);
+            
+            let finalGridIndex;
+            if (winningPrize) {
+                finalGridIndex = winningPrize.index;
+            } else {
+                // 降级策略：如果 prizeId 匹配不到，用 lotteryType 匹配
+                const fallbackPrize = prizeGrid.value.find(p => p.lotteryType === result.lotteryType);
+                finalGridIndex = fallbackPrize ? fallbackPrize.index : 3; // 默认停在 '今日好运' (index 3)
+                console.warn(`未通过 prizeId 匹配到格子，使用降级匹配到 index: ${finalGridIndex}`);
             }
 
-            const finalGridIndex = winningPrize ? winningPrize.index : 3; 
+            // 将九宫格索引 (0-8) 转换为动画序列索引 (0-7)
             const finalPrizeSeqIndex = GRID_SEQUENCE.findIndex(i => i === finalGridIndex);
             
+            // 启动动画
             await animateLottery(finalPrizeSeqIndex); 
 
             winningResult.value = result;
             
-            toast.success(`🎉 恭喜您：${result.description || result.lotteryTypeName}`);
+            toast.success(`🎉 恭喜您：${result.description || winningPrize?.name || result.lotteryTypeName || '中奖啦'}`);
 
             setTimeout(() => {
-                fetchInitialData(); 
+                fetchInitialData(); // 刷新积分和机会
                 loading.value.draw = false;
             }, 1500); 
 
         } else {
+            // 抽奖失败，重置状态
             activeIndex.value = -1; 
             finalPrizeIndex.value = -1;
             toast.error(res.message || '抽奖失败，请稍后重试。');
@@ -492,17 +450,17 @@ const formatPoints = (points) => {
 };
 const getPrizeIcon = (type) => {
     switch(type) {
-        case 1: return '💰'; 
-        case 2: return '✨'; 
+        case 1: return '💰'; // 积分
+        case 2: return '✨'; // 翻倍卡
         case 0: 
-        default: return '🍀'; 
+        default: return '🍀'; // 没中奖/占位
     }
 };
 const formatRecord = (record) => {
     if (record.lotteryType === 1) { 
         return `🎉 恭喜获得 ${formatPoints(record.pointsReward)} 积分`;
     } else if (record.lotteryType === 2) { 
-        return `🌟 获得积分翻倍卡 (x${record.pointsMultiplier || '?'})，原积分 ${formatPoints(record.originalPoints || 0)}`;
+        return `🌟 获得积分翻倍卡 (原积分 ${formatPoints(record.originalPoints || 0)})`;
     } else { 
         return `😢 遗憾，${record.lotteryTypeName}`;
     }
@@ -512,6 +470,11 @@ const formatTime = (timeStr) => {
     const date = new Date(timeStr);
     return date.toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' }); 
 };
+
+// --- 生命周期 ---
+onMounted(() => {
+    fetchInitialData();
+});
 </script>
 
 <style scoped>
@@ -575,11 +538,20 @@ const formatTime = (timeStr) => {
   display: flex;
   flex-direction: column;
 }
-.points-info .label { font-size: 0.9rem; margin-bottom: 5px; }
-.points-info .value { 
-    font-size: 2rem; 
-    font-weight: 900; 
-    min-width: 80px; 
+.points-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.points-row:last-child {
+  margin-bottom: 0;
+}
+.points-row .label { font-size: 0.9rem; }
+.points-row .value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    min-width: 80px;
 }
 .earn-btn {
   background-color: white;
