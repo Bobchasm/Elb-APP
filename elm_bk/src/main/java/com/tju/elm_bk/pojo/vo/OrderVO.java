@@ -53,4 +53,13 @@ public class OrderVO {
 
     @Schema(description = "地址对象")
     private AddressVO deliveryAddress;
+
+    @Schema(description = "使用积分数量")
+    private Long pointsUsed;
+
+    @Schema(description = "获得积分数量")
+    private Long pointsAmount;
+
+    @Schema(description = "积分抵扣的现金金额（元）")
+    private BigDecimal pointsDiscountAmount;
 }

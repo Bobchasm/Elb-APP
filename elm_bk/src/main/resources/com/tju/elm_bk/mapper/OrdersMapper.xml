@@ -14,6 +14,9 @@
         <result property="orderDate" column="order_date"/>
         <result property="orderState" column="order_state"/>
         <result property="orderTotal" column="order_total"/>
+        <result property="pointsUsed" column="points_used"/>
+        <result property="pointsAmount" column="points_amount"/>
+        <result property="pointsDiscountAmount" column="points_discount_amount"/>
         <association property="business" resultMap="businessVOResultMap"/>
         <association property="customer" resultMap="customerUserVOResultMap"/>
         <association property="deliveryAddress" resultMap="addressVOResultMap"/>
@@ -160,9 +163,12 @@
                O.order_date,
                O.order_state,
                O.order_total,
+               O.points_used,
+               O.points_amount,
+               O.points_discount_amount,
                O.business_id,
                O.customer_id,
-               O.address_id,
+               O.address,
 
                b.business_name as business_business_name,
                b.business_address as business_business_address,
