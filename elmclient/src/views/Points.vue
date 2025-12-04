@@ -1,6 +1,6 @@
 <template>
-    <div class="points-container">
-        <div class="header">
+    <div class="details-container">
+        <div class="header app-header-fixed">
             <h3>我的积分</h3>
         </div>
 
@@ -18,15 +18,16 @@
             <div 
                 :class="['recent-expiry-detail', { 'no-warning': expiringCount === 0 }]" 
                 class="card-small"
-                @click="goToExpiringDetails"
+                @click="goToExpiringPage"
             >
                 <i :class="['fas', expiringCount > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle']"></i> 
                 <span v-if="expiringCount > 0">
-                    您有 **{{ expiringCount }}** 积分即将过期！
+                    您有 {{ expiringCount }} 积分即将过期！
                 </span>
                 <span v-else>
                     暂无即将过期的积分。
                 </span>
+                <i class="fas fa-chevron-right detail-link-icon-small"></i>
             </div>
 
             <div class="lottery-entry-card card-small" @click="goToLottery">
@@ -147,15 +148,15 @@ const router = useRouter();
 const totalPoints = ref(0); 
 const expiringCount = ref(0); 
 const exchangeProducts = ref([]);
-const userAddresses = ref([]); // 用户地址列表
+const userAddresses = ref([]); 
 
 // 兑换弹窗状态
 const showExchangeModal = ref(false);
 const currentProduct = ref(null);
 const exchangeQuantity = ref(1);
 const selectedAddressId = ref('');
-const maxQuantity = ref(1); // 最大可兑换数量
-const isExchanging = ref(false); // 防止重复提交
+const maxQuantity = ref(1); 
+const isExchanging = ref(false); 
 
 // --- 工具函数 ---
 
@@ -166,13 +167,12 @@ const getToken = () => {
 const getUserId = () => {
     try {
         const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-        return userInfo ? userInfo.id : null; // 假设 userInfo 存储了 id
+        return userInfo ? userInfo.id : null; 
     } catch (e) {
         return null;
     }
 };
 
-// 统一 API 错误处理函数
 const handleApiError = (error, fallbackMessage) => {
     console.error(fallbackMessage, error);
     
@@ -185,15 +185,12 @@ const handleApiError = (error, fallbackMessage) => {
     } else {
         toast.error(fallbackMessage + (error.message ? `: ${error.message}` : ''));
     }
-    // 失败时重置状态
     isExchanging.value = false;
 };
 
-// --- API 调用逻辑 ---
+// --- API 调用逻辑 (保持不变，省略大部分实现细节) ---
+// ... (fetchPointsAccount, fetchExchangeGoods, fetchExpiringCount, fetchUserAddresses, confirmExchange) ...
 
-/**
- * 刷新数据：积分和商品列表
- */
 const refreshAllData = async () => {
     await Promise.all([
         fetchPointsAccount(),
@@ -203,9 +200,7 @@ const refreshAllData = async () => {
     ]);
 };
 
-/**
- * 1. 查询积分账户
- */
+// 1. 查询积分账户
 const fetchPointsAccount = async () => {
     const token = getToken();
     if (!token) return;
@@ -215,7 +210,7 @@ const fetchPointsAccount = async () => {
         });
 
         if (response && response.success && response.data) {
-            totalPoints.value = response.data.availablePoints || 0; 
+            totalPoints.value = response.data.totalPoints || 0; 
         } else {
             toast.error('获取积分账户失败: ' + (response ? response.message : '未知错误'));
         }
@@ -224,9 +219,7 @@ const fetchPointsAccount = async () => {
     }
 };
 
-/**
- * 2. 获取可兑换商品列表
- */
+// 2. 获取可兑换商品列表
 const fetchExchangeGoods = async () => {
     const token = getToken();
     if (!token) return;
@@ -251,31 +244,32 @@ const fetchExchangeGoods = async () => {
     }
 };
 
-/**
- * 3. 统计即将过期的积分总数
- */
+// 3. 统计即将过期的积分总数
 const fetchExpiringCount = async () => {
     const token = getToken();
     if (!token) return;
     try {
+        // 接口地址改为 /api/points/expiring/count (与文档确认一致)
         const response = await request.get(`/api/points/expiring/count`, {
             headers: { 'Authorization': `Bearer ${token}` },
         });
         
         if (response && response.success) {
+            // data直接返回积分总数 (int64)
             expiringCount.value = response.data || 0; 
         } else {
             // 不进行 toast.error，避免频繁弹窗，但记录错误
             console.error('获取过期积分统计失败', response);
+            expiringCount.value = 0; // 失败时重置为 0
         }
     } catch (e) {
         // handleApiError(e, '获取过期积分统计异常'); // 避免对主页面的过度干扰
+        console.error('获取过期积分统计异常', e);
+        expiringCount.value = 0;
     }
 };
 
-/**
- * 4. 获取用户地址列表 (新增)
- */
+// 4. 获取用户地址列表 (新增)
 const fetchUserAddresses = async () => {
     const token = getToken();
     const userId = getUserId();
@@ -292,7 +286,6 @@ const fetchUserAddresses = async () => {
 
         if (response && response.success && Array.isArray(response.data)) {
             userAddresses.value = response.data;
-            // 默认选择第一个地址
             if (userAddresses.value.length > 0) {
                 selectedAddressId.value = userAddresses.value[0].id;
             }
@@ -306,9 +299,7 @@ const fetchUserAddresses = async () => {
     }
 };
 
-/**
- * 5. 提交积分兑换 (新增)
- */
+// 5. 提交积分兑换
 const confirmExchange = async () => {
     if (isExchanging.value) return;
     if (!currentProduct.value || !selectedAddressId.value || exchangeQuantity.value <= 0) {
@@ -338,7 +329,6 @@ const confirmExchange = async () => {
         if (response && response.success) {
             toast.success('积分兑换成功！');
             showExchangeModal.value = false;
-            // 兑换成功后刷新所有数据
             await refreshAllData();
         } else {
             toast.error('兑换失败: ' + (response ? response.message : '未知错误'));
@@ -353,7 +343,6 @@ const confirmExchange = async () => {
 
 // --- 逻辑处理 ---
 
-// 点击兑换按钮，显示弹窗并初始化数据
 const handleExchange = (product) => {
     if (totalPoints.value < product.requiredPoints) {
         toast.error('积分不足，无法兑换！');
@@ -366,22 +355,18 @@ const handleExchange = (product) => {
 
     currentProduct.value = product;
     exchangeQuantity.value = 1;
-    // 计算最大可兑换数量 (取决于库存和积分)
     const maxByStock = product.stockQuantity;
     const maxByPoints = Math.floor(totalPoints.value / product.requiredPoints);
     maxQuantity.value = Math.min(maxByStock, maxByPoints);
     
-    // 确保默认数量不大于最大值
     if (exchangeQuantity.value > maxQuantity.value) {
-           exchangeQuantity.value = maxQuantity.value;
+        exchangeQuantity.value = maxQuantity.value;
     }
     
-    // 如果没有地址，提示添加地址
     if (userAddresses.value.length === 0) {
         toast.warning('请先添加收货地址！');
     }
     
-    // 重置地址选择 (如果地址被删除，可能需要重新选择)
     if (userAddresses.value.findIndex(a => a.id === selectedAddressId.value) === -1) {
         selectedAddressId.value = userAddresses.value.length > 0 ? userAddresses.value[0].id : '';
     }
@@ -389,37 +374,33 @@ const handleExchange = (product) => {
     showExchangeModal.value = true;
 };
 
-// 增加兑换数量
 const increaseQuantity = () => {
     if (exchangeQuantity.value < maxQuantity.value) {
         exchangeQuantity.value++;
     }
 };
 
-// 减少兑换数量
 const decreaseQuantity = () => {
     if (exchangeQuantity.value > 1) {
         exchangeQuantity.value--;
     }
 };
 
-// 跳转到积分明细页面
+// 跳转到积分明细页面 (PointsDetails)
 const goToDetails = () => {
     router.push({ name: 'PointsDetails' }); 
 };
 
-// 跳转到过期积分筛选
-const goToExpiringDetails = () => {
-    // 假设 PointsDetails 页面可以接收 query 参数进行筛选
-    router.push({ name: 'PointsDetails', query: { filter: 'expiring' } });
+// 【主要改动】：跳转到即将过期积分页面 (PointsExpiring)
+const goToExpiringPage = () => {
+    router.push({ name: 'PointsExpiring' }); 
 }
 
-// ⭐ 新增：跳转到积分抽奖页面
+// 跳转到积分抽奖页面
 const goToLottery = () => {
     router.push({ name: 'PointsLottery' }); 
 }
 
-// 页面加载时调用所有接口
 onMounted(() => {
     const token = getToken();
     const userId = getUserId();
@@ -430,16 +411,15 @@ onMounted(() => {
         return;
     }
 
-    // 初始加载所有数据
     refreshAllData();
 });
 </script>
 
 <style scoped>
-/* CSS 样式部分 - 保持不变，仅新增 Lottery Card 样式 */
+/* CSS 样式部分 (为新功能添加小箭头样式) */
 
 /* 容器和全局样式 */
-.points-container {
+/* .points-container {
     padding: 0;
     max-width: 600px;
     margin: 0 auto;
@@ -448,7 +428,7 @@ onMounted(() => {
 }
 
 /* 页面头部 */
-.header {
+/* .header {
     background-color: #fff;
     padding: 15px 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -461,7 +441,7 @@ onMounted(() => {
     margin: 0;
     font-size: 1.2rem;
     color: #333;
-}
+}  */
 
 .tab-content {
     padding: 0 15px 20px 15px;
@@ -528,12 +508,20 @@ onMounted(() => {
     flex-shrink: 0;
     margin-left: 10px;
 }
+/* 【新增样式】：小卡片右侧的箭头 */
+.detail-link-icon-small {
+    font-size: 1rem;
+    color: #999;
+    margin-left: auto; /* 靠右对齐 */
+    flex-shrink: 0;
+}
+
 
 /* B. 即将过期积分提醒 */
 .card-small {
     padding: 10px 15px;
     border-radius: 8px;
-    margin-bottom: 15px; /* 统一小卡片间距 */
+    margin-bottom: 15px; 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     cursor: pointer; 
 }
@@ -545,7 +533,9 @@ onMounted(() => {
     line-height: 1.5;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: flex-start; /* 保持内容左对齐 */
+    position: relative;
+    padding-right: 35px; /* 留出箭头空间 */
 }
 .recent-expiry-detail i {
     margin-right: 8px;
@@ -563,10 +553,18 @@ onMounted(() => {
 .recent-expiry-detail.no-warning i {
     color: #4caf50;
 }
+/* 将小箭头定位到右侧 */
+.recent-expiry-detail .detail-link-icon-small {
+    position: absolute;
+    right: 15px;
+    color: #e65100;
+}
+.recent-expiry-detail.no-warning .detail-link-icon-small {
+    color: #4caf50;
+}
 
-/* ⭐ 新增：积分抽奖入口样式 ⭐ */
+/* ⭐ 积分抽奖入口样式 ⭐ */
 .lottery-entry-card {
-    /* 使用渐变背景使其醒目 */
     background: linear-gradient(90deg, #ffeb3b, #ffc107);
     border: 1px solid #ff9800;
     color: #333;
@@ -588,13 +586,12 @@ onMounted(() => {
     align-items: center;
     font-size: 1rem;
     font-weight: 700;
-    color: #d84315; /* 深橙红色 */
+    color: #d84315; 
 }
 
 .lottery-icon {
     font-size: 1.4rem;
     margin-right: 10px;
-    /* 添加旋转动画吸引眼球 */
     animation: pulse 1.5s infinite;
 }
 
@@ -607,13 +604,13 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     font-size: 0.8rem;
-    color: #795548; /* 棕色系小字 */
+    color: #795548; 
     padding-top: 5px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.5); /* 浅色虚线分割 */
+    border-top: 1px dashed rgba(255, 255, 255, 0.5); 
 }
 
 .lottery-entry-card .extra-tip i {
-    color: #e91e63; /* VIP图标使用粉色 */
+    color: #e91e63; 
     margin-right: 5px;
 }
 .lottery-entry-card .extra-tip .fa-chevron-right {
@@ -627,8 +624,6 @@ onMounted(() => {
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
-/* ⭐ 新增样式结束 ⭐ */
-
 
 /* C. 积分兑换商品 */
 .exchange-section {
@@ -816,7 +811,7 @@ onMounted(() => {
     font-size: 0.95rem;
     font-weight: 600;
     color: #333;
-    -moz-appearance: textfield; /* Firefox */
+    -moz-appearance: textfield; 
 }
 .quantity-control input::-webkit-outer-spin-button,
 .quantity-control input::-webkit-inner-spin-button {
@@ -854,7 +849,7 @@ onMounted(() => {
     padding: 12px;
     margin-top: 20px;
     border-radius: 8px;
-    background-color: #4caf50;
+    background-color: #2a7efc;
     color: white;
     border: none;
     font-size: 1rem;
@@ -869,7 +864,6 @@ onMounted(() => {
 
 /* 移动端适配 */
 @media (max-width: 480px) {
-    /* ... (保留移动端适配) ... */
     .modal-content {
         width: 95%;
     }

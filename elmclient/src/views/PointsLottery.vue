@@ -1,10 +1,8 @@
 <template>
-  <div class="simple-lottery-page">
-    <div class="header">
+  <div class="details-container">
+    <div class="header app-header-fixed">
       <h3>积分抽奖</h3>
-      <span class="rules-link" @click="openRules">活动规则</span>
     </div>
-
     <div class="points-balance-card card">
       <div class="points-info">
         <div class="points-row">
@@ -31,6 +29,8 @@
 
     <div class="lottery-area card">
       <h4>🎉 专属奖池</h4>
+      
+      <div class="rules-link" @click="openRules">活动规则</div>
 
       <div class="loading-overlay" v-if="loading.info || loading.draw">
         <div class="spinner"></div>
@@ -74,9 +74,9 @@
             <template v-else>
               <div class="prize-content">
                 <span class="prize-icon">{{ getPrizeIcon(prize.lotteryType) }}</span>
-                <span class="prize-name">{{ prize.name || 'N/A' }}</span>
+                <span class="prize-name">{{ prize.name || '神秘奖品' }}</span>
                 <span class="prize-points" v-if="prize.pointsReward > 0">
-                    {{ formatPoints(prize.pointsReward) }} 积分
+                  {{ formatPoints(prize.pointsReward) }} 积分
                 </span>
               </div>
             </template>
@@ -100,38 +100,43 @@
     </div>
     
     <teleport to="body">
-        <div v-if="showRules" class="modal-mask" @click="showRules = false">
-            <div class="modal-wrapper">
-                <div class="modal-container" @click.stop>
-                    <div class="modal-header">
-                        <h3>活动规则</h3>
-                        <button class="close-btn" @click="showRules = false">×</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>1. <span class="rule-title">会员免费机会：</span></p>
-                        <p class="rule-content" v-html="memberRules"></p>
-
-                        <p>2. <span class="rule-title">抽奖消耗：</span>免费机会用完后，每次抽奖需消耗 100 积分。</p>
-
-                        <p>3. <span class="rule-title">当前奖池：</span>{{ prizeDescriptions }}。</p>
-
-                        <p>4. <span class="rule-title">积分有效期：</span>活动中获得的积分有效期为 15 天。</p>
-                        <p>5. <span class="rule-title">其他：</span>中奖记录仅显示最近 5 条。最终解释权归本公司所有。</p>
-
-                        <p class="level-info">当前等级：<span style="color: #ff4d4f;">{{ lotteryInfo.memberLevelName || '加载中...' }}</span></p>
-                    </div>
-                </div>
+      <div v-if="showRules" class="modal-mask" @click="showRules = false">
+        <div class="modal-wrapper">
+          <div class="modal-container" @click.stop>
+            <div class="modal-header">
+              <h3>活动规则</h3>
+              <button class="close-btn" @click="showRules = false">×</button>
             </div>
+            <div class="modal-body">
+              <p>1. <span class="rule-title">会员免费机会：</span></p>
+              <p class="rule-content" v-html="memberRules"></p>
+
+              <p>2. <span class="rule-title">抽奖消耗：</span>免费机会用完后，每次抽奖需消耗 100 积分。</p>
+
+              <p>3. <span class="rule-title">当前奖池：</span>{{ prizeDescriptions }}。</p>
+
+              <p>4. <span class="rule-title">积分有效期：</span>活动中获得的积分有效期为 15 天。</p>
+              <p>5. <span class="rule-title">其他：</span>中奖记录仅显示最近 5 条。最终解释权归本公司所有。</p>
+
+              <p class="level-info">当前等级：<span style="color: var(--primary-color);">{{ lotteryInfo.memberLevelName || '加载中...' }}</span></p>
+            </div>
+          </div>
         </div>
+      </div>
     </teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-// 假设这是你的自定义请求和提示工具
+import { useRouter } from 'vue-router'; 
+// 假设这是您的工具/请求函数，请确保路径正确
 import request from '@/utils/request'; 
 import { toast } from '@/utils/toast'; 
+
+const WIN_PRIZE_INDICES = [0, 1, 2, 5, 8, 7, 6, 3].filter(i => i !== 4); // 中奖格子索引集合
+const NO_WIN_PRIZE_INDICES = [6, 8]; // 非中奖格子索引集合 (左下和右下)
+const GRID_SEQUENCE = [0, 1, 2, 5, 8, 7, 6, 3]; 
 
 // --- 状态管理 ---
 const showRules = ref(false); 
@@ -213,10 +218,10 @@ const prizeDescriptions = computed(() => {
     return `当前奖池包含：${pool} `;
 });
 
-// --- 辅助函数：赚取积分跳转 ---
+const router = useRouter(); 
+
 const goToPointsPage = () => {
-    // 模拟跳转逻辑
-    toast.info('跳转到赚取积分页面...');
+    router.push('/wallet');
 };
 
 const openRules = () => {
@@ -240,7 +245,6 @@ const fetchPointsAccount = async () => {
 };
 
 /**
- * ❗ 需求 1 修复: 确保 8 个格子都有数据
  * 将后端返回的奖品数据格式化并填充到九宫格中。
  * @param {Array} apiPrizes 后端返回的奖品列表
  */
@@ -251,10 +255,10 @@ const formatPrizesToGrid = (apiPrizes) => {
     
     // 优化后的默认占位奖品模板（用于填充不足 8 个的情况）
     const defaultPrizeTemplates = [
-        { id: 'EMPTY_1', lotteryTypeName: '今日好运', lotteryType: 0, pointsReward: 0 },
+        { id: 'EMPTY_1', lotteryTypeName: '再试试吧', lotteryType: 0, pointsReward: 0 },
         { id: 'EMPTY_2', lotteryTypeName: '幸运加持', lotteryType: 0, pointsReward: 0 },
         { id: 'EMPTY_3', lotteryTypeName: '谢谢参与', lotteryType: 0, pointsReward: 0 },
-        { id: 'EMPTY_4', lotteryTypeName: '再来一次', lotteryType: 0, pointsReward: 0 },
+        { id: 'EMPTY_4', lotteryTypeName: '今日好运', lotteryType: 0, pointsReward: 0 },
     ];
     
     // 准备 8 个奖品数据 (优先使用后端返回的，不足则使用默认占位)
@@ -272,14 +276,12 @@ const formatPrizesToGrid = (apiPrizes) => {
             // 中心格：抽奖按钮
             grid.push({ index: 4, isButton: true, name: '抽奖' }); 
         } else {
-            // 根据 GRID_SEQUENCE_MAP 确定当前格子对应的奖品数据索引
-            // ❗ 修复核心逻辑：根据当前格子的索引 i，找到它在 GRID_SEQUENCE_MAP 中的位置，
-            // 然后再用这个位置去取 prizesToUse 数组中的数据。
+            // 根据当前格子的索引 i，找到它在 GRID_SEQUENCE_MAP 中的位置，
             const sequenceIndex = GRID_SEQUENCE_MAP.findIndex(seq => seq === i);
             const finalPrizeData = prizesToUse[sequenceIndex]; 
 
             // 优化：根据奖励类型优化显示名称
-            let prizeName = finalPrizeData?.lotteryTypeName || 'N/A';
+            let prizeName = finalPrizeData?.lotteryTypeName || '神秘奖品';
             if (finalPrizeData?.lotteryType === 1 && finalPrizeData?.pointsReward > 0) {
                  prizeName = `+${formatPoints(finalPrizeData.pointsReward)} 积分`;
             } else if (finalPrizeData?.lotteryType === 2) {
@@ -289,7 +291,7 @@ const formatPrizesToGrid = (apiPrizes) => {
             grid.push({
                 index: i,
                 isButton: false,
-                name: prizeName, // ❗ 确保这里使用 prizeName
+                name: prizeName, // 确保这里使用 prizeName
                 lotteryType: finalPrizeData?.lotteryType,
                 pointsReward: finalPrizeData?.pointsReward || 0,
                 prizeId: finalPrizeData?.id,
@@ -343,44 +345,9 @@ const fetchInitialData = async () => {
     }
 };
 
-// --- 抽奖动画逻辑 ---
-const GRID_SEQUENCE = [0, 1, 2, 5, 8, 7, 6, 3]; 
-
-const animateLottery = (finalPrizeSeqIndex) => {
-    return new Promise(resolve => {
-        let startTime = Date.now();
-        const minCircles = 3;
-        const targetStopStep = minCircles * 8 + finalPrizeSeqIndex; 
-        const totalDuration = 3500; 
-        
-        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-        
-        const animate = () => {
-            const elapsedTime = Date.now() - startTime;
-            const progress = Math.min(1, elapsedTime / totalDuration); 
-            
-            const totalAnimatedSteps = easeOutCubic(progress) * (targetStopStep + 8);
-            
-            const currentStep = Math.floor(totalAnimatedSteps);
-            const seqIndex = currentStep % 8; 
-            
-            activeIndex.value = GRID_SEQUENCE[seqIndex];
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                activeIndex.value = GRID_SEQUENCE[finalPrizeSeqIndex]; 
-                finalPrizeIndex.value = activeIndex.value;
-                resolve();
-            }
-        };
-
-        requestAnimationFrame(animate);
-    });
-};
 
 /**
- * ❗ 需求 2 修复：确保动画终点是随机的（即中奖的格子）
+ * 简化后的抽奖逻辑：
  */
 const startLottery = async () => {
     if (!canStartLottery.value) {
@@ -398,34 +365,40 @@ const startLottery = async () => {
 
         if (res.success && res.data) {
             const result = res.data;
-            
-            // ❗ 核心修复点 2：根据后端返回的 prizeId 准确找到九宫格中的中奖格子
-            const winningPrize = prizeGrid.value.find(p => p.prizeId === result.prizeId);
-            
             let finalGridIndex;
-            if (winningPrize) {
-                finalGridIndex = winningPrize.index;
-            } else {
-                // 降级策略：如果 prizeId 匹配不到，用 lotteryType 匹配
-                const fallbackPrize = prizeGrid.value.find(p => p.lotteryType === result.lotteryType);
-                finalGridIndex = fallbackPrize ? fallbackPrize.index : 3; // 默认停在 '今日好运' (index 3)
-                console.warn(`未通过 prizeId 匹配到格子，使用降级匹配到 index: ${finalGridIndex}`);
-            }
-
-            // 将九宫格索引 (0-8) 转换为动画序列索引 (0-7)
-            const finalPrizeSeqIndex = GRID_SEQUENCE.findIndex(i => i === finalGridIndex);
+            let targetPool;
             
-            // 启动动画
-            await animateLottery(finalPrizeSeqIndex); 
+            // 核心逻辑：根据 lotteryType 决定目标格子池
+            if (result.lotteryType === 0) {
+                targetPool = NO_WIN_PRIZE_INDICES;
+            } else {
+                targetPool = WIN_PRIZE_INDICES;
+            }
+            
+            // 随机选择终点格子
+            const randomIndex = Math.floor(Math.random() * targetPool.length);
+            finalGridIndex = targetPool[randomIndex];
+            
+            // 设置动画终点和闪烁目标
+            activeIndex.value = finalGridIndex;
+            finalPrizeIndex.value = finalGridIndex; // 触发 CSS 闪烁
 
             winningResult.value = result;
             
-            toast.success(`🎉 恭喜您：${result.description || winningPrize?.name || result.lotteryTypeName || '中奖啦'}`);
-
+            // 查找实际的格子名称用于提示
+            const actualPrize = prizeGrid.value.find(p => p.index === finalGridIndex);
+            
+            
+            // 将 toast.success 移入 setTimeout 中
             setTimeout(() => {
+                // 1. 弹出中奖提示（在动画结束后执行）
+                toast.success(`🎉 抽奖结果：${result.description || actualPrize?.name || '获得奖品'}`);
+                
+                // 2. 清理动画状态并刷新数据
+                activeIndex.value = -1;
                 fetchInitialData(); // 刷新积分和机会
                 loading.value.draw = false;
-            }, 1500); 
+            }, 1800); // 1800ms 对应 CSS 动画的持续时间
 
         } else {
             // 抽奖失败，重置状态
@@ -479,7 +452,7 @@ onMounted(() => {
 
 <style scoped>
 /* ==================================== */
-/* CSS 样式 (保持不变，仅为规则弹窗添加样式，使描述更清晰) */
+/* CSS 样式 (已包含头部适配和规则链接修改) */
 /* ==================================== */
 :root {
   --primary-color: #ff4d4f; /* 核心红色/抽奖按钮 */
@@ -488,34 +461,51 @@ onMounted(() => {
   --card-bg: #fff;
 }
 
-.simple-lottery-page {
-  padding: 0;
-  max-width: 600px;
-  margin: 0 auto;
-  background-color: var(--bg-color);
-  min-height: 100vh;
-  font-family: 'PingFang SC', 'Helvetica Neue', sans-serif;
-  color: #333;
+/* 头部样式（用于与全局样式配合） */
+.header.app-header-fixed {
+    /* 继承全局样式：fixed定位、蓝色背景、居中、12vw高度 */
+    /* 由于使用了全局类，这里scoped内不需重复定义 */
+}
+.details-container {
+    /* 为固定头部留出空间。假设头部高度为 12vw，下方卡片有 15px margin */
+    padding-top: calc(6vw + 15px); 
+    background-color: var(--bg-color);
+    min-height: 100vh;
 }
 
-.header {
-  background-color: var(--card-bg);
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-}
-.header h3 { margin: 0; font-size: 1.2rem; color: #333; }
-.rules-link { font-size: 0.9rem; color: #1890ff; cursor: pointer; }
 
+/* 【修改】活动规则链接样式 - 移入卡片内定位 */
+.rules-link { 
+    position: absolute;
+    top: 10px; /* 距离卡片顶部 */
+    right: 15px; /* 距离卡片右侧 */
+    
+    font-size: 0.8rem; 
+    color: var(--primary-color); 
+    font-weight: 600;
+    cursor: pointer; 
+    padding: 3px 8px; 
+    border: 1px solid var(--primary-color);
+    border-radius: 12px;
+    background-color: #ffe283fd; /* 浅色背景区分 */
+    transition: all 0.2s;
+    z-index: 15; 
+}
+
+.rules-link:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+
+/* 卡片通用样式 */
 .card {
   background-color: var(--card-bg);
   border-radius: 12px;
   padding: 15px;
   margin: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
-  position: relative;
+  position: relative; /* 确保 rules-link 相对它定位 */
 }
 .card h4 {
   color: #333;
@@ -525,6 +515,21 @@ onMounted(() => {
   border-left: 4px solid var(--primary-color);
   padding-left: 10px;
 }
+
+/* 【修改】Lottery Area 样式 */
+.lottery-area.card {
+    position: relative; 
+    /* 增加顶部填充，为 rules-link 留出空间 (约 30px + 15px) */
+    padding-top: 45px; 
+}
+.lottery-area.card h4 {
+    /* 调整 h4 的位置，从 padding-top 算起 */
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    margin: 0;
+}
+
 
 /* 积分余额卡片 */
 .points-balance-card {
@@ -555,7 +560,7 @@ onMounted(() => {
 }
 .earn-btn {
   background-color: white;
-  color: #000; /* Changed to black for better visibility */
+  color: #000; 
   border: none;
   padding: 8px 18px;
   border-radius: 20px;
@@ -676,7 +681,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   justify-content: center;
-  background-color: #ff4d4f; /* Explicit red background color */
+  background-color: #ff4d4f; 
 }
 /* 禁用状态优化 */
 .draw-center-button.disabled {
@@ -733,12 +738,44 @@ onMounted(() => {
     border-radius: 4px;
     cursor: pointer;
 }
-
-
 </style>
 
 <style>
-/* 规则弹窗 Modal 样式 - moved to global for teleported content */
+/* ==================================== */
+/* 全局样式 (用于头部和 Teleported Modal) */
+/* ==================================== */
+
+/* 1. 全局固定头部样式 (解决多页面统一问题) */
+.header.app-header-fixed {
+    position: fixed;
+    top: 0;
+    /* 实现居中 */
+    left: 50%; 
+    transform: translateX(-50%);
+    
+    width: 100%;
+    max-width: 600px; /* 限制最大宽度 */
+    
+    height: 12vw;
+    background-color: #0097FF;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header.app-header-fixed h3,
+.header.app-header-fixed h1 {
+    font-size: 4.8vw;
+    margin: 0;
+    font-weight: 500;
+    color: #fff; /* 确保标题颜色为白色 */
+}
+
+
+/* 2. 规则弹窗 Modal 样式 - 放在非 scoped 块中，因为使用了 Teleport */
 .modal-mask {
   position: fixed;
   z-index: 9998;
@@ -776,7 +813,7 @@ onMounted(() => {
 .modal-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #ff4d4f;
+  color: var(--primary-color); /* 使用主题色 */
 }
 .close-btn {
     background: none;

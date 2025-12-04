@@ -48,94 +48,86 @@
 <script>
 import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import request from '@/utils/request';
+import request from '@/utils/request'; // 假设这是您的网络请求工具
 
 export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const paymentDetails = ref({});
+    // paymentDetails 现在将直接存储从订单接口获取的数据
+    const paymentDetails = ref({
+      business: null,
+      orderTotal: '0.00',
+      pointsDeduction: '0.00', // 存储积分抵扣金额
+      orderDate: ''
+    });
     const orderId = ref(route.query.orderId);
 
+    // 计算实付金额
     const actualPaidAmount = computed(() => {
       const total = parseFloat(paymentDetails.value.orderTotal) || 0;
-      const deduction = parseFloat(paymentDetails.value.pointsDeduction) || 0;
+      // 积分抵扣金额
+      const deduction = parseFloat(paymentDetails.value.pointsDeduction) || 0; 
+      // 确保实付金额不为负
       return Math.max(0, total - deduction).toFixed(2);
     });
 
+    // 格式化积分抵扣金额
     const pointsDeductionAmount = computed(() =>
       (parseFloat(paymentDetails.value.pointsDeduction) || 0).toFixed(2)
     );
 
     onMounted(async () => {
-  if (!orderId.value) {
-    console.error('缺少订单ID');
-    return;
-  }
-
-  try {
-    // 1. 查询订单信息
-    const orderResponse = await request.get(`/api/orders/${orderId.value}`);
-    if (!orderResponse.success || !orderResponse.data) {
-      console.error('订单 API 返回异常', orderResponse.message);
-      return;
-    }
-
-    const orderData = orderResponse.data;
-    const totalAmount = parseFloat(orderData.orderTotal) || 0;
-
-    // 2. 查询积分明细（取最近一条 pointsSource = 5）
-    let latestPointsSource5 = null;
-    try {
-      const pointsResp = await request.get(`/api/points/transactions`, {
-        params: {
-          pageNum: 1,
-          pageSize: 20,
-          pointsSource: 5,     // 只查积+现消费来源
-        }
-      });
-
-      if (pointsResp.success && Array.isArray(pointsResp.data)) {
-        // 根据 createTime 降序排序，取最新
-        latestPointsSource5 = pointsResp.data
-          .sort((a, b) => new Date(b.createTime) - new Date(a.createTime))[0];
+      // **【调试】** 打印获取到的订单 ID
+      console.log('--- 开始获取订单详情 ---');
+      console.log('订单ID:', orderId.value);
+      
+      if (!orderId.value) {
+        console.error('缺少订单ID，无法查询详情');
+        return;
       }
-    } catch (e) {
-      console.error('积分明细查询失败:', e);
-    }
 
-    // 没查到积分，不抵扣
-    let deductionAmount = 0;
-
-    // 3. 如果查到了积分来源=5，则算可抵扣金额
-    if (latestPointsSource5) {
       try {
-        const deductionResp = await request.get('/api/points/deductible-amount', {
-          params: {
-            orderAmount: totalAmount
-          }
-        });
-
-        if (deductionResp.success && deductionResp.data !== undefined) {
-          deductionAmount = parseFloat(deductionResp.data) || 0;
+        // 1. 调用订单详情接口
+        const apiUrl = `/api/orders/${orderId.value}`;
+        console.log('请求订单详情 API:', apiUrl);
+        const orderResponse = await request.get(apiUrl);
+        
+        // **【调试】** 打印 API 原始返回
+        console.log('订单 API 原始返回:', orderResponse);
+        
+        if (!orderResponse.success || !orderResponse.data) {
+          console.error('订单 API 返回异常或 data 为空', orderResponse.message);
+          return;
         }
-      } catch (e) {
-        console.error('积分抵扣计算失败:', e);
+
+        const orderData = orderResponse.data;
+        
+        // 确保 orderTotal 是一个数字
+        const totalAmount = parseFloat(orderData.orderTotal) || 0;
+        
+        // **核心逻辑：直接从订单数据中读取 pointsDiscountAmount**
+        // 根据您的接口文档，这是积分抵扣的现金金额（元）
+        const deductionAmount = parseFloat(orderData.pointsDiscountAmount) || 0;
+
+        // **【调试】** 打印提取的关键数据
+        console.log('提取到的订单总额 (orderTotal):', totalAmount.toFixed(2));
+        console.log('提取到的积分抵扣金额 (pointsDiscountAmount):', deductionAmount.toFixed(2));
+        console.log('--- 订单详情获取结束 ---');
+
+
+        // 2. 写入页面数据
+        paymentDetails.value = {
+          business: orderData.business,
+          orderTotal: totalAmount.toFixed(2),
+          pointsDeduction: deductionAmount.toFixed(2), // 使用接口返回的抵扣金额
+          orderDate: orderData.orderDate
+        };
+        
+      } catch (err) {
+        console.error('Error fetching order details:', err);
       }
-    }
-
-    // 4. 写入页面数据
-    paymentDetails.value = {
-      business: orderData.business,
-      orderTotal: totalAmount.toFixed(2),
-      pointsDeduction: deductionAmount.toFixed(2),
-      orderDate: orderData.orderDate
-    };
-  } catch (err) {
-    console.error('Error fetching orders:', err);
-  }
-});
-
+    });
 
     const goBack = () => router.push('/orderList');
 

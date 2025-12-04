@@ -1,7 +1,7 @@
 <template>
     <div class="details-container">
         
-        <div class="header">
+        <div class="header app-header-fixed">
             <h3>积分明细</h3>
         </div>
 
@@ -145,20 +145,20 @@ const router = useRouter();
 
 // --- 常量映射 (根据新要求更新) ---
 const TRANSACTION_TYPE_MAP = {
-    'gain': 0,      
-    'deduct': 1,    
-    'expired': 2,   
-    'frozen': 3,    
-    'thaw': 4,      
+    'gain': 0,        
+    'deduct': 1,      
+    'expired': 2,     
+    'frozen': 3,      
+    'thaw': 4,        
 };
 
 const POINTS_SOURCE_MAP = {
-    'consume_frozen': 0,      
-    'vip': 2,               
-    'interact': 3,          
-    'exchange': 4,          
-    'deduction_deducted': 5, 
-    'deduction_frozen': 5,   
+    'consume_frozen': 0,      
+    'vip': 2,                 
+    'interact': 3,            
+    'exchange': 4,            
+    'deduction_deducted': 5,  
+    'deduction_frozen': 5,    
     'thaw_order_complete': 0, 
 };
 
@@ -361,57 +361,52 @@ const showItemDetails = (item) => {
 // --- 查询过期积分记录 ---
 const fetchExpiringTransactions = async () => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+        console.warn("fetchExpiringTransactions: Token is missing, skipping fetch.");
+        expiringTransactions.value = [];
+        return;
+    }
     
     expiringTransactions.value = [];
 
-    const fetchExpiredList = async (isExpiredStatus, apiUrl) => {
-        try {
-            const response = await request.get(apiUrl, {
-                params: { isExpired: isExpiredStatus }, 
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-            return (response && response.success && response.data) ? response.data : [];
-        } catch (e) {
-            console.error(`获取积分状态=${isExpiredStatus}异常`, e);
-            return [];
-        }
-    };
+    // **【修改】** 只查询已过期的积分记录
+    const apiUrl = '/api/points/expired'; // 接口地址
 
-    const expiringSoon = await fetchExpiredList(0, '/api/points/expiring'); 
-    const expiredAlready = await fetchExpiredList(1, '/api/points/expired'); 
+    console.log(`[DEBUG] 正在请求已过期积分记录接口: ${apiUrl}`);
 
-    // 映射即将过期
-    const mappedExpiring = expiringSoon.map(item => ({
-        id: `expiring-${item.id}`,
-        type: '过期',
-        points: item.pointsAmount,
-        description: `即将过期积分 (到期日: ${item.expireDate})`,
-        date: item.expireTime,
-        isExpired: false, 
-        rawDescription: `到期时间: ${item.expireTime}，距离过期天数: ${item.daysUntilExpiration}`,
-    }));
+    try {
+        const response = await request.get(apiUrl, {
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
 
-    // 映射已过期
-    const mappedExpired = expiredAlready.map(item => ({
-        id: `expired-${item.id}`,
-        type: '过期',
-        points: item.pointsAmount,
-        description: `已过期积分 (过期日: ${item.expireDate})`,
-        date: item.expireTime,
-        isExpired: true, 
-        rawDescription: `已过期积分，过期时间: ${item.expireTime}`,
-    }));
+        console.log(`[DEBUG] 已过期积分记录接口响应:`, response);
 
-    let combinedList = [...mappedExpiring, ...mappedExpired];
-    combinedList.sort((a, b) => {
-        if (a.isExpired !== b.isExpired) {
-            return a.isExpired ? 1 : -1;
-        }
-        return new Date(a.date) - new Date(b.date);
-    });
+        const expiredAlready = (response && response.success && response.data) ? response.data : [];
+        
+        console.log(`[DEBUG] 成功获取 ${expiredAlready.length} 条已过期积分记录。`);
 
-    expiringTransactions.value = combinedList;
+        // 映射已过期
+        const mappedExpired = expiredAlready.map(item => ({
+            id: `expired-${item.id}`,
+            type: '过期',
+            points: item.pointsAmount,
+            description: `已过期积分 (过期日: ${item.expireDate})`, 
+            date: item.expireTime,
+            isExpired: true, 
+            rawDescription: `已过期积分，过期时间: ${item.expireTime}`,
+        }));
+
+        let combinedList = mappedExpired;
+        
+        // 按过期时间排序
+        combinedList.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        expiringTransactions.value = combinedList;
+
+    } catch (e) {
+        console.error(`[ERROR] 获取已过期积分记录异常 (API: ${apiUrl})`, e);
+        expiringTransactions.value = [];
+    }
 };
 
 // --- 查询积分明细 ---
@@ -514,31 +509,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 容器样式 */
+/* ============================================== */
+/* 【修改 1】：为 details-container 增加左右 padding */
+/* ============================================== */
 .details-container {
-    padding: 20px;
+    /* 保持顶部填充（适应 header 高度） */
+    padding-top: 13vw;
+    /* 【新增】：左右内边距 15px */
+    padding-left: 15px;
+    padding-right: 15px; 
+    
+    /* 其他属性 */
     max-width: 800px;
     margin: 0 auto;
     font-family: Arial, sans-serif;
     background-color: #f8f8f8;
+    min-height: 100vh; /* 确保页面高度足够 */
 }
 
-.header {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+/* 移除 .details-header-content 和 .transaction-content 可能引入的额外侧边距 */
+.tab-content {
+    /* 确保 tab-content 不会额外增加 padding 或 margin */
+    /* 如果您的全局样式中定义了，这里可能需要重置 */
 }
 
+/* ============================================== */
+/* 【修改 2】：移除积分卡片的左右 margin */
+/* ============================================== */
 /* 顶部积分卡片样式 */
 .current-points-card {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    background: linear-gradient(135deg, #315eb1 0%, #437fe8 100%);
     color: #fff;
     padding: 25px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    /* 【修改】：移除左右 margin，使其紧贴 details-container 的 15px padding */
+    margin: 0 0 20px 0; 
 }
 
 .points-icon-large {
@@ -546,6 +554,28 @@ onMounted(() => {
     margin-right: 20px;
     color: #ffd700; /* 金色 */
 }
+
+/* ... (其他样式保持不变) ... */
+
+/* 列表样式 */
+.transaction-list {
+    list-style: none;
+    padding: 0;
+}
+
+/* transaction-item 的 padding-left/right 依赖于 details-container 的 padding，如果需要列表项与筛选器对齐，这里保持 0 */
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* 保持列表项的上下 padding，左右为 0 */
+    padding: 15px 0; 
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+/* ... (以下样式无需变动) ... */
 
 .points-detail {
     display: flex;
@@ -635,20 +665,7 @@ onMounted(() => {
 }
 
 /* 列表样式 */
-.transaction-list {
-    list-style: none;
-    padding: 0;
-}
-
-.transaction-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
+/* .transaction-list 已在上方 */
 
 .transaction-item:hover {
     background-color: #f0f0f0;
@@ -692,7 +709,7 @@ onMounted(() => {
 
 /* 冻结/解冻标签 */
 .frozen-tag-item {
-    background-color: #ffc107;
+    background-color: #ffd65d;
     color: #333;
     padding: 2px 6px;
     border-radius: 4px;
@@ -807,5 +824,40 @@ onMounted(() => {
     white-space: pre-wrap;
     word-break: break-word;
     font-style: italic;
+}
+</style>
+
+<style>
+/* ==================================== */
+/* 全局样式 (用于头部) */
+/* ==================================== */
+
+/* 1. 全局固定头部样式 (解决多页面统一问题) */
+.header.app-header-fixed {
+    position: fixed;
+    top: 0;
+    /* 实现居中 */
+    left: 50%; 
+    transform: translateX(-50%);
+    
+    width: 100%;
+    max-width: 600px; /* 限制最大宽度 */
+    
+    height: 12vw;
+    background-color: #0097FF;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header.app-header-fixed h3,
+.header.app-header-fixed h1 {
+    font-size: 4.8vw;
+    margin: 0;
+    font-weight: 500;
+    color: #fff; /* 确保标题颜色为白色 */
 }
 </style>

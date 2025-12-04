@@ -28,6 +28,7 @@ import WalletTransactions from '@/views/WalletTransactions.vue'
 import Points from '@/views/Points.vue'
 import PointsDetails from '@/views/PointsDetails.vue'
 import PointsLottery from '@/views/PointsLottery.vue'
+import PointsExpiring from '../views/PointsExpiring.vue';
 
 
 //商家端路由配置
@@ -257,6 +258,12 @@ const routes = [
     name: 'PointsDetails',
     component: PointsDetails,
     meta: { title: '积分明细' }
+  },
+  {
+    path: '/points/expiring',
+    name: 'PointsExpiring',
+    component: PointsExpiring,
+    meta: { title: '即将过期积分' }
   },
  //
 //管理端

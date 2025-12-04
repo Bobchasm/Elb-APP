@@ -15,35 +15,11 @@
             <div class="content">
                 <div class="section order-section">
                     
-                    <div class="section-header">
-                        <h3>订单总金额</h3>
-                        <span class="total-amount">&#165;{{ originalOrderTotal.toFixed(2) }}</span>
-                    </div>
-
-                    <div class="section-header points-deduct-section" 
-                         v-if="maxDeductibleAmount > 0 && availablePoints > 0">
-                        
-                        <div class="points-info">
-                            <h3 class="points-label">
-                                积分抵扣
-                                <span class="points-available">({{ availablePoints }} 积分可用)</span>
-                            </h3>
-                            <span class="discount-amount" :class="{ disabled: !usePoints }">
-                                 - &#165;{{ actualDiscount.toFixed(2) }}
-                            </span>
-                        </div>
-                        
-                        <label class="switch">
-                            <input type="checkbox" v-model="usePoints">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
                     <div class="section-header final-amount-section">
-                        <h3 class="final-label">实际支付金额</h3>
-                        <span class="final-amount">&#165;{{ finalPaymentAmount }}</span>
+                        <h3 class="final-label">合计</h3>
+                        <span class="final-amount">¥{{ finalPaymentAmount }}</span>
                     </div>
 
-                    
                     <div class="delivery-info">
                         <div class="info-item">
                             <i class="fa fa-map-marker"></i>
@@ -57,6 +33,28 @@
                             <i class="fa fa-phone"></i>
                             <span>{{ orderDetail.contactTel }}</span>
                         </div>
+                    </div>
+                    
+                    <div class="section-header">
+                        <h3>订单总金额</h3>
+                        <span class="total-amount">¥{{ originalOrderTotal.toFixed(2) }}</span>
+                    </div>
+
+                    <div class="section-header points-deduct-section" 
+                            v-if="maxDeductibleAmount > 0 && availablePoints > 0"
+                            @click="usePoints = !usePoints"> 
+                        
+                        <div class="points-info">
+                            <h3 class="points-label">
+                                积分抵扣
+                                <span class="points-available">({{ availablePoints }} 积分可用)</span>
+                            </h3>
+                            <span class="discount-amount" :class="{ disabled: !usePoints }">
+                                总优惠 ¥{{ actualDiscount.toFixed(2) }} 
+                            </span>
+                        </div>
+                        
+                        <i class="fa fa-check-circle" :class="{ active: usePoints }"></i>
                     </div>
 
                     <div class="section-header" @click="detailetShow">
@@ -75,13 +73,13 @@
                         <div class="order-details">
                             <template v-if="orderDetail.foodList && orderDetail.foodList.length > 0">
                                 <div class="detail-item" v-for="item in orderDetail.foodList" :key="item.id">
-                                    <span class="item-name">{{ item.foodName || '未知商品' }} &#165;{{ item.foodPrice }} &nbsp; × {{ item.quantity || 0 }}</span>
-                                    <span class="item-price">&#165;{{ (item.foodPrice * item.quantity).toFixed(2) }}</span>
+                                    <span class="item-name">{{ item.foodName || '未知商品' }} ¥{{ item.foodPrice }} &nbsp; × {{ item.quantity || 0 }}</span>
+                                    <span class="item-price">¥{{ (item.foodPrice * item.quantity).toFixed(2) }}</span>
                                 </div>
                             </template>
                             <div class="detail-item delivery-fee">
                                 <span>配送费</span>
-                                <span>&#165;{{ orderDetail.deliveryPrice.toFixed(2) || '0.00' }}</span>
+                                <span>¥{{ orderDetail.deliveryPrice.toFixed(2) || '0.00' }}</span>
                             </div>
                         </div>
                     </div>
@@ -114,71 +112,70 @@
                 <div class="payment-action">
                     <button class="pay-button" @click="handlePayment" :disabled="paying">
                         <span v-if="paying">支付中...</span>
-                        <span v-else>确认支付 &#165;{{ finalPaymentAmount }}</span>
+                        <span v-else>确认支付 ¥{{ finalPaymentAmount }}</span>
                     </button>
                 </div>
             </div>
         </template>
 
-        </div>
-
-    <div v-if="showWalletCreateModal" class="modal-overlay" @click.self="showWalletCreateModal = false">
-        <div class="modal-content wallet-modal">
-            <div class="modal-header">
-                <h3>开通虚拟钱包</h3>
-                <i class="fa fa-times close-btn" @click="showWalletCreateModal = false"></i>
-            </div>
-            <div class="modal-body">
-                <p class="wallet-tip">您还没有虚拟钱包账户，是否现在开通？</p>
-                <p class="wallet-desc">开通后即可使用钱包余额进行支付，享受便捷的支付体验。</p>
-            </div>
-            <div class="modal-footer">
-                <button class="cancel-btn" @click="showWalletCreateModal = false">取消</button>
-                <button class="confirm-btn" @click="handleCreateWallet" :disabled="creatingWallet">
-                    <span v-if="creatingWallet">开通中...</span>
-                    <span v-else>确认开通</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div v-if="showOverdraftConfirmModal" class="modal-overlay" @click.self="showOverdraftConfirmModal = false">
-        <div class="modal-content overdraft-modal">
-            <div class="modal-header">
-                <h3>余额不足提示</h3>
-                <i class="fa fa-times close-btn" @click="showOverdraftConfirmModal = false"></i>
-            </div>
-            <div class="modal-body">
-                <div class="overdraft-info">
-                    <i class="fa fa-exclamation-triangle warning-icon"></i>
-                    <p class="overdraft-tip">钱包余额不足，可能需要透支</p>
-                    <div class="balance-details">
-                        <div class="balance-item">
-                            <span class="label">当前余额：</span>
-                            <span class="value">&#165;{{ walletInfo?.balance?.toFixed(2) || '0.00' }}</span>
-                        </div>
-                        <div class="balance-item">
-                            <span class="label">订单金额：</span>
-                            <span class="value amount">&#165;{{ finalPaymentAmount }}</span>
-                        </div>
-                        <div class="balance-item">
-                            <span class="label">透支额度：</span>
-                            <span class="value">&#165;{{ walletInfo?.overdraftLimit?.toFixed(2) || '0.00' }}</span>
-                        </div>
-                        <div class="balance-item">
-                            <span class="label">已透支：</span>
-                            <span class="value">&#165;{{ walletInfo?.overdrawnAmount?.toFixed(2) || '0.00' }}</span>
-                        </div>
-                    </div>
-                    <p class="overdraft-desc">继续支付将使用透支功能，可能会产生额外费用</p>
+        <div v-if="showWalletCreateModal" class="modal-overlay" @click.self="showWalletCreateModal = false">
+            <div class="modal-content wallet-modal">
+                <div class="modal-header">
+                    <h3>开通虚拟钱包</h3>
+                    <i class="fa fa-times close-btn" @click="showWalletCreateModal = false"></i>
+                </div>
+                <div class="modal-body">
+                    <p class="wallet-tip">您还没有虚拟钱包账户，是否现在开通？</p>
+                    <p class="wallet-desc">开通后即可使用钱包余额进行支付，享受便捷的支付体验。</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="cancel-btn" @click="showWalletCreateModal = false">取消</button>
+                    <button class="confirm-btn" @click="handleCreateWallet" :disabled="creatingWallet">
+                        <span v-if="creatingWallet">开通中...</span>
+                        <span v-else>确认开通</span>
+                    </button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="cancel-btn" @click="cancelOverdraftPayment">取消支付</button>
-                <button class="confirm-btn" @click="confirmOverdraftPayment" :disabled="paying">
-                    <span v-if="paying">支付中...</span>
-                    <span v-else>确认支付</span>
-                </button>
+        </div>
+
+        <div v-if="showOverdraftConfirmModal" class="modal-overlay" @click.self="showOverdraftConfirmModal = false">
+            <div class="modal-content overdraft-modal">
+                <div class="modal-header">
+                    <h3>余额不足提示</h3>
+                    <i class="fa fa-times close-btn" @click="showOverdraftConfirmModal = false"></i>
+                </div>
+                <div class="modal-body">
+                    <div class="overdraft-info">
+                        <i class="fa fa-exclamation-triangle warning-icon"></i>
+                        <p class="overdraft-tip">钱包余额不足，可能需要透支</p>
+                        <div class="balance-details">
+                            <div class="balance-item">
+                                <span class="label">当前余额：</span>
+                                <span class="value">¥{{ walletInfo?.balance?.toFixed(2) || '0.00' }}</span>
+                            </div>
+                            <div class="balance-item">
+                                <span class="label">订单金额：</span>
+                                <span class="value amount">¥{{ finalPaymentAmount }}</span>
+                            </div>
+                            <div class="balance-item">
+                                <span class="label">透支额度：</span>
+                                <span class="value">¥{{ walletInfo?.overdraftLimit?.toFixed(2) || '0.00' }}</span>
+                            </div>
+                            <div class="balance-item">
+                                <span class="label">已透支：</span>
+                                <span class="value">¥{{ walletInfo?.overdrawnAmount?.toFixed(2) || '0.00' }}</span>
+                            </div>
+                        </div>
+                        <p class="overdraft-desc">继续支付将使用透支功能，可能会产生额外费用</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="cancel-btn" @click="cancelOverdraftPayment">取消支付</button>
+                    <button class="confirm-btn" @click="confirmOverdraftPayment" :disabled="paying">
+                        <span v-if="paying">支付中...</span>
+                        <span v-else>确认支付</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -191,7 +188,7 @@ import request from '../utils/request';
 import { toast } from '../utils/toast';
 import BackButton from '../components/BackButton.vue';
 
-// --- 【新增：积分逻辑相关的 API 方法】 ---
+// --- 【积分逻辑相关的 API 方法】 ---
 const fetchPointsAccount = async () => {
     try {
         const res = await request.get('/api/points/account');
@@ -221,7 +218,7 @@ const calculateDeductibleAmount = async (orderAmount) => {
     }
     return 0;
 };
-// --- 【新增：积分逻辑相关的 API 方法 结束】 ---
+// --- 【积分逻辑相关的 API 方法 结束】 ---
 
 
 export default {
@@ -244,14 +241,14 @@ export default {
         const showOverdraftConfirmModal = ref(false);
         const walletInfo = ref(null);
 
-        // --- 【新增：积分相关状态】 ---
+        // --- 【积分相关状态】 ---
         const availablePoints = ref(0);
         const maxDeductibleAmount = ref(0); // 最大可抵扣金额 (由后端计算)
         const usePoints = ref(true); // 是否使用积分抵扣 (默认开启)
-        // --- 【新增：积分相关状态 结束】 ---
+        // --- 【积分相关状态 结束】 ---
 
 
-        // --- 【新增：计算属性 - 订单金额】 ---
+        // --- 【计算属性 - 订单金额】 ---
         
         // 订单原始总金额 (含配送费)
         const originalOrderTotal = computed(() => {
@@ -262,6 +259,7 @@ export default {
         const actualDiscount = computed(() => {
             // 确保只有在订单和积分数据加载完毕后才计算
             if (!orderDetail.value || !availablePoints.value) return 0;
+            // usePoints 控制是否应用抵扣
             return usePoints.value ? maxDeductibleAmount.value : 0;
         });
 
@@ -273,10 +271,10 @@ export default {
             return Math.max(0, amount).toFixed(2);
         });
         
-        // --- 【新增：计算属性 结束】 ---
+        // --- 【计算属性 结束】 ---
 
 
-        // --- 【新增：积分数据初始化逻辑】 ---
+        // --- 【积分数据初始化逻辑】 ---
         const initPointsLogic = async (orderTotal) => {
             if (!orderTotal || orderTotal <= 0) {
                 loading.value = false;
@@ -301,7 +299,7 @@ export default {
             }
             loading.value = false; // 积分加载完成后再解除整个页面的 loading
         };
-        // --- 【新增：积分数据初始化逻辑 结束】 ---
+        // --- 【积分数据初始化逻辑 结束】 ---
 
         // 获取订单详情
         const fetchOrderDetails = async () => {
@@ -426,7 +424,7 @@ export default {
                 return false;
             }
             const balance = walletInfo.value.balance || 0;
-            // 【修改点 4】：检查余额时使用最终支付金额
+            // 检查余额时使用最终支付金额
             const finalAmount = parseFloat(finalPaymentAmount.value);
             return balance >= finalAmount;
         };
@@ -476,7 +474,7 @@ export default {
                 try {
                     paying.value = true;
                     // 【注意】：此处是原有的PUT请求，如果是真实的第三方支付，
-                    // 应调用生成支付链接的接口，并传入 finalPaymentAmount.value
+                    // 应调用生成支付链接的接口，并传入 finalPaymentAmount.value, actualDiscount.value 等参数
                     const response = await request.put("/api/orders/status?orderState=1&orderId=" + orderId.value);
                     if (response && response.success) {
                         router.push({
@@ -783,10 +781,6 @@ export default {
     z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 
-/* 2. 样式穿透：确保 BackButton 内部图标/文字正常显示（可选，根据组件内部结构调整） */
-/* 暂不添加，假设 BackButton 样式已处理 */
-
-
 /* 钱包开通对话框样式 */
 .modal-overlay {
     position: fixed;
@@ -1020,14 +1014,15 @@ export default {
 }
 
 
-/* 【新增：积分抵扣区域样式】 */
+/* 【积分抵扣区域样式】 */
 .points-deduct-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 3vw 0;
     border-top: 1px solid #f0f0f0;
-    margin-bottom: 2vw; /* 调整与下方最终金额的间距 */
+    margin-bottom: 2vw; 
+    cursor: pointer; 
 }
 
 .points-info {
@@ -1038,7 +1033,7 @@ export default {
 
 .points-label {
     font-size: 3.8vw;
-    color: #0097FF; /* 突出积分颜色 */
+    color: #0097FF; 
     font-weight: 500;
     margin: 0;
 }
@@ -1051,11 +1046,12 @@ export default {
 
 .discount-amount {
     font-size: 4.2vw;
-    color: #FF6B00; /* 突出优惠金额 */
+    color: #FF6B00; 
     font-weight: bold;
-    margin-left: auto; /* 推到右侧 */
+    margin-left: auto; 
     margin-right: 4vw;
     transition: color 0.3s ease;
+    white-space: nowrap;
 }
 
 .discount-amount.disabled {
@@ -1063,12 +1059,12 @@ export default {
     text-decoration: line-through;
 }
 
-/* 最终支付金额区域样式 */
+/* 最终支付金额/合计区域样式 */
 .final-amount-section {
-    padding-top: 2vw;
-    border-top: 1px dashed #eee;
-    margin-top: 2vw;
-    margin-bottom: 0;
+    padding-top: 0;
+    margin-top: 0;
+    margin-bottom: 4vw; 
+    border-top: none; 
 }
 
 .final-label {
@@ -1080,62 +1076,18 @@ export default {
 
 .final-amount {
     font-size: 6vw;
-    color: #E51C23; /* 红色突出最终支付金额 */
+    color: #E51C23; 
     font-weight: bold;
 }
 
-
-/* Switch 切换开关样式 (参考 iOS 风格) */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 10vw;
-  height: 6vw;
+/* 【积分抵扣勾选图标样式】 */
+.points-deduct-section .fa-check-circle {
+    font-size: 5vw;
+    color: #ddd; 
+    transition: all 0.3s ease;
 }
 
-.switch input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-  border-radius: 3.4vw; /* 圓角 */
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 4.8vw;
-  width: 4.8vw;
-  left: 0.6vw;
-  bottom: 0.6vw;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
-  border-radius: 50%; /* 圓形按鈕 */
-}
-
-input:checked + .slider {
-  background-color: #38CA73; /* 开启时的颜色 */
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #38CA73;
-}
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(4vw);
-  -ms-transform: translateX(4vw);
-  transform: translateX(4vw);
+.points-deduct-section .fa-check-circle.active {
+    color: #38CA73; 
 }
 </style>
