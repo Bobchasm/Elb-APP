@@ -78,5 +78,19 @@ public interface MarketingPointsRuleService {
      */
     Long calculateOrderPoints(Long userId, Long orderId, BigDecimal orderAmount, 
                               LocalDateTime orderDate, List<OrderPaidMessage.OrderFoodDetail> foodDetails);
+    
+    /**
+     * 启用积分规则
+     * @param ruleId 规则ID
+     * @return 是否成功
+     */
+    Boolean enableRule(Long ruleId);
+    
+    /**
+     * 禁用积分规则
+     * @param ruleId 规则ID
+     * @return 是否成功
+     */
+    Boolean disableRule(Long ruleId);
 }
 

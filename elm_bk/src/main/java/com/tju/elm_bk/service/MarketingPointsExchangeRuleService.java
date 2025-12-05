@@ -64,5 +64,19 @@ public interface MarketingPointsExchangeRuleService {
      * @return 兑换比例（如10表示10积分=1元）
      */
     java.math.BigDecimal getCashExchangeRatio();
+    
+    /**
+     * 启用积分兑换规则
+     * @param ruleId 规则ID
+     * @return 是否成功
+     */
+    Boolean enableRule(Long ruleId);
+    
+    /**
+     * 禁用积分兑换规则
+     * @param ruleId 规则ID
+     * @return 是否成功
+     */
+    Boolean disableRule(Long ruleId);
 }
 

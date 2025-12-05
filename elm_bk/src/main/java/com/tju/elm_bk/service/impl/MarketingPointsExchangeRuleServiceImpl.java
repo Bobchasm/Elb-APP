@@ -333,5 +333,43 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
                 SecurityUtils.getCurrentUsername().orElse(null));
         return currentUserId;
     }
+
+    /**
+     * 启用积分兑换规则
+     */
+    @Override
+    @Transactional
+    public Boolean enableRule(Long ruleId) {
+        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+        
+        rule.setRuleStatus(1); // 1-启用
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setUpdater(getCurrentUserId());
+        
+        exchangeRuleMapper.updateById(rule);
+        return true;
+    }
+
+    /**
+     * 禁用积分兑换规则
+     */
+    @Override
+    @Transactional
+    public Boolean disableRule(Long ruleId) {
+        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+        
+        rule.setRuleStatus(0); // 0-禁用
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setUpdater(getCurrentUserId());
+        
+        exchangeRuleMapper.updateById(rule);
+        return true;
+    }
 }
 
