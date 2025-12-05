@@ -40,6 +40,7 @@
                         <span class="total-amount">¥{{ originalOrderTotal.toFixed(2) }}</span>
                     </div>
 
+                    <!-- 积分抵扣 - 启用/有积分且可抵扣 -->
                     <div class="section-header points-deduct-section" 
                             v-if="maxDeductibleAmount > 0 && availablePoints > 0"
                             @click="usePoints = !usePoints"> 
@@ -56,6 +57,22 @@
                         
                         <i class="fa fa-check-circle" :class="{ active: usePoints }"></i>
                     </div>
+
+                    <!-- 积分抵扣 - 禁用/积分不足 (新增的逻辑) -->
+                    <div class="section-header points-deduct-section static-deduct-section"
+                         v-else-if="availablePoints === 0"> 
+                        
+                        <div class="points-info">
+                            <h3 class="points-label disabled-label">
+                                积分抵扣
+                                <span class="points-unavailable">(0 积分)</span>
+                            </h3>
+                        </div>
+						<br>
+                        <span class="discount-message text-disabled">您的积分不足，无法进行抵扣</span>
+						<br>
+                    </div>
+
 
                     <div class="section-header" @click="detailetShow">
                         <h3>订单详情</h3>
@@ -98,12 +115,12 @@
                         </div>
                         <div class="payment-option" :class="{ active: selectedPayment === 'alipay' }"
                             @click="selectPayment('alipay')">
-                            <img src="../assets/alipay.png" alt="支付宝支付">
+                            <img src="../assets/alipay.png" alt="支付宝支付" onerror="this.onerror=null;this.src='https://placehold.co/100x40/0097FF/ffffff?text=Alipay';">
                             <i class="fa fa-check-circle"></i>
                         </div>
                         <div class="payment-option" :class="{ active: selectedPayment === 'wechat' }"
                             @click="selectPayment('wechat')">
-                            <img src="../assets/wechat.png" alt="微信支付">
+                            <img src="../assets/wechat.png" alt="微信支付" onerror="this.onerror=null;this.src='https://placehold.co/100x40/38CA73/ffffff?text=WeChat';">
                             <i class="fa fa-check-circle"></i>
                         </div>
                     </div>
@@ -180,23 +197,28 @@
         </div>
     </div>
 </template>
-  
-<script>
+
+<script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
 import BackButton from '../components/BackButton.vue';
 
+// --- 【常量】 ---
+const POINT_DEDUCTION_KEY = 'usePointsDeduction'; // 用于 sessionStorage 的 Key
+
 // --- 【积分逻辑相关的 API 方法】 ---
 const fetchPointsAccount = async () => {
+    console.log('[DEBUG] 正在请求用户可用积分...');
     try {
         const res = await request.get('/api/points/account');
         if (res.success && res.data) {
+            console.log(`[DEBUG] 积分账户返回: ${res.data.availablePoints} 分`);
             return res.data.availablePoints || 0;
         }
     } catch (error) {
-        console.error('查询积分账户失败:', error);
+        console.error('[ERROR] 查询积分账户失败:', error);
     }
     return 0;
 };
@@ -205,338 +227,356 @@ const calculateDeductibleAmount = async (orderAmount) => {
     if (!orderAmount || orderAmount <= 0) {
         return 0;
     }
+    console.log(`[DEBUG] 正在请求计算订单金额 ¥${orderAmount.toFixed(2)} 的最大可抵扣金额...`);
     try {
         const res = await request.get('/api/points/deductible-amount', {
             params: { orderAmount: orderAmount }
         });
         
         if (res.success && typeof res.data === 'number') {
-            return Math.min(res.data, orderAmount); 
+            const deductible = Math.min(res.data, orderAmount);
+            console.log(`[DEBUG] 最大可抵扣金额返回: ¥${deductible.toFixed(2)}`);
+            return deductible;
         }
     } catch (error) {
-        console.error('计算可抵扣金额失败:', error);
+        console.error('[ERROR] 计算可抵扣金额失败:', error);
     }
     return 0;
 };
 // --- 【积分逻辑相关的 API 方法 结束】 ---
 
+const orderDetail = ref(null);
+const isShowDetailet = ref(true);
+const route = useRoute();
+const router = useRouter();
+const orderId = ref();
+const loading = ref(true);
+const selectedPayment = ref('wallet'); 
+const paying = ref(false);
+const showWalletCreateModal = ref(false);
+const creatingWallet = ref(false);
+const walletExists = ref(false);
+const showOverdraftConfirmModal = ref(false);
+const walletInfo = ref(null);
 
-export default {
-    name: 'Payment',
-    components: {
-        BackButton
-    },
-    setup() {
-        const orderDetail = ref(null);
-        const isShowDetailet = ref(true);
-        const route = useRoute();
-        const router = useRouter();
-        const orderId = ref();
-        const loading = ref(true);
-        const selectedPayment = ref('wallet'); 
-        const paying = ref(false);
-        const showWalletCreateModal = ref(false);
-        const creatingWallet = ref(false);
-        const walletExists = ref(false);
-        const showOverdraftConfirmModal = ref(false);
-        const walletInfo = ref(null);
-
-        // --- 【积分相关状态】 ---
-        const availablePoints = ref(0);
-        const maxDeductibleAmount = ref(0); // 最大可抵扣金额 (由后端计算)
-        const usePoints = ref(true); // 是否使用积分抵扣 (默认开启)
-        // --- 【积分相关状态 结束】 ---
+// --- 【积分相关状态】 ---
+const availablePoints = ref(0);
+const maxDeductibleAmount = ref(0);
+const usePoints = ref(true); 
+// --- 【积分相关状态 结束】 ---
 
 
-        // --- 【计算属性 - 订单金额】 ---
-        
-        // 订单原始总金额 (含配送费)
-        const originalOrderTotal = computed(() => {
-            return orderDetail.value?.orderTotal || 0;
-        });
+// --- 【计算属性 - 订单金额】 ---
+const originalOrderTotal = computed(() => {
+    return orderDetail.value?.orderTotal || 0;
+});
 
-        // 实际的优惠金额 (如果用户选择使用积分，则应用最大可抵扣金额)
-        const actualDiscount = computed(() => {
-            // 确保只有在订单和积分数据加载完毕后才计算
-            if (!orderDetail.value || !availablePoints.value) return 0;
-            // usePoints 控制是否应用抵扣
-            return usePoints.value ? maxDeductibleAmount.value : 0;
-        });
+const actualDiscount = computed(() => {
+    if (!orderDetail.value || !availablePoints.value) return 0;
+    const discount = usePoints.value ? maxDeductibleAmount.value : 0;
+    console.log(`[DEBUG] 计算属性: 实际优惠金额更新为 ¥${discount.toFixed(2)} (使用积分: ${usePoints.value})`);
+    return discount;
+});
 
-        // 最终需要现金支付的金额 (用于UI展示和支付接口)
-        const finalPaymentAmount = computed(() => {
-            // 最终支付金额 = 原始总金额 - 实际优惠金额
-            const amount = originalOrderTotal.value - actualDiscount.value;
-            // 确保不为负数，并保留两位小数
-            return Math.max(0, amount).toFixed(2);
-        });
-        
-        // --- 【计算属性 结束】 ---
+const finalPaymentAmount = computed(() => {
+    const amount = originalOrderTotal.value - actualDiscount.value;
+    const finalAmount = Math.max(0, amount).toFixed(2);
+    console.log(`[DEBUG] 计算属性: 最终支付金额更新为 ¥${finalAmount}`);
+    return finalAmount;
+});
+
+// --- 【计算属性 结束】 ---
 
 
-        // --- 【积分数据初始化逻辑】 ---
-        const initPointsLogic = async (orderTotal) => {
-            if (!orderTotal || orderTotal <= 0) {
-                loading.value = false;
-                return;
-            }
-
-            // 1. 获取用户可用积分
-            const points = await fetchPointsAccount();
-            availablePoints.value = points;
-
-            if (points > 0) {
-                // 2. 如果有积分，计算最大可抵扣金额
-                const deductible = await calculateDeductibleAmount(orderTotal);
-                maxDeductibleAmount.value = deductible;
-                
-                // 3. 默认开启积分抵扣
-                usePoints.value = true;
-            } else {
-                // 没有积分则重置状态
-                maxDeductibleAmount.value = 0;
-                usePoints.value = false;
-            }
-            loading.value = false; // 积分加载完成后再解除整个页面的 loading
-        };
-        // --- 【积分数据初始化逻辑 结束】 ---
-
-        // 获取订单详情
-        const fetchOrderDetails = async () => {
-            try {
-                const response = await request.get("/api/orders/detail", {
-                    params: { orderId: orderId.value }
-                });
-                
-                if (response && response.success) {
-                    orderDetail.value = response.data;
-                    // 在订单详情获取成功后，初始化积分逻辑
-                    await initPointsLogic(response.data.orderTotal); 
-                } else {
-                    console.error('获取订单详情失败:', response.data?.message);
-                    toast.error("获取订单信息失败，请重试！");
-                    router.push({ path: '/userAddress' });
-                }
-            } catch (error) {
-                console.error('请求错误:', error);
-                toast.error("获取订单信息失败，请重试！");
-                router.push({ path: '/userAddress' });
-            } 
-        };
-
-        // 检查钱包是否存在（后端）
-        const checkWalletExists = async () => {
-            try {
-                const response = await request.get("/api/wallet/message");
-                
-                if (response && response.success && response.data) {
-                    walletExists.value = true;
-                    walletInfo.value = response.data; 
-                    return true;
-                }
-                
-                if (response && response.code === 'VIRTUAL_WALLET_MISSED') {
-                    walletExists.value = false;
-                    walletInfo.value = null;
-                    return false;
-                }
-                
-                walletExists.value = false;
-                walletInfo.value = null;
-                return false;
-            } catch (error) {
-                console.error('检查钱包失败:', error);
-                walletExists.value = false;
-                walletInfo.value = null;
-                return false;
-            }
-        };
-
-        // 获取钱包余额信息
-        const fetchWalletBalance = async () => {
-            try {
-                const response = await request.get("/api/wallet/message");
-                if (response && response.success) {
-                    walletInfo.value = response.data;
-                    return response.data;
-                }
-                return null;
-            } catch (error) {
-                console.error('获取钱包余额失败:', error);
-                return null;
-            }
-        };
-
-        // 创建钱包（后端）
-        const handleCreateWallet = async () => {
-            try {
-                creatingWallet.value = true;
-                const response = await request.get("/api/wallet/open");
-                if (response && response.success) {
-                    walletExists.value = true;
-                    showWalletCreateModal.value = false;
-                    toast.success('钱包开通成功');
-                    await fetchWalletBalance();
-                } else {
-                    toast.error("钱包开通失败：" + (response?.message || '未知错误'));
-                }
-            } catch (error) {
-                console.error('开通钱包失败:', error);
-                toast.error("钱包开通失败，请重试");
-            } finally {
-                creatingWallet.value = false;
-            }
-        };
-
-        // 钱包支付（后端）
-        const performWalletPayment = async () => {
-            try {
-                paying.value = true;
-                // 注意：在实际项目中，这里需要告知后端最终的支付金额和积分使用情况
-                const response = await request.get("/api/wallet/transaction/payment", {
-                    params: { 
-                        orderId: orderId.value,
-                        // 建议与后端约定传入以下参数
-                        finalAmount: finalPaymentAmount.value, // 最终支付金额
-                        pointsDeduction: actualDiscount.value, // 积分抵扣金额
-                    }
-                });
-
-                if (response && response.success) {
-                    router.push({
-                        path: '/successfulPayment',
-                        query: { orderId: orderId.value }
-                    });
-                } else {
-                    toast.error("钱包支付失败：" + (response?.message || '余额不足或账户异常'));
-                }
-            } catch (error) {
-                console.error('钱包支付失败:', error);
-                toast.error("钱包支付失败，请重试！");
-            } finally {
-                paying.value = false;
-            }
-        };
-
-        // 检查余额是否足够
-        const checkBalanceSufficient = () => {
-            if (!walletInfo.value || !orderDetail.value) {
-                return false;
-            }
-            const balance = walletInfo.value.balance || 0;
-            // 检查余额时使用最终支付金额
-            const finalAmount = parseFloat(finalPaymentAmount.value);
-            return balance >= finalAmount;
-        };
-
-        // 处理钱包支付前的余额检查
-        const handleWalletPayment = async () => {
-            const walletData = await fetchWalletBalance();
-            if (!walletData) {
-                toast.error("获取钱包信息失败");
-                return;
-            }
-
-            if (checkBalanceSufficient()) {
-                await performWalletPayment();
-            } else {
-                // 余额不足，显示透支确认对话框
-                showOverdraftConfirmModal.value = true;
-            }
-        };
-
-        // 确认透支支付
-        const confirmOverdraftPayment = async () => {
-            showOverdraftConfirmModal.value = false;
-            await performWalletPayment();
-        };
-
-        // 取消透支支付
-        const cancelOverdraftPayment = () => {
-            showOverdraftConfirmModal.value = false;
-            paying.value = false;
-            toast.info("已取消支付");
-        };
-
-        // 支付处理
-        const handlePayment = async () => {
-            if (paying.value) return;
-
-            if (selectedPayment.value === 'wallet') {
-                const exists = await checkWalletExists();
-                if (!exists) { 
-                    showWalletCreateModal.value = true; 
-                    return; 
-                }
-                await handleWalletPayment();
-            } else {
-                // 第三方支付逻辑
-                try {
-                    paying.value = true;
-                    // 【注意】：此处是原有的PUT请求，如果是真实的第三方支付，
-                    // 应调用生成支付链接的接口，并传入 finalPaymentAmount.value, actualDiscount.value 等参数
-                    const response = await request.put("/api/orders/status?orderState=1&orderId=" + orderId.value);
-                    if (response && response.success) {
-                        router.push({
-                            path: '/successfulPayment',
-                            query: { orderId: orderId.value }
-                        });
-                    } else {
-                        toast.error("支付失败" + response.data.message);
-                    }
-                } catch (error) {
-                    console.error('支付失败:', error);
-                    toast.error("支付失败，请重试！");
-                } finally {
-                    paying.value = false;
-                }
-            }
-        };
-
-        const selectPayment = (type) => {
-            selectedPayment.value = type;
-        };
-        
-        const detailetShow = () => {
-            isShowDetailet.value = !isShowDetailet.value;
-        };
-
-        onMounted(() => {
-            orderId.value = route.query.orderId;
-            fetchOrderDetails(); // 统一在 fetchOrderDetails 中处理 loading 和积分初始化
-            checkWalletExists(); // 提前检查钱包状态
-        });
-
-        return {
-            orderId,
-            orderDetail,
-            isShowDetailet,
-            detailetShow,
-            handlePayment,
-            loading,
-            selectedPayment,
-            selectPayment,
-            paying,
-            showWalletCreateModal,
-            creatingWallet,
-            handleCreateWallet,
-            showOverdraftConfirmModal,
-            walletInfo,
-            confirmOverdraftPayment,
-            cancelOverdraftPayment,
-            
-            // 积分和金额相关
-            availablePoints,
-            maxDeductibleAmount,
-            usePoints,
-            actualDiscount,
-            finalPaymentAmount,
-            originalOrderTotal,
-        };
+// --- 【积分数据初始化逻辑】 ---
+const initPointsLogic = async (orderTotal) => {
+    console.log(`[DEBUG] 开始初始化积分逻辑，订单总额: ¥${orderTotal.toFixed(2)}`);
+    if (!orderTotal || orderTotal <= 0) {
+        loading.value = false;
+        return;
     }
-}
+
+    const points = await fetchPointsAccount();
+    availablePoints.value = points;
+
+    if (points > 0) {
+        const deductible = await calculateDeductibleAmount(orderTotal);
+        maxDeductibleAmount.value = deductible;
+        // 初始状态下，如果可以抵扣，则默认启用
+        usePoints.value = deductible > 0;
+    } else {
+        maxDeductibleAmount.value = 0;
+        usePoints.value = false;
+    }
+    loading.value = false; 
+    console.log('[DEBUG] 积分逻辑初始化完成。');
+};
+// --- 【积分数据初始化逻辑 结束】 ---
+
+// 获取订单详情
+const fetchOrderDetails = async () => {
+    console.log(`[DEBUG] 正在获取订单详情, OrderID: ${orderId.value}`);
+    try {
+        const response = await request.get("/api/orders/detail", {
+            params: { orderId: orderId.value }
+        });
+        
+        if (response && response.success) {
+            console.log('[DEBUG] 订单详情获取成功。');
+            orderDetail.value = response.data;
+            await initPointsLogic(response.data.orderTotal); 
+        } else {
+            console.error('[ERROR] 获取订单详情失败:', response.data?.message);
+            toast.error("获取订单信息失败，请重试！");
+            router.push({ path: '/userAddress' });
+        }
+    } catch (error) {
+        console.error('[ERROR] 请求订单详情失败:', error);
+        toast.error("获取订单信息失败，请重试！");
+        router.push({ path: '/userAddress' });
+    } 
+};
+
+// 检查钱包是否存在（后端）
+const checkWalletExists = async () => {
+    console.log('[DEBUG] 正在检查钱包是否存在...');
+    try {
+        const response = await request.get("/api/wallet/message");
+        if (response && response.success && response.data) {
+            console.log('[DEBUG] 钱包存在。');
+            walletExists.value = true;
+            walletInfo.value = response.data; 
+            return true;
+        }
+        if (response && response.code === 'VIRTUAL_WALLET_MISSED') {
+            console.log('[DEBUG] 钱包不存在（需开通）。');
+            walletExists.value = false;
+            return false;
+        }
+        console.log('[DEBUG] 钱包检查失败或返回未知代码。');
+        walletExists.value = false;
+        return false;
+    } catch (error) {
+        console.error('[ERROR] 检查钱包失败:', error);
+        walletExists.value = false;
+        return false;
+    }
+};
+
+// 获取钱包余额信息
+const fetchWalletBalance = async () => {
+    console.log('[DEBUG] 正在获取钱包余额信息...');
+    try {
+        const response = await request.get("/api/wallet/message");
+        if (response && response.success) {
+            walletInfo.value = response.data;
+            console.log(`[DEBUG] 钱包余额获取成功: ¥${walletInfo.value.balance.toFixed(2)}`);
+            return response.data;
+        }
+        return null;
+    } catch (error) {
+        console.error('[ERROR] 获取钱包余额失败:', error);
+        return null;
+    }
+};
+
+// 创建钱包（后端）
+const handleCreateWallet = async () => {
+    console.log('[ACTION] 尝试开通虚拟钱包...');
+    try {
+        creatingWallet.value = true;
+        const response = await request.get("/api/wallet/open");
+        if (response && response.success) {
+            console.log('[SUCCESS] 钱包开通成功！');
+            walletExists.value = true;
+            showWalletCreateModal.value = false;
+            toast.success('钱包开通成功');
+            await fetchWalletBalance();
+        } else {
+            console.error('[FAIL] 钱包开通失败:', response?.message);
+            toast.error("钱包开通失败：" + (response?.message || '未知错误'));
+        }
+    } catch (error) {
+        console.error('[ERROR] 开通钱包失败:', error);
+        toast.error("钱包开通失败，请重试");
+    } finally {
+        creatingWallet.value = false;
+    }
+};
+
+/**
+ * 钱包支付（后端）
+ * 成功后同时存储积分使用状态到 sessionStorage
+ */
+const performWalletPayment = async (forcePay = false) => {
+    console.log(`[ACTION] 钱包支付发起。订单ID: ${orderId.value}, 最终金额: ¥${finalPaymentAmount.value}, 抵扣金额: ¥${actualDiscount.value}, 强制支付: ${forcePay}`);
+    try {
+        paying.value = true;
+        
+        const response = await request.get("/api/wallet/transaction/payment", {
+            params: { 
+                orderId: orderId.value,
+                finalAmount: finalPaymentAmount.value, 
+                pointsDeduction: actualDiscount.value, 
+            }
+        });
+
+        if (response && response.success) {
+            console.log('[SUCCESS] 钱包支付成功！');
+            // 存储积分使用状态到 sessionStorage，作为辅助信息
+            sessionStorage.setItem(POINT_DEDUCTION_KEY, String(usePoints.value)); 
+            console.log(`[INFO] SessionStorage 写入积分状态: ${usePoints.value}`);
+            
+            router.push({
+                path: '/successfulPayment',
+                query: { orderId: orderId.value }
+            });
+        } else {
+            console.error('[FAIL] 钱包支付失败:', response?.message);
+            // 检查是否是余额不足/需要透支的错误码
+            if (response?.code === 'VIRTUAL_WALLET_OVERDRAFT_LIMIT') {
+                if (!forcePay) {
+                    // 弹出透支确认框，不Toast错误
+                    showOverdraftConfirmModal.value = true;
+                    return; // 暂停流程，等待用户确认
+                } else {
+                    toast.error("透支支付失败：" + (response?.message || '超出透支额度'));
+                }
+            } else {
+                toast.error("钱包支付失败：" + (response?.message || '余额不足或账户异常'));
+            }
+        }
+    } catch (error) {
+        console.error('[ERROR] 钱包支付请求失败:', error);
+        toast.error("钱包支付失败，请重试！");
+    } finally {
+        // 如果没有弹出透支框，则设置paying为false
+        if (!showOverdraftConfirmModal.value) {
+            paying.value = false;
+        }
+    }
+};
+
+// 检查余额是否足够 (此函数在实际的后端透支判断后可能不再是主要的，但保留其逻辑完整性)
+const checkBalanceSufficient = () => {
+    if (!walletInfo.value || !orderDetail.value) {
+        return false;
+    }
+    const balance = walletInfo.value.balance || 0;
+    const finalAmount = parseFloat(finalPaymentAmount.value);
+    const result = balance >= finalAmount;
+    console.log(`[DEBUG] 余额检查: 余额 ¥${balance.toFixed(2)}, 最终支付 ¥${finalAmount.toFixed(2)}。结果: ${result ? '足够' : '不足'}`);
+    return result;
+};
+
+// 处理钱包支付前的余额检查
+const handleWalletPayment = async () => {
+    const walletData = await fetchWalletBalance();
+    if (!walletData) {
+        toast.error("获取钱包信息失败");
+        return;
+    }
+
+    // 直接发起支付，让后端来处理余额不足和透支逻辑
+    await performWalletPayment();
+};
+
+// 确认透支支付
+const confirmOverdraftPayment = async () => {
+    showOverdraftConfirmModal.value = false;
+    console.log('[ACTION] 用户确认透支支付。');
+    // 再次调用支付函数，但这次是在用户确认后的流程，无需再次弹框
+    await performWalletPayment(true);
+};
+
+// 取消透支支付
+const cancelOverdraftPayment = () => {
+    showOverdraftConfirmModal.value = false;
+    paying.value = false;
+    console.log('[ACTION] 用户取消透支支付。');
+    toast.info("已取消支付");
+};
+
+/**
+ * 支付处理
+ */
+const handlePayment = async () => {
+    if (paying.value) return;
+
+    console.log(`[ACTION] 用户点击支付按钮。选择支付方式: ${selectedPayment.value}`);
+
+    if (selectedPayment.value === 'wallet') {
+        const exists = await checkWalletExists();
+        if (!exists) { 
+            console.log('[INFO] 钱包不存在，弹出开通模态框。');
+            showWalletCreateModal.value = true; 
+            return; 
+        }
+        // 直接进入钱包支付流程，由其内部处理余额/透支问题
+        await handleWalletPayment(); 
+    } else {
+        // 第三方支付逻辑
+        try {
+            paying.value = true;
+            console.log(`[ACTION] 第三方支付发起（模拟）。订单ID: ${orderId.value}, 最终金额: ¥${finalPaymentAmount.value}, 抵扣金额: ¥${actualDiscount.value}`);
+            
+            // 构造包含 orderState=1, orderId, usePoints 的查询字符串
+            const queryParams = new URLSearchParams();
+            queryParams.append('orderState', 1);
+            queryParams.append('orderId', orderId.value);
+            // 只有当明确不使用积分时，才需要传递 usePoints=false
+            if (!usePoints.value) {
+                queryParams.append('usePoints', false); 
+            }
+            
+            const url = `/api/orders/status?${queryParams.toString()}`;
+            console.log(`[DEBUG] 第三方支付请求URL: ${url}`);
+
+            // 根据 API 文档，仅传递 orderState 和 usePoints，移除 Body
+            const response = await request.put(url, {}); 
+
+            if (response && response.success) {
+                console.log('[SUCCESS] 第三方支付（模拟）成功！');
+                sessionStorage.setItem(POINT_DEDUCTION_KEY, String(usePoints.value));
+                console.log(`[INFO] SessionStorage 写入积分状态: ${usePoints.value}`);
+
+                router.push({
+                    path: '/successfulPayment',
+                    query: { orderId: orderId.value }
+                });
+            } else {
+                console.error('[FAIL] 第三方支付（模拟）失败:', response.data?.message);
+                toast.error("支付失败" + (response.data?.message || '未知错误'));
+            }
+        } catch (error) {
+            console.error('[ERROR] 第三方支付请求失败:', error);
+            toast.error("支付失败，请重试！");
+        } finally {
+            paying.value = false;
+        }
+    }
+};
+
+const selectPayment = (type) => {
+    selectedPayment.value = type;
+    console.log(`[ACTION] 支付方式切换为: ${type}`);
+};
+
+const detailetShow = () => {
+    isShowDetailet.value = !isShowDetailet.value;
+    console.log(`[INFO] 订单详情显示状态切换为: ${isShowDetailet.value}`);
+};
+
+onMounted(() => {
+    orderId.value = route.query.orderId;
+    console.log(`[LIFECYCLE] Payment 页面挂载，从 URL 获取 OrderID: ${orderId.value}`);
+    fetchOrderDetails();
+    checkWalletExists();
+});
+
+// 变量和函数自动暴露给模板
 </script>
-  
+ 
 <style scoped>
 /****************** 总容器 ******************/
 .wrapper {
@@ -1025,6 +1065,11 @@ export default {
     cursor: pointer; 
 }
 
+/* 禁用的积分抵扣区域，移除点击效果 */
+.points-deduct-section.static-deduct-section {
+    cursor: default;
+}
+
 .points-info {
     display: flex;
     align-items: center;
@@ -1038,10 +1083,20 @@ export default {
     margin: 0;
 }
 
+/* 积分标签禁用时的颜色 */
+.points-label.disabled-label {
+    color: #999 !important;
+}
+
 .points-available {
     font-size: 3.2vw;
     color: #999;
     margin-left: 2vw;
+}
+
+/* 可用积分为 0 时的颜色 */
+.points-unavailable {
+    color: #ccc !important;
 }
 
 .discount-amount {
@@ -1057,6 +1112,14 @@ export default {
 .discount-amount.disabled {
     color: #ccc;
     text-decoration: line-through;
+}
+
+/* 积分不足时的提示信息样式 */
+.discount-message.text-disabled {
+    font-size: 3.8vw;
+    color: #999; 
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 /* 最终支付金额/合计区域样式 */

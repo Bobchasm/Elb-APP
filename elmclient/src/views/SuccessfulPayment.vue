@@ -12,26 +12,31 @@
       </div>
 
       <div class="details">
+        <!-- 商家名称 -->
         <div class="detail-item">
           <span class="label">商家名称</span>
           <span class="value">{{ paymentDetails.business?.businessName || '未知商家' }}</span>
         </div>
 
+        <!-- 订单总额 -->
         <div class="detail-item total-section">
           <span class="label">订单总额</span>
           <span class="value">¥{{ paymentDetails.orderTotal }}</span>
         </div>
 
-        <div class="detail-item deduction-section">
+        <!-- 积分抵扣 - 仅在有抵扣金额时显示 -->
+        <div class="detail-item deduction-section" v-if="hasPointsDeduction">
           <span class="label deduction-label">积分抵扣</span>
           <span class="value deduction-value">- ¥{{ pointsDeductionAmount }}</span>
         </div>
 
+        <!-- 实付金额 -->
         <div class="detail-item actual-paid-section">
           <span class="label actual-paid-label">实付金额</span>
           <span class="value actual-paid-amount">¥{{ actualPaidAmount }}</span>
         </div>
 
+        <!-- 支付时间 -->
         <div class="detail-item">
           <span class="label">支付时间</span>
           <span class="value">{{ paymentDetails.orderDate }}</span>
@@ -45,103 +50,105 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import request from '@/utils/request'; // 假设这是您的网络请求工具
+// 假设 '@/utils/request' 路径正确
+import request from '@/utils/request'; 
 
-export default {
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
-    // paymentDetails 现在将直接存储从订单接口获取的数据
-    const paymentDetails = ref({
-      business: null,
-      orderTotal: '0.00',
-      pointsDeduction: '0.00', // 存储积分抵扣金额
-      orderDate: ''
-    });
-    const orderId = ref(route.query.orderId);
+// 定义常量
+const POINT_DEDUCTION_KEY = 'usePointsDeduction'; 
 
-    // 计算实付金额
-    const actualPaidAmount = computed(() => {
-      const total = parseFloat(paymentDetails.value.orderTotal) || 0;
-      // 积分抵扣金额
-      const deduction = parseFloat(paymentDetails.value.pointsDeduction) || 0; 
-      // 确保实付金额不为负
-      return Math.max(0, total - deduction).toFixed(2);
-    });
+const route = useRoute();
+const router = useRouter();
+const paymentDetails = ref({
+    business: null,
+    orderTotal: '0.00',
+    pointsDeduction: '0.00', // 存储积分抵扣金额 (来自后端)
+    orderDate: ''
+});
+const orderId = ref(route.query.orderId);
 
-    // 格式化积分抵扣金额
-    const pointsDeductionAmount = computed(() =>
-      (parseFloat(paymentDetails.value.pointsDeduction) || 0).toFixed(2)
-    );
+// 辅助判断：用于控制积分抵扣行是否显示
+const hasPointsDeduction = computed(() => {
+    const deduction = parseFloat(paymentDetails.value.pointsDeduction);
+    // 只有当积分抵扣金额大于 0.00 时才显示该行
+    return deduction > 0.00;
+});
 
-    onMounted(async () => {
-      // **【调试】** 打印获取到的订单 ID
-      console.log('--- 开始获取订单详情 ---');
-      console.log('订单ID:', orderId.value);
-      
-      if (!orderId.value) {
-        console.error('缺少订单ID，无法查询详情');
+// 计算实付金额
+const actualPaidAmount = computed(() => {
+    const total = parseFloat(paymentDetails.value.orderTotal) || 0;
+    const deduction = parseFloat(paymentDetails.value.pointsDeduction) || 0; 
+    // 确保实付金额不为负
+    return Math.max(0, total - deduction).toFixed(2);
+});
+
+// 格式化积分抵扣金额
+const pointsDeductionAmount = computed(() =>
+    (parseFloat(paymentDetails.value.pointsDeduction) || 0).toFixed(2)
+);
+
+onMounted(async () => {
+    console.log('[LIFECYCLE] SuccessfulPayment 页面挂载。');
+    console.log(`[INFO] 订单ID: ${orderId.value}`);
+    
+    if (!orderId.value) {
+        console.error('[ERROR] 缺少订单ID，无法查询详情');
         return;
-      }
+    }
 
-      try {
-        // 1. 调用订单详情接口
-        const apiUrl = `/api/orders/${orderId.value}`;
-        console.log('请求订单详情 API:', apiUrl);
-        const orderResponse = await request.get(apiUrl);
+    try {
+        console.log('[ACTION] 正在请求订单详情（获取最终数据，包括抵扣金额）。');
         
-        // **【调试】** 打印 API 原始返回
-        console.log('订单 API 原始返回:', orderResponse);
+        // --- 接口修改：使用新的 Path 参数结构 GET /api/orders/{id} ---
+        const apiUrl = `/api/orders/${orderId.value}`; 
+        const orderResponse = await request.get(apiUrl);
+        // --- 接口修改结束 ---
         
         if (!orderResponse.success || !orderResponse.data) {
-          console.error('订单 API 返回异常或 data 为空', orderResponse.message);
-          return;
+            console.error('[ERROR] 订单 API 返回异常或 data 为空', orderResponse.message);
+            // 可以在此处添加友好的错误提示
+            return;
         }
 
         const orderData = orderResponse.data;
-        
-        // 确保 orderTotal 是一个数字
         const totalAmount = parseFloat(orderData.orderTotal) || 0;
-        
-        // **核心逻辑：直接从订单数据中读取 pointsDiscountAmount**
-        // 根据您的接口文档，这是积分抵扣的现金金额（元）
+        // 积分抵扣的现金金额字段为 pointsDiscountAmount
         const deductionAmount = parseFloat(orderData.pointsDiscountAmount) || 0;
 
-        // **【调试】** 打印提取的关键数据
-        console.log('提取到的订单总额 (orderTotal):', totalAmount.toFixed(2));
-        console.log('提取到的积分抵扣金额 (pointsDiscountAmount):', deductionAmount.toFixed(2));
-        console.log('--- 订单详情获取结束 ---');
-
-
-        // 2. 写入页面数据
         paymentDetails.value = {
-          business: orderData.business,
-          orderTotal: totalAmount.toFixed(2),
-          pointsDeduction: deductionAmount.toFixed(2), // 使用接口返回的抵扣金额
-          orderDate: orderData.orderDate
+            business: orderData.business,
+            orderTotal: totalAmount.toFixed(2),
+            pointsDeduction: deductionAmount.toFixed(2), 
+            orderDate: orderData.orderDate
         };
         
-      } catch (err) {
-        console.error('Error fetching order details:', err);
-      }
-    });
+        console.log(`[INFO] 从后端获取的订单总额: ¥${totalAmount.toFixed(2)}`);
+        console.log(`[INFO] 从后端获取的积分抵扣金额: ¥${deductionAmount.toFixed(2)}`);
+        
+        // 清除 sessionStorage 中的临时数据
+        if (sessionStorage.getItem(POINT_DEDUCTION_KEY) !== null) {
+            sessionStorage.removeItem(POINT_DEDUCTION_KEY);
+            console.log('[INFO] SessionStorage 积分抵扣临时状态已清除。');
+        }
 
-    const goBack = () => router.push('/orderList');
+    } catch (err) {
+        console.error('[ERROR] Error fetching order details:', err);
+    }
+});
 
-    return {
-      paymentDetails,
-      goBack,
-      actualPaidAmount,
-      pointsDeductionAmount
-    };
-  }
+const goBack = () => {
+    console.log('[ACTION] 跳转至订单列表。');
+    // 假设订单列表的路由是 '/orderList'
+    router.push('/orderList');
 };
+
+// 变量和函数自动暴露给模板
 </script>
 
 <style scoped>
+/* 保持原有的样式，确保页面的美观和响应式 */
 :root {
   --primary-color: #2e7d32;
   --secondary-color: #f5f7fa;
