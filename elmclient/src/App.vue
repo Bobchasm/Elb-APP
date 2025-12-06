@@ -53,7 +53,14 @@ export default {
     });
 
     const showAdminFooter = computed(() => {
-      return route.path.startsWith('/admin');
+    if (['AdminExchangeManagement', 'AdminWarningConfig', 'AdminPointsRuleManagement'].includes(route.name)) {
+    return false;
+  }
+    
+    // 其他 /admin 路径的页面显示 footer
+    if (route.path.startsWith('/admin')) {
+      return true;
+    }
     });
 
     return { showFooter, showBusinessFooter, showAdminFooter, showBackButton};

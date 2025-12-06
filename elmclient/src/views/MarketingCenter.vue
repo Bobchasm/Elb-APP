@@ -2,94 +2,92 @@
   <div class="marketing-center-page">
     <div class="top-background">
       <div class="top-content">
-        <div class="top-icon">🎯</div>
-        <div class="top-text">
-          <h1 class="top-title">营销中心</h1>
-          <p class="top-subtitle">积分规则概览与管理</p>
-        </div>
+        <h1>营销中心</h1>
       </div>
     </div>
+    <div class="page-content">
 
-    <div class="promotion-banner">
-      <div class="banner-content">
-        <div class="banner-icon">📢</div>
-        <div class="banner-text">
-          <p class="banner-label">当前生效促销规则</p>
-          <h2 class="promotion-text">{{ activeRule.ruleName || '正在加载中...' }}</h2>
-        </div>
-        <div class="banner-actions">
-          <button
-            class="banner-action-btn"
-            @click="showDetailsModal = true"
-            :disabled="!activeRule.id"
-          >
-            查看详情
-          </button>
+      <div class="promotion-banner">
+        <div class="banner-content">
+          <div class="banner-icon">📢</div>
+          <div class="banner-text">
+            <p class="banner-label">当前生效促销规则</p>
+            <h2 class="promotion-text">{{ activeRule.ruleName || '正在加载中...' }}</h2>
+          </div>
+          <div class="banner-actions">
+            <button
+              class="banner-action-btn"
+              @click="showDetailsModal = true"
+              :disabled="!activeRule.id"
+            >
+              查看详情
+            </button>
+          </div>
         </div>
       </div>
+
+      <section class="functions-section">
+        <h2 class="section-title">核心管理功能</h2>
+        <div class="functions-grid">
+          <div class="function-card" @click="handleManageUsageRules">
+            <div class="card-icon-wrapper">
+              <span class="card-icon">📋</span>
+            </div>
+            <div class="card-content">
+              <h3 class="card-title">规则管理</h3>
+              <p class="card-description full-line">管理所有积分使用规则，包括新增、修改和启用/禁用。</p>
+            </div>
+            <div class="card-arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div class="card-hover-overlay">
+              <span class="hover-text">查看详情</span>
+            </div>
+          </div>
+
+          <div class="function-card" @click="handleManageWarningConfig">
+            <div class="card-icon-wrapper warning-icon">
+              <span class="card-icon">🚨</span>
+            </div>
+            <div class="card-content">
+              <h3 class="card-title">预警配置</h3>
+              <p class="card-description full-line">设置系统积分余额预警阈值，确保及时补充积分。</p>
+            </div>
+            <div class="card-arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div class="card-hover-overlay">
+              <span class="hover-text">配置预警</span>
+            </div>
+          </div>
+
+          <div class="function-card primary" @click="handleGoToExchangeManagement">
+            <div class="card-icon-wrapper primary-icon">
+              <span class="card-icon">🔄</span>
+            </div>
+            <div class="card-content">
+              <h3 class="card-title">兑换管理</h3>
+              <p class="card-description full-line">管理可兑换的商品目录、设置兑换比例与规则。</p>
+            </div>
+            <div class="card-arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div class="card-hover-overlay">
+              <span class="hover-text">立即前往</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
-
-    <section class="functions-section">
-      <h2 class="section-title">核心管理功能</h2>
-      <div class="functions-grid">
-        <div class="function-card" @click="handleManageUsageRules">
-          <div class="card-icon-wrapper">
-            <span class="card-icon">📋</span>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">规则管理</h3>
-            <p class="card-description full-line">管理所有积分使用规则，包括新增、修改和启用/禁用。</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <div class="card-hover-overlay">
-            <span class="hover-text">查看详情</span>
-          </div>
-        </div>
-
-        <div class="function-card" @click="handleManageWarningConfig">
-          <div class="card-icon-wrapper warning-icon">
-            <span class="card-icon">🚨</span>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">预警配置</h3>
-            <p class="card-description full-line">设置系统积分余额预警阈值，确保及时补充积分。</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <div class="card-hover-overlay">
-            <span class="hover-text">配置预警</span>
-          </div>
-        </div>
-
-        <div class="function-card primary" @click="handleGoToExchangeManagement">
-          <div class="card-icon-wrapper primary-icon">
-            <span class="card-icon">🔄</span>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">兑换管理</h3>
-            <p class="card-description full-line">管理可兑换的商品目录、设置兑换比例与规则。</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <div class="card-hover-overlay">
-            <span class="hover-text">立即前往</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <div class="page-footer">
-      <p>营销中心 © 2024</p>
+      <p>营销中心  2024</p>
     </div>
 
     <div v-if="showDetailsModal && activeRule.id" class="modal-overlay" @click.self="showDetailsModal = false">
@@ -196,7 +194,6 @@ const handleManageWarningConfig = () => {
 
 const handleGoToExchangeManagement = () => {
   router.push({ name: 'AdminExchangeManagement' });
-  toast.info('跳转到积分兑换管理中心');
 };
 
 onMounted(() => {
@@ -206,6 +203,61 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 顶部导航栏 - 简化版 */
+/* .top-background {
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to right, #3a7bd5, #00d2ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px 16px 0 0;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  overflow: hidden;
+  margin-bottom: 50px;
+  max-width: 600px;
+}
+
+.top-content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-background h1 {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+} */
+
+.top-subtitle,
+.top-icon {
+  display: none; /* 隐藏副标题和图标 */
+}
+
+/* 页面内容区域 */
+.page-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px 16px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 移除原有的顶部退出按钮样式 */
+.top-logout-btn {
+  display: none;
+}
 /* ======================================= */
 /* ====== 核心样式保留 ====== */
 /* ======================================= */
@@ -213,10 +265,12 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fbff 0%, #f0f7ff 100%);
   padding: 0 20px 40px;
-  padding-top: 120px; /* 为固定顶部留出空间 */
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-/* 顶部固定标题区域 */
+/* 顶部固定标题区域 - 已注释掉
 .top-background {
   width: 100%;
   height: 100px;
@@ -243,6 +297,7 @@ onMounted(() => {
   width: 100%;
   padding: 0 30px;
 }
+*/
 
 .top-icon {
   font-size: 42px;
