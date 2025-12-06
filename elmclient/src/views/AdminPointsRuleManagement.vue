@@ -1,4 +1,7 @@
 <template>
+  <div class="backbutton" @click="goBack">
+    <i class="fas fa-arrow-left"></i> 
+</div>
   <div class="sub-page-container">
     <div class="top-background">
       <h1>积分使用规则</h1>
@@ -455,8 +458,10 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
+//import BackButton from "@/components/BackButton.vue";
 import request from '../utils/request';
 import { toast } from '../utils/toast';
+
 
 // --- 状态数据定义 ---
 const loading = ref(false);
@@ -493,6 +498,11 @@ const ruleStatusMap = {
   1: '启用中',
   0: '已禁用'
 };
+
+function goBack() {
+  // 这是标准的浏览器API，用于返回历史记录中的上一个页面
+  window.history.back(); 
+}
 
 // 表单数据
 // 高级选项显示状态
@@ -972,6 +982,27 @@ watch(searchKeyword, (newVal) => {
 </script>
 
 <style scoped>
+.backbutton {
+    /* 基础定位 */
+    position: fixed;
+    top: 0; /* 从顶部开始计算 */
+    left: 0; /* 贴近屏幕左侧 */
+    z-index: 1001; /* 确保在顶部背景之上 */
+
+    /* 容器居中对齐 */
+    height: 100px; /* 匹配 top-background 的高度 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    padding: 0 15px; /* 左右内边距，提供空间感 */
+
+    /* 按钮图标/文字的实际样式 */
+    /* 假设内部有一个图标或文字，例如 <i class="icon"></i> */
+    color: #ffffff; /* 确保文字或图标颜色是白色，与蓝色背景形成高对比度 */
+    font-size: 24px; /* 图标大小 */
+    cursor: pointer;
+    transition: transform 0.2s ease-out; /* 增加点击动画 */
+}
+
 /* 顶部背景样式 */
 .top-background {
   width: 100%;

@@ -1,4 +1,7 @@
 <template>
+  <div class="backbutton" @click="goBack">
+    <i class="fas fa-arrow-left"></i> 
+</div>
   <div class="points-exchange-app">
     <!-- 头部 -->
     <div class="top-background">
@@ -76,17 +79,14 @@
             @click="showDetail(rule, 'Rule')"
           >
             <div class="item-main">
-              <div class="item-header">
-                <div class="item-title" v-if="currentTab === 'Rule'">
-                  {{ rule.ruleName }}
+              <!-- 规则布局：标题和状态在同一行 -->
+              <div class="item-header rule-header">
+                <div class="title-container">
+                  <div class="item-title">{{ rule.ruleName }}</div>
+                  <span class="item-status" :class="rule.ruleStatus === 1 ? 'active' : 'inactive'">
+                    {{ rule.ruleStatus === 1 ? '启用中' : '已禁用' }}
+                  </span>
                 </div>
-                <div class="item-title" v-else>
-                  <img :src="rule.foodImg" class="food-image" v-if="rule.foodImg" />
-                  <span class="food-name">{{ rule.foodName || rule.ruleName }}</span>
-                </div>
-                <span class="item-status" :class="rule.ruleStatus === 1 ? 'active' : 'inactive'">
-                  {{ rule.ruleStatus === 1 ? '启用中' : '已禁用' }}
-                </span>
               </div>
               
               <div class="item-content">
@@ -215,26 +215,26 @@
             @click="showDetail(goods, 'Goods')"
           >
             <div class="item-main">
-              <div class="item-header">
-                <div class="item-title" v-if="currentTab === 'Rule'">
-                  {{ goods.ruleName }}
-                </div>
-                <div class="item-title" v-else>
-                  <img :src="goods.foodImg" class="food-image" v-if="goods.foodImg" />
-                  <span class="food-name">{{ goods.foodName || goods.ruleName }}</span>
-                </div>
-                <div class="item-tags">
-                  <span class="item-status" :class="goods.ruleStatus === 1 ? 'active' : 'inactive'">
-                    {{ goods.ruleStatus === 1 ? '启用中' : '已禁用' }}
-                  </span>
-                  <span v-if="goods.stockQuantity < 10 && goods.ruleStatus === 1" class="stock-warning">
-                    ⚠️ 库存紧张
-                  </span>
+              <!-- 商品布局：紧凑布局，不显示图片 -->
+              <div class="item-header goods-header">
+                <div class="title-container">
+                  <div class="item-title">
+                    <span class="food-name">{{ goods.foodName || goods.ruleName }}</span>
+                    <span v-if="goods.foodId" class="food-id">(ID: {{ goods.foodId }})</span>
+                  </div>
+                  <div class="item-tags">
+                    <span class="item-status" :class="goods.ruleStatus === 1 ? 'active' : 'inactive'">
+                      {{ goods.ruleStatus === 1 ? '启用中' : '已禁用' }}
+                    </span>
+                    <span v-if="goods.stockQuantity < 10 && goods.ruleStatus === 1" class="stock-warning">
+                      ⚠️ 库存紧张
+                    </span>
+                  </div>
                 </div>
               </div>
               
               <div class="item-content">
-                <div class="item-info">
+                <div class="item-info compact-info">
                   <div class="info-item">
                     <span class="info-label">所需积分</span>
                     <span class="info-value highlight">{{ goods.requiredPoints }}积分</span>
@@ -242,10 +242,6 @@
                   <div class="info-item">
                     <span class="info-label">库存</span>
                     <span class="info-value">{{ goods.stockQuantity }}件</span>
-                  </div>
-                  <div class="info-item" v-if="goods.foodId">
-                    <span class="info-label">商品ID</span>
-                    <span class="info-value">{{ goods.foodId }}</span>
                   </div>
                 </div>
                 
@@ -493,11 +489,11 @@
             <!-- 商品字段 -->
             <template v-if="formData.ruleType === '1'">
               <div class="form-group">
-                <label class="form-label">商品ID</label>
+                <label class="form-label required">商品ID</label>
                 <input 
                   type="number" 
                   v-model.number="formData.foodId" 
-                  placeholder="请输入商品ID (选填)"
+                  placeholder="请输入商品ID"
                   class="form-input"
                 />
               </div>
@@ -657,6 +653,11 @@ const switchTab = (tab) => {
   fetchRules('Goods');
  }
 };
+
+function goBack() {
+  // 这是标准的浏览器API，用于返回历史记录中的上一个页面
+  window.history.back(); 
+}
 
 /**
  * 接口：GET /api/points/exchange-goods 获取可兑换商品列表
@@ -1059,6 +1060,26 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.backbutton {
+    /* 基础定位 */
+    position: fixed;
+    top: 0; /* 从顶部开始计算 */
+    left: 0; /* 贴近屏幕左侧 */
+    z-index: 1001; /* 确保在顶部背景之上 */
+
+    /* 容器居中对齐 */
+    height: 100px; /* 匹配 top-background 的高度 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    padding: 0 15px; /* 左右内边距，提供空间感 */
+
+    /* 按钮图标/文字的实际样式 */
+    /* 假设内部有一个图标或文字，例如 <i class="icon"></i> */
+    color: #ffffff; /* 确保文字或图标颜色是白色，与蓝色背景形成高对比度 */
+    font-size: 24px; /* 图标大小 */
+    cursor: pointer;
+    transition: transform 0.2s ease-out; /* 增加点击动画 */
+}
 /* 基础样式 */
 .points-exchange-app {
   max-width: 1200px;
@@ -1232,7 +1253,7 @@ onMounted(async () => {
 }
 
 .list-item {
-  padding: 20px 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1253,19 +1274,49 @@ onMounted(async () => {
   flex: 1;
 }
 
-.item-header {
+/* 优化：规则布局 - 标题和状态在同一行 */
+.rule-header .title-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rule-header .item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* 优化：商品布局 - 更紧凑 */
+.goods-header .title-container {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 12px;
 }
 
-.item-title {
+.goods-header .item-title {
   font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.food-id {
+  font-size: 12px;
+  color: #999;
+  font-weight: normal;
+}
+
+.item-tags {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .item-status {
@@ -1273,7 +1324,7 @@ onMounted(async () => {
   font-weight: 500;
   padding: 4px 10px;
   border-radius: 12px;
-  margin-left: 12px;
+  white-space: nowrap;
 }
 
 .item-status.active {
@@ -1286,18 +1337,13 @@ onMounted(async () => {
   color: #dc2626;
 }
 
-.item-tags {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 .stock-warning {
   font-size: 12px;
   color: #f97316;
   background: rgba(249, 115, 22, 0.1);
   padding: 2px 8px;
   border-radius: 10px;
+  white-space: nowrap;
 }
 
 .item-content {
@@ -1309,6 +1355,10 @@ onMounted(async () => {
 .item-info {
   display: flex;
   gap: 24px;
+}
+
+.compact-info {
+  gap: 20px;
 }
 
 .info-item {
@@ -1344,48 +1394,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-/* 商品图片样式 */
-.food-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  margin-right: 12px;
-  border: 1px solid #f0f0f0;
-  background-color: #f9f9f9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.food-image:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.food-name {
-  vertical-align: middle;
-  font-weight: 500;
-  color: #333;
-}
-
-/* 确保图片在卡片中正确显示 */
-.list-item .item-header {
-  display: flex;
-  align-items: center;
-}
-
-/* 响应式调整 */
-@media (max-width: 480px) {
-  .food-image {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .food-name {
-    font-size: 14px;
-  }
 }
 
 .meta-icon {
@@ -1950,16 +1958,26 @@ onMounted(async () => {
     justify-content: center;
   }
   
-  .item-header {
+  .rule-header .title-container,
+  .goods-header .title-container {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+  
+  .goods-header .title-container {
+    align-items: stretch;
   }
   
   .item-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+  
+  .item-info {
+    flex-direction: column;
+    gap: 12px;
   }
   
   .item-actions {
@@ -1998,6 +2016,31 @@ onMounted(async () => {
   }
   
   .pagination-controls {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .list-item {
+    padding: 12px 16px;
+  }
+  
+  .item-content {
+    gap: 12px;
+  }
+  
+  .item-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .item-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .action-btn {
+    width: 100%;
     justify-content: center;
   }
 }

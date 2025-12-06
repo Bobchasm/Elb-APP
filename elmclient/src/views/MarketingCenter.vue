@@ -95,15 +95,15 @@
         <h3>当前生效积分规则详情</h3>
         <p class="rule-title">{{ activeRule.ruleName }}</p>
         <div class="rule-details">
-          <p><strong>规则类型：</strong>{{ activeRule.ruleTypeName || 'N/A' }}</p>
+          <p><strong>规则类型：</strong>{{ activeRule.ruleTypeName || '无' }}</p>
           <p><strong>积分状态：</strong>{{ activeRule.ruleStatus === 1 ? '启用' : '禁用' }}</p>
           <p><strong>积分比例：</strong>{{ activeRule.pointsRatio || '无' }}</p>
           <p><strong>积分倍数：</strong>{{ activeRule.pointsMultiplier || '无' }}</p>
           <p v-if="activeRule.minOrderAmount"><strong>最低订单金额：</strong>¥{{ formatNumber(activeRule.minOrderAmount) }}</p>
           <p v-if="activeRule.maxOrderAmount"><strong>最高订单金额：</strong>¥{{ formatNumber(activeRule.maxOrderAmount) }}</p>
           <p v-if="activeRule.expireDays"><strong>有效期：</strong>{{ activeRule.expireDays }} 天</p>
-          <p><strong>生效时间：</strong>{{ activeRule.startTime?.split('T')[0] || 'N/A' }}</p>
-          <p><strong>结束时间：</strong>{{ activeRule.endTime?.split('T')[0] || 'N/A' }}</p>
+          <p><strong>生效时间：</strong>{{ activeRule.startTime?.split('T')[0] || '无' }}</p>
+          <p><strong>结束时间：</strong>{{ activeRule.endTime?.split('T')[0] || '无' }}</p>
         </div>
         <button class="close-btn" @click="showDetailsModal = false">关闭</button>
       </div>

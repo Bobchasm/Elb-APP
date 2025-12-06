@@ -301,19 +301,19 @@ const routes = [
     meta: { title: '营销中心' }
   },
   {
-    path: '/admin/marketing/rules',
+    path: '/marketing/rules',
     name: 'AdminPointsRuleManagement', 
     component: () => import('@/views/AdminPointsRuleManagement.vue'), 
     meta: { title: '规则管理' }
   },
   {
-    path: '/admin/marketing/warning',
+    path: '/marketing/warning',
     name: 'AdminWarningConfig', 
     component: () => import('@/views/AdminWarningConfig.vue'), 
     meta: { title: '预警配置' }
   },
   {
-    path: '/admin/marketing/exchange',
+    path: '/marketing/exchange',
     name: 'AdminExchangeManagement',
     component: () => import('@/views/AdminExchangeManagement.vue'), 
     meta: { title: '兑换管理' }

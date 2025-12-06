@@ -1,7 +1,8 @@
 <template>
+  <div class="back-btn-container">
+        <BackButton style="margin-top: 2vw;"/>
+    </div>
   <div class="notifications-container">
-    <BackButton style="margin-top: -13vw;"/>
-    
     <div class="header">
       <h1 class="title">消息与通知</h1>
       <div v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</div>
@@ -70,7 +71,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import request from '@/utils/request';
 import { toast } from '@/utils/toast';
-import BackButton from "@/components/BackButton.vue";
+//import BackButton from "@/components/BackButton.vue";
 
 // 状态管理
 const messages = ref([]);
@@ -335,6 +336,13 @@ const formatTime = (timeStr) => {
   color: #ffffff;
   font-weight: 600;
   margin: 0;
+}
+
+.back-btn-container {
+    position: fixed; /* 固定定位，不随滚动移动 */
+    left: 0vw; /* 距离左侧的距离，可根据需求调整 */
+    top: 0vw; /* 距离顶部的距离，与 header 高度（12vw）适配，确保垂直居中 */
+    z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 
 .unread-badge {
