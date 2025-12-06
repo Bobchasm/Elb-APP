@@ -41,11 +41,12 @@ public interface MarketingPointsRuleService {
     /**
      * 查询积分规则列表
      * @param ruleType 规则类型（可选）
+     * @param ruleStatus 规则状态（可选，1-启用，0-禁用，null-全部）
      * @param pageNum 页码
      * @param pageSize 每页大小
      * @return 积分规则列表
      */
-    List<PointsRuleVO> getRules(Integer ruleType, Integer pageNum, Integer pageSize);
+    List<PointsRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize);
     
     /**
      * 根据订单信息计算应获得积分（同步调用积分系统）
@@ -78,19 +79,6 @@ public interface MarketingPointsRuleService {
      */
     Long calculateOrderPoints(Long userId, Long orderId, BigDecimal orderAmount, 
                               LocalDateTime orderDate, List<OrderPaidMessage.OrderFoodDetail> foodDetails);
-    
-    /**
-     * 启用积分规则
-     * @param ruleId 规则ID
-     * @return 是否成功
-     */
-    Boolean enableRule(Long ruleId);
-    
-    /**
-     * 禁用积分规则
-     * @param ruleId 规则ID
-     * @return 是否成功
-     */
-    Boolean disableRule(Long ruleId);
+
 }
 

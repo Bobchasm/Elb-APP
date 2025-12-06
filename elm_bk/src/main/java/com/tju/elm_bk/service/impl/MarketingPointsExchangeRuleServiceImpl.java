@@ -134,7 +134,7 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
     }
 
     @Override
-    public List<PointsExchangeRuleVO> getRules(Integer ruleType, Integer pageNum, Integer pageSize) {
+    public List<PointsExchangeRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize) {
         if (pageNum == null || pageNum < 1) {
             pageNum = 1;
         }
@@ -144,7 +144,7 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
 
         Integer offset = (pageNum - 1) * pageSize;
         List<MarketingPointsExchangeRule> rules = exchangeRuleMapper.selectRules(
-            ruleType, 1, offset, pageSize);
+            ruleType, ruleStatus, offset, pageSize);
 
         List<PointsExchangeRuleVO> voList = new ArrayList<>();
         for (MarketingPointsExchangeRule rule : rules) {
@@ -332,44 +332,6 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         Long currentUserId = userMapper.getUserIdByUsername(
                 SecurityUtils.getCurrentUsername().orElse(null));
         return currentUserId;
-    }
-
-    /**
-     * 启用积分兑换规则
-     */
-    @Override
-    @Transactional
-    public Boolean enableRule(Long ruleId) {
-        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
-        if (rule == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        
-        rule.setRuleStatus(1); // 1-启用
-        rule.setUpdateTime(LocalDateTime.now());
-        rule.setUpdater(getCurrentUserId());
-        
-        exchangeRuleMapper.updateById(rule);
-        return true;
-    }
-
-    /**
-     * 禁用积分兑换规则
-     */
-    @Override
-    @Transactional
-    public Boolean disableRule(Long ruleId) {
-        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
-        if (rule == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        
-        rule.setRuleStatus(0); // 0-禁用
-        rule.setUpdateTime(LocalDateTime.now());
-        rule.setUpdater(getCurrentUserId());
-        
-        exchangeRuleMapper.updateById(rule);
-        return true;
     }
 }
 

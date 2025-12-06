@@ -162,44 +162,6 @@ public class PointsLotteryRuleServiceImpl implements PointsLotteryRuleService {
     }
 
     /**
-     * 启用积分抽奖规则
-     */
-    @Override
-    @Transactional
-    public Boolean enableRule(Long ruleId) {
-        PointsLotteryRule rule = lotteryRuleMapper.selectById(ruleId);
-        if (rule == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        
-        rule.setRuleStatus(1); // 1-启用
-        rule.setUpdateTime(LocalDateTime.now());
-        rule.setUpdater(getCurrentUserId());
-        
-        lotteryRuleMapper.updateById(rule);
-        return true;
-    }
-
-    /**
-     * 禁用积分抽奖规则
-     */
-    @Override
-    @Transactional
-    public Boolean disableRule(Long ruleId) {
-        PointsLotteryRule rule = lotteryRuleMapper.selectById(ruleId);
-        if (rule == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        
-        rule.setRuleStatus(0); // 0-禁用
-        rule.setUpdateTime(LocalDateTime.now());
-        rule.setUpdater(getCurrentUserId());
-        
-        lotteryRuleMapper.updateById(rule);
-        return true;
-    }
-
-    /**
      * 获取会员等级名称
      */
     private String getMemberLevelName(Integer memberLevel) {

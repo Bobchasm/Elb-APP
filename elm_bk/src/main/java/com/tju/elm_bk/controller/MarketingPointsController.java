@@ -85,33 +85,14 @@ public class MarketingPointsController {
      * 查询积分规则列表
      */
     @GetMapping("/rules")
-    @Operation(summary = "查询积分规则列表", description = "分页查询积分规则列表")
+    @Operation(summary = "查询积分规则列表", description = "分页查询积分规则列表，支持按规则类型和状态筛选")
     public HttpResult<List<PointsRuleVO>> getRules(
             @RequestParam(required = false) Integer ruleType,
+            @RequestParam(required = false) Integer ruleStatus,
             @RequestParam(required = false, defaultValue = "1") Integer pageNum,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
-        List<PointsRuleVO> rules = marketingPointsRuleService.getRules(ruleType, pageNum, pageSize);
+        List<PointsRuleVO> rules = marketingPointsRuleService.getRules(ruleType, ruleStatus, pageNum, pageSize);
         return HttpResult.success(rules);
-    }
-
-    /**
-     * 启用积分规则
-     */
-    @PutMapping("/rules/{id}/enable")
-    @Operation(summary = "启用积分规则", description = "启用指定的积分规则")
-    public HttpResult<Boolean> enableRule(@PathVariable Long id) {
-        Boolean result = marketingPointsRuleService.enableRule(id);
-        return HttpResult.success(result);
-    }
-
-    /**
-     * 禁用积分规则
-     */
-    @PutMapping("/rules/{id}/disable")
-    @Operation(summary = "禁用积分规则", description = "禁用指定的积分规则")
-    public HttpResult<Boolean> disableRule(@PathVariable Long id) {
-        Boolean result = marketingPointsRuleService.disableRule(id);
-        return HttpResult.success(result);
     }
 
     // ========== 积分兑换规则管理 ==========
@@ -151,33 +132,14 @@ public class MarketingPointsController {
      * 查询积分兑换规则列表
      */
     @GetMapping("/exchange-rules")
-    @Operation(summary = "查询积分兑换规则列表", description = "分页查询积分兑换规则列表")
+    @Operation(summary = "查询积分兑换规则列表", description = "分页查询积分兑换规则列表，支持按规则类型和状态筛选")
     public HttpResult<List<PointsExchangeRuleVO>> getExchangeRules(
             @RequestParam(required = false) Integer ruleType,
+            @RequestParam(required = false) Integer ruleStatus,
             @RequestParam(required = false, defaultValue = "1") Integer pageNum,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
-        List<PointsExchangeRuleVO> rules = exchangeRuleService.getRules(ruleType, pageNum, pageSize);
+        List<PointsExchangeRuleVO> rules = exchangeRuleService.getRules(ruleType, ruleStatus, pageNum, pageSize);
         return HttpResult.success(rules);
-    }
-
-    /**
-     * 启用积分兑换规则
-     */
-    @PutMapping("/exchange-rules/{id}/enable")
-    @Operation(summary = "启用积分兑换规则", description = "启用指定的积分兑换规则")
-    public HttpResult<Boolean> enableExchangeRule(@PathVariable Long id) {
-        Boolean result = exchangeRuleService.enableRule(id);
-        return HttpResult.success(result);
-    }
-
-    /**
-     * 禁用积分兑换规则
-     */
-    @PutMapping("/exchange-rules/{id}/disable")
-    @Operation(summary = "禁用积分兑换规则", description = "禁用指定的积分兑换规则")
-    public HttpResult<Boolean> disableExchangeRule(@PathVariable Long id) {
-        Boolean result = exchangeRuleService.disableRule(id);
-        return HttpResult.success(result);
     }
 
     // ========== 积分抽奖规则管理 ==========
@@ -217,7 +179,7 @@ public class MarketingPointsController {
      * 查询积分抽奖规则列表
      */
     @GetMapping("/lottery-rules")
-    @Operation(summary = "查询积分抽奖规则列表", description = "分页查询积分抽奖规则列表")
+    @Operation(summary = "查询积分抽奖规则列表", description = "分页查询积分抽奖规则列表，支持按会员等级和状态筛选")
     public HttpResult<List<PointsLotteryRuleVO>> getLotteryRules(
             @RequestParam(required = false) Integer memberLevel,
             @RequestParam(required = false) Integer ruleStatus,
@@ -225,26 +187,6 @@ public class MarketingPointsController {
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         List<PointsLotteryRuleVO> rules = lotteryRuleService.getRules(memberLevel, ruleStatus, pageNum, pageSize);
         return HttpResult.success(rules);
-    }
-
-    /**
-     * 启用积分抽奖规则
-     */
-    @PutMapping("/lottery-rules/{id}/enable")
-    @Operation(summary = "启用积分抽奖规则", description = "启用指定的积分抽奖规则")
-    public HttpResult<Boolean> enableLotteryRule(@PathVariable Long id) {
-        Boolean result = lotteryRuleService.enableRule(id);
-        return HttpResult.success(result);
-    }
-
-    /**
-     * 禁用积分抽奖规则
-     */
-    @PutMapping("/lottery-rules/{id}/disable")
-    @Operation(summary = "禁用积分抽奖规则", description = "禁用指定的积分抽奖规则")
-    public HttpResult<Boolean> disableLotteryRule(@PathVariable Long id) {
-        Boolean result = lotteryRuleService.disableRule(id);
-        return HttpResult.success(result);
     }
 
     // ========== 预警配置管理 ==========

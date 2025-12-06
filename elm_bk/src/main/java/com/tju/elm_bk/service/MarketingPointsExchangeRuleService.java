@@ -39,11 +39,12 @@ public interface MarketingPointsExchangeRuleService {
     /**
      * 查询积分兑换规则列表
      * @param ruleType 规则类型（可选）
+     * @param ruleStatus 规则状态（可选，1-启用，0-禁用，null-全部）
      * @param pageNum 页码
      * @param pageSize 每页大小
      * @return 积分兑换规则列表
      */
-    List<PointsExchangeRuleVO> getRules(Integer ruleType, Integer pageNum, Integer pageSize);
+    List<PointsExchangeRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize);
     
     /**
      * 查询可兑换商品列表
@@ -64,19 +65,5 @@ public interface MarketingPointsExchangeRuleService {
      * @return 兑换比例（如10表示10积分=1元）
      */
     java.math.BigDecimal getCashExchangeRatio();
-    
-    /**
-     * 启用积分兑换规则
-     * @param ruleId 规则ID
-     * @return 是否成功
-     */
-    Boolean enableRule(Long ruleId);
-    
-    /**
-     * 禁用积分兑换规则
-     * @param ruleId 规则ID
-     * @return 是否成功
-     */
-    Boolean disableRule(Long ruleId);
 }
 

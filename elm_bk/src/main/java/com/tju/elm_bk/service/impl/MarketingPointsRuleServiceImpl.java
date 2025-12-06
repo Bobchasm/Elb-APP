@@ -174,7 +174,7 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
      * 查询积分规则列表
      */
     @Override
-    public List<PointsRuleVO> getRules(Integer ruleType, Integer pageNum, Integer pageSize) {
+    public List<PointsRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize) {
         if (pageNum == null || pageNum < 1) {
             pageNum = 1;
         }
@@ -184,7 +184,7 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
 
         Integer offset = (pageNum - 1) * pageSize;
         List<MarketingPointsRule> rules = marketingPointsRuleMapper.selectRules(
-            ruleType, 1, offset, pageSize); // 只查询启用的规则
+            ruleType, ruleStatus, offset, pageSize); 
 
         List<PointsRuleVO> voList = new ArrayList<>();
         for (MarketingPointsRule rule : rules) {
@@ -440,44 +440,6 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         
         // 调用原有的calculatePoints方法
         return calculatePoints(userId, orderId, orderAmount, orderDate, foodIds);
-    }
-
-    /**
-     * 启用积分规则
-     */
-    @Override
-    @Transactional
-    public Boolean enableRule(Long ruleId) {
-        MarketingPointsRule rule = marketingPointsRuleMapper.selectById(ruleId);
-        if (rule == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        
-        rule.setRuleStatus(1); // 1-启用
-        rule.setUpdateTime(LocalDateTime.now());
-        rule.setUpdater(getCurrentUserId());
-        
-        marketingPointsRuleMapper.updateById(rule);
-        return true;
-    }
-
-    /**
-     * 禁用积分规则
-     */
-    @Override
-    @Transactional
-    public Boolean disableRule(Long ruleId) {
-        MarketingPointsRule rule = marketingPointsRuleMapper.selectById(ruleId);
-        if (rule == null) {
-            throw new APIException(ResultCodeEnum.NOT_FOUND);
-        }
-        
-        rule.setRuleStatus(0); // 0-禁用
-        rule.setUpdateTime(LocalDateTime.now());
-        rule.setUpdater(getCurrentUserId());
-        
-        marketingPointsRuleMapper.updateById(rule);
-        return true;
     }
 }
 

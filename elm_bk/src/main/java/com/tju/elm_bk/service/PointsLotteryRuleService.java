@@ -44,19 +44,6 @@ public interface PointsLotteryRuleService {
      */
     List<PointsLotteryRuleVO> getRules(Integer memberLevel, Integer ruleStatus, 
                                      Integer pageNum, Integer pageSize);
-    
-    /**
-     * 启用积分抽奖规则
-     * @param ruleId 规则ID
-     * @return 是否成功
-     */
-    Boolean enableRule(Long ruleId);
-    
-    /**
-     * 禁用积分抽奖规则
-     * @param ruleId 规则ID
-     * @return 是否成功
-     */
-    Boolean disableRule(Long ruleId);
+
 }
 
