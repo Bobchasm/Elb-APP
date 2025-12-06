@@ -24,16 +24,15 @@ import java.util.List;
 
 /**
  * 营销系统Controller
- * 职责：处理管理员端营销系统相关HTTP请求
+ * 职责：处理营销系统相关HTTP请求
  * 设计原则：
  * 1. 单一职责原则 - 只负责HTTP请求处理
  * 2. 依赖注入 - 注入Service接口
- * 3. 权限控制 - 使用@PreAuthorize控制访问权限
+ * 3. 权限控制 - 使用@PreAuthorize控制访问权限（查询接口开放，增删改需要管理员权限）
  */
 @RestController
 @RequestMapping("/api/marketing/points")
-@Tag(name = "营销系统-积分管理", description = "管理员端积分规则管理接口")
-@PreAuthorize("hasAuthority('ADMIN')")
+@Tag(name = "营销系统-积分管理", description = "积分规则管理接口")
 public class MarketingPointsController {
 
     @Autowired
@@ -54,6 +53,7 @@ public class MarketingPointsController {
      * 创建积分规则
      */
     @PostMapping("/rules")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "创建积分规则", description = "创建新的积分获取规则")
     public HttpResult<Long> createRule(@RequestBody PointsRuleCreateDTO dto) {
         Long ruleId = marketingPointsRuleService.createRule(dto);
@@ -64,6 +64,7 @@ public class MarketingPointsController {
      * 更新积分规则
      */
     @PutMapping("/rules/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "更新积分规则", description = "更新指定的积分规则")
     public HttpResult<Boolean> updateRule(@PathVariable Long id, 
                                           @RequestBody PointsRuleUpdateDTO dto) {
@@ -75,6 +76,7 @@ public class MarketingPointsController {
      * 删除积分规则
      */
     @DeleteMapping("/rules/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "删除积分规则", description = "删除指定的积分规则")
     public HttpResult<Boolean> deleteRule(@PathVariable Long id) {
         Boolean result = marketingPointsRuleService.deleteRule(id);
@@ -101,6 +103,7 @@ public class MarketingPointsController {
      * 创建积分兑换规则
      */
     @PostMapping("/exchange-rules")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "创建积分兑换规则", description = "创建新的积分兑换规则")
     public HttpResult<Long> createExchangeRule(@RequestBody PointsExchangeRuleCreateDTO dto) {
         Long ruleId = exchangeRuleService.createRule(dto);
@@ -111,6 +114,7 @@ public class MarketingPointsController {
      * 更新积分兑换规则
      */
     @PutMapping("/exchange-rules/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "更新积分兑换规则", description = "更新指定的积分兑换规则")
     public HttpResult<Boolean> updateExchangeRule(@PathVariable Long id, 
                                                    @RequestBody PointsExchangeRuleCreateDTO dto) {
@@ -122,6 +126,7 @@ public class MarketingPointsController {
      * 删除积分兑换规则
      */
     @DeleteMapping("/exchange-rules/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "删除积分兑换规则", description = "删除指定的积分兑换规则")
     public HttpResult<Boolean> deleteExchangeRule(@PathVariable Long id) {
         Boolean result = exchangeRuleService.deleteRule(id);
@@ -148,6 +153,7 @@ public class MarketingPointsController {
      * 创建积分抽奖规则
      */
     @PostMapping("/lottery-rules")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "创建积分抽奖规则", description = "创建新的积分抽奖规则")
     public HttpResult<Long> createLotteryRule(@RequestBody PointsLotteryRuleCreateDTO dto) {
         Long ruleId = lotteryRuleService.createRule(dto);
@@ -158,6 +164,7 @@ public class MarketingPointsController {
      * 更新积分抽奖规则
      */
     @PutMapping("/lottery-rules/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "更新积分抽奖规则", description = "更新指定的积分抽奖规则")
     public HttpResult<Boolean> updateLotteryRule(@PathVariable Long id, 
                                                  @RequestBody PointsLotteryRuleUpdateDTO dto) {
@@ -169,6 +176,7 @@ public class MarketingPointsController {
      * 删除积分抽奖规则
      */
     @DeleteMapping("/lottery-rules/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "删除积分抽奖规则", description = "删除指定的积分抽奖规则")
     public HttpResult<Boolean> deleteLotteryRule(@PathVariable Long id) {
         Boolean result = lotteryRuleService.deleteRule(id);
@@ -205,6 +213,7 @@ public class MarketingPointsController {
      * 更新预警配置
      */
     @PutMapping("/alert-config")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "更新预警配置", description = "更新积分到期预警配置")
     public HttpResult<Boolean> updateAlertConfig(@RequestBody PointsExpirationAlertConfig config) {
         Boolean result = alertService.updateAlertConfig(config);
