@@ -1,6 +1,7 @@
 package com.tju.elm_bk.service.impl;
 
 import com.tju.elm_bk.exception.APIException;
+import com.tju.elm_bk.mapper.MarketingPointsRuleFoodMapper;
 import com.tju.elm_bk.mapper.MarketingPointsRuleMapper;
 import com.tju.elm_bk.mapper.OrdersMapper;
 import com.tju.elm_bk.mapper.PointsAccountMapper;
@@ -10,6 +11,7 @@ import com.tju.elm_bk.pojo.dto.PointsAddDTO;
 import com.tju.elm_bk.pojo.dto.PointsRuleCreateDTO;
 import com.tju.elm_bk.pojo.dto.PointsRuleUpdateDTO;
 import com.tju.elm_bk.pojo.entity.MarketingPointsRule;
+import com.tju.elm_bk.pojo.entity.MarketingPointsRuleFood;
 import com.tju.elm_bk.pojo.entity.PointsAccount;
 import com.tju.elm_bk.pojo.vo.PointsRuleVO;
 import com.tju.elm_bk.result.ResultCodeEnum;
@@ -57,6 +59,9 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private MarketingPointsRuleFoodMapper ruleFoodMapper;
+
     /**
      * 创建积分规则
      */
@@ -84,6 +89,10 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         rule.setUpdater(currentUserId);
         
         marketingPointsRuleMapper.insert(rule);
+        
+        // 保存商品关联关系到中间表
+        saveRuleFoods(rule.getId(), dto.getFoodIds());
+        
         return rule.getId();
     }
 
@@ -120,8 +129,12 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         if (dto.getMaxOrderAmount() != null) {
             rule.setMaxOrderAmount(dto.getMaxOrderAmount());
         }
-        if (dto.getFoodId() != null) {
-            rule.setFoodId(dto.getFoodId());
+        // 如果传入了 foodIds，则更新中间表
+        if (dto.getFoodIds() != null) {
+            // 先删除旧的关联
+            ruleFoodMapper.deleteByRuleId(ruleId, LocalDateTime.now());
+            // 保存新的关联
+            saveRuleFoods(ruleId, dto.getFoodIds());
         }
         if (dto.getHolidayStart() != null) {
             rule.setHolidayStart(dto.getHolidayStart());
@@ -166,7 +179,12 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
             throw new APIException(ResultCodeEnum.NOT_FOUND);
         }
         
+        // 逻辑删除规则
         marketingPointsRuleMapper.deleteById(ruleId, LocalDateTime.now(), getCurrentUserId());
+        
+        // 逻辑删除中间表的关联记录
+        ruleFoodMapper.deleteByRuleId(ruleId, LocalDateTime.now());
+        
         return true;
     }
 
@@ -191,6 +209,11 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
             PointsRuleVO vo = new PointsRuleVO();
             BeanUtils.copyProperties(rule, vo);
             vo.setRuleTypeName(getRuleTypeName(rule.getRuleType()));
+            
+            // 从中间表查询关联的商品ID列表
+            List<Long> foodIds = ruleFoodMapper.selectFoodIdsByRuleId(rule.getId());
+            vo.setFoodIds(foodIds);
+            
             voList.add(vo);
         }
 
@@ -380,6 +403,37 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
             log.error("【积分添加失败】用户ID={}, 行为类型={}, 积分数量={}, 错误: {}", 
                 userId, behaviorType, points, e.getMessage(), e);
             throw e; // 重新抛出异常，让调用方知道积分添加失败
+        }
+    }
+
+    /**
+     * 保存规则与商品的关联关系
+     */
+    private void saveRuleFoods(Long ruleId, List<Long> foodIds) {
+        if (foodIds == null || foodIds.isEmpty()) {
+            return; // 没有商品关联
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        List<MarketingPointsRuleFood> ruleFoods = new ArrayList<>();
+        for (Long fid : foodIds) {
+            if (fid != null) {
+                MarketingPointsRuleFood ruleFood = new MarketingPointsRuleFood();
+                ruleFood.setRuleId(ruleId);
+                ruleFood.setFoodId(fid);
+                ruleFood.setCreateTime(now);
+                ruleFood.setUpdateTime(now);
+                ruleFood.setIsDeleted(false);
+                ruleFoods.add(ruleFood);
+            }
+        }
+        
+        if (!ruleFoods.isEmpty()) {
+            if (ruleFoods.size() == 1) {
+                ruleFoodMapper.insert(ruleFoods.get(0));
+            } else {
+                ruleFoodMapper.batchInsert(ruleFoods);
+            }
         }
     }
 

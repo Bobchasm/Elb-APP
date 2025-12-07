@@ -13,7 +13,6 @@
         <result column="member_level" property="memberLevel"/>
         <result column="min_order_amount" property="minOrderAmount"/>
         <result column="max_order_amount" property="maxOrderAmount"/>
-        <result column="food_id" property="foodId"/>
         <result column="holiday_start" property="holidayStart"/>
         <result column="holiday_end" property="holidayEnd"/>
         <result column="behavior_type" property="behaviorType"/>
@@ -39,7 +38,6 @@
             <if test="memberLevel != null">member_level = #{memberLevel},</if>
             <if test="minOrderAmount != null">min_order_amount = #{minOrderAmount},</if>
             <if test="maxOrderAmount != null">max_order_amount = #{maxOrderAmount},</if>
-            <if test="foodId != null">food_id = #{foodId},</if>
             <if test="holidayStart != null">holiday_start = #{holidayStart},</if>
             <if test="holidayEnd != null">holiday_end = #{holidayEnd},</if>
             <if test="behaviorType != null">behavior_type = #{behaviorType},</if>
@@ -70,29 +68,42 @@
     </select>
 
     <select id="selectPromotionRules" resultMap="BaseResultMap">
-        SELECT * FROM marketing_points_rule
+        SELECT DISTINCT r.* FROM marketing_points_rule r
         <where>
-            rule_type = 1 AND rule_status = 1 AND is_deleted = 0
-            AND (member_level IS NULL OR member_level = #{memberLevel})
-            AND (start_time IS NULL OR start_time &lt;= NOW())
-            AND (end_time IS NULL OR end_time &gt;= NOW())
+            r.rule_type = 1 AND r.rule_status = 1 AND r.is_deleted = 0
+            AND (r.member_level IS NULL OR r.member_level = #{memberLevel})
+            AND (r.start_time IS NULL OR r.start_time &lt;= NOW())
+            AND (r.end_time IS NULL OR r.end_time &gt;= NOW())
             <if test="orderDate != null">
-                AND (holiday_start IS NULL OR holiday_start &lt;= #{orderDate})
-                AND (holiday_end IS NULL OR holiday_end &gt;= #{orderDate})
+                AND (r.holiday_start IS NULL OR r.holiday_start &lt;= #{orderDate})
+                AND (r.holiday_end IS NULL OR r.holiday_end &gt;= #{orderDate})
             </if>
             <if test="orderAmount != null">
-                AND (min_order_amount IS NULL OR min_order_amount &lt;= #{orderAmount})
-                AND (max_order_amount IS NULL OR max_order_amount &gt;= #{orderAmount})
+                AND (r.min_order_amount IS NULL OR r.min_order_amount &lt;= #{orderAmount})
+                AND (r.max_order_amount IS NULL OR r.max_order_amount &gt;= #{orderAmount})
             </if>
             <if test="foodIds != null and foodIds.size() > 0">
-                AND (food_id IS NULL OR food_id IN
-                <foreach collection="foodIds" item="foodId" open="(" separator="," close=")">
-                    #{foodId}
-                </foreach>
+                AND (
+                    -- 规则没有指定商品（适用于所有商品）
+                    NOT EXISTS (
+                        SELECT 1 FROM marketing_points_rule_food rf 
+                        WHERE rf.rule_id = r.id AND rf.is_deleted = 0
+                    )
+                    OR
+                    -- 规则指定的商品在订单商品列表中
+                    EXISTS (
+                        SELECT 1 FROM marketing_points_rule_food rf 
+                        WHERE rf.rule_id = r.id 
+                          AND rf.is_deleted = 0
+                          AND rf.food_id IN
+                        <foreach collection="foodIds" item="foodId" open="(" separator="," close=")">
+                            #{foodId}
+                        </foreach>
+                    )
                 )
             </if>
         </where>
-        ORDER BY priority DESC
+        ORDER BY r.priority DESC
     </select>
 
 </mapper>

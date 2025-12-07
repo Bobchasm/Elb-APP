@@ -43,8 +43,6 @@ public class MarketingPointsRule {
     @Schema(description = "最高订单金额（促销积分使用）")
     private BigDecimal maxOrderAmount;
 
-    @Schema(description = "指定商品ID（关联food表，促销积分使用）")
-    private Long foodId;
 
     @Schema(description = "节假日开始日期")
     @JsonFormat(pattern = "yyyy-MM-dd")

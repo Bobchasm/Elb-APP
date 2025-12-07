@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -39,8 +40,8 @@ public class PointsRuleCreateDTO {
     @Schema(description = "最高订单金额")
     private BigDecimal maxOrderAmount;
 
-    @Schema(description = "指定商品ID")
-    private Long foodId;
+    @Schema(description = "指定商品ID列表（多个商品）")
+    private List<Long> foodIds;
 
     @Schema(description = "节假日开始日期")
     @JsonFormat(pattern = "yyyy-MM-dd")

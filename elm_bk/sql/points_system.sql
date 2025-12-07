@@ -95,7 +95,6 @@ CREATE TABLE `marketing_points_rule` (
   `member_level` tinyint NULL DEFAULT NULL COMMENT '适用会员等级（NULL表示所有等级）。对于等级积分(rule_type=2)，表示升级到的目标会员等级（1-白银 2-黄金 3-钻石）',
   `min_order_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '最低订单金额（促销积分使用）',
   `max_order_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '最高订单金额（促销积分使用）',
-  `food_id` bigint NULL DEFAULT NULL COMMENT '指定商品ID（关联food表，促销积分使用）',
   `holiday_start` date NULL DEFAULT NULL COMMENT '节假日开始日期',
   `holiday_end` date NULL DEFAULT NULL COMMENT '节假日结束日期',
   `behavior_type` varchar(50) NULL DEFAULT NULL COMMENT '行为类型（like-点赞 collect-收藏 repay_loan-还贷款）',
@@ -113,9 +112,28 @@ CREATE TABLE `marketing_points_rule` (
   INDEX `idx_rule_type` (`rule_type`) USING BTREE COMMENT '规则类型索引',
   INDEX `idx_rule_status` (`rule_status`) USING BTREE COMMENT '规则状态索引',
   INDEX `idx_start_end_time` (`start_time`, `end_time`) USING BTREE COMMENT '生效时间索引',
-  INDEX `idx_member_level` (`member_level`) USING BTREE COMMENT '会员等级索引',
-  CONSTRAINT `fk_marketing_points_rule_food` FOREIGN KEY (`food_id`) REFERENCES `food` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  INDEX `idx_member_level` (`member_level`) USING BTREE COMMENT '会员等级索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='营销系统-积分规则表';
+
+-- ----------------------------
+-- 4.1. 营销积分规则与商品关联表 (marketing_points_rule_food)
+-- 用于支持一个促销积分规则关联多个商品
+-- ----------------------------
+DROP TABLE IF EXISTS `marketing_points_rule_food`;
+CREATE TABLE `marketing_points_rule_food` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `rule_id` bigint NOT NULL COMMENT '积分规则ID（关联marketing_points_rule表）',
+  `food_id` bigint NOT NULL COMMENT '商品ID（关联food表）',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_rule_food` (`rule_id`, `food_id`, `is_deleted`) USING BTREE COMMENT '规则商品唯一索引（考虑软删除）',
+  INDEX `idx_rule_id` (`rule_id`) USING BTREE COMMENT '规则ID索引',
+  INDEX `idx_food_id` (`food_id`) USING BTREE COMMENT '商品ID索引',
+  CONSTRAINT `fk_rule_food_rule` FOREIGN KEY (`rule_id`) REFERENCES `marketing_points_rule` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_rule_food_food` FOREIGN KEY (`food_id`) REFERENCES `food` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='促销积分规则与商品关联表';
 
 -- ----------------------------
 -- 5. 营销系统-积分兑换规则表 (marketing_points_exchange_rule)
@@ -333,11 +351,14 @@ INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `p
 VALUES ('满200元双倍积分', 1, 1, 2.0, 200.00, 30, 8, 1, 1);
 
 -- 3. 指定商品双倍积分促销
--- 说明：购买商品ID为1的商品时，获得双倍积分（积分倍数为2.0）
--- 注意：food_id需要根据实际商品ID调整
+-- 说明：购买指定商品时，获得双倍积分（积分倍数为2.0）
+-- 注意：需要先在 marketing_points_rule_food 表中插入关联关系
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
-    `food_id`, `expire_days`, `priority`, `creator`, `updater`) 
-VALUES ('指定商品双倍积分', 1, 1, 2.0, 1, 30, 7, 1, 1);
+    `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('指定商品双倍积分', 1, 1, 2.0, 30, 7, 1, 1);
+-- 关联商品ID为1的商品（假设规则ID为上面插入后生成的ID，实际使用时需要先查询规则ID）
+-- INSERT INTO `marketing_points_rule_food` (`rule_id`, `food_id`, `create_time`, `update_time`, `is_deleted`)
+-- VALUES (LAST_INSERT_ID(), 1, NOW(), NOW(), 0);
 
 -- 4. 订单金额区间促销（1.5倍积分）
 -- 说明：订单金额在100元到300元之间时，获得1.5倍积分（积分倍数为1.5）
@@ -353,10 +374,13 @@ VALUES ('黄金会员节假日三倍积分', 1, 1, 3.0, 2, '2024-12-24', '2024-1
 
 -- 6. 综合条件促销（节假日+高额订单+指定商品）
 -- 说明：在节假日期间，订单金额达到150元，且购买了指定商品时，获得2.5倍积分
--- 注意：food_id需要根据实际商品ID调整
+-- 注意：需要先在 marketing_points_rule_food 表中插入关联关系
 INSERT INTO `marketing_points_rule` (`rule_name`, `rule_type`, `rule_status`, `points_multiplier`, 
-    `min_order_amount`, `food_id`, `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
-VALUES ('节假日高额订单指定商品2.5倍积分', 1, 1, 2.5, 150.00, 1, '2024-12-20', '2024-12-31', 30, 11, 1, 1);
+    `min_order_amount`, `holiday_start`, `holiday_end`, `expire_days`, `priority`, `creator`, `updater`) 
+VALUES ('节假日高额订单指定商品2.5倍积分', 1, 1, 2.5, 150.00, '2024-12-20', '2024-12-31', 30, 11, 1, 1);
+-- 关联商品ID为1的商品（假设规则ID为上面插入后生成的ID，实际使用时需要先查询规则ID）
+-- INSERT INTO `marketing_points_rule_food` (`rule_id`, `food_id`, `create_time`, `update_time`, `is_deleted`)
+-- VALUES (LAST_INSERT_ID(), 1, NOW(), NOW(), 0);
 
 -- ----------------------------
 -- 11. 积分抽奖规则表 (points_lottery_rule)
