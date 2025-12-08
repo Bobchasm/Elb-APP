@@ -1,55 +1,6 @@
-<template>
-    <div class="back-btn-container">
-        <BackButton style="margin-top: 2vw;"/>
-    </div>
-  <div class="promotion-list-page">
-    <div class="details-container">
-        <div class="header app-header-fixed">
-            <h3>促销指定商品</h3>
-        </div>
-    </div>
-
-    <div class="product-content">
-      <p v-if="loading" class="loading-state">正在加载商品信息...</p>
-      <p v-else-if="error" class="error-state">加载失败：{{ error }}</p>
-      <p v-else-if="products.length === 0 && !loading" class="empty-state">
-        暂无关联的促销商品或商品已下架。
-      </p>
-
-      <ul v-else class="product-list">
-        <li v-for="product in products" :key="product.id" class="product-item">
-          
-          <div class="product-item-content">
-            <img :src="product.foodImg || defaultImg" class="product-image" :alt="product.foodName">
-            
-            <div class="product-info-group">
-              <span class="product-name">{{ product.businessName }} | {{ product.foodName }}</span>
-              
-              <span class="product-explain">
-                {{ formatExplain(product.foodExplain) }}
-              </span>
-            </div>
-          </div>
-          
-          <div class="product-action-group">
-              <div class="product-price">
-              <span class="price-value">¥{{ product.foodPrice.toFixed(2) }}</span>
-              </div>
-
-              <button @click="navigateToPayment(product.id)" class="buy-now-btn">
-                立即购买
-              </button>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-// 假设这是您的 Axios 或封装后的请求工具
 import request from '../utils/request'; 
 
 const route = useRoute();
@@ -58,7 +9,6 @@ const router = useRouter();
 const products = ref([]);
 const loading = ref(true);
 const error = ref(null);
-// 占位图片，如果您的后端返回图片为空，可以使用此默认值
 const defaultImg = ref('https://via.placeholder.com/60x60?text=Food'); 
 
 // --- 工具函数：限制商品说明字数 ---
@@ -68,9 +18,94 @@ const formatExplain = (explain) => {
     return explain.length > EXPLAIN_LIMIT ? explain.substring(0, EXPLAIN_LIMIT) + '...' : explain;
 };
 
-// --- 认证工具函数 ---
 const getToken = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
+/**
+ * 获取用户ID的多种方式
+ */
+const getUserId = () => {
+    // 调试信息
+    console.log('🔍 获取用户ID，检查存储...');
+    
+    // 方法1: 从localStorage/sessionStorage中获取用户信息
+    try {
+        const userInfoStr = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
+        console.log('userInfo存储:', userInfoStr);
+        if (userInfoStr) {
+            const userInfo = JSON.parse(userInfoStr);
+            console.log('userInfo解析:', userInfo);
+            if (userInfo) {
+                // 尝试各种可能的字段名
+                const userId = userInfo.id || userInfo.userId || userInfo.userId || userInfo.uid;
+                if (userId) {
+                    console.log('✅ 从userInfo获取到用户ID:', userId);
+                    return userId;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('解析用户信息失败:', err);
+    }
+
+    // 方法2: 从localStorage/sessionStorage中直接获取userId
+    const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    console.log('直接存储的userId:', storedUserId);
+    if (storedUserId) {
+        console.log('✅ 从直接存储获取到用户ID:', storedUserId);
+        return storedUserId;
+    }
+
+    // 方法3: 尝试从token中解析（如果是JWT）
+    try {
+        const token = getToken();
+        if (token) {
+            console.log('尝试解析token...');
+            const payload = token.split('.')[1];
+            if (payload) {
+                const decoded = JSON.parse(atob(payload));
+                console.log('Token解析结果:', decoded);
+                const userId = decoded.userId || decoded.id || decoded.sub || decoded.user_id;
+                if (userId) {
+                    console.log('✅ 从token解析到用户ID:', userId);
+                    return userId;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('解析token失败:', err);
+    }
+
+    console.log('❌ 未找到用户ID');
+    return null;
+};
+
+const showAlert = (message, type = 'error') => {
+    if (type === 'error') {
+        alert(`错误: ${message}`);
+    } else {
+        alert(message);
+    }
+};
+
+const handleApiError = (error, fallbackMessage) => {
+    console.error(fallbackMessage, error);
+    if (error.response && error.response.status === 401) {
+        showAlert('登录已过期，请重新登录！');
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        sessionStorage.removeItem('userInfo');
+        localStorage.removeItem('userId');
+        sessionStorage.removeItem('userId');
+        router.push({ path: '/login' });
+    } else if (error.response) {
+        showAlert(`${fallbackMessage} (HTTP ${error.response.status})` + 
+                 (error.response.data?.message ? `: ${error.response.data.message}` : ''));
+    } else {
+        showAlert(fallbackMessage + (error.message ? `: ${error.message}` : ''));
+    }
 };
 
 /**
@@ -110,7 +145,7 @@ const fetchProducts = async (ids) => {
         .then(response => {
             const httpStatus = response.status || 200; 
             console.log(`[DEBUG] foodId: ${foodId} 请求成功响应 (HTTP ${httpStatus})`, response.data);
-            return response;
+            return { ...response, foodId: foodId }; // 添加 foodId 到响应对象
         }) 
         .catch(err => {
             console.error(`🚨 [ERROR] foodId: ${foodId} 请求异常捕获:`, err);
@@ -131,58 +166,67 @@ const fetchProducts = async (ids) => {
         const fetchedProducts = [];
         const failedRequests = [];
 
-        responses.forEach((response, index) => {
-            const foodId = ids[index];
+        responses.forEach((response) => {
+            const foodId = response.foodId;
 
             if (response.isError) {
                 failedRequests.push(foodId);
                 return; 
             }
 
-            // 检查业务 success 标记
-            if (response.data && response.data.success) {
-                
-                // 核心修正：使用您提供的标准结构 response.data.data
-                const foodDetail = response.data.data; 
-                
-                // 确保 foodDetail 确实是一个对象
-                if (!foodDetail || typeof foodDetail !== 'object' || Array.isArray(foodDetail)) {
-                    failedRequests.push(foodId);
-                    console.error(`🚨 [DEBUG] foodId: ${foodId} 致命错误：后端返回的 data.data 字段为空或结构不正确！`, response.data);
-                    return;
+            // 关键修改：根据你的API文档，响应结构可能是两种形式：
+            // 1. { success: true, data: { ...商品数据... } }
+            // 2. 直接是商品数据对象 { id: 1, foodName: "...", ... }
+            let foodDetail = null;
+            
+            // 检查是否是包裹结构
+            if (response.data && typeof response.data === 'object') {
+                if (response.data.success !== undefined) {
+                    // 有 success 字段，是包裹结构
+                    if (response.data.success === true && response.data.data) {
+                        foodDetail = response.data.data;
+                    } else {
+                        // 业务失败
+                        failedRequests.push(foodId);
+                        console.warn(`⚠️ 获取 foodId: ${foodId} 详情业务失败: ${response.data.message || '未知错误'}`);
+                        return;
+                    }
+                } else if (response.data.id !== undefined) {
+                    // 没有 success 字段，但是有 id 字段，说明是直接的商品数据
+                    foodDetail = response.data;
                 }
-                    
-                // ⭐⭐⭐ 关键调试日志：请务必查看此日志的值！ ⭐⭐⭐
-                // 使用 ?? 确保即使字段缺失也不会报错
-                const shelveStatus = foodDetail.shelveStatus ?? 'N/A';
-                const deletedStatus = foodDetail.deleted ?? 'N/A';
-                console.log(`[DEBUG] foodId: ${foodId} 状态检查: shelveStatus=${shelveStatus}, deleted=${deletedStatus}`); 
+            }
 
-                // 过滤逻辑：要求 shelveStatus=1 (上架) 且 deleted=false (未删除)
-                const isShelved = shelveStatus === 1 || shelveStatus === '1'; 
-                const isNotDeleted = deletedStatus === false || deletedStatus === 0 || deletedStatus === '0'; 
-
-                if (isShelved && isNotDeleted) {
-                    // 通过过滤条件，加入显示列表
-                    fetchedProducts.push(foodDetail);
-                } else {
-                    // 未通过过滤条件
-                    failedRequests.push(foodId);
-                    const reason = (deletedStatus === true || deletedStatus === 1) 
-                        ? '已删除' 
-                        : (!isShelved ? '已下架 (Status:' + shelveStatus + ')' : '其他过滤');
-                    console.warn(`⚠️ foodId: ${foodId} 未通过前端显示条件，被过滤 (${reason})`);
-                }
-            } else {
-                // 请求返回但业务失败 (success: false)
+            if (!foodDetail) {
                 failedRequests.push(foodId);
-                const statusDisplay = response.status || '200 (业务失败)'; 
-                console.warn(`⚠️ 获取 foodId: ${foodId} 详情失败 (HTTP 状态码: ${statusDisplay}, 业务消息: ${response.data?.message || '后端业务逻辑失败'})`);
+                console.error(`🚨 [DEBUG] foodId: ${foodId} 数据解析失败，响应结构:`, response.data);
+                return;
+            }
+                    
+            // ⭐⭐⭐ 关键调试日志：请务必查看此日志的值！ ⭐⭐⭐
+            const shelveStatus = foodDetail.shelveStatus ?? 'N/A';
+            const deletedStatus = foodDetail.deleted ?? 'N/A';
+            console.log(`[DEBUG] foodId: ${foodId} 状态检查: shelveStatus=${shelveStatus}, deleted=${deletedStatus}`); 
+
+            // 过滤逻辑：要求 shelveStatus=1 (上架) 且 deleted=false (未删除)
+            const isShelved = shelveStatus === 1 || shelveStatus === '1'; 
+            const isNotDeleted = deletedStatus === false || deletedStatus === 0 || deletedStatus === '0'; 
+
+            if (isShelved && isNotDeleted) {
+                // 通过过滤条件，加入显示列表
+                fetchedProducts.push(foodDetail);
+            } else {
+                // 未通过过滤条件
+                failedRequests.push(foodId);
+                const reason = (deletedStatus === true || deletedStatus === 1) 
+                    ? '已删除' 
+                    : (!isShelved ? '已下架 (Status:' + shelveStatus + ')' : '其他过滤');
+                console.warn(`⚠️ foodId: ${foodId} 未通过前端显示条件，被过滤 (${reason})`);
             }
         });
         
         products.value = fetchedProducts;
-        console.log(`✅ 成功加载 ${fetchedProducts.length} 条促销商品详情.`);
+        console.log(`✅ 成功加载 ${fetchedProducts.length} 条促销商品详情.`, fetchedProducts);
         
         if (failedRequests.length > 0) {
             console.warn(`部分商品请求失败或无法显示 (ID: ${failedRequests.join(', ')})`);
@@ -197,37 +241,122 @@ const fetchProducts = async (ids) => {
 };
 
 /**
- * 跳转到支付页面 (接受商品ID)
+ * 跳转到购买流程 - 修改后的版本
+ * 1. 先调用购物车接口添加商品
+ * 2. 然后跳转到地址选择页
  */
-const navigateToPayment = (productId) => {
-  if (productId) {
-    console.log(`🛒 跳转到支付页面，购买商品 ID: ${productId}`);
-    router.push({ 
-      path: '/payment', 
-      query: { productId: productId } 
-    });
-  } else {
-    console.warn('⚠️ 缺少商品 ID，无法跳转到支付页面。');
-  }
+const navigateToPayment = async (product) => {
+    if (!product || !product.id) {
+        console.warn('⚠️ 缺少商品信息，无法进行购买。');
+        showAlert('商品信息不完整，请刷新页面重试');
+        return;
+    }
+
+    console.log('🛒 开始购买，检查用户信息...');
+
+    const token = getToken();
+    if (!token) {
+        console.error('❌ 未找到用户认证信息，请先登录');
+        showAlert('请先登录以进行购买');
+        router.push({ path: '/login' });
+        return;
+    }
+
+    try {
+        console.log(`🛒 开始购买商品: ${product.foodName} (ID: ${product.id})`);
+        
+        // 1. 获取当前用户ID
+        const userId = getUserId();
+        
+        if (!userId) {
+            showAlert('无法获取用户信息，请重新登录');
+            localStorage.removeItem('userInfo');
+            sessionStorage.removeItem('userInfo');
+            localStorage.removeItem('userId');
+            sessionStorage.removeItem('userId');
+            router.push({ path: '/login' });
+            return;
+        }
+
+        console.log('👤 当前用户ID:', userId);
+
+        // 2. 检查商家ID
+        if (!product.businessId) {
+            showAlert('商品信息不完整，缺少商家信息');
+            return;
+        }
+
+        // 3. 先将商品加入购物车（数量默认为1）
+        console.log(`🛒 正在将商品加入购物车: foodId=${product.id}, quantity=1`);
+        
+        const addCartResponse = await request.get('/api/carts/add', {
+            params: {
+                foodId: product.id,
+                quantity: 1
+            },
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📦 购物车响应:', addCartResponse);
+
+        // 检查购物车接口返回
+        if (!addCartResponse.data || addCartResponse.data.success === false) {
+            const errorMsg = addCartResponse.data?.message || '加入购物车失败';
+            console.error('❌ 加入购物车失败:', errorMsg);
+            showAlert(errorMsg);
+            return;
+        }
+
+        console.log('✅ 成功加入购物车');
+
+        // 4. 跳转到地址选择页
+        console.log(`📍 跳转到地址选择页面，商家ID: ${product.businessId}`);
+        
+        router.push({ 
+            path: '/userAddress', 
+            query: { 
+                businessId: product.businessId
+            } 
+        });
+
+    } catch (err) {
+        console.error('❌ 购买流程失败:', err);
+        console.error('❌ 错误堆栈:', err.stack);
+        
+        if (err.response?.status === 401 || err.message.includes('登录') || err.message.includes('认证')) {
+            showAlert('登录已过期，请重新登录');
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            sessionStorage.removeItem('userInfo');
+            router.push({ path: '/login' });
+        } else {
+            const errorMsg = err.response?.data?.message || err.message || '请稍后重试';
+            showAlert(`购买失败: ${errorMsg}`);
+        }
+    }
 };
+
 
 // 组件挂载时执行
 onMounted(() => {
-  const idsParam = route.query.ids; 
-  let foodIdsArray = [];
-  
-  if (idsParam) {
-    foodIdsArray = idsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-  }
-  
-  // 如果 URL 中没有提供 ids，使用默认值 [1, 2, 3, 4] 进行测试
-  if (foodIdsArray.length === 0) {
-      foodIdsArray = [1, 2, 3, 4]; 
-  }
+    const idsParam = route.query.ids; 
+    let foodIdsArray = [];
+    
+    if (idsParam) {
+        foodIdsArray = idsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    }
+    
+    // 如果 URL 中没有提供 ids，使用默认值 [1, 2, 3, 4] 进行测试
+    if (foodIdsArray.length === 0) {
+        foodIdsArray = [1, 2, 3, 4]; 
+    }
 
-  console.log('🚀 页面获取到的 foodIds (真实请求):', foodIdsArray);
-  
-  fetchProducts(foodIdsArray);
+    console.log('🚀 页面获取到的 foodIds (真实请求):', foodIdsArray);
+    
+    fetchProducts(foodIdsArray);
 });
 
 // 将需要暴露给模板的变量和函数导出
@@ -239,9 +368,57 @@ defineExpose({
     navigateToPayment,
     defaultImg
 });
-
 </script>
 
+<template>
+        <div class="back-btn-container">
+        <BackButton style="margin-top: 2vw;"/>
+    </div>
+        <!-- 页面标题 -->
+        <div class="details-container">
+        <div class="header app-header-fixed">
+            <h3>促销商品</h3>
+        </div>
+
+
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading">
+            加载中...
+        </div>
+
+        <!-- 错误状态 -->
+        <div v-if="error && !loading" class="error">
+            {{ error }}
+        </div>
+
+        <!-- 商品列表 -->
+        <div v-if="!loading && !error && products.length > 0" class="product-list">
+            <div v-for="product in products" :key="product.id" class="product-card">
+                <div class="product-image">
+                    <img :src="product.foodImg || defaultImg" :alt="product.foodName" @error="defaultImg" />
+                </div>
+                <div class="product-info">
+                    <h3>{{ product.businessName ? `${product.businessName} | ${product.foodName}` : product.foodName }}</h3>
+                    <p class="product-description">{{ formatExplain(product.foodExplain) }}</p>
+                    <div class="product-price">
+                        <span class="current-price">¥{{ product.foodPrice }}</span>
+                        <span v-if="product.originalPrice" class="original-price">¥{{ product.originalPrice }}</span>
+                    </div>
+                    <div class="product-actions">
+                        <button class="buy-btn" @click="navigateToPayment(product)">
+                            立即购买
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div v-if="!loading && !error && products.length === 0" class="empty">
+            暂无促销商品
+        </div>
+    </div>
+</template>
 
 <style scoped>
 /*试图统一header */
@@ -286,142 +463,133 @@ defineExpose({
     z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 
-/* --- 整体容器和头部样式保持不变 --- */
-.promotion-list-page {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 0 15px 20px;
-}
-
 .page-header {
-    padding: 15px 0;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 20px;
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-.header-title {
-    font-size: 20px;
+.page-header h1 {
+    font-size: 24px;
     color: #333;
     font-weight: bold;
+}
+
+.loading, .error, .empty {
+    text-align: center;
+    padding: 50px;
+    font-size: 16px;
+    color: #666;
+}
+
+.error {
+    color: #f56c6c;
 }
 
 .product-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
 }
 
-/* --- ⭐ 商品列表项样式更新 (参考用户提供的样式) ⭐ --- */
-.product-item {
-    /* 统一列表项基础样式 */
-    padding: 12px;
-    background-color: #fff;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    
-    /* 实现主要内容和操作按钮的分隔 */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    transition: transform 0.3s ease-in-out, background-color 0.3s; 
-    border-bottom: 1px solid #f0f0f0; /* 结合用户提供的 business-list li 样式 */
+.product-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
 }
 
-.product-item:hover {
-    background-color: #f9f9f9;
-    transform: translateY(-2px);
+.product-card:hover {
+    transform: translateY(-5px);
 }
 
-/* --- 新增图片和信息区域的 Flex 容器 --- */
-.product-item-content {
-    display: flex;
-    align-items: center;
-    flex-grow: 1; /* 占据主要空间 */
-    margin-right: 15px; 
-}
-
-/* --- 新增商品图片样式 --- */
 .product-image {
-    width: 60px;
-    height: 60px;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 6px;
-    margin-right: 12px;
-    flex-shrink: 0; /* 防止图片被压缩 */
 }
 
-/* --- 信息组样式 --- */
-.product-info-group {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex-grow: 1; 
-    min-width: 0; /* 允许文本溢出和省略号生效 */
+.product-info {
+    padding: 15px;
 }
 
-.product-name {
-    font-size: 15px;
+.product-info h3 {
+    font-size: 18px;
     color: #333;
-    font-weight: bold; 
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-bottom: 10px;
+    font-weight: bold;
 }
 
-/* --- ⭐ 商品说明样式 ⭐ --- */
-.product-explain {
-    font-size: 12px;
-    color: #999;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* --- 价格和按钮容器 (右侧区域) --- */
-.product-action-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end; /* 价格和按钮靠右对齐 */
-    flex-shrink: 0;
+.product-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.4;
 }
 
 .product-price {
-    margin-bottom: 5px; /* 价格和按钮留出空间 */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
-/* --- 价格值样式 --- */
-.price-value {
-    font-size: 16px;
+.current-price {
+    font-size: 20px;
+    color: #e4393c;
     font-weight: bold;
-    color: #ff5722;
-    display: block;
+}
+
+.original-price {
+    font-size: 14px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+.product-actions {
     text-align: right;
 }
 
-/* 立即购买按钮 */
-.buy-now-btn {
-    background-color: #ff5722; 
-    color: white;
+.buy-btn {
+    background-color: #0097FF;
+    color: #fff;
     border: none;
+    padding: 8px 20px;
     border-radius: 20px;
-    padding: 6px 12px; /* 减小 padding 适应新布局 */
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s;
-    flex-shrink: 0;
+    transition: all 0.3s ease;
 }
 
-.buy-now-btn:hover {
-    background-color: #e64a19;
+.buy-btn:hover {
+    background-color: #0081e6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 151, 255, 0.3);
 }
 
-/* 状态信息 */
-.loading-state, .error-state, .empty-state {
-    text-align: center;
-    padding: 40px 0;
-    color: #999;
+.buy-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .promotion-container {
+        padding: 10px;
+    }
+    
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .product-image {
+        height: 150px;
+    }
 }
 </style>
