@@ -3,6 +3,7 @@ package com.tju.elm_bk.service;
 import com.tju.elm_bk.pojo.dto.FoodCreateDTO;
 import com.tju.elm_bk.pojo.dto.FoodDTO;
 import com.tju.elm_bk.pojo.dto.FoodUpdateDTO;
+import com.tju.elm_bk.pojo.vo.FoodDetailVO;
 import com.tju.elm_bk.pojo.vo.FoodItemVO;
 import com.tju.elm_bk.pojo.vo.FoodVO;
 
@@ -28,6 +29,13 @@ public interface FoodService {
     Long modifyFoodMessage(FoodUpdateDTO foodUpdateDTO);
 
     Long deleteFood(Long foodId);
+
+    /**
+     * 根据foodId查询已上架且未删除的food详细信息及所属商铺名字
+     * @param foodId 食品ID
+     * @return FoodDetailVO
+     */
+    FoodDetailVO getFoodDetailByFoodId(Long foodId);
 
 
 }

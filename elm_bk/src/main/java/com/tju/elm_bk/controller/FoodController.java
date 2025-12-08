@@ -5,6 +5,7 @@ import com.tju.elm_bk.pojo.dto.FoodDTO;
 import com.tju.elm_bk.pojo.dto.FoodUpdateDTO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.FoodService;
+import com.tju.elm_bk.pojo.vo.FoodDetailVO;
 import com.tju.elm_bk.pojo.vo.FoodItemVO;
 import com.tju.elm_bk.pojo.vo.FoodVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,6 +81,12 @@ public class FoodController {
     //@PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> setFoodShelveStatus(@RequestParam Long foodId) {
         return HttpResult.success(foodService.deleteFood(foodId));
+    }
+
+    @GetMapping("/detail/{foodId}")
+    @Operation(summary = "根据foodId查询已上架且未删除的food详细信息及所属商铺名字")
+    public HttpResult<FoodDetailVO> getFoodDetailByFoodId(@PathVariable Long foodId) {
+        return HttpResult.success(foodService.getFoodDetailByFoodId(foodId));
     }
 
 }
