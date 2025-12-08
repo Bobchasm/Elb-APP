@@ -15,6 +15,7 @@ import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.FoodService;
 import com.tju.elm_bk.utils.ObjectCopyUtil;
 import com.tju.elm_bk.utils.SecurityUtils;
+import com.tju.elm_bk.pojo.vo.FoodDetailVO;
 import com.tju.elm_bk.pojo.vo.FoodItemVO;
 import com.tju.elm_bk.pojo.vo.FoodVO;
 import org.springframework.beans.BeanUtils;
@@ -221,5 +222,10 @@ public class FoodServiceImpl implements FoodService {
 
         foodMapper.deleteFood(foodId);
         return foodId;
+    }
+
+    @Override
+    public FoodDetailVO getFoodDetailByFoodId(Long foodId) {
+        return foodMapper.selectFoodDetailVOByFoodId(foodId);
     }
 }

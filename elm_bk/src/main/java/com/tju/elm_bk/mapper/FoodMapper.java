@@ -2,6 +2,7 @@ package com.tju.elm_bk.mapper;
 import java.util.List;
 
 import com.tju.elm_bk.pojo.entity.Food;
+import com.tju.elm_bk.pojo.vo.FoodDetailVO;
 import com.tju.elm_bk.pojo.vo.FoodItemVO;
 import com.tju.elm_bk.pojo.vo.FoodVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -51,5 +52,12 @@ public interface FoodMapper {
             "LIMIT #{limit}" +
             "</script>")
     List<Food> searchByKeyword(@Param("keyword") String keyword, @Param("limit") Integer limit);
+
+    /**
+     * 根据foodId查询已上架且未删除的food详细信息及所属商铺名字
+     * @param foodId 食品ID
+     * @return FoodDetailVO
+     */
+    FoodDetailVO selectFoodDetailVOByFoodId(Long foodId);
 
 }
