@@ -32,13 +32,13 @@
           </div>
           
           <div class="product-action-group">
-             <div class="product-price">
+              <div class="product-price">
               <span class="price-value">¥{{ product.foodPrice.toFixed(2) }}</span>
-             </div>
+              </div>
 
-             <button @click="navigateToPayment(product.id)" class="buy-now-btn">
-               立即购买
-             </button>
+              <button @click="navigateToPayment(product.id)" class="buy-now-btn">
+                立即购买
+              </button>
           </div>
         </li>
       </ul>
@@ -49,18 +49,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-// ⭐ 恢复真实网络请求
+// 假设这是您的 Axios 或封装后的请求工具
 import request from '../utils/request'; 
-// 假设 toast 模块可用，用于错误提示
-// import { toast } from 'your-toast-library'; 
 
 const route = useRoute();
 const router = useRouter();
 
-// 响应式数据
 const products = ref([]);
 const loading = ref(true);
 const error = ref(null);
+// 占位图片，如果您的后端返回图片为空，可以使用此默认值
 const defaultImg = ref('https://via.placeholder.com/60x60?text=Food'); 
 
 // --- 工具函数：限制商品说明字数 ---
@@ -72,12 +70,11 @@ const formatExplain = (explain) => {
 
 // --- 认证工具函数 ---
 const getToken = () => {
-    // 统一从本地存储获取 token 的逻辑
     return localStorage.getItem('token') || sessionStorage.getItem('token');
 };
 
 /**
- * 核心逻辑：恢复真实请求，添加调试信息
+ * 核心逻辑：获取商品详情
  */
 const fetchProducts = async (ids) => {
     const token = getToken();
@@ -89,54 +86,36 @@ const fetchProducts = async (ids) => {
     }
 
     if (!token) {
-        console.error('❌ [DEBUG] 认证失败：getToken() 返回空值。请检查登录状态和存储！');
+        console.error('❌ [DEBUG] 认证失败：getToken() 返回空值。');
         loading.value = false;
         error.value = '请先登录以查看商品详情。';
-        // 实际应用中建议 router.push({ path: '/login' });
         return;
     }
     
     loading.value = true;
     error.value = null;
     
-    // ⭐ 调试信息：打印使用的 token 状态
     console.log(`[DEBUG] Authorization Token (Exists): ${!!token}`);
     
     // 1. 创建所有 API 请求的 Promise 数组
     const detailPromises = ids.map(foodId => {
         const url = `/api/foods/detail/${foodId}`;
-        
-        // ⭐ 调试信息：打印请求 URL
         console.log(`[DEBUG] 准备发送请求: ${url}`);
         
-        // 恢复真实请求：手动在请求中添加 Authorization Header
         return request.get(url, {
             headers: { 'Authorization': `Bearer ${token}` },
-            // 保持 validateStatus 设置，确保非 2xx 状态码进入 .catch
+            // 允许接收非 2xx 状态码，以便检查业务错误
             validateStatus: function (status) { return status >= 200 && status < 600; }
         })
         .then(response => {
-            // ⭐ 调试信息：请求成功响应
-            console.log(`[DEBUG] foodId: ${foodId} 请求成功响应 (HTTP ${response.status})`, response);
+            const httpStatus = response.status || 200; 
+            console.log(`[DEBUG] foodId: ${foodId} 请求成功响应 (HTTP ${httpStatus})`, response.data);
             return response;
         }) 
         .catch(err => {
-            // ⭐ 调试信息：请求失败异常捕获
             console.error(`🚨 [ERROR] foodId: ${foodId} 请求异常捕获:`, err);
-            
-            // 检查 Axios 错误对象结构
-            if (err.response) {
-                console.error(`🚨 [ERROR] 后端返回状态码: ${err.response.status}, 业务消息: ${err.response.data?.message || 'N/A'}`);
-            } else if (err.request) {
-                console.error('🚨 [ERROR] 请求已发出，但未收到响应 (可能是代理或 CORS 失败):', err.request);
-            } else {
-                console.error('🚨 [ERROR] 请求配置失败或网络中断:', err.message);
-            }
-
-            // 返回一个结构化的错误对象，确保 Promise.all 不中断
             return { 
                 isError: true, 
-                // 使用 NETWORK_ERR 或 AUTH_MISSING 作为默认状态码，以便区分
                 status: err.response?.status || 'NETWORK_ERR',
                 data: err.response?.data || { message: err.message || '底层网络或配置失败' },
                 foodId: foodId
@@ -155,38 +134,49 @@ const fetchProducts = async (ids) => {
         responses.forEach((response, index) => {
             const foodId = ids[index];
 
-            // 1. 检查是否为我们自定义的错误对象（底层失败或网络异常）
             if (response.isError) {
                 failedRequests.push(foodId);
-                const statusMsg = response.status === 'NETWORK_ERR' ? '网络/配置错误' : response.status;
-                const errMsg = response.data?.message || '请求配置或底层网络失败';
-                
-                console.warn(`⚠️ 获取 foodId: ${foodId} 详情失败 (状态: ${statusMsg}, 消息: ${errMsg})`);
-                
-                // 强制要求重新登录（例如 401 错误）
-                if (response.status === 401) {
-                    error.value = '认证失败，请重新登录！';
-                }
                 return; 
             }
 
-            // 2. 检查成功的 HTTP 状态码 (200) 和业务 success 标记
-            if (response.status === 200 && response.data && response.data.success) {
-                // 成功获取数据，且 success 为 true
-                const foodDetail = response.data.data;
+            // 检查业务 success 标记
+            if (response.data && response.data.success) {
                 
-                // 3. 仅保留“已上架”且“未删除”的商品
-                if (foodDetail && foodDetail.shelveStatus === 1 && foodDetail.deleted === false) {
+                // 核心修正：使用您提供的标准结构 response.data.data
+                const foodDetail = response.data.data; 
+                
+                // 确保 foodDetail 确实是一个对象
+                if (!foodDetail || typeof foodDetail !== 'object' || Array.isArray(foodDetail)) {
+                    failedRequests.push(foodId);
+                    console.error(`🚨 [DEBUG] foodId: ${foodId} 致命错误：后端返回的 data.data 字段为空或结构不正确！`, response.data);
+                    return;
+                }
+                    
+                // ⭐⭐⭐ 关键调试日志：请务必查看此日志的值！ ⭐⭐⭐
+                // 使用 ?? 确保即使字段缺失也不会报错
+                const shelveStatus = foodDetail.shelveStatus ?? 'N/A';
+                const deletedStatus = foodDetail.deleted ?? 'N/A';
+                console.log(`[DEBUG] foodId: ${foodId} 状态检查: shelveStatus=${shelveStatus}, deleted=${deletedStatus}`); 
+
+                // 过滤逻辑：要求 shelveStatus=1 (上架) 且 deleted=false (未删除)
+                const isShelved = shelveStatus === 1 || shelveStatus === '1'; 
+                const isNotDeleted = deletedStatus === false || deletedStatus === 0 || deletedStatus === '0'; 
+
+                if (isShelved && isNotDeleted) {
+                    // 通过过滤条件，加入显示列表
                     fetchedProducts.push(foodDetail);
                 } else {
+                    // 未通过过滤条件
                     failedRequests.push(foodId);
-                    const reason = foodDetail ? (foodDetail.deleted ? '已删除' : '已下架') : '数据结构异常';
-                    console.warn(`⚠️ foodId: ${foodId} 被业务逻辑过滤 (${reason})`);
+                    const reason = (deletedStatus === true || deletedStatus === 1) 
+                        ? '已删除' 
+                        : (!isShelved ? '已下架 (Status:' + shelveStatus + ')' : '其他过滤');
+                    console.warn(`⚠️ foodId: ${foodId} 未通过前端显示条件，被过滤 (${reason})`);
                 }
             } else {
-                // 请求返回但业务失败 (非 200，或 200 但 success: false)
+                // 请求返回但业务失败 (success: false)
                 failedRequests.push(foodId);
-                const statusDisplay = response.status || 'N/A';
+                const statusDisplay = response.status || '200 (业务失败)'; 
                 console.warn(`⚠️ 获取 foodId: ${foodId} 详情失败 (HTTP 状态码: ${statusDisplay}, 业务消息: ${response.data?.message || '后端业务逻辑失败'})`);
             }
         });
@@ -230,9 +220,9 @@ onMounted(() => {
     foodIdsArray = idsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
   }
   
-  // 如果 URL 中没有提供 ids，使用默认值 [1, 2, 3, 4, 5] 进行测试
+  // 如果 URL 中没有提供 ids，使用默认值 [1, 2, 3, 4] 进行测试
   if (foodIdsArray.length === 0) {
-      foodIdsArray = [1, 2, 3, 4, 5]; 
+      foodIdsArray = [1, 2, 3, 4]; 
   }
 
   console.log('🚀 页面获取到的 foodIds (真实请求):', foodIdsArray);
@@ -240,7 +230,18 @@ onMounted(() => {
   fetchProducts(foodIdsArray);
 });
 
+// 将需要暴露给模板的变量和函数导出
+defineExpose({
+    products,
+    loading,
+    error,
+    formatExplain,
+    navigateToPayment,
+    defaultImg
+});
+
 </script>
+
 
 <style scoped>
 /*试图统一header */
@@ -287,45 +288,45 @@ onMounted(() => {
 
 /* --- 整体容器和头部样式保持不变 --- */
 .promotion-list-page {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 15px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 15px 20px;
 }
 
 .page-header {
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
 }
 
 .header-title {
-  font-size: 20px;
-  color: #333;
-  font-weight: bold;
+    font-size: 20px;
+    color: #333;
+    font-weight: bold;
 }
 
 .product-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 /* --- ⭐ 商品列表项样式更新 (参考用户提供的样式) ⭐ --- */
 .product-item {
-  /* 统一列表项基础样式 */
-  padding: 12px;
-  background-color: #fff;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
-  /* 实现主要内容和操作按钮的分隔 */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  transition: transform 0.3s ease-in-out, background-color 0.3s; 
-  border-bottom: 1px solid #f0f0f0; /* 结合用户提供的 business-list li 样式 */
+    /* 统一列表项基础样式 */
+    padding: 12px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    
+    /* 实现主要内容和操作按钮的分隔 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    transition: transform 0.3s ease-in-out, background-color 0.3s; 
+    border-bottom: 1px solid #f0f0f0; /* 结合用户提供的 business-list li 样式 */
 }
 
 .product-item:hover {
@@ -353,30 +354,30 @@ onMounted(() => {
 
 /* --- 信息组样式 --- */
 .product-info-group {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex-grow: 1; 
-  min-width: 0; /* 允许文本溢出和省略号生效 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1; 
+    min-width: 0; /* 允许文本溢出和省略号生效 */
 }
 
 .product-name {
-  font-size: 15px;
-  color: #333;
-  font-weight: bold; 
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 15px;
+    color: #333;
+    font-weight: bold; 
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- ⭐ 商品说明样式 ⭐ --- */
 .product-explain {
-  font-size: 12px;
-  color: #999;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 12px;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- 价格和按钮容器 (右侧区域) --- */
@@ -393,34 +394,34 @@ onMounted(() => {
 
 /* --- 价格值样式 --- */
 .price-value {
-  font-size: 16px;
-  font-weight: bold;
-  color: #ff5722;
-  display: block;
-  text-align: right;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff5722;
+    display: block;
+    text-align: right;
 }
 
 /* 立即购买按钮 */
 .buy-now-btn {
-  background-color: #ff5722; 
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 6px 12px; /* 减小 padding 适应新布局 */
-  font-size: 13px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  flex-shrink: 0;
+    background-color: #ff5722; 
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 12px; /* 减小 padding 适应新布局 */
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
 }
 
 .buy-now-btn:hover {
-  background-color: #e64a19;
+    background-color: #e64a19;
 }
 
 /* 状态信息 */
 .loading-state, .error-state, .empty-state {
-  text-align: center;
-  padding: 40px 0;
-  color: #999;
+    text-align: center;
+    padding: 40px 0;
+    color: #999;
 }
 </style>
