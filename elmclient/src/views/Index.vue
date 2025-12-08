@@ -247,6 +247,15 @@
                         <div class="promotion-content">
                             <span class="promotion-text">{{ currentPointsRule.ruleName }}</span>
                         </div>
+                        <div class="promotion-action">
+                            <button 
+                                v-if="currentPointsRule.hasPromotionLink"
+                                @click="navigateToPromotion(currentPointsRule.foodIds)"
+                                class="jump-button"
+                            >
+                                点击跳转
+                            </button>
+                        </div>
                         <div class="promotion-indicator">
                             <span class="current-index">{{ currentPointsIndex + 1 }}</span>
                             <span class="separator">/</span>
@@ -782,7 +791,28 @@ export default {
             return ratingMap.value[businessId] || '1.0';
         };
 
-        // 获取积分规则列表
+// 新增的跳转函数（使用 foodIds 数组）
+const navigateToPromotion = (foodIds) => {
+    if (Array.isArray(foodIds) && foodIds.length > 0) {
+        
+        // 1. 将 foodIds 数组转换为逗号分隔的字符串
+        const idsString = foodIds.join(',');
+        
+        console.log(`🔗 尝试跳转。关联的 Food IDs 列表: ${idsString}`);
+        
+        // 2. ⭐ 修改点：通过 query 参数传递 ids 字符串
+        router.push({ 
+            path: '/PromotionList',
+            query: {
+                ids: idsString // 使用 'ids' 作为查询参数的 key
+            }
+        }); 
+    } else {
+        console.warn('⚠️ foodIds 为空或不是有效数组，无法跳转到指定商品页面');
+    }
+};
+
+// 获取积分规则列表 (修改后的版本)
 const fetchPointsRules = async () => {
     try {
         console.log('🔍 开始获取积分规则列表...');
@@ -801,6 +831,7 @@ const fetchPointsRules = async () => {
         }
         
         // 2. 调用接口获取积分规则
+        // ⭐ 修改点 A: 显式添加 Header 以解决 401 Unauthorized 问题
         const response = await request.get('/api/marketing/points/rules', {
             params: {
                 ruleType: 1, // 1-促销积分
@@ -808,13 +839,20 @@ const fetchPointsRules = async () => {
                 pageNum: 1,
                 pageSize: 100
             },
+            headers: {
+                // 根据您的 API 文档，同时尝试设置两种可能的认证头部
+                'Authorization': `Bearer ${token}`, // 标准 JWT/OAuth2 认证格式
+               // 'token': token // API 文档中提到的自定义 Header 格式
+            },
             // 允许所有响应进入 .then 块，让代码可以检查 status 和 response.data
             validateStatus: function (status) {
                 return status >= 200 && status < 600; 
             }
         }).catch(error => {
             // 捕获纯网络错误 (如断网、请求超时、CORS预检失败等)
-            console.warn('⚠️ 获取积分规则请求失败 (网络或客户端错误):', error?.response?.status || error.message);
+            // ⭐ 优化日志，如果存在 HTTP 状态码，打印出来
+            const status = error?.response?.status;
+            console.warn(`⚠️ 获取积分规则请求失败 (状态码: ${status || '无'} 或网络错误):`, error?.message);
             
             enabledPointsRules.value = [];
             currentPointsRule.value = null;
@@ -829,41 +867,43 @@ const fetchPointsRules = async () => {
         }
         
         console.log('📊 积分规则接口响应状态:', response?.status);
-        console.log('📊 积分规则接口响应数据:', response);
         
         let rulesData = [];
         const responseData = response.data || response;
         const httpStatus = response.status;
 
         // 3. 处理非 200 HTTP 状态码 (如 401, 403, 500)
-        // 仅在 httpStatus 明确存在且不为 200 时执行
         if (httpStatus && httpStatus !== 200) {
-            console.warn(`⚠️ 积分规则接口返回非200 HTTP状态码: ${httpStatus}，清空数据并停止轮播`);
+            // ⭐ 优化 401 错误提示，避免误导
+            let warningMsg = `⚠️ 积分规则接口返回非200 HTTP状态码: ${httpStatus}`;
+            if (httpStatus === 401) {
+                warningMsg += '，权限认证失败 (Unauthorized)。请检查 Token 有效性或登录状态。';
+            } else {
+                warningMsg += '，清空数据并停止轮播。';
+            }
+            console.warn(warningMsg);
+            
             enabledPointsRules.value = [];
             currentPointsRule.value = null;
             stopPointsCarousel();
             return;
         }
 
-        // 4. 检查响应数据中的 success 字段 (处理 Access Denied 等业务错误)
+        // 4. 检查响应数据中的 success 字段 (处理业务错误)
         if (responseData && responseData.success !== undefined) {
-            // 格式1: {success: true/false, data: [...]}
             if (responseData.success) {
-                // 业务成功
                 rulesData = Array.isArray(responseData.data) ? responseData.data : [];
                 console.log('✅ 使用标准响应格式获取积分规则');
             } else {
-                // 业务失败 (例如：Access Denied，命中您日志中的 Index.vue:862 行)
                 console.warn('⚠️ 积分规则接口业务失败:', responseData.message); 
                 enabledPointsRules.value = [];
                 currentPointsRule.value = null;
                 stopPointsCarousel();
-                return; // 业务失败，终止执行
+                return;
             }
         } 
-        // 5. 处理直接返回数组或其他格式 (如果 success 字段不存在)
+        // 5. 处理直接返回数组或其他格式
         else if (Array.isArray(responseData)) {
-            // 格式2 & 3: 直接返回数组
             rulesData = responseData;
             console.log('✅ 使用直接数组格式获取积分规则');
         } else {
@@ -874,7 +914,7 @@ const fetchPointsRules = async () => {
             return;
         }
 
-        // 6. 过滤和排序数据 (成功逻辑)
+        // 6. 过滤、标记和排序数据 (成功逻辑)
         enabledPointsRules.value = rulesData
             .filter(rule => 
                 rule && 
@@ -882,6 +922,12 @@ const fetchPointsRules = async () => {
                 rule.ruleStatus === 1 && // 启用状态
                 rule.ruleName // 必须有规则名称
             )
+            // ⭐ 修改点 B: 检查 foodIds 数组并添加 hasPromotionLink 标记
+            .map(rule => ({
+                ...rule,
+                // 如果 foodIds 存在且是长度大于 0 的数组，则标记为 true
+                hasPromotionLink: Array.isArray(rule.foodIds) && rule.foodIds.length > 0
+            }))
             .sort((a, b) => {
                 const priorityA = a.priority || 0;
                 const priorityB = b.priority || 0;
@@ -1722,6 +1768,7 @@ const fetchPointsRules = async () => {
             currentPointsRule,
             prevPointsRule,
             nextPointsRule,
+            navigateToPromotion,
             getPrevIndex,
             getNextIndex,
             getRankClass,
@@ -2386,6 +2433,8 @@ const fetchPointsRules = async () => {
     align-items: center;
     width: 100%;
     padding: 1vw 0;
+    /* ⭐ 确保内容、按钮、指示器能分散对齐 */
+    justify-content: space-between; /* 这一行很重要，确保内部元素分散对齐 */
     animation: slideInUp 0.5s ease-out;
 }
 
@@ -2407,8 +2456,55 @@ const fetchPointsRules = async () => {
 }
 
 .wrapper .points-promotion-carousel .promotion-content {
+    /* ⭐ 新增：给右侧留出空间，与新增的按钮容器分隔 */
+    margin-right: 2vw;
     flex: 1;
     overflow: hidden;
+}
+
+/* 新增的按钮容器样式 */
+.wrapper .points-promotion-carousel .promotion-action {
+    /* 确保容器不会被挤压，给按钮预留空间 */
+    flex-shrink: 0; 
+    
+    /* 增加一个右侧外边距，将按钮与文本内容分隔开 */
+    margin-right: 3vw; 
+    
+    /* 调整定位，使其在垂直方向上居中 */
+    display: flex;
+    align-items: center;
+}
+
+/* 跳转按钮样式 */
+.wrapper .points-promotion-carousel .promotion-action .jump-button {
+    /* 使用稍小的字体以适应紧凑的轮播空间 */
+    font-size: 3.2vw; 
+    font-weight: 700;
+    
+    /* 按钮内边距 */
+    padding: 1.5vw 3vw; 
+    
+    /* 使用醒目的颜色与背景形成对比，例如纯白色背景或高亮色 */
+    /* 采用浅米色作为背景，与深橙色背景形成对比 */
+    background-color: white; 
+    color: #ff6600; /* 使用高亮的橙色文字 */
+    
+    border: none;
+    border-radius: 1.5vw; /* 略微圆角 */
+    cursor: pointer;
+    
+    transition: all 0.2s ease;
+    white-space: nowrap; /* 防止按钮文字换行 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 增加轻微阴影，使按钮突出 */
+}
+
+.wrapper .points-promotion-carousel .promotion-action .jump-button:hover {
+    background-color: #ffe0b3; /* 悬停时颜色变浅 */
+    transform: scale(1.05); /* 增加一点缩放效果 */
+}
+
+.wrapper .points-promotion-carousel .promotion-action .jump-button:active {
+    transform: scale(0.98); /* 点击时的按下效果 */
 }
 
 .wrapper .points-promotion-carousel .promotion-text {
@@ -2560,6 +2656,18 @@ const fetchPointsRules = async () => {
         width: 10vw;
         height: 10vw;
         font-size: 4vw;
+    }
+
+    /* 移动端按钮容器样式微调 */
+    .wrapper .points-promotion-carousel .promotion-action {
+        margin-right: 2vw; /* 调整间距 */
+    }
+
+    /* 移动端跳转按钮样式 */
+    .wrapper .points-promotion-carousel .promotion-action .jump-button {
+        font-size: 3.5vw; /* 字体略微放大 */
+        padding: 1.8vw 3.5vw; /* 内边距略微增加，方便点击 */
+        border-radius: 2vw;
     }
 }
 

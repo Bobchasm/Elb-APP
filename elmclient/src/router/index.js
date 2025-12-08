@@ -119,6 +119,12 @@ const routes = [
     component: SuccessfulPayment
   },
   {
+    path: '/PromotionList',
+    name: 'PromotionList',
+    component: () => import('@/views/PromotionList.vue'), 
+    meta: { title: '促销商品列表' }
+  },
+  {
     path: '/myInformation',
     name: 'MyInformation',
     component: MyInformation
