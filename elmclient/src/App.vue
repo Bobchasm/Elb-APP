@@ -41,7 +41,7 @@ export default {
       if (route.path.startsWith('/merchant') || route.path.startsWith('/admin')) {
         return false;
       }
-      return !['BusinessInfo', 'Payment', 'SuccessfulPayment', 'Orders', 'Cart','Favorites','Notifications','UserAddress','ListDetail','Register','Login','EditUserAddress'].includes(route.name);
+      return !['BusinessInfo', 'Payment', 'SuccessfulPayment', 'Orders', 'Cart','Favorites','Notifications','UserAddress','ListDetail','Register','Login','EditUserAddress','Wallet','Points','PointsLottery','PointsDetails','PointsExpiring','AdminExchangeManagement', 'AdminWarningConfig', 'AdminPointsRuleManagement','PromotionList'].includes(route.name);
     });
 
     const showBusinessFooter = computed(() => {
@@ -53,7 +53,14 @@ export default {
     });
 
     const showAdminFooter = computed(() => {
-      return route.path.startsWith('/admin');
+    if (['AdminExchangeManagement', 'AdminWarningConfig', 'AdminPointsRuleManagement'].includes(route.name)) {
+    return false;
+  }
+    
+    // 其他 /admin 路径的页面显示 footer
+    if (route.path.startsWith('/admin')) {
+      return true;
+    }
     });
 
     return { showFooter, showBusinessFooter, showAdminFooter, showBackButton};
@@ -114,4 +121,40 @@ a {
   flex: 1;
   overflow-y: auto;
 }
+
+/*试图统一header */
+.app-header-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* 确保在宽屏设备上不会过宽，这里设置 max-width */
+    max-width: 600px; 
+    /* 在 fixed 模式下，margin: 0 auto 需要额外的 left/right 配合 */
+    left: 50%;
+    transform: translateX(-50%); 
+    
+    height: 12vw; /* 统一高度，使用 vw */
+    background-color: #0097FF;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-header-fixed h3,
+.app-header-fixed h1 { /* 统一 h1 和 h3 的样式 */
+    font-size: 4.8vw; /* 统一字体大小 */
+    margin: 0;
+    font-weight: 500;
+    color: inherit; /* 继承父级的 #fff 颜色 */
+}
+
+/* ⚠️ 重要：添加 padding-top 以防止内容被固定头部遮挡 */
+.details-container {
+    padding-top: 13vw; /* 顶部容器增加内边距，等于头部高度 */
+}
+
 </style>

@@ -1,41 +1,65 @@
 <template>
+  <div class="back-btn-container">
+        <BackButton style="margin-top: 2vw;"/>
+    </div>
   <div class="notifications-container">
-    <BackButton style="margin-top: -13vw;"/>
     <div class="header">
       <h1 class="title">消息与通知</h1>
       <div v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</div>
     </div>
 
-    <!-- 加载状态 -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
       <p>加载消息中...</p>
     </div>
 
-    <!-- 错误状态 -->
     <div v-if="error" class="error-state">
       <i class="fas fa-exclamation-circle"></i>
       <p>{{ error }}</p>
-      <button class="retry-btn" @click="initWebSocket">重新连接</button>
+      <button 
+        class="retry-btn" 
+        @click="error.includes('连接') ? initWebSocket() : fetchHistoryMessages()"
+      >
+        {{ error.includes('连接') ? '重新连接' : '重新加载' }}
+      </button>
     </div>
 
-    <!-- 消息列表 -->
     <div v-else class="notification-list">
-      <div v-for="message in messages" :key="message.id" class="notification-item" @click="markAsRead(message)">
-        <div class="icon-wrapper" :class="{ 'unread': message.unread }">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <div 
+        v-for="message in messages" 
+        :key="message.id" 
+        class="notification-item" 
+        @click="markAsRead(message)"
+      >
+        <div 
+          class="icon-wrapper" 
+          :class="{ 
+            'unread': message.unread,
+            'expiry-warning': message.notificationType === 2 
+          }"
+        >
+          <i v-if="message.notificationType === 2" class="icon fas fa-hourglass-half"></i> 
+          <svg v-else class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22 6.5C22 7.32843 21.3284 8 20.5 8H3.5C2.67157 8 2 7.32843 2 6.5V3.5C2 2.67157 2.67157 2 3.5 2H20.5C21.3284 2 22 2.67157 22 3.5V6.5ZM22 17.5C22 18.3284 21.3284 19 20.5 19H3.5C2.67157 19 2 18.3284 2 17.5V14.5C2 13.6716 2.67157 13 3.5 13H20.5C21.3284 13 22 13.6716 22 14.5V17.5ZM2 10.5C2 9.67157 2.67157 9 3.5 9H20.5C21.3284 9 22 9.67157 22 10.5V11.5C22 12.3284 21.3284 13 20.5 13H3.5C2.67157 13 2 12.3284 2 11.5V10.5Z"></path>
           </svg>
         </div>
         <div class="content">
-          <div class="message-text" :class="{ 'bold': message.unread }">{{ message.notificationContent }}</div>
-          <div class="timestamp">{{ formatTime(message.currentTime) }}</div>
+          <div 
+            class="message-text" 
+            :class="{ 
+              'bold': message.unread,
+              'warning-text': message.notificationType === 2 
+            }"
+          >
+            <span v-if="message.notificationType === 2" style="color: #faad14;">【积分预警】</span>
+            {{ message.notificationContent }}
+          </div>
+          <div class="timestamp">{{ formatTime(message.createTime) }}</div>
         </div>
         <div v-if="message.unread" class="dot"></div>
       </div>
 
-      <!-- 空状态 -->
-      <div v-if="messages.length === 0" class="empty-state">
+      <div v-if="messages.length === 0 && !loading && !error" class="empty-state">
         <i class="fas fa-envelope-open"></i>
         <p>暂无消息通知</p>
       </div>
@@ -47,7 +71,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import request from '@/utils/request';
 import { toast } from '@/utils/toast';
-import BackButton from "@/components/BackButton.vue";
+//import BackButton from "@/components/BackButton.vue";
 
 // 状态管理
 const messages = ref([]);
@@ -56,10 +80,19 @@ const error = ref('');
 const webSocket = ref(null);
 const isConnected = ref(false);
 
+// 消息类型常量 (根据 API 文档)
+const MESSAGE_TYPE = {
+  MERCHANT_AUDIT: 0, // 商家申请审核
+  STORE_AUDIT: 1,    // 开店申请审核
+  SCORE_EXPIRY: 2    // 积分过期预警
+};
+
+// 获取当前用户信息
 const userFromLocal = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 const userFromSession = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')) : null;
-const	user = userFromLocal || userFromSession;
-const currentUserId = user.id;
+const user = userFromLocal || userFromSession;
+// 确保 currentUserId 在用户未登录时为 null
+const currentUserId = user ? user.id : null; 
 
 // 计算未读消息数量
 const unreadCount = computed(() => {
@@ -68,8 +101,13 @@ const unreadCount = computed(() => {
 
 // 初始化：加载历史消息并连接WebSocket
 onMounted(() => {
-  fetchHistoryMessages();
-  initWebSocket();
+  if (currentUserId) { // 只有在获取到用户ID时才执行初始化操作
+    fetchHistoryMessages();
+    initWebSocket();
+  } else {
+    loading.value = false;
+    error.value = '请先登录以接收消息通知';
+  }
 });
 
 // 组件卸载时关闭WebSocket连接
@@ -83,22 +121,36 @@ onUnmounted(() => {
  * 加载历史消息
  */
 const fetchHistoryMessages = async () => {
+  loading.value = true;
+  error.value = ''; // 清除之前的错误
   try {
+    if (!currentUserId) {
+        error.value = '用户未登录';
+        loading.value = false;
+        return;
+    }
+
     const res = await request.get('/api/notifications', {
       params: {
-        userId: currentUserId // 假设 currentUserId 是当前用户的 ID
+        userId: currentUserId // 传递当前用户的 ID
       }
     });
+
     if (res.success) {
       messages.value = res.data.map(msg => ({
         ...msg,
-        unread: msg.isRead !== 1, // isRead=0 → 未读 → unread=true；isRead=1 → 已读 → unread=false
-        createTime: msg.createTime
+        // 确保 notificationType 字段被正确接收
+        notificationType: msg.notificationType, 
+        // isRead=0 → 未读 → unread=true；isRead=1 → 已读 → unread=false
+        unread: msg.isRead !== 1, 
       }));
+    } else {
+        throw new Error(res.message || '获取消息列表失败');
     }
   } catch (err) {
     console.error('加载历史消息失败:', err);
     toast.error('加载消息失败');
+    error.value = `加载历史消息失败：${err.message || '请检查网络'}`;
   } finally {
     loading.value = false;
   }
@@ -114,20 +166,18 @@ const initWebSocket = () => {
   }
 
   error.value = '';
-  loading.value = true;
+  // 不设置 loading=true，避免覆盖 fetchHistoryMessages 的状态
 
   try {
-    // // 获取当前用户ID，如果未登录则不连接
-    // if (!currentUserId.value) {
-    //   error.value = '请先登录以接收消息通知';
-    //   loading.value = false;
-    //   return;
-    // }
-
-    // 创建WebSocket连接（根据实际后端地址修改）
+    if (!currentUserId) {
+      error.value = '请先登录以接收消息通知';
+      return;
+    }
+    
+    // 创建WebSocket连接
     const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//REDACTED_IP:8080/ws/${sid}`;
+    const wsUrl = `${wsProtocol}//REDACTED_IP:8080/ws/${sid}`; 
     
     webSocket.value = new WebSocket(wsUrl);
 
@@ -136,8 +186,7 @@ const initWebSocket = () => {
       console.log('WebSocket连接成功');
       isConnected.value = true;
       error.value = '';
-      loading.value = false;
-      //toast.success('已连接消息通知');
+      // toast.success('已连接消息通知');
     };
 
     // 接收消息
@@ -168,12 +217,10 @@ const initWebSocket = () => {
       console.error('WebSocket错误:', err);
       isConnected.value = false;
       error.value = '消息连接出错，请检查网络';
-      loading.value = false;
     };
   } catch (err) {
     console.error('初始化WebSocket失败:', err);
     error.value = '无法建立消息连接';
-    loading.value = false;
   }
 };
 
@@ -181,38 +228,42 @@ const initWebSocket = () => {
  * 处理新接收的消息
  */
 const handleNewMessage = (message) => {
-  // 只处理当前用户的消息
-  if (message.userId && message.userId !== currentUserId.value) {
+  // 1. 检查是否为当前用户的消息
+  if (message.userId && message.userId !== currentUserId) {
     return;
   }
-  // 2. 验证消息合法性（确保是审核相关的有效消息）
-  const isValidMessage = message.type !== undefined && message.content;
+
+  // 2. 验证消息合法性
+  const isValidMessage = message.notificationType !== undefined && message.notificationContent;
   if (!isValidMessage) {
     console.warn('收到无效的WebSocket消息:', message);
     return;
   }
+  
+  // 3. 显示即时提示，根据类型调整提示内容
+  let toastContent = `新消息：${message.notificationContent}`;
+  if (message.notificationType === MESSAGE_TYPE.SCORE_EXPIRY) {
+      toastContent = `⚠️ 积分预警：${message.notificationContent}`;
+  }
+  toast.info(toastContent);
 
-  // 3. 显示即时提示（告知用户有新消息）
-  toast.info(`新消息：${message.notificationContent}`);
-
-  // 4. 延迟调用接口重新拉取消息列表（避免后端写入数据库延迟导致漏消息）
-  // 延迟300ms是为了确保后端已将新消息写入数据库，再前端拉取
+  // 4. 延迟调用接口重新拉取消息列表（保证数据一致性）
   setTimeout(async () => {
     try {
-      // 5. 调用接口重新获取完整消息列表（复用加载历史消息的逻辑，确保数据一致）
-      const res = await request.get('/api/notifications');
+      const res = await request.get('/api/notifications', {
+         params: { userId: currentUserId }
+      });
       if (res.success) {
-        // 6. 重新映射消息状态（isRead → unread），覆盖本地列表
+        // 5. 重新映射消息状态，确保 notificationType 被保留
         messages.value = res.data.map(msg => ({
           ...msg,
-          // 后端isRead=0→未读（unread=true），isRead=1→已读（unread=false）
+          notificationType: msg.notificationType, 
           unread: msg.isRead !== 1,
           createTime: msg.createTime
         }));
       }
     } catch (err) {
       console.error('WebSocket消息触发重新拉取失败:', err);
-      // 失败时给用户提示，允许手动重试
       toast.error('新消息已收到，但加载失败，可下拉刷新重试');
     }
   }, 300);
@@ -270,6 +321,7 @@ const formatTime = (timeStr) => {
   top: 0;
   left: 0;
   width: 100%;
+  max-width: 600px; /* 确保 header 不超出容器 */
   height: 50px;
   background-color: #0097ff;
   display: flex;
@@ -278,18 +330,19 @@ const formatTime = (timeStr) => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   z-index: 100;
 }
-/* .header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid #e0e0e0;
-  position: relative;
-} */
 
 .title {
- font-size: 1.1rem;
+  font-size: 1.1rem;
   color: #ffffff;
   font-weight: 600;
   margin: 0;
+}
+
+.back-btn-container {
+    position: fixed; /* 固定定位，不随滚动移动 */
+    left: 0vw; /* 距离左侧的距离，可根据需求调整 */
+    top: 0vw; /* 距离顶部的距离，与 header 高度（12vw）适配，确保垂直居中 */
+    z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 
 .unread-badge {
@@ -308,9 +361,11 @@ const formatTime = (timeStr) => {
   font-weight: bold;
 }
 
+/* 留出固定头部和返回按钮的空间 */
 .notification-list {
   padding: 0;
-  margin: 15vw;
+  margin-top: calc(50px + 10vw); /* 50px 是 header 高度 */
+  padding-bottom: 20px;
 }
 
 .notification-item {
@@ -339,17 +394,30 @@ const formatTime = (timeStr) => {
   height: 40px;
   border-radius: 50%;
   margin-right: 15px;
-  background-color: #e6f0ff; /* 浅蓝色 */
+  background-color: #e6f0ff; /* 默认浅蓝色 */
 }
 
 .icon-wrapper.unread {
   background-color: #c9e2ff; /* 针对未读消息的更深的蓝色 */
 }
 
+/* --- 积分过期预警样式 --- */
+
+/* 针对积分预警的图标背景 */
+.icon-wrapper.expiry-warning {
+  background-color: #fffbe6; /* 浅黄色背景 */
+}
+
 .icon {
   width: 20px;
   height: 20px;
-  color: #1a73e8; /* 图标蓝色 */
+  color: #1a73e8; /* 默认图标蓝色 */
+}
+
+/* 针对积分预警图标本身的颜色 (Font Awesome) */
+.icon.fa-hourglass-half {
+  color: #faad14; /* 警告黄色 */
+  font-size: 1.1rem; /* 调整 Font Awesome 图标大小 */
 }
 
 .content {
@@ -367,6 +435,17 @@ const formatTime = (timeStr) => {
 .message-text.bold {
   font-weight: 600;
   color: #1a73e8; /* 未读消息文本蓝色 */
+}
+
+/* 针对积分预警文本的颜色，让它更醒目 */
+.message-text.warning-text {
+  color: #d46b08; /* 偏深的警告色 */
+}
+
+/* 如果是未读的积分预警，可以更突出 */
+.message-text.bold.warning-text {
+  font-weight: 700;
+  color: #cf1322; /* 红色强调 */
 }
 
 .timestamp {

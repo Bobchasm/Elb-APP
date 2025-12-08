@@ -25,6 +25,12 @@ import SubmitItems from '@/views/SubmitItems.vue'
 import AiChat from '@/views/AiChat.vue'
 import Wallet from '@/views/Wallet.vue'
 import WalletTransactions from '@/views/WalletTransactions.vue'
+import Points from '@/views/Points.vue'
+import PointsDetails from '@/views/PointsDetails.vue'
+import PointsLottery from '@/views/PointsLottery.vue'
+import PointsExpiring from '../views/PointsExpiring.vue'
+import MarketingCenter from '../views/MarketingCenter.vue';
+
 
 //商家端路由配置
 import MerchantProfile from '../views/MerchantProfile.vue';
@@ -36,7 +42,9 @@ import MerchantOrders from '../views/MerchantOrders.vue'
 import AdminHome from '../views/AdminHome.vue';
 import AdminBusiness from '@/views/AdminBusiness.vue'
 import AdminShop from '@/views/AdminShop.vue'
+//import PointsDetails from '../views/PointsDetails.vue'   这是什么？(⊙o⊙)？
 //import { pa } from 'element-plus/es/locale'
+//管理端营销中心-规则管理 预警配置 商品兑换import在下面了有空再挪上来吧
 
 // 定义路由
 const routes = [
@@ -109,6 +117,12 @@ const routes = [
     path: '/successfulPayment',
     name: 'SuccessfulPayment',
     component: SuccessfulPayment
+  },
+  {
+    path: '/PromotionList',
+    name: 'PromotionList',
+    component: () => import('@/views/PromotionList.vue'), 
+    meta: { title: '促销商品列表' }
   },
   {
     path: '/myInformation',
@@ -235,6 +249,30 @@ const routes = [
     component: WalletTransactions,
     meta: { title: '交易明细' }
   },
+  {
+    path: '/points',
+    name: 'Points',
+    component: Points,
+    meta: { title: '我的积分' }
+  },
+  {
+    path: '/points/lottery', 
+    name: 'PointsLottery',
+    component: PointsLottery,
+    meta: { title: '积分抽奖' }
+    },
+  {
+    path: '/points/details',
+    name: 'PointsDetails',
+    component: PointsDetails,
+    meta: { title: '积分明细' }
+  },
+  {
+    path: '/points/expiring',
+    name: 'PointsExpiring',
+    component: PointsExpiring,
+    meta: { title: '即将过期积分' }
+  },
  //
 //管理端
   {
@@ -261,7 +299,31 @@ const routes = [
     path: '/wallet/loans',
     name: 'WalletLoan',
     component: () => import('@/views/WalletLoan.vue') // 注意是 WalletLoans.vue（复数）
-  }
+  },
+  {
+    path: '/admin/marketing',
+    name: 'MarketingCenter',
+    component: MarketingCenter, 
+    meta: { title: '营销中心' }
+  },
+  {
+    path: '/marketing/rules',
+    name: 'AdminPointsRuleManagement', 
+    component: () => import('@/views/AdminPointsRuleManagement.vue'), 
+    meta: { title: '规则管理' }
+  },
+  {
+    path: '/marketing/warning',
+    name: 'AdminWarningConfig', 
+    component: () => import('@/views/AdminWarningConfig.vue'), 
+    meta: { title: '预警配置' }
+  },
+  {
+    path: '/marketing/exchange',
+    name: 'AdminExchangeManagement',
+    component: () => import('@/views/AdminExchangeManagement.vue'), 
+    meta: { title: '兑换管理' }
+  },
   //
 
 ]

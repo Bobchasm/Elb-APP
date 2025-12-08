@@ -235,6 +235,53 @@
             </div>
         </div>
 
+        <!-- 促销积分轮播部分 -->
+        <div class="points-promotion-carousel">
+            <div class="carousel-container">
+                <!-- 轮播项目，使用向上滚动动画 -->
+                <transition name="slide-up" mode="out-in">
+                    <div v-if="currentPointsRule" :key="currentPointsRule.id" class="promotion-item">
+                        <div class="promotion-icon">
+                            <i class="fa fa-gift"></i>
+                        </div>
+                        <div class="promotion-content">
+                            <span class="promotion-text">{{ currentPointsRule.ruleName }}</span>
+                        </div>
+                        <div class="promotion-action">
+                            <button 
+                                v-if="currentPointsRule.hasPromotionLink"
+                                @click="navigateToPromotion(currentPointsRule.foodIds)"
+                                class="jump-button"
+                            >
+                                点击跳转
+                            </button>
+                        </div>
+                        <div class="promotion-indicator">
+                            <span class="current-index">{{ currentPointsIndex + 1 }}</span>
+                            <span class="separator">/</span>
+                            <span class="total-count">{{ enabledPointsRules.length }}</span>
+                        </div>
+                    </div>
+                </transition>
+                
+                <!-- 空状态 -->
+                <div v-if="enabledPointsRules.length === 0" class="empty-promotion">
+                    <i class="fa fa-gift"></i>
+                    <span>暂无促销积分活动</span>
+                </div>
+            </div>
+            
+            <!-- 手动切换按钮 -->
+            <div class="carousel-controls" v-if="enabledPointsRules.length > 1">
+                <button class="control-btn prev-btn" @click="prevPointsRule" title="上一条">
+                    <i class="fa fa-chevron-up"></i>
+                </button>
+                <button class="control-btn next-btn" @click="nextPointsRule" title="下一条">
+                    <i class="fa fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- 推荐商家部分 -->
         <div class="recommend">
             <div class="recommend-line"></div>
@@ -356,7 +403,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import Footer from '../components/Footer.vue';
 import AiChatbot from '../components/AiChatbot.vue';
 import { useRouter } from 'vue-router';
@@ -381,6 +428,13 @@ export default {
         const currentSlide = ref(0);
         const topThreeBusinesses = ref([]);
         let autoPlayTimer = null;
+
+        //促销积分相关
+        const pointsRules = ref([]); // 所有积分规则
+        const enabledPointsRules = ref([]); // 启用的促销积分规则
+        const currentPointsIndex = ref(0); // 当前显示的规则索引
+        const currentPointsRule = ref(null); // 当前显示的规则
+        let pointsCarouselTimer = null; // 轮播定时器
 
         const currentLocation = ref('定位中...');
         const searchKeyword = ref('');
@@ -674,6 +728,12 @@ export default {
             }
         };
 
+        // 监听用户信息变化，重新获取积分规则
+        watch(() => userInfo.value, (newUserInfo) => {
+            console.log('👤 用户信息变化，重新获取积分规则:', newUserInfo ? '已登录' : '未登录');
+            fetchPointsRules();
+        }, { immediate: false });
+
         const loadReactions = () => {
             try {
                 return JSON.parse(localStorage.getItem('reactions')) || { likes: {}, favorites: {} };
@@ -729,6 +789,231 @@ export default {
 
         const getBusinessRating = (businessId) => {
             return ratingMap.value[businessId] || '1.0';
+        };
+
+// 新增的跳转函数（使用 foodIds 数组）
+const navigateToPromotion = (foodIds) => {
+    if (Array.isArray(foodIds) && foodIds.length > 0) {
+        
+        // 1. 将 foodIds 数组转换为逗号分隔的字符串
+        const idsString = foodIds.join(',');
+        
+        console.log(`🔗 尝试跳转。关联的 Food IDs 列表: ${idsString}`);
+        
+        // 2. ⭐ 修改点：通过 query 参数传递 ids 字符串
+        router.push({ 
+            path: '/PromotionList',
+            query: {
+                ids: idsString // 使用 'ids' 作为查询参数的 key
+            }
+        }); 
+    } else {
+        console.warn('⚠️ foodIds 为空或不是有效数组，无法跳转到指定商品页面');
+    }
+};
+
+// 获取积分规则列表 (修改后的版本)
+const fetchPointsRules = async () => {
+    try {
+        console.log('🔍 开始获取积分规则列表...');
+        
+        // 1. 检查 Token
+        const tokenFromLocal = localStorage.getItem('token');
+        const tokenFromSession = sessionStorage.getItem('token');
+        const token = tokenFromLocal || tokenFromSession;
+        
+        if (!token) {
+            console.log('👤 用户未登录，不显示促销积分轮播');
+            enabledPointsRules.value = [];
+            currentPointsRule.value = null;
+            stopPointsCarousel();
+            return;
+        }
+        
+        // 2. 调用接口获取积分规则
+        // ⭐ 修改点 A: 显式添加 Header 以解决 401 Unauthorized 问题
+        const response = await request.get('/api/marketing/points/rules', {
+            params: {
+                ruleType: 1, // 1-促销积分
+                ruleStatus: 1, // 1-启用
+                pageNum: 1,
+                pageSize: 100
+            },
+            headers: {
+                // 根据您的 API 文档，同时尝试设置两种可能的认证头部
+                'Authorization': `Bearer ${token}`, // 标准 JWT/OAuth2 认证格式
+               // 'token': token // API 文档中提到的自定义 Header 格式
+            },
+            // 允许所有响应进入 .then 块，让代码可以检查 status 和 response.data
+            validateStatus: function (status) {
+                return status >= 200 && status < 600; 
+            }
+        }).catch(error => {
+            // 捕获纯网络错误 (如断网、请求超时、CORS预检失败等)
+            // ⭐ 优化日志，如果存在 HTTP 状态码，打印出来
+            const status = error?.response?.status;
+            console.warn(`⚠️ 获取积分规则请求失败 (状态码: ${status || '无'} 或网络错误):`, error?.message);
+            
+            enabledPointsRules.value = [];
+            currentPointsRule.value = null;
+            stopPointsCarousel();
+            return null; // 返回 null，表示请求彻底失败
+        });
+        
+        // 如果请求彻底失败 (网络问题)
+        if (!response) {
+            console.log('📭 未获取到积分规则响应，可能是网络错误，已清空数据并停止轮播');
+            return;
+        }
+        
+        console.log('📊 积分规则接口响应状态:', response?.status);
+        
+        let rulesData = [];
+        const responseData = response.data || response;
+        const httpStatus = response.status;
+
+        // 3. 处理非 200 HTTP 状态码 (如 401, 403, 500)
+        if (httpStatus && httpStatus !== 200) {
+            // ⭐ 优化 401 错误提示，避免误导
+            let warningMsg = `⚠️ 积分规则接口返回非200 HTTP状态码: ${httpStatus}`;
+            if (httpStatus === 401) {
+                warningMsg += '，权限认证失败 (Unauthorized)。请检查 Token 有效性或登录状态。';
+            } else {
+                warningMsg += '，清空数据并停止轮播。';
+            }
+            console.warn(warningMsg);
+            
+            enabledPointsRules.value = [];
+            currentPointsRule.value = null;
+            stopPointsCarousel();
+            return;
+        }
+
+        // 4. 检查响应数据中的 success 字段 (处理业务错误)
+        if (responseData && responseData.success !== undefined) {
+            if (responseData.success) {
+                rulesData = Array.isArray(responseData.data) ? responseData.data : [];
+                console.log('✅ 使用标准响应格式获取积分规则');
+            } else {
+                console.warn('⚠️ 积分规则接口业务失败:', responseData.message); 
+                enabledPointsRules.value = [];
+                currentPointsRule.value = null;
+                stopPointsCarousel();
+                return;
+            }
+        } 
+        // 5. 处理直接返回数组或其他格式
+        else if (Array.isArray(responseData)) {
+            rulesData = responseData;
+            console.log('✅ 使用直接数组格式获取积分规则');
+        } else {
+            console.warn('❌ 积分规则响应格式不正确或缺少 success 字段，清空数据:', responseData);
+            enabledPointsRules.value = [];
+            currentPointsRule.value = null;
+            stopPointsCarousel();
+            return;
+        }
+
+        // 6. 过滤、标记和排序数据 (成功逻辑)
+        enabledPointsRules.value = rulesData
+            .filter(rule => 
+                rule && 
+                rule.ruleType === 1 && // 促销积分
+                rule.ruleStatus === 1 && // 启用状态
+                rule.ruleName // 必须有规则名称
+            )
+            // ⭐ 修改点 B: 检查 foodIds 数组并添加 hasPromotionLink 标记
+            .map(rule => ({
+                ...rule,
+                // 如果 foodIds 存在且是长度大于 0 的数组，则标记为 true
+                hasPromotionLink: Array.isArray(rule.foodIds) && rule.foodIds.length > 0
+            }))
+            .sort((a, b) => {
+                const priorityA = a.priority || 0;
+                const priorityB = b.priority || 0;
+                return priorityB - priorityA;
+            });
+        
+        console.log('🎯 已启用的促销积分规则:', enabledPointsRules.value.length, '条');
+        
+        if (enabledPointsRules.value.length > 0) {
+            // ... (设置当前规则和启动轮播)
+            // ...
+            startPointsCarousel();
+        } else {
+            console.log('📭 没有可用的促销积分规则');
+            currentPointsRule.value = null;
+            stopPointsCarousel();
+        }
+        
+    } catch (error) {
+        console.error('❌ 获取积分规则异常:', error);
+        // 捕获所有未被内部处理的异常
+        enabledPointsRules.value = [];
+        currentPointsRule.value = null;
+        stopPointsCarousel();
+    }
+};
+        
+        // 启动积分轮播
+        const startPointsCarousel = () => {
+            // 清理现有定时器
+            if (pointsCarouselTimer) {
+                clearInterval(pointsCarouselTimer);
+            }
+            
+            // 只有在有规则的情况下才启动轮播
+            if (enabledPointsRules.value.length > 1) {
+                pointsCarouselTimer = setInterval(() => {
+                    nextPointsRule();
+                }, 3000); // 3秒切换一次
+                console.log('⏰ 积分轮播已启动，3秒切换一次');
+            }
+        };
+
+        // 切换到下一条规则
+        const nextPointsRule = () => {
+            if (enabledPointsRules.value.length === 0) return;
+            
+            currentPointsIndex.value = (currentPointsIndex.value + 1) % enabledPointsRules.value.length;
+            currentPointsRule.value = enabledPointsRules.value[currentPointsIndex.value];
+            
+            console.log('🔄 切换到下一条积分规则:', currentPointsRule.value.ruleName);
+            
+            // 重置轮播定时器
+            restartPointsCarousel();
+        };
+
+        // 切换到上一条规则
+        const prevPointsRule = () => {
+            if (enabledPointsRules.value.length === 0) return;
+            
+            currentPointsIndex.value = currentPointsIndex.value === 0 
+                ? enabledPointsRules.value.length - 1 
+                : currentPointsIndex.value - 1;
+            currentPointsRule.value = enabledPointsRules.value[currentPointsIndex.value];
+            
+            console.log('🔄 切换到上一条积分规则:', currentPointsRule.value.ruleName);
+            
+            // 重置轮播定时器
+            restartPointsCarousel();
+        };
+
+        // 重启轮播定时器
+        const restartPointsCarousel = () => {
+            if (pointsCarouselTimer) {
+                clearInterval(pointsCarouselTimer);
+            }
+            startPointsCarousel();
+        };
+
+        // 停止轮播
+        const stopPointsCarousel = () => {
+            if (pointsCarouselTimer) {
+                clearInterval(pointsCarouselTimer);
+                pointsCarouselTimer = null;
+                console.log('⏹️ 积分轮播已停止');
+            }
         };
 
         // 获取销量前三的商家
@@ -1032,11 +1317,16 @@ export default {
 
             getBusinessList(); // 恢复API调用
             startAutoPlay();
+            
+            // 获取积分规则
+            fetchPointsRules();
+
         });
 
         onBeforeUnmount(() => {
             window.removeEventListener('scroll', handleScroll);
             stopAutoPlay(); // 清理自动轮播定时器
+            stopPointsCarousel(); // 清理积分轮播定时器
         });
 
         const toBusinessList = (orderTypeId) => {
@@ -1472,6 +1762,13 @@ export default {
             goToSlide,
             nextSlide,
             prevSlide,
+            // 促销积分相关
+            enabledPointsRules,
+            currentPointsIndex,
+            currentPointsRule,
+            prevPointsRule,
+            nextPointsRule,
+            navigateToPromotion,
             getPrevIndex,
             getNextIndex,
             getRankClass,
@@ -2094,6 +2391,284 @@ export default {
     font-size: 3vw;
     margin-right: 4vw;
     cursor: pointer;
+}
+
+/****************** 促销积分轮播部分 ******************/
+.wrapper .points-promotion-carousel {
+    width: 95%;
+    margin: 2vw auto;
+    
+    /* ⭐ 更改点 1: 使用柔和的深蓝色背景 (#34495e - 宝石青色/暗青色) */
+    /* 这种颜色与 #FEEDC1 (浅米黄色) 形成良好的对比，且不冲突 */
+    background: #f7c870; 
+    
+    border-radius: 2vw;
+    padding: 2.5vw 3vw;
+    
+    /* ⭐ 更改点 2: 调整阴影颜色，使用较暗但柔和的阴影 */
+    box-shadow: 0 4px 12px rgba(255, 167, 16, 0.397); 
+    
+    position: relative;
+    overflow: hidden;
+    min-height: 12vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    /* ⭐ 确保内部文字颜色是白色 (如果文字是直接写在 carousel 容器内的话) */
+    color: white; 
+}
+.wrapper .points-promotion-carousel .carousel-container {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    min-height: 7vw;
+    display: flex;
+    align-items: center;
+}
+
+/* 轮播项样式 */
+.wrapper .points-promotion-carousel .promotion-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 1vw 0;
+    /* ⭐ 确保内容、按钮、指示器能分散对齐 */
+    justify-content: space-between; /* 这一行很重要，确保内部元素分散对齐 */
+    animation: slideInUp 0.5s ease-out;
+}
+
+.wrapper .points-promotion-carousel .promotion-icon {
+    width: 6vw;
+    height: 6vw;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 2.5vw;
+    flex-shrink: 0;
+}
+
+.wrapper .points-promotion-carousel .promotion-icon i {
+    font-size: 3vw;
+    color: white;
+}
+
+.wrapper .points-promotion-carousel .promotion-content {
+    /* ⭐ 新增：给右侧留出空间，与新增的按钮容器分隔 */
+    margin-right: 2vw;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 新增的按钮容器样式 */
+.wrapper .points-promotion-carousel .promotion-action {
+    /* 确保容器不会被挤压，给按钮预留空间 */
+    flex-shrink: 0; 
+    
+    /* 增加一个右侧外边距，将按钮与文本内容分隔开 */
+    margin-right: 3vw; 
+    
+    /* 调整定位，使其在垂直方向上居中 */
+    display: flex;
+    align-items: center;
+}
+
+/* 跳转按钮样式 */
+.wrapper .points-promotion-carousel .promotion-action .jump-button {
+    /* 使用稍小的字体以适应紧凑的轮播空间 */
+    font-size: 3.2vw; 
+    font-weight: 700;
+    
+    /* 按钮内边距 */
+    padding: 1.5vw 3vw; 
+    
+    /* 使用醒目的颜色与背景形成对比，例如纯白色背景或高亮色 */
+    /* 采用浅米色作为背景，与深橙色背景形成对比 */
+    background-color: white; 
+    color: #ff6600; /* 使用高亮的橙色文字 */
+    
+    border: none;
+    border-radius: 1.5vw; /* 略微圆角 */
+    cursor: pointer;
+    
+    transition: all 0.2s ease;
+    white-space: nowrap; /* 防止按钮文字换行 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 增加轻微阴影，使按钮突出 */
+}
+
+.wrapper .points-promotion-carousel .promotion-action .jump-button:hover {
+    background-color: #ffe0b3; /* 悬停时颜色变浅 */
+    transform: scale(1.05); /* 增加一点缩放效果 */
+}
+
+.wrapper .points-promotion-carousel .promotion-action .jump-button:active {
+    transform: scale(0.98); /* 点击时的按下效果 */
+}
+
+.wrapper .points-promotion-carousel .promotion-text {
+    font-size: 3.8vw;
+    font-weight: 600;
+    color: white;
+    display: block;
+    line-height: 1.4;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.wrapper .points-promotion-carousel .promotion-indicator {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1vw 2vw;
+    border-radius: 2vw;
+    margin-left: 2vw;
+    display: flex;
+    align-items: center;
+    gap: 0.5vw;
+    flex-shrink: 0;
+}
+
+.wrapper .points-promotion-carousel .promotion-indicator .current-index {
+    font-size: 3.2vw;
+    font-weight: 700;
+    color: white;
+}
+
+.wrapper .points-promotion-carousel .promotion-indicator .separator {
+    font-size: 2.8vw;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.wrapper .points-promotion-carousel .promotion-indicator .total-count {
+    font-size: 3vw;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* 空状态样式 */
+.wrapper .points-promotion-carousel .empty-promotion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 2vw 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 3.5vw;
+}
+
+.wrapper .points-promotion-carousel .empty-promotion i {
+    margin-right: 2vw;
+    font-size: 4vw;
+}
+
+/* 轮播控制按钮 */
+.wrapper .points-promotion-carousel .carousel-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+    margin-left: 2vw;
+}
+
+.wrapper .points-promotion-carousel .control-btn {
+    width: 8vw;
+    height: 8vw;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 3vw;
+}
+
+.wrapper .points-promotion-carousel .control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.wrapper .points-promotion-carousel .control-btn:active {
+    transform: scale(0.95);
+}
+
+/* 轮播动画 */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Vue transition 动画 */
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 0.5s ease;
+    position: absolute;
+    width: 100%;
+}
+
+.slide-up-enter-from {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(-30px);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .wrapper .points-promotion-carousel {
+        padding: 3vw 4vw;
+        min-height: 14vw;
+    }
+    
+    .wrapper .points-promotion-carousel .promotion-text {
+        font-size: 4.2vw;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.3;
+    }
+    
+    .wrapper .points-promotion-carousel .promotion-icon {
+        width: 8vw;
+        height: 8vw;
+    }
+    
+    .wrapper .points-promotion-carousel .promotion-icon i {
+        font-size: 4vw;
+    }
+    
+    .wrapper .points-promotion-carousel .control-btn {
+        width: 10vw;
+        height: 10vw;
+        font-size: 4vw;
+    }
+
+    /* 移动端按钮容器样式微调 */
+    .wrapper .points-promotion-carousel .promotion-action {
+        margin-right: 2vw; /* 调整间距 */
+    }
+
+    /* 移动端跳转按钮样式 */
+    .wrapper .points-promotion-carousel .promotion-action .jump-button {
+        font-size: 3.5vw; /* 字体略微放大 */
+        padding: 1.8vw 3.5vw; /* 内边距略微增加，方便点击 */
+        border-radius: 2vw;
+    }
 }
 
 /****************** 推荐商家部分 ******************/
