@@ -237,13 +237,15 @@
 
         <!-- 促销积分轮播部分 -->
         <div class="points-promotion-carousel">
+            <!-- 固定的礼物图标 -->
+            <div class="promotion-icon-fixed">
+                <i class="fa fa-gift"></i>
+            </div>
+            
             <div class="carousel-container">
                 <!-- 轮播项目，使用向上滚动动画 -->
                 <transition name="slide-up" mode="out-in">
                     <div v-if="currentPointsRule" :key="currentPointsRule.id" class="promotion-item">
-                        <div class="promotion-icon">
-                            <i class="fa fa-gift"></i>
-                        </div>
                         <div class="promotion-content">
                             <span class="promotion-text">{{ currentPointsRule.ruleName }}</span>
                         </div>
@@ -253,13 +255,8 @@
                                 @click="navigateToPromotion(currentPointsRule.foodIds)"
                                 class="jump-button"
                             >
-                                点击跳转
+                                立即购买&gt;
                             </button>
-                        </div>
-                        <div class="promotion-indicator">
-                            <span class="current-index">{{ currentPointsIndex + 1 }}</span>
-                            <span class="separator">/</span>
-                            <span class="total-count">{{ enabledPointsRules.length }}</span>
                         </div>
                     </div>
                 </transition>
@@ -269,16 +266,16 @@
                     <i class="fa fa-gift"></i>
                     <span>暂无促销积分活动</span>
                 </div>
-            </div>
-            
-            <!-- 手动切换按钮 -->
-            <div class="carousel-controls" v-if="enabledPointsRules.length > 1">
-                <button class="control-btn prev-btn" @click="prevPointsRule" title="上一条">
-                    <i class="fa fa-chevron-up"></i>
-                </button>
-                <button class="control-btn next-btn" @click="nextPointsRule" title="下一条">
-                    <i class="fa fa-chevron-down"></i>
-                </button>
+                
+                <!-- 手动切换按钮 - 悬停时显示在中间上下 -->
+                <div class="carousel-controls" v-if="enabledPointsRules.length > 1">
+                    <button class="control-btn prev-btn" @click="prevPointsRule" title="上一条">
+                        <i class="fa fa-chevron-up"></i>
+                    </button>
+                    <button class="control-btn next-btn" @click="nextPointsRule" title="下一条">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -2395,156 +2392,189 @@ const fetchPointsRules = async () => {
 
 /****************** 促销积分轮播部分 ******************/
 .wrapper .points-promotion-carousel {
-    width: 95%;
+    width: 97%;
     margin: 2vw auto;
     
-    /* ⭐ 更改点 1: 使用柔和的深蓝色背景 (#34495e - 宝石青色/暗青色) */
-    /* 这种颜色与 #FEEDC1 (浅米黄色) 形成良好的对比，且不冲突 */
-    background: #f7c870; 
-    
-    border-radius: 2vw;
-    padding: 2.5vw 3vw;
-    
-    /* ⭐ 更改点 2: 调整阴影颜色，使用较暗但柔和的阴影 */
-    box-shadow: 0 4px 12px rgba(255, 167, 16, 0.397); 
-    
+    /* 使用金色渐变背景，彰显价值和吸引力 */
+    background: linear-gradient(135deg, #FFC107 0%, #FF8F00 100%);
     position: relative;
-    overflow: hidden;
-    min-height: 12vw;
+    overflow: visible;
+    border-radius: 16px;
+    padding: 2.5vw 2vw;
+    height: 14vw;
+    min-height: 14vw;
+    
+    /* 精美的金色阴影效果 */
+    box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4), 
+                0 4px 8px rgba(255, 143, 0, 0.3);
+    
     display: flex;
     align-items: center;
     justify-content: space-between;
-    
-    /* ⭐ 确保内部文字颜色是白色 (如果文字是直接写在 carousel 容器内的话) */
-    color: white; 
 }
+
+/* 添加背景装饰 */
+.wrapper .points-promotion-carousel::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.wrapper .points-promotion-carousel::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -5%;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
 .wrapper .points-promotion-carousel .carousel-container {
     flex: 1;
     position: relative;
     height: 100%;
-    min-height: 7vw;
+    min-height: 9vw;
     display: flex;
     align-items: center;
+    z-index: 1;
+    overflow: visible;
 }
 
-/* 轮播项样式 */
+/* 悬停时显示控制按钮 */
+.wrapper .points-promotion-carousel:hover .carousel-controls {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 固定的礼物图标容器 */
+.wrapper .points-promotion-carousel .promotion-icon-fixed {
+    position: absolute;
+    left: 3vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 7vw;
+    height: 7vw;
+    min-width: 48px;
+    min-height: 48px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 5;
+    overflow: hidden;
+}
+
+.wrapper .points-promotion-carousel .promotion-icon-fixed::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+.wrapper .points-promotion-carousel .promotion-icon-fixed i {
+    font-size: 3.5vw;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+}
+
+/* 轮播项样式 - 重新设计为卡片风格 */
 .wrapper .points-promotion-carousel .promotion-item {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 1vw 0;
-    /* ⭐ 确保内容、按钮、指示器能分散对齐 */
-    justify-content: space-between; /* 这一行很重要，确保内部元素分散对齐 */
-    animation: slideInUp 0.5s ease-out;
-}
-
-.wrapper .points-promotion-carousel .promotion-icon {
-    width: 6vw;
-    height: 6vw;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 2.5vw;
+    height: 100%;
+    padding: 1.5vw 2vw;
+    padding-left: 11vw; /* 为固定的图标留出空间 */
+    justify-content: flex-start;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: slideInUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-sizing: border-box;
     flex-shrink: 0;
+    position: relative;
 }
 
-.wrapper .points-promotion-carousel .promotion-icon i {
-    font-size: 3vw;
-    color: white;
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 
+
+/* 内容区域 */
 .wrapper .points-promotion-carousel .promotion-content {
-    /* ⭐ 新增：给右侧留出空间，与新增的按钮容器分隔 */
-    margin-right: 2vw;
+    margin-right: 15vw; /* 为右下角按钮留出空间，避免重叠 */
     flex: 1;
     overflow: hidden;
 }
 
-/* 新增的按钮容器样式 */
-.wrapper .points-promotion-carousel .promotion-action {
-    /* 确保容器不会被挤压，给按钮预留空间 */
-    flex-shrink: 0; 
-    
-    /* 增加一个右侧外边距，将按钮与文本内容分隔开 */
-    margin-right: 3vw; 
-    
-    /* 调整定位，使其在垂直方向上居中 */
-    display: flex;
-    align-items: center;
-}
-
-/* 跳转按钮样式 */
-.wrapper .points-promotion-carousel .promotion-action .jump-button {
-    /* 使用稍小的字体以适应紧凑的轮播空间 */
-    font-size: 3.2vw; 
-    font-weight: 700;
-    
-    /* 按钮内边距 */
-    padding: 1.5vw 3vw; 
-    
-    /* 使用醒目的颜色与背景形成对比，例如纯白色背景或高亮色 */
-    /* 采用浅米色作为背景，与深橙色背景形成对比 */
-    background-color: white; 
-    color: #ff6600; /* 使用高亮的橙色文字 */
-    
-    border: none;
-    border-radius: 1.5vw; /* 略微圆角 */
-    cursor: pointer;
-    
-    transition: all 0.2s ease;
-    white-space: nowrap; /* 防止按钮文字换行 */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 增加轻微阴影，使按钮突出 */
-}
-
-.wrapper .points-promotion-carousel .promotion-action .jump-button:hover {
-    background-color: #ffe0b3; /* 悬停时颜色变浅 */
-    transform: scale(1.05); /* 增加一点缩放效果 */
-}
-
-.wrapper .points-promotion-carousel .promotion-action .jump-button:active {
-    transform: scale(0.98); /* 点击时的按下效果 */
-}
-
 .wrapper .points-promotion-carousel .promotion-text {
-    font-size: 3.8vw;
+    font-size: 4vw;
     font-weight: 600;
     color: white;
     display: block;
-    line-height: 1.4;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    line-height: 1.5;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    letter-spacing: 0.5px;
 }
 
-.wrapper .points-promotion-carousel .promotion-indicator {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 1vw 2vw;
-    border-radius: 2vw;
-    margin-left: 2vw;
+/* 按钮容器 - 定位到右下角 */
+.wrapper .points-promotion-carousel .promotion-action {
+    position: absolute;
+    bottom: 1vw;
+    right: 1.5vw;
+    z-index: 5;
+}
+
+/* 立即购买按钮 - 简化设计，避免与文字重叠 */
+.wrapper .points-promotion-carousel .promotion-action .jump-button {
+    font-size: 2.2vw;
+    font-weight: 500;
+    padding: 0.4vw 1.2vw;
+    background: none;
+    color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 0.5vw;
-    flex-shrink: 0;
+    gap: 0.3vw;
 }
 
-.wrapper .points-promotion-carousel .promotion-indicator .current-index {
-    font-size: 3.2vw;
-    font-weight: 700;
-    color: white;
+.wrapper .points-promotion-carousel .promotion-action .jump-button:hover {
+    color: rgba(255, 255, 255, 1);
+    border-bottom-color: rgba(255, 255, 255, 1);
 }
 
-.wrapper .points-promotion-carousel .promotion-indicator .separator {
-    font-size: 2.8vw;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.wrapper .points-promotion-carousel .promotion-indicator .total-count {
-    font-size: 3vw;
-    color: rgba(255, 255, 255, 0.9);
+.wrapper .points-promotion-carousel .promotion-action .jump-button:active {
+    opacity: 0.8;
 }
 
 /* 空状态样式 */
@@ -2553,122 +2583,162 @@ const fetchPointsRules = async () => {
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 2vw 0;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 3.5vw;
+    padding: 3vw 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 3.8vw;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .wrapper .points-promotion-carousel .empty-promotion i {
     margin-right: 2vw;
-    font-size: 4vw;
+    font-size: 4.5vw;
+    opacity: 0.8;
 }
 
-/* 轮播控制按钮 */
+/* 轮播控制按钮 - 悬停时显示在文字上下方 */
 .wrapper .points-promotion-carousel .carousel-controls {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 1vw;
-    margin-left: 2vw;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5vw 0;
 }
 
 .wrapper .points-promotion-carousel .control-btn {
-    width: 8vw;
-    height: 8vw;
-    background: rgba(255, 255, 255, 0.2);
+    width: 3.5vw;
+    height: 3.5vw;
+    min-width: 20px;
+    min-height: 20px;
+    background: none;
     border: none;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
-    color: white;
-    font-size: 3vw;
+    transition: opacity 0.2s ease;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 2vw;
+    pointer-events: auto;
+    flex-shrink: 0;
+}
+
+.wrapper .points-promotion-carousel .control-btn.prev-btn {
+    order: 1;
+    margin-top: -5vw; /* 往上移动 */
+}
+
+.wrapper .points-promotion-carousel .control-btn.next-btn {
+    order: 2;
+    margin-bottom: -5vw; /* 往下移动 */
 }
 
 .wrapper .points-promotion-carousel .control-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
+    color: rgba(255, 255, 255, 1);
+    opacity: 1;
 }
 
 .wrapper .points-promotion-carousel .control-btn:active {
-    transform: scale(0.95);
+    opacity: 0.7;
 }
 
-/* 轮播动画 */
+/* 轮播动画 - 优化动画效果 */
 @keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
-/* Vue transition 动画 */
+/* Vue transition 动画 - 更流畅的过渡 */
 .slide-up-enter-active,
 .slide-up-leave-active {
-    transition: all 0.5s ease;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: absolute;
     width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
 }
 
 .slide-up-enter-from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px) scale(0.9);
 }
 
 .slide-up-leave-to {
     opacity: 0;
-    transform: translateY(-30px);
+    transform: translateY(-40px) scale(0.9);
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
     .wrapper .points-promotion-carousel {
         padding: 3vw 4vw;
-        min-height: 14vw;
+        height: 16vw;
+        min-height: 16vw;
+        border-radius: 12px;
+    }
+    
+    .wrapper .points-promotion-carousel .promotion-item {
+        padding: 2vw 2.5vw;
+        padding-left: 13vw; /* 为固定的图标留出空间 */
+        border-radius: 10px;
     }
     
     .wrapper .points-promotion-carousel .promotion-text {
-        font-size: 4.2vw;
+        font-size: 4.5vw;
         white-space: normal;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-        line-height: 1.3;
+        line-height: 1.4;
     }
     
-    .wrapper .points-promotion-carousel .promotion-icon {
-        width: 8vw;
-        height: 8vw;
+    .wrapper .points-promotion-carousel .promotion-icon-fixed {
+        width: 9vw;
+        height: 9vw;
+        min-width: 44px;
+        min-height: 44px;
+        left: 4vw;
+        border-radius: 10px;
     }
     
-    .wrapper .points-promotion-carousel .promotion-icon i {
-        font-size: 4vw;
+    .wrapper .points-promotion-carousel .promotion-icon-fixed i {
+        font-size: 4.5vw;
     }
     
     .wrapper .points-promotion-carousel .control-btn {
-        width: 10vw;
-        height: 10vw;
-        font-size: 4vw;
+        width: 4vw;
+        height: 4vw;
+        min-width: 24px;
+        min-height: 24px;
+        font-size: 2.5vw;
     }
-
-    /* 移动端按钮容器样式微调 */
-    .wrapper .points-promotion-carousel .promotion-action {
-        margin-right: 2vw; /* 调整间距 */
-    }
-
-    /* 移动端跳转按钮样式 */
+    
     .wrapper .points-promotion-carousel .promotion-action .jump-button {
-        font-size: 3.5vw; /* 字体略微放大 */
-        padding: 1.8vw 3.5vw; /* 内边距略微增加，方便点击 */
-        border-radius: 2vw;
+        font-size: 2.8vw;
+        padding: 1vw 2.2vw;
+        border-radius: 14px;
     }
+
 }
 
 /****************** 推荐商家部分 ******************/
