@@ -283,11 +283,11 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         if (orderState == 3) {
-            if (order.getOrderState() != 2 || (!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId))) {
+            if (null != order.getPaymentMethod() && (order.getOrderState() != 2 || (!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId)))) {
                 throw new APIException(ResultCodeEnum.ORDER_ACCEPT_FAILED);
             }
 
-            if (order.getPaymentMethod() == 2) {
+            if (null != order.getPaymentMethod() && order.getPaymentMethod() == 2) {
                 // 商家用户钱包
                 Wallet wallet = walletRepository.findByUserId(business.getUserId());
                 // 订单交易
