@@ -283,7 +283,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         if (orderState == 3) {
-            if (null != order.getPaymentMethod() && (order.getOrderState() != 2 || (!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId)))) {
+            if ((null == order.getPaymentMethod() || (order.getPaymentMethod()!= 2)) && (order.getOrderState() != 2 || (!Objects.equals(business.getUserId(),userId) && !Objects.equals(order.getCustomerId(),userId)))) {
                 throw new APIException(ResultCodeEnum.ORDER_ACCEPT_FAILED);
             }
 
