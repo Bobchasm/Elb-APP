@@ -337,7 +337,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new APIException(ResultCodeEnum.ORDER_CANCEL_FAILED);
             }
 
-            if (order.getPaymentMethod() == 2) {
+            if (null != order.getPaymentMethod() && order.getPaymentMethod() == 2) {
                 Wallet my_wallet = walletRepository.findByUserId(userId);
                 Wallet bu_wallet = walletRepository.findByUserId(business.getUserId());
 
