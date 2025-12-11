@@ -2,6 +2,8 @@ package com.tju.elm_bk.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.tju.elm_bk.pojo.vo.PointsAccountVO;
 import com.tju.elm_bk.pojo.vo.PointsExpirationVO;
 import com.tju.elm_bk.service.PointsCacheService;
@@ -26,7 +28,12 @@ public class PointsCacheServiceImpl implements PointsCacheService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     
+    // 配置 ObjectMapper 支持 LocalDateTime
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    static {
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
     
     // 缓存 Key 前缀
     private static final String CACHE_KEY_ACCOUNT = "points:account:";

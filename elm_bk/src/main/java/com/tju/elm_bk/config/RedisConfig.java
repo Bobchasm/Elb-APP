@@ -3,9 +3,11 @@ package com.tju.elm_bk.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +35,10 @@ public class RedisConfig {
         ObjectMapper om = new ObjectMapper();
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         om.activateDefaultTyping(om.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL);
+        // 注册 JavaTimeModule 以支持 LocalDateTime 等 Java 8 日期时间类型
+        om.registerModule(new JavaTimeModule());
+        // 禁用将日期时间写为时间戳，使用字符串格式（更易读）
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         jackson2JsonRedisSerializer.setObjectMapper(om);
 
         // 使用 StringRedisSerializer 来序列化和反序列化 redis 的 key 值

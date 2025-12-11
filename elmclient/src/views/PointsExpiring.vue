@@ -11,7 +11,7 @@
             
             <div class="summary-card card">
             <h4 class="summary-title">
-                🎉 近期有 <span class="total-expiring-points">{{ totalExpiringPoints }}</span> 积分即将过期！
+                 近期有 <span class="total-expiring-points">{{ totalExpiringPoints }}</span> 积分即将过期！
                 <br>
                 <span class="record-count">{{ expiringList.length }} 笔记录</span>
             </h4>

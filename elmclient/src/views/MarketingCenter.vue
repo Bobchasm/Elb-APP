@@ -29,7 +29,7 @@
       <section class="functions-section">
         <h2 class="section-title">核心管理功能</h2>
         <div class="functions-grid">
-          <div class="function-card" @click="handleManageUsageRules">
+          <div class="function-card" @mousedown="handleManageUsageRules">
             <div class="card-icon-wrapper">
               <span class="card-icon">📋</span>
             </div>
@@ -42,12 +42,9 @@
                 <path d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <div class="card-hover-overlay">
-              <span class="hover-text">查看详情</span>
-            </div>
           </div>
 
-          <div class="function-card" @click="handleManageWarningConfig">
+          <div class="function-card" @mousedown="handleManageWarningConfig">
             <div class="card-icon-wrapper warning-icon">
               <span class="card-icon">🚨</span>
             </div>
@@ -60,12 +57,9 @@
                 <path d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <div class="card-hover-overlay">
-              <span class="hover-text">配置预警</span>
-            </div>
           </div>
 
-          <div class="function-card primary" @click="handleGoToExchangeManagement">
+          <div class="function-card primary" @mousedown="handleGoToExchangeManagement">
             <div class="card-icon-wrapper primary-icon">
               <span class="card-icon">🔄</span>
             </div>
@@ -77,9 +71,6 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 5l7 7-7 7" />
               </svg>
-            </div>
-            <div class="card-hover-overlay">
-              <span class="hover-text">立即前往</span>
             </div>
           </div>
         </div>
@@ -185,15 +176,15 @@ const fetchPointsRules = async () => {
 };
 
 const handleManageUsageRules = () => {
-  router.push({ name: 'AdminPointsRuleManagement' });
+  router.push({ name: 'AdminPointsRuleManagement' }).catch(() => {});
 };
 
 const handleManageWarningConfig = () => {
-  router.push({ name: 'AdminWarningConfig' });
+  router.push({ name: 'AdminWarningConfig' }).catch(() => {});
 };
 
 const handleGoToExchangeManagement = () => {
-  router.push({ name: 'AdminExchangeManagement' });
+  router.push({ name: 'AdminExchangeManagement' }).catch(() => {});
 };
 
 onMounted(() => {
@@ -463,6 +454,11 @@ onMounted(() => {
   border-color: #3a7bd5;
 }
 
+.function-card:active {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(58, 123, 213, 0.2);
+}
+
 .card-icon-wrapper {
   width: 70px;
   height: 70px;
@@ -525,46 +521,6 @@ onMounted(() => {
   transform: translateX(5px);
 }
 
-/* 悬停覆盖层优化 */
-.card-hover-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(58, 123, 213, 0.95) 0%, rgba(0, 210, 255, 0.95) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform: translateY(100%);
-}
-
-.function-card:hover .card-hover-overlay {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.hover-text {
-  color: white;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s;
-}
-
-.function-card:hover .hover-text {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.function-card.primary:hover .card-hover-overlay {
-  background: linear-gradient(135deg, rgba(54, 209, 220, 0.95) 0%, rgba(91, 134, 229, 0.95) 100%);
-}
-
-.function-card:hover .card-icon-wrapper.warning-icon + .card-content + .card-hover-overlay {
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.95) 0%, rgba(238, 90, 82, 0.95) 100%);
-}
 
 /* 页面底部 */
 .page-footer {

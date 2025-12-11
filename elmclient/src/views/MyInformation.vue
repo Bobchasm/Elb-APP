@@ -67,7 +67,7 @@
                     <div class="menu-icon">
                         <i class="fas fa-star"></i>
                     </div>
-                    <span class="menu-text">我的积分：{{ userInfo.totalPoints || 0 }}</span>
+                    <span class="menu-text">我的积分：{{ userInfo.availablePoints || 0 }}</span>
                     <i class="fas fa-chevron-right menu-arrow"></i>
                 </div>
                 <div class="menu-item" @click="navigateTo('wallet')">
@@ -413,7 +413,7 @@ export default {
 
                         if (pointsResponse && pointsResponse.success) {
                             // 确保使用 data 路径获取 totalPoints
-                            userInfo.value.totalPoints = pointsResponse.data.totalPoints || 0;
+                            userInfo.value.availablePoints = pointsResponse.data.availablePoints || 0;
                             console.log('积分已更新为:', userInfo.value.totalPoints); // 👈 保留检查点
                         }
 

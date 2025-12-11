@@ -11,12 +11,12 @@
             <div class="current-points-card">
                 <i class="fas fa-star points-icon-large"></i>
                 <div class="points-detail">
-                    <span class="label">当前积分</span>
-                    <span class="value">{{ totalPoints }}</span> 
+                    <span class="label">可用积分</span>
+                    <span class="value">{{ availablePoints }}</span> 
                     
                     <div class="available-points-info">
-                        <span class="available-label">可用积分:</span>
-                        <span class="available-value">{{ availablePoints }}</span>
+                        <span class="available-label">当前积分:</span>
+                        <span class="available-value">{{ totalPoints }}</span>
                     </div>
                 </div>
             </div>
@@ -38,7 +38,7 @@
             </div>
 
             <div 
-                v-if="activeStatusFilter === 'gain' || activeStatusFilter === 'deduct'" 
+                v-if="activeStatusFilter === 'gain' || activeStatusFilter === 'frozen' || activeStatusFilter === 'deduct'" 
                 class="secondary-filters"
             >
                 <div v-if="activeStatusFilter === 'gain'">
@@ -50,6 +50,18 @@
                         @click="activeGainSourceFilter = source.value"
                     >
                         {{ source.label }}
+                    </div>
+                </div>
+
+                <div v-if="activeStatusFilter === 'frozen'">
+                    <span class="filter-label">类型:</span>
+                    <div
+                        v-for="type in frozenTypes"
+                        :key="type.value"
+                        :class="['filter-item secondary', { active: activeFrozenTypeFilter === type.value }]"
+                        @click="activeFrozenTypeFilter = type.value"
+                    >
+                        {{ type.label }}
                     </div>
                 </div>
 
@@ -171,6 +183,7 @@ const availablePoints = ref(0);
 
 const activeStatusFilter = ref('all'); 
 const activeGainSourceFilter = ref('all'); 
+const activeFrozenTypeFilter = ref('all');
 const activeDeductTypeFilter = ref('all'); 
 
 const showDetailsModal = ref(false);
@@ -180,6 +193,7 @@ const selectedItemDetails = ref(null);
 const transactionStatuses = [
     { label: '全部', value: 'all' },
     { label: '已获得', value: 'gain' },
+    { label: '冻结中', value: 'frozen' },
     { label: '已消耗', value: 'deduct' },
     { label: '过期积分', value: 'expiring' }, 
 ];
@@ -189,6 +203,12 @@ const gainSources = [
     { label: '消费奖励', value: 'consume' }, 
     { label: 'VIP奖励', value: 'vip' },
     { label: '互动奖励', value: 'interact' },
+];
+
+const frozenTypes = [
+    { label: '全部', value: 'all' },
+    { label: '消费奖励', value: 'consume' },
+    { label: '积分抵扣', value: 'deduction' },
 ];
 
 const deductTypes = [
@@ -419,46 +439,256 @@ const fetchTransactions = async (params = {}) => {
     mainTransactions.value = [];
     
     const status = activeStatusFilter.value;
-    let queryParams = { ...params, pageNum: 1, pageSize: 50 }; 
-    let selectedTransactionType = null;
-    let selectedPointsSource = null;
-
-    if (status === 'gain') {
-        selectedTransactionType = TRANSACTION_TYPE_MAP.gain; 
-        if (activeGainSourceFilter.value === 'vip') {
-            selectedPointsSource = POINTS_SOURCE_MAP.vip; 
-        } else if (activeGainSourceFilter.value === 'interact') {
-            selectedPointsSource = POINTS_SOURCE_MAP.interact; 
-        }
-    } else if (status === 'deduct') {
-        selectedTransactionType = TRANSACTION_TYPE_MAP.deduct; 
-        if (activeDeductTypeFilter.value === 'exchange') {
-            selectedPointsSource = POINTS_SOURCE_MAP.exchange; 
-        } else if (activeDeductTypeFilter.value === 'deduction') {
-            selectedPointsSource = POINTS_SOURCE_MAP.deduction_deducted; 
-        }
-    } 
-    
-    if (selectedTransactionType !== null) {
-        queryParams.transactionType = selectedTransactionType;
-    }
-    if (selectedPointsSource !== null) {
-        queryParams.pointsSource = selectedPointsSource;
-    }
-
     loading.value = true;
+    
     try {
-        const response = await request.get(`/api/points/transactions`, {
-            params: queryParams,
-            headers: { 'Authorization': `Bearer ${token}` },
-        });
+        let allResults = [];
+        
+        // 当选择"已获得"时
+        if (status === 'gain') {
+            // 如果选择"消费奖励"，只发送一个请求
+            if (activeGainSourceFilter.value === 'consume') {
+                const queryParams = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 4,  // thaw
+                    pointsSource: 0      // consume_frozen
+                };
+                
+                const response = await request.get(`/api/points/transactions`, {
+                    params: queryParams,
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
 
-        if (response && response.success && response.data && Array.isArray(response.data)) {
-            mainTransactions.value = response.data
-                .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
-                .map(mapTransactionItem); 
-        } else {
-            toast.error('获取积分明细失败');
+                if (response && response.success && response.data && Array.isArray(response.data)) {
+                    allResults = response.data
+                        .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
+                        .map(mapTransactionItem);
+                }
+            } 
+            // 如果选择"全部"，发送多个请求
+            else if (activeGainSourceFilter.value === 'all') {
+                // 请求1: transaction_type=4 points_source=0
+                const queryParams1 = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 4,  // thaw
+                    pointsSource: 0      // consume_frozen
+                };
+                
+                // 请求2: transaction_type=0 points_source=2
+                const queryParams2 = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 0,  // gain
+                    pointsSource: 2      // vip
+                };
+                
+                // 请求3: transaction_type=0 points_source=3
+                const queryParams3 = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 0,  // gain
+                    pointsSource: 3      // interact
+                };
+                
+                // 并行发送三个请求
+                const [response1, response2, response3] = await Promise.all([
+                    request.get(`/api/points/transactions`, {
+                        params: queryParams1,
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    }),
+                    request.get(`/api/points/transactions`, {
+                        params: queryParams2,
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    }),
+                    request.get(`/api/points/transactions`, {
+                        params: queryParams3,
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    })
+                ]);
+
+                // 合并三个请求的结果
+                const results1 = (response1 && response1.success && response1.data && Array.isArray(response1.data)) 
+                    ? response1.data.filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired).map(mapTransactionItem)
+                    : [];
+                const results2 = (response2 && response2.success && response2.data && Array.isArray(response2.data)) 
+                    ? response2.data.filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired).map(mapTransactionItem)
+                    : [];
+                const results3 = (response3 && response3.success && response3.data && Array.isArray(response3.data)) 
+                    ? response3.data.filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired).map(mapTransactionItem)
+                    : [];
+                
+                allResults = [...results1, ...results2, ...results3];
+            }
+            // VIP奖励和互动奖励保持原有逻辑
+            else {
+                let queryParams = { ...params, pageNum: 1, pageSize: 50 }; 
+                let selectedTransactionType = TRANSACTION_TYPE_MAP.gain;
+                let selectedPointsSource = null;
+
+                if (activeGainSourceFilter.value === 'vip') {
+                    selectedPointsSource = POINTS_SOURCE_MAP.vip; 
+                } else if (activeGainSourceFilter.value === 'interact') {
+                    selectedPointsSource = POINTS_SOURCE_MAP.interact; 
+                }
+                
+                queryParams.transactionType = selectedTransactionType;
+                if (selectedPointsSource !== null) {
+                    queryParams.pointsSource = selectedPointsSource;
+                }
+
+                const response = await request.get(`/api/points/transactions`, {
+                    params: queryParams,
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+
+                if (response && response.success && response.data && Array.isArray(response.data)) {
+                    allResults = response.data
+                        .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
+                        .map(mapTransactionItem);
+                }
+            }
+        } 
+        // 当选择"冻结中"时
+        else if (status === 'frozen') {
+            // 如果选择"全部"，发送两个请求
+            if (activeFrozenTypeFilter.value === 'all') {
+                // 请求1: transaction_type=0 points_source=0 （消费奖励）
+                const queryParams1 = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 0,  // gain
+                    pointsSource: 0      // consume_frozen
+                };
+                
+                // 请求2: transaction_type=3 points_source=5（积分抵扣）
+                const queryParams2 = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 3,  // frozen
+                    pointsSource: 5      // deduction_frozen
+                };
+                
+                // 并行发送两个请求
+                const [response1, response2] = await Promise.all([
+                    request.get(`/api/points/transactions`, {
+                        params: queryParams1,
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    }),
+                    request.get(`/api/points/transactions`, {
+                        params: queryParams2,
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    })
+                ]);
+
+                // 合并两个请求的结果
+                const results1 = (response1 && response1.success && response1.data && Array.isArray(response1.data)) 
+                    ? response1.data.filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired).map(mapTransactionItem)
+                    : [];
+                const results2 = (response2 && response2.success && response2.data && Array.isArray(response2.data)) 
+                    ? response2.data.filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired).map(mapTransactionItem)
+                    : [];
+                
+                allResults = [...results1, ...results2];
+            }
+            // 如果选择"消费奖励"
+            else if (activeFrozenTypeFilter.value === 'consume') {
+                const queryParams = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 0,  // gain
+                    pointsSource: 0      // consume_frozen
+                };
+                
+                const response = await request.get(`/api/points/transactions`, {
+                    params: queryParams,
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+
+                if (response && response.success && response.data && Array.isArray(response.data)) {
+                    allResults = response.data
+                        .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
+                        .map(mapTransactionItem);
+                }
+            }
+            // 如果选择"积分抵扣"
+            else if (activeFrozenTypeFilter.value === 'deduction') {
+                const queryParams = { 
+                    ...params, 
+                    pageNum: 1, 
+                    pageSize: 50,
+                    transactionType: 3,  // frozen
+                    pointsSource: 5      // deduction_frozen
+                };
+                
+                const response = await request.get(`/api/points/transactions`, {
+                    params: queryParams,
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+
+                if (response && response.success && response.data && Array.isArray(response.data)) {
+                    allResults = response.data
+                        .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
+                        .map(mapTransactionItem);
+                }
+            }
+        }
+        // 其他状态（已消耗等）保持原有逻辑
+        else if (status === 'deduct') {
+            let queryParams = { ...params, pageNum: 1, pageSize: 50 }; 
+            let selectedTransactionType = TRANSACTION_TYPE_MAP.deduct;
+            let selectedPointsSource = null;
+
+            if (activeDeductTypeFilter.value === 'exchange') {
+                selectedPointsSource = POINTS_SOURCE_MAP.exchange; 
+            } else if (activeDeductTypeFilter.value === 'deduction') {
+                selectedPointsSource = POINTS_SOURCE_MAP.deduction_deducted; 
+            }
+            
+            queryParams.transactionType = selectedTransactionType;
+            if (selectedPointsSource !== null) {
+                queryParams.pointsSource = selectedPointsSource;
+            }
+
+            const response = await request.get(`/api/points/transactions`, {
+                params: queryParams,
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            if (response && response.success && response.data && Array.isArray(response.data)) {
+                allResults = response.data
+                    .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
+                    .map(mapTransactionItem);
+            }
+        }
+        // 全部状态
+        else {
+            let queryParams = { ...params, pageNum: 1, pageSize: 50 }; 
+            
+            const response = await request.get(`/api/points/transactions`, {
+                params: queryParams,
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            if (response && response.success && response.data && Array.isArray(response.data)) {
+                allResults = response.data
+                    .filter(item => item.transactionType !== TRANSACTION_TYPE_MAP.expired)
+                    .map(mapTransactionItem);
+            }
+        }
+
+        mainTransactions.value = allResults;
+        
+        if (allResults.length === 0 && status !== 'expiring') {
+            // 不显示错误提示，只是没有数据
         }
     } catch (e) {
         handleApiError(e, '获取积分明细异常');
@@ -469,9 +699,10 @@ const fetchTransactions = async (params = {}) => {
 
 // --- 数据触发和监听 ---
 
-watch([activeStatusFilter, activeGainSourceFilter, activeDeductTypeFilter], () => {
+watch([activeStatusFilter, activeGainSourceFilter, activeFrozenTypeFilter, activeDeductTypeFilter], () => {
     if (activeStatusFilter.value !== 'expiring') {
         if (activeStatusFilter.value !== 'gain') activeGainSourceFilter.value = 'all';
+        if (activeStatusFilter.value !== 'frozen') activeFrozenTypeFilter.value = 'all';
         if (activeStatusFilter.value !== 'deduct') activeDeductTypeFilter.value = 'all';
         fetchTransactions();
     }

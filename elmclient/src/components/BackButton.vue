@@ -16,7 +16,7 @@
       const router = useRouter();
   
       // 如果当前路径不是首页路径就显示返回键
-      const excludedPaths = ['/index', '/','/successfulPayment','/myInformation','/admin/home','/admin/user'];
+      const excludedPaths = ['/index', '/','/myInformation','/admin/home','/admin/user'];
       const showBackButton = computed(() => !excludedPaths.includes(route.path));
       const goBack = () => {
         router.back();

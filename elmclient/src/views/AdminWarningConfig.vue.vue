@@ -114,7 +114,7 @@
             </button>
             <button 
               class="cancel-btn" 
-              @click="resetForm"
+              @click="showResetConfirm"
               :disabled="saving"
             >
               重置
@@ -136,6 +136,23 @@
         </div>
       </div>
     </div>
+
+    <!-- 重置确认弹窗 -->
+    <div v-if="showResetModal" class="modal-overlay" @click.self="showResetModal = false">
+      <div class="modal-content confirm-modal">
+        <div class="modal-header">
+          <h3>确认重置</h3>
+          <span class="close-btn" @click="showResetModal = false">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>确定要重置所有修改吗？</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" @click="showResetModal = false">取消</button>
+          <button class="modal-btn confirm-btn" @click="confirmReset">确认重置</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -149,6 +166,7 @@ const router = useRouter();
 const loading = ref(false);
 const saving = ref(false);
 const error = ref(false);
+const showResetModal = ref(false);
 
 // 配置数据
 const configData = ref({
@@ -240,11 +258,15 @@ const saveConfig = async () => {
   }
 };
 
-// 重置表单
-const resetForm = () => {
-  if (confirm('确定要重置所有修改吗？')) {
-    fetchConfig();
-  }
+// 显示重置确认弹窗
+const showResetConfirm = () => {
+  showResetModal.value = true;
+};
+
+// 确认重置表单
+const confirmReset = () => {
+  showResetModal.value = false;
+  fetchConfig();
 };
 
 // 插入变量到短信模板
@@ -339,8 +361,11 @@ onMounted(() => {
     /* 容器居中对齐 */
     height: 100px; /* 匹配 top-background 的高度 */
     display: flex;
-    align-items: center; /* 垂直居中 */
-    padding: 0 15px; /* 左右内边距，提供空间感 */
+    align-items: flex-start; /* 改为顶部对齐，让图标靠上 */
+    padding-top: 30px; /* 顶部内边距10px，让图标稍微靠上 */
+    padding-left: 15px; /* 左右内边距，提供空间感 */
+    padding-right: 15px;
+    padding-bottom: 0;
 
     /* 按钮图标/文字的实际样式 */
     /* 假设内部有一个图标或文字，例如 <i class="icon"></i> */
@@ -809,5 +834,129 @@ input:disabled + .slider {
   .page-content {
     padding: 12px;
   }
+}
+
+/* 确认弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.confirm-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.confirm-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.confirm-modal .close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.confirm-modal .close-btn:hover {
+  color: #666;
+}
+
+.confirm-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirm-modal .modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.confirm-modal .modal-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.confirm-modal .modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: auto !important;
+  width: auto !important;
+  flex: none !important;
+  max-width: none !important;
+}
+
+.confirm-modal .cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+  min-width: auto !important;
+  width: auto !important;
+  flex: none !important;
+  max-width: none !important;
+}
+
+.confirm-modal .cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-modal .confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-modal .confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 </style>

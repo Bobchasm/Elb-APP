@@ -124,7 +124,7 @@
               <button 
                 class="action-btn status" 
                 :class="rule.ruleStatus === 1 ? 'disable' : 'enable'"
-                @click.stop="handleToggleStatus(rule)"
+                @click.stop="showToggleStatusConfirm(rule)"
               >
                 <span class="action-icon" v-if="rule.ruleStatus === 1">⏸️</span>
                 <span class="action-icon" v-else>▶️</span>
@@ -266,7 +266,7 @@
               <button 
                 class="action-btn status" 
                 :class="goods.ruleStatus === 1 ? 'disable' : 'enable'"
-                @click.stop="handleToggleStatus(goods)"
+                @click.stop="showToggleStatusConfirm(goods)"
               >
                 <span class="action-icon" v-if="goods.ruleStatus === 1">⏸️</span>
                 <span class="action-icon" v-else>▶️</span>
@@ -584,6 +584,40 @@
         </div>
       </div>
     </div>
+
+    <!-- 启用/禁用确认弹窗 -->
+    <div v-if="showToggleStatusModal" class="modal-overlay" @click.self="showToggleStatusModal = false">
+      <div class="modal-content confirm-modal">
+        <div class="modal-header">
+          <h3>确认操作</h3>
+          <span class="close-btn" @click="showToggleStatusModal = false">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>{{ toggleStatusMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" @click="showToggleStatusModal = false">取消</button>
+          <button class="modal-btn confirm-btn" @click="confirmToggleStatus">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div class="modal-content confirm-modal">
+        <div class="modal-header">
+          <h3>确认删除</h3>
+          <span class="close-btn" @click="showDeleteModal = false">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>{{ deleteMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" @click="showDeleteModal = false">取消</button>
+          <button class="modal-btn confirm-btn" @click="confirmDelete">确认删除</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -625,6 +659,12 @@ const isEditMode = ref(false);
 const submitting = ref(false);
 const detailData = ref(null);
 const detailType = ref('');
+const showToggleStatusModal = ref(false);
+const showDeleteModal = ref(false);
+const toggleStatusMessage = ref('');
+const deleteMessage = ref('');
+const toggleStatusTarget = ref(null);
+const deleteTarget = ref(null);
 
 // --- 表单数据 ---
 const formData = reactive({
@@ -818,14 +858,34 @@ const handleEdit = (item) => {
 };
 
 /**
+ * 显示启用/禁用确认弹窗
+ */
+const showToggleStatusConfirm = (item) => {
+  const newStatus = item.ruleStatus === 1 ? 0 : 1;
+  const isRule = item.ruleType === 0;
+  toggleStatusMessage.value = `${isRule ? '规则' : '商品'} "${item.ruleName}" 将被${newStatus === 1 ? '启用' : '禁用'}，确认操作吗？`;
+  toggleStatusTarget.value = item;
+  showToggleStatusModal.value = true;
+};
+
+/**
+ * 确认启用/禁用操作
+ */
+const confirmToggleStatus = async () => {
+  const item = toggleStatusTarget.value;
+  showToggleStatusModal.value = false;
+  
+  if (!item) return;
+
+  await handleToggleStatus(item);
+};
+
+/**
  * 接口：PUT /api/marketing/points/exchange-rules/{id} (更新规则状态)
  */
 const handleToggleStatus = async (item) => {
  const newStatus = item.ruleStatus === 1 ? 0 : 1;
  const isRule = item.ruleType === 0;
- const message = `${isRule ? '规则' : '商品'} "${item.ruleName}" 将被${newStatus === 1 ? '启用' : '禁用'}，确认操作吗？`;
- 
- if (!confirm(message)) return;
  
  try {
     // 构造请求体，只包含必要的字段
@@ -859,13 +919,32 @@ const handleToggleStatus = async (item) => {
 };
 
 /**
+ * 显示删除确认弹窗
+ */
+const showDeleteConfirm = (item) => {
+  const isRule = item.ruleType === 0;
+  deleteMessage.value = `确认删除${isRule ? '规则' : '商品'} "${item.ruleName}" 吗？删除后不可恢复。`;
+  deleteTarget.value = item;
+  showDeleteModal.value = true;
+};
+
+/**
+ * 确认删除操作
+ */
+const confirmDelete = async () => {
+  const item = deleteTarget.value;
+  showDeleteModal.value = false;
+  
+  if (!item) return;
+
+  await handleDelete(item);
+};
+
+/**
  * 接口：DELETE /api/marketing/points/exchange-rules/{id} (删除规则)
  */
 const handleDelete = async (item) => {
     const isRule = item.ruleType === 0;
-    const message = `确认删除${isRule ? '规则' : '商品'} "${item.ruleName}" 吗？删除后不可恢复。`;
-    
-    if (!confirm(message)) return;
 
     try {
         const response = await request.delete(`/api/marketing/points/exchange-rules/${item.id}`);
@@ -2043,5 +2122,121 @@ onMounted(async () => {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* 确认弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.confirm-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeInConfirm 0.3s ease-out;
+}
+
+@keyframes fadeInConfirm {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.confirm-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.confirm-modal .close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.confirm-modal .close-btn:hover {
+  color: #666;
+}
+
+.confirm-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirm-modal .modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.confirm-modal .modal-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.confirm-modal .modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.confirm-modal .cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.confirm-modal .cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-modal .confirm-btn {
+  background-color: #1e80ff;
+  color: white;
+}
+
+.confirm-modal .confirm-btn:hover {
+  background-color: #0085e0;
+  box-shadow: 0 4px 12px rgba(30, 128, 255, 0.3);
 }
 </style>

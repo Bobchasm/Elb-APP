@@ -113,7 +113,7 @@
                 <i class="icon-edit"></i>
                 <span>编辑</span>
               </button>
-              <button @click="handleDelete(rule.id)" class="action-btn delete-btn">
+              <button @click="showDeleteConfirm(rule.id)" class="action-btn delete-btn">
                 <i class="icon-delete"></i>
                 <span>删除</span>
               </button>
@@ -238,10 +238,27 @@
             <button @click="handleEdit(selectedRule)" class="btn btn-edit">
               <i class="icon-edit"></i>编辑
             </button>
-            <button @click="handleDelete(selectedRule.id)" class="btn btn-delete">
+            <button @click="showDeleteConfirm(selectedRule.id)" class="btn btn-delete">
               <i class="icon-delete"></i>删除
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div class="modal-content confirm-modal">
+        <div class="modal-header">
+          <h3>确认删除</h3>
+          <span class="close-btn" @click="showDeleteModal = false">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>确定要删除这条积分规则吗？此操作不可恢复！</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" @click="showDeleteModal = false">取消</button>
+          <button class="modal-btn confirm-btn" @click="confirmDelete">确认删除</button>
         </div>
       </div>
     </div>
@@ -507,6 +524,8 @@ function goBack() {
 // 表单数据
 // 高级选项显示状态
 const showAdvanced = ref(false);
+const showDeleteModal = ref(false);
+const deleteTargetId = ref(null);
 
 // 规则表单数据
 const ruleForm = ref({
@@ -759,10 +778,16 @@ const handleEdit = (rule) => {
   isModalVisible.value = true;
 };
 
-const handleDelete = async (id) => {
-  if (!confirm('确定要删除这条积分规则吗？此操作不可恢复！')) {
-    return;
-  }
+const showDeleteConfirm = (id) => {
+  deleteTargetId.value = id;
+  showDeleteModal.value = true;
+};
+
+const confirmDelete = async () => {
+  const id = deleteTargetId.value;
+  showDeleteModal.value = false;
+  
+  if (!id) return;
 
   try {
     // ⚠️ 实际删除接口调用，需要根据您的 API 调整
@@ -992,8 +1017,11 @@ watch(searchKeyword, (newVal) => {
     /* 容器居中对齐 */
     height: 100px; /* 匹配 top-background 的高度 */
     display: flex;
-    align-items: center; /* 垂直居中 */
-    padding: 0 15px; /* 左右内边距，提供空间感 */
+    align-items: flex-start; /* 改为顶部对齐，让图标靠上 */
+    padding-top: 40px; /* 顶部内边距30px，让图标稍微靠上 */
+    padding-left: 15px; /* 左右内边距，提供空间感 */
+    padding-right: 15px;
+    padding-bottom: 0;
 
     /* 按钮图标/文字的实际样式 */
     /* 假设内部有一个图标或文字，例如 <i class="icon"></i> */
@@ -1927,5 +1955,97 @@ watch(searchKeyword, (newVal) => {
   background-color: #e6f7ff;
   border-color: #91d5ff;
   color: #1890ff;
+}
+
+/* 确认弹窗样式 */
+.confirm-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.confirm-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.confirm-modal .close-btn {
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.confirm-modal .close-btn:hover {
+  color: #666;
+}
+
+.confirm-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirm-modal .modal-body p {
+  color: #555;
+  line-height: 1.5;
+}
+
+.confirm-modal .modal-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.confirm-modal .modal-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.confirm-modal .cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.confirm-modal .cancel-btn:hover {
+  background-color: #c7c7c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-modal .confirm-btn {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.confirm-modal .confirm-btn:hover {
+  background-color: #ff7875;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
 }
 </style>

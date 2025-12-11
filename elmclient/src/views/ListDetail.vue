@@ -215,16 +215,20 @@ export default {
 					orderId: orderId.value 
 				});
 				
-				if (response.data.success) {
+				if (response.data && response.data.success) {
 					alert("订单取消成功");
 					// 重新加载订单详情
 					fetchOrderDetail();
 				} else {
-					alert("取消失败: " + response.data.message);
+					// 显示后端返回的具体错误消息
+					const errorMessage = (response.data && response.data.message) || response.message || "取消失败,请重试";
+					alert(errorMessage);
 				}
 			} catch (err) {
 				console.error("取消订单失败:", err);
-				alert("取消订单失败，请稍后重试");
+				// 从错误响应中提取错误消息
+				const errorMessage = err.response?.data?.message || err.message || "取消订单失败，请稍后重试";
+				alert(errorMessage);
 			}
 		};
 

@@ -1,15 +1,23 @@
 <template>
-  <div class="container">
-    <div class="card">
-      <div class="header-section">
-        <div class="icon-section">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-8.82"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+  <div class="back-btn-container">
+    <BackButton style="margin-top: 2vw;"/>
+  </div>
+  <div class="wrapper">
+    <header>
+      <p>支付成功</p>
+    </header>
+    
+    <div class="content">
+      <div class="card">
+        <div class="header-section">
+          <div class="icon-section">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-8.82"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h2 class="title">支付成功</h2>
         </div>
-        <h2 class="title">支付成功</h2>
-      </div>
 
       <div class="details">
         <!-- 商家名称 -->
@@ -36,6 +44,15 @@
           <span class="value actual-paid-amount">¥{{ actualPaidAmount }}</span>
         </div>
 
+        <!-- 本单可获积分 -->
+        <div class="detail-item" v-if="pointsAmount > 0">
+          <span class="label">本单可获积分</span>
+          <span class="value points-value">
+            <i class="fas fa-star"></i>
+            {{ pointsAmount }}
+          </span>
+        </div>
+
         <!-- 支付时间 -->
         <div class="detail-item">
           <span class="label">支付时间</span>
@@ -43,8 +60,9 @@
         </div>
       </div>
 
-      <div class="actions">
-        <button @click="goBack" class="btn-back">去查看订单</button>
+        <div class="actions">
+          <button @click="goBack" class="btn-back">去查看订单</button>
+        </div>
       </div>
     </div>
   </div>
@@ -54,7 +72,8 @@
 import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 // 假设 '@/utils/request' 路径正确
-import request from '@/utils/request'; 
+import request from '@/utils/request';
+import BackButton from '../components/BackButton.vue'; 
 
 // 定义常量
 const POINT_DEDUCTION_KEY = 'usePointsDeduction'; 
@@ -68,6 +87,7 @@ const paymentDetails = ref({
     orderDate: ''
 });
 const orderId = ref(route.query.orderId);
+const pointsAmount = ref(0); // 本单可获积分
 
 // 辅助判断：用于控制积分抵扣行是否显示
 const hasPointsDeduction = computed(() => {
@@ -116,6 +136,8 @@ onMounted(async () => {
         const totalAmount = parseFloat(orderData.orderTotal) || 0;
         // 积分抵扣的现金金额字段为 pointsDiscountAmount
         const deductionAmount = parseFloat(orderData.pointsDiscountAmount) || 0;
+        // 本单可获积分字段为 pointsAmount
+        pointsAmount.value = orderData.pointsAmount || 0;
 
         paymentDetails.value = {
             business: orderData.business,
@@ -126,6 +148,7 @@ onMounted(async () => {
         
         console.log(`[INFO] 从后端获取的订单总额: ¥${totalAmount.toFixed(2)}`);
         console.log(`[INFO] 从后端获取的积分抵扣金额: ¥${deductionAmount.toFixed(2)}`);
+        console.log(`[INFO] 从后端获取的本单可获积分: ${pointsAmount.value}`);
         
         // 清除 sessionStorage 中的临时数据
         if (sessionStorage.getItem(POINT_DEDUCTION_KEY) !== null) {
@@ -163,30 +186,78 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "PingFang SC", "Microsoft YaHei", sans-serif;
   background-color: var(--secondary-color);
 }
 
-.container {
+.wrapper {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: #f5f7fa;
+}
+
+/****************** header部分 ******************/
+.wrapper header {
+  width: 100%;
+  height: 12vw;
+  background-color: #0097FF;
+  color: #fff;
+  font-size: 4.8vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 1.5rem;
+}
+
+.content {
+  padding-top: 14vw;
+  padding-bottom: 4vw;
+  width: 100%;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
-.card {
+/* 返回按钮容器 */
+.back-btn-container {
+  position: fixed;
+  left: 0vw;
+  top: 0vw;
+  z-index: 1001;
+}
+
+/* 本单可获积分样式 */
+.points-value {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  color: #ff6b00;
+  font-weight: bold;
+}
+
+.points-value i {
+  color: #ffa500;
+  font-size: 1em;
+}
+
+.content .card {
   background-color: var(--card-bg-color);
-  border-radius: 20px;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02);
-  padding: 2.5rem 2rem;
-  width: 100%;
+  border-radius: 3vw;
+  box-shadow: 0 0.2vw 1vw rgba(0, 0, 0, 0.05);
+  padding: 4vw;
+  width: calc(100% - 6vw);
   max-width: 420px;
+  margin: 0 auto;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  box-sizing: border-box;
 }
 
 .header-section {

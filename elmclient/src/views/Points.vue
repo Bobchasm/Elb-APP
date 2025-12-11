@@ -1,10 +1,11 @@
 <template>
-    <div class="back-btn-container">
+    <div class="back-btn-container" v-if="!showRulesModal">
         <BackButton style="margin-top: 2vw;"/>
     </div>
     <div class="details-container">
         <div class="header app-header-fixed">
             <h3>我的积分</h3>
+            <i class="fas fa-info-circle rules-icon" @click="showRulesModal = true"></i>
         </div>
 
         <div class="tab-content overview-content">
@@ -12,8 +13,13 @@
             <div class="current-points-card" @click="goToDetails">
                 <i class="fas fa-star points-icon-large"></i>
                 <div class="points-detail">
-                    <span class="label">当前积分</span>
-                    <span class="value">{{ totalPoints }}</span>
+                    <span class="label">可用积分</span>
+                    <span class="value">{{ availablePoints }}</span>
+                    
+                    <div class="available-points-info">
+                        <span class="available-label">当前积分:</span>
+                        <span class="available-value">{{ totalPoints }}</span>
+                    </div>
                 </div>
                 <i class="fas fa-chevron-right detail-link-icon"></i> 
             </div>
@@ -63,7 +69,7 @@
                                 库存: <span :class="{'low-stock': product.stockQuantity < 10}">{{ product.stockQuantity }}</span>
                             </div>
                             <button 
-                                :disabled="totalPoints < product.requiredPoints || product.stockQuantity <= 0"
+                                :disabled="availablePoints < product.requiredPoints || product.stockQuantity <= 0"
                                 class="exchange-btn"
                                 @click.stop="handleExchange(product)"
                             >
@@ -88,7 +94,7 @@
                     <p>
                         <strong>消耗积分:</strong> 
                         <span class="required-points">{{ currentProduct.requiredPoints * exchangeQuantity }}</span>
-                        (当前可用: {{ totalPoints }})
+                        (当前可用: {{ availablePoints }})
                     </p>
                     <p>
                         <strong>单品积分:</strong> {{ currentProduct.requiredPoints }}
@@ -120,13 +126,13 @@
                         </p>
                     </div>
 
-                    <p v-if="totalPoints < currentProduct.requiredPoints * exchangeQuantity" class="warning-text">
+                    <p v-if="availablePoints < currentProduct.requiredPoints * exchangeQuantity" class="warning-text">
                         <i class="fas fa-exclamation-circle"></i> 积分不足以兑换当前数量。
                     </p>
 
                     <button 
                         @click="confirmExchange" 
-                        :disabled="!selectedAddressId || totalPoints < currentProduct.requiredPoints * exchangeQuantity || isExchanging"
+                        :disabled="!selectedAddressId || availablePoints < currentProduct.requiredPoints * exchangeQuantity || isExchanging"
                         class="confirm-btn"
                     >
                         {{ isExchanging ? '兑换中...' : `确认兑换 (${currentProduct.requiredPoints * exchangeQuantity} 积分)` }}
@@ -135,11 +141,81 @@
             </div>
         </div>
 
+        <!-- 积分规则弹窗 -->
+        <div v-if="showRulesModal" class="modal-overlay" @click.self="showRulesModal = false">
+            <div class="modal-content rules-modal">
+                <div class="modal-header">
+                    <h4>积分规则</h4>
+                    <button class="close-btn" @click="showRulesModal = false">&times;</button>
+                </div>
+                <div class="modal-body rules-content">
+                    <div v-if="loadingRules" class="loading-rules">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                    <div v-else>
+                        <div class="rule-section">
+                            <h5 class="rule-title">
+                                <i class="fas fa-star"></i> 积分获取规则
+                            </h5>
+                            <div class="rule-text">
+                                <div v-if="pointsRules.length === 0" class="no-rules">暂无规则信息</div>
+                                <div v-else>
+                                    <div v-for="(rule, index) in pointsRules" :key="rule.id || index" class="rule-item">
+                                        <div class="rule-name">{{ rule.ruleName || '未命名规则' }}</div>
+                                        <div class="rule-details">
+                                            <div v-if="rule.pointsRatio != null" class="rule-detail-item">
+                                                <span class="detail-label">积分比例：</span>
+                                                <span class="detail-value">{{ rule.pointsRatio }}（消费1元获得{{ rule.pointsRatio }}积分）</span>
+                                            </div>
+                                            <div v-if="rule.pointsMultiplier != null" class="rule-detail-item">
+                                                <span class="detail-label">积分倍数：</span>
+                                                <span class="detail-value">{{ rule.pointsMultiplier }}</span>
+                                            </div>
+                                            <div v-if="rule.expireDays != null" class="rule-detail-item">
+                                                <span class="detail-label">有效期：</span>
+                                                <span class="detail-value">{{ rule.expireDays }} 天</span>
+                                            </div>
+                                            <div v-if="rule.priority != null" class="rule-detail-item">
+                                                <span class="detail-label">优先级：</span>
+                                                <span class="detail-value">{{ rule.priority }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rule-section">
+                            <h5 class="rule-title">
+                                <i class="fas fa-exchange-alt"></i> 积分消费规则
+                            </h5>
+                            <div class="rule-text">
+                                <div v-if="exchangeRules.length === 0" class="no-rules">暂无规则信息</div>
+                                <div v-else>
+                                    <div v-for="(rule, index) in exchangeRules" :key="rule.id || index" class="rule-item">
+                                        <div class="rule-name">{{ rule.ruleName || '未命名规则' }}</div>
+                                        <div class="rule-details">
+                                            <div v-if="rule.exchangeRatio != null" class="rule-detail-item">
+                                                <span class="detail-label">兑换比例：</span>
+                                                <span class="detail-value">{{ rule.exchangeRatio }} 积分 = 1 元</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="confirm-btn" @click="showRulesModal = false">我知道了</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router'; 
 import request from '../utils/request';
 import { toast } from '../utils/toast';
@@ -149,6 +225,7 @@ const router = useRouter();
 
 // --- 响应式数据 ---
 const totalPoints = ref(0); 
+const availablePoints = ref(0);
 const expiringCount = ref(0); 
 const exchangeProducts = ref([]);
 const userAddresses = ref([]); 
@@ -159,7 +236,13 @@ const currentProduct = ref(null);
 const exchangeQuantity = ref(1);
 const selectedAddressId = ref('');
 const maxQuantity = ref(1); 
-const isExchanging = ref(false); 
+const isExchanging = ref(false);
+
+// 规则弹窗状态
+const showRulesModal = ref(false);
+const pointsRules = ref([]);
+const exchangeRules = ref([]);
+const loadingRules = ref(false); 
 
 // --- 工具函数 ---
 
@@ -213,7 +296,8 @@ const fetchPointsAccount = async () => {
         });
 
         if (response && response.success && response.data) {
-            totalPoints.value = response.data.totalPoints || 0; 
+            availablePoints.value = response.data.availablePoints || 0;
+            totalPoints.value = response.data.totalPoints || 0;
         } else {
             toast.error('获取积分账户失败: ' + (response ? response.message : '未知错误'));
         }
@@ -310,7 +394,7 @@ const confirmExchange = async () => {
         return;
     }
     const requiredPoints = currentProduct.value.requiredPoints * exchangeQuantity.value;
-    if (totalPoints.value < requiredPoints) {
+    if (availablePoints.value < requiredPoints) {
         toast.error('积分不足，无法完成兑换！');
         return;
     }
@@ -344,10 +428,57 @@ const confirmExchange = async () => {
 };
 
 
+// --- 获取积分规则 ---
+const fetchPointsRules = async () => {
+    loadingRules.value = true;
+    const token = getToken();
+    if (!token) {
+        loadingRules.value = false;
+        return;
+    }
+    
+    try {
+        // 并行获取两个规则
+        const [pointsResponse, exchangeResponse] = await Promise.all([
+            request.get('/api/marketing/points/rules', {
+                headers: { 'Authorization': `Bearer ${token}` },
+            }),
+            request.get('/api/marketing/points/exchange-rules', {
+                headers: { 'Authorization': `Bearer ${token}` },
+            })
+        ]);
+
+        if (pointsResponse && pointsResponse.success) {
+            pointsRules.value = Array.isArray(pointsResponse.data) ? pointsResponse.data : [];
+        } else {
+            pointsRules.value = [];
+        }
+
+        if (exchangeResponse && exchangeResponse.success) {
+            exchangeRules.value = Array.isArray(exchangeResponse.data) ? exchangeResponse.data : [];
+        } else {
+            exchangeRules.value = [];
+        }
+    } catch (e) {
+        console.error('获取积分规则失败:', e);
+        pointsRules.value = [];
+        exchangeRules.value = [];
+    } finally {
+        loadingRules.value = false;
+    }
+};
+
+// 监听弹窗打开，获取规则
+watch(showRulesModal, (newVal) => {
+    if (newVal) {
+        fetchPointsRules();
+    }
+});
+
 // --- 逻辑处理 ---
 
 const handleExchange = (product) => {
-    if (totalPoints.value < product.requiredPoints) {
+    if (availablePoints.value < product.requiredPoints) {
         toast.error('积分不足，无法兑换！');
         return;
     }
@@ -359,7 +490,7 @@ const handleExchange = (product) => {
     currentProduct.value = product;
     exchangeQuantity.value = 1;
     const maxByStock = product.stockQuantity;
-    const maxByPoints = Math.floor(totalPoints.value / product.requiredPoints);
+    const maxByPoints = Math.floor(availablePoints.value / product.requiredPoints);
     maxQuantity.value = Math.min(maxByStock, maxByPoints);
     
     if (exchangeQuantity.value > maxQuantity.value) {
@@ -511,6 +642,24 @@ onMounted(() => {
     font-weight: 700;
     line-height: 1.1;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.available-points-info {
+    font-size: 0.75rem; 
+    margin-top: 5px; 
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.available-label {
+    opacity: 0.7;
+    font-weight: 300;
+}
+
+.available-value {
+    font-weight: 600;
 }
 .detail-link-icon {
     font-size: 1.2rem;
@@ -746,6 +895,25 @@ onMounted(() => {
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* 规则图标样式 */
+.rules-icon {
+    position: absolute;
+    right: 4vw;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 5vw;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 1001;
+}
+
+.rules-icon:hover {
+    color: #ffd700;
+    transform: translateY(-50%) scale(1.1);
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -767,6 +935,24 @@ onMounted(() => {
     color: #999;
     padding: 0;
 }
+/* 规则图标样式 */
+.rules-icon {
+    position: absolute;
+    right: 4vw;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 5vw;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 1001;
+}
+
+.rules-icon:hover {
+    color: #ffd700;
+    transform: translateY(-50%) scale(1.1);
+}
+
 .modal-body p {
     margin: 10px 0;
     font-size: 0.95rem;
@@ -852,6 +1038,155 @@ onMounted(() => {
 }
 .warning-text i {
     margin-right: 5px;
+}
+
+/* 规则弹窗样式 */
+.rules-modal {
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.rules-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 15px 0;
+}
+
+.loading-rules {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 1rem;
+}
+
+.loading-rules i {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+.rule-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #e0e0e0;
+}
+
+.rule-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.rule-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.rule-title i {
+    color: #ff6b6b;
+    font-size: 1rem;
+}
+
+.rule-text {
+    color: #666;
+    line-height: 1.8;
+    font-size: 0.95rem;
+    padding-left: 24px;
+}
+
+.rule-text p {
+    margin: 8px 0;
+}
+
+.rule-text ul,
+.rule-text ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.rule-text li {
+    margin: 5px 0;
+}
+
+.rule-item {
+    margin-bottom: 12px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #ff6b6b;
+}
+
+.rule-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.rule-details {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.rule-detail-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.rule-detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: #888;
+    margin-right: 6px;
+    min-width: 70px;
+}
+
+.detail-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.no-rules {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.modal-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    text-align: center;
+}
+
+.modal-footer .confirm-btn {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+    color: white;
+    border: none;
+    padding: 10px 40px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modal-footer .confirm-btn:hover {
+    background: linear-gradient(135deg, #ff5252, #ff7979);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
 
 .confirm-btn {

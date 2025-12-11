@@ -268,10 +268,14 @@ export default {
           // 重新加载订单
           fetchOrders();
         } else {
-          toast.error("取消失败,请重试");
+          // 显示后端返回的具体错误消息
+          const errorMessage = response.message || "取消失败,请重试";
+          toast.error(errorMessage);
         }
       } catch (error) {
-        toast.error("取消失败,请重试");
+        // 从错误响应中提取错误消息
+        const errorMessage = error.response?.data?.message || error.message || "取消失败,请重试";
+        toast.error(errorMessage);
       } finally {
         closeModal();
       }

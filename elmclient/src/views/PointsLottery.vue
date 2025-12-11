@@ -125,6 +125,25 @@
     </div>
    </div>
   </teleport>
+
+  <!-- 钱包开通弹窗 -->
+  <teleport to="body">
+    <div v-if="showWalletActivateModal" class="modal-mask" @click="showWalletActivateModal = false">
+      <div class="modal-wrapper">
+        <div class="modal-container wallet-activate-modal" @click.stop>
+          <div class="modal-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <h3>开通虚拟钱包</h3>
+          <p class="modal-message">您还没有虚拟钱包账户，是否现在开通？</p>
+          <div class="modal-buttons">
+            <button class="apply-btn" @click="activateWallet">确认开通</button>
+            <button class="cancel-btn" @click="showWalletActivateModal = false">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </teleport>
  </div>
 </template>
 
@@ -133,7 +152,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router'; 
 // 假设这是您的工具/请求函数，请确保路径正确
 import request from '@/utils/request'; 
-import { toast } from '@/utils/toast'; 
+import { toast } from '@/utils/toast';
+import BackButton from '../components/BackButton.vue'; 
 
 const WIN_PRIZE_INDICES = [0, 1, 2, 5, 8, 7, 6, 3].filter(i => i !== 4); // 中奖格子索引集合
 const NO_WIN_PRIZE_INDICES = [6, 8]; // 非中奖格子索引集合 (左下和右下)
@@ -221,9 +241,61 @@ const prizeDescriptions = computed(() => {
 });
 
 const router = useRouter(); 
+const showWalletActivateModal = ref(false);
+
+// 检测并创建钱包（复用个人信息页面的逻辑）
+const checkAndCreateWallet = async () => {
+  try {
+    const response = await request.get('/api/wallet/message');
+    if (response && response.success) {
+      router.push({ path: '/wallet' });
+    } else {
+      // 检查是否是钱包不存在的错误
+      if (response && (response.code === 'VIRTUAL_WALLET_MISSED' || 
+          (response.message && (response.message.includes('不存在') || response.message.includes('未开通'))))) {
+        showWalletActivateModal.value = true;
+      } else {
+        toast.error('获取钱包信息失败');
+      }
+    }
+  } catch (error) {
+    // 检查是否是钱包不存在的错误
+    const errorData = error.response?.data || error;
+    const errorCode = errorData?.code || error.code;
+    const errorMessage = errorData?.message || error.message || '';
+    
+    if (error.response?.status === 404 || 
+        errorCode === 'VIRTUAL_WALLET_MISSED' ||
+        errorMessage.includes('不存在') ||
+        errorMessage.includes('未开通') ||
+        errorMessage.includes('您还未开通钱包')) {
+      showWalletActivateModal.value = true;
+    } else {
+      console.error('检查钱包失败:', error);
+      toast.error('检查钱包状态失败');
+    }
+  }
+};
+
+// 激活钱包
+const activateWallet = async () => {
+  try {
+    const response = await request.get('/api/wallet/open');
+    if (response && response.success) {
+      toast.success('钱包开通成功');
+      showWalletActivateModal.value = false;
+      router.push({ path: '/wallet' });
+    } else {
+      toast.error('钱包开通失败：' + (response.message || '未知错误'));
+    }
+  } catch (error) {
+    console.error('激活钱包失败:', error);
+    toast.error('钱包开通失败，请重试');
+  }
+};
 
 const goToPointsPage = () => {
-  router.push('/wallet');
+  checkAndCreateWallet();
 };
 
 const openRules = () => {
@@ -471,11 +543,6 @@ onMounted(() => {
   z-index: 1001; /* 比 header 的 z-index:1000 高，避免被遮挡 */
 }
 
-/* 头部样式（用于与全局样式配合） */
-.header.app-header-fixed {
-  /* 继承全局样式：fixed定位、蓝色背景、居中、12vw高度 */
-  /* 由于使用了全局类，这里scoped内不需重复定义 */
-}
 .details-container {
   /* 为固定头部留出空间。假设头部高度为 12vw，下方卡片有 15px margin */
   padding-top: calc(6vw + 15px); 
@@ -784,7 +851,6 @@ onMounted(() => {
   color: #fff; /* 确保标题颜色为白色 */
 }
 
-
 /* 2. 规则弹窗 Modal 样式 - 放在非 scoped 块中，因为使用了 Teleport */
 .modal-mask {
  position: fixed;
@@ -837,6 +903,7 @@ onMounted(() => {
  max-height: 70vh;
  overflow-y: auto;
 }
+
 .modal-body p {
   font-size: 0.9rem;
   line-height: 1.5;
@@ -862,6 +929,7 @@ onMounted(() => {
   color: #888;
 }
 
+
 /* 弹窗过渡动画 */
 .modal-enter-active,
 .modal-leave-active {
@@ -875,5 +943,87 @@ onMounted(() => {
 .modal-leave-to .modal-container {
  -webkit-transform: scale(1.1);
  transform: scale(1.1);
+}
+
+/* 钱包开通弹窗样式 */
+.wallet-activate-modal {
+  text-align: center;
+  max-width: 350px;
+  position: relative;
+}
+
+.wallet-activate-modal .modal-icon {
+  font-size: 3rem;
+  color: #ff6b6b;
+  margin-bottom: 15px;
+}
+
+.wallet-activate-modal .modal-icon i {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.wallet-activate-modal h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.wallet-activate-modal .modal-message {
+  color: #666;
+  font-size: 1rem;
+  margin: 15px 0 25px 0;
+  line-height: 1.5;
+}
+
+.wallet-activate-modal .modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.wallet-activate-modal .apply-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e) !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 12px 24px !important;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wallet-activate-modal .apply-btn:hover {
+  background: linear-gradient(135deg, #ff5252, #ff7979) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.wallet-activate-modal .cancel-btn {
+  background: #e0e0e0 !important;
+  color: #666 !important;
+  font-weight: 500;
+  padding: 12px 24px !important;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wallet-activate-modal .cancel-btn:hover {
+  background: #d0d0d0 !important;
+  transform: translateY(-2px);
 }
 </style>
