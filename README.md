@@ -10,11 +10,11 @@
 
 **本项目已部署至小组的服务器上** 
 
-- 如果想直接查看效果请访问：[http://REDACTED_IP:8081/](http://REDACTED_IP:8081/)
+- 如果想直接查看效果请访问：[http://REDACTED_DOMAIN:8081/](http://REDACTED_DOMAIN:8081/)
 
-- 后端部分接口前缀：[http://REDACTED_IP:8080](http://REDACTED_IP:8080) 
+- 后端部分接口前缀：[http://bobchasm,cn:8080](http://REDACTED_DOMAIN:8080) 
 
-- 接口文档路径：[http://REDACTED_IP:8080/swagger-ui/index.html](http://REDACTED_IP:8080/swagger-ui/index.html)
+- 接口文档路径：[http://REDACTED_DOMAIN:8080/swagger-ui/index.html](http://REDACTED_DOMAIN:8080/swagger-ui/index.html)
 
 **若自己部署请注意：**
 
@@ -24,9 +24,21 @@
    
    可参考 [从0开始在linux服务器上部署SpringBoot和Vue_vue项目linux部署-CSDN博客](https://blog.csdn.net/m0_53140426/article/details/144745031?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522061248a22aceb1ff2288a8b50a813a59%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=061248a22aceb1ff2288a8b50a813a59&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-2-144745031-null-null.142^v102^pc_search_result_base7&utm_term=Linux%E9%83%A8%E7%BD%B2spingboot%E5%92%8Cvue&spm=1018.2226.3001.4187)
 
+3. 本项目在版本？后启用了中间件redis、rabbitmq，当前设置均为服务器的配置信息，如需使用自己本地的中间件，请在本地启动相关服务并修改配置文件
+
 #### 2.1 后端部分
 
-基于 SpringBoot，Maven，Mybatis
+**技术栈**
+
+- SpringBoot
+
+- Maven
+
+- Mybatis
+
+- redis
+
+- rabbitmq
 
 ##### 开发环境
 
@@ -52,17 +64,17 @@ MySQL版本信息：
 
 ##### 配置
 
-- 配置文件数据库修改
+- 配后端置文件
   
   ```
   frontend-comprehension/elm_bk/src/main/resources/application.yml
   ```
   
-  将数据库配置改为您本地的配置，包括：
-  
-  url(主要是数据库名)，username，password
+  可修改配置：数据库、redis、rabbitmq，若您想尝试使用这些本地服务
 
-- 如果可以使用我们的数据库(为添加拓展功能，我们新增了一些表和字段)，请在本地新建一个名为 **elm_v2** 的数据库，并运行以下路径中的建表语句：
+- 数据库
+  
+  使用本地数据库服务时，请新建一个名为 **elm_v2** 的数据库，并运行以下路径中的建表语句：
   
   ```
   frontend-comprehension/elm_bk/sql/elm_v2.sql
@@ -70,7 +82,11 @@ MySQL版本信息：
 
 ##### 部署运行
 
-1.打包
+1.中间件服务准备
+
+如果您想使用自己的中间件(已经修改相关配置文件的情况下)，请先启动自己的服务，否则忽略这一步
+
+2.打包
 
 若使用IDEA打包项目，先 clean，再 package，成功控制台如图![Alt](./gra/success_package.png)
 
@@ -92,7 +108,7 @@ mvn clean package
 frontend-comprehension/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
 ```
 
-2.命令行在jar包存放的目录中执行:
+3.命令行在jar包存放的目录中执行:
 
 ```bash
 java -jar elm_bk-0.0.1-SNAPSHOT.jar
@@ -108,7 +124,7 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 
 后端配置端口为 8080，请注意端口占用
 
-3.当终端出现以下界面，则启动成功：
+4.当终端出现以下界面，则启动成功：
 
 ![Alt](./gra/success_bk_start.png)
 
@@ -419,9 +435,9 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 **前端开发技术实践**
 
 - 2025-06-15 前端开发技术实践最终版
-
+  
   855118c99b6b834de79cd181daa44fb3a8da8745
-
+  
   保留分支：frontend-comprehension
 
 **软件工程综合实践**
@@ -437,28 +453,30 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
   4811b39329c8ba900ab6f9af88818abaea970d2a
 
 - 2025-10-06 添加服务器配置
-
+  
   9cf1660403b491e5dbe273ef5ae54e1d30fe9667
 
 - 2025-10-08 软件工程综合实践最终版
-
+  
   8f63541c7e2861148d53ea6d732003642b58fa9c
-
+  
   保留分支：comprehension
 
 **软件工程中级实践**
 
 - 2025-10-17 更换服务器配置
-
+  
   af1d1ac56e61b9a3f4c87d4afef4aa2e2d30b0fd
 
 - 2025-11-10 虚拟钱包开始
-
+  
   0aaddb0a3bf536cc800726d5a948dc6c109060d8
 
 - 2025-11-14 虚拟钱包最终版
-
+  
   0a27a93732bfd996522399ff9b158ea32ec77394
+
+- 
 
 ## 5 一些说明
 
