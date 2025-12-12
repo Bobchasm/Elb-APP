@@ -478,6 +478,16 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
   
   0a27a93732bfd996522399ff9b158ea32ec77394
 
+- 2025-11-23 积分系统开始
+  
+  4eeb319c5eb4eccae252fffdf04004a9eb6daf05
+
+- 2025-12-12 积分系统最终版
+  
+  b85e5e60c423314d371852b9596d1448c680721d
+  
+  保留分支：mid-comprehension
+
 ## 5 一些说明
 
 欢迎贡献代码、报告问题或提出建议！
