@@ -11,8 +11,10 @@
 **本项目已部署至小组的服务器上** 
 
 - 如果想直接查看效果请访问：[http://REDACTED_DOMAIN:8081/](http://REDACTED_DOMAIN:8081/)
+  
+  特别提供一个项目管理员账号：用户名 admin，密码 Admin123
 
-- 后端部分接口前缀：[http://bobchasm,cn:8080](http://REDACTED_DOMAIN:8080) 
+- 后端部分接口前缀：[http://REDACTED_DOMAIN:8080](http://REDACTED_DOMAIN:8080) 
 
 - 接口文档路径：[http://REDACTED_DOMAIN:8080/swagger-ui/index.html](http://REDACTED_DOMAIN:8080/swagger-ui/index.html)
 
@@ -476,8 +478,6 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
   
   0a27a93732bfd996522399ff9b158ea32ec77394
 
-- 
-
 ## 5 一些说明
 
 欢迎贡献代码、报告问题或提出建议！
@@ -501,7 +501,6 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 如有问题或建议，请通过以下方式联系：
 
 - **邮箱**：<br>
-  Tel: 17850362981 <br>
   zengyicydd@tju.edu.cn <br>
   gaocan@tju.edu.cn <br>
   yxy641121@gmail.com <br>
