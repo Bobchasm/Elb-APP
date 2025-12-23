@@ -26,6 +26,12 @@ import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordDetailVO;
 import com.tju.elm_bk.rich.domain.web.vo.TransactionRecordVO;
 import com.tju.elm_bk.service.PointsService;
 import com.tju.elm_bk.service.MarketingPointsRuleService;
+import com.tju.elm_bk.service.OrderMessageService;
+import com.tju.elm_bk.pojo.dto.OrderPaidMessage;
+import com.tju.elm_bk.mapper.OrderDetailetMapper;
+import com.tju.elm_bk.pojo.vo.OrderFoodVO;
+import com.tju.elm_bk.mapper.PointsExchangeOrderMapper;
+import com.tju.elm_bk.pojo.entity.PointsExchangeOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,6 +66,12 @@ public class WalletApplicationService {
     private PointsService pointsService;
     @Autowired
     private MarketingPointsRuleService marketingPointsRuleService;
+    @Autowired
+    private OrderMessageService orderMessageService;
+    @Autowired
+    private OrderDetailetMapper orderDetailetMapper;
+    @Autowired
+    private PointsExchangeOrderMapper pointsExchangeOrderMapper;
 
 
     public final static float RECHARGE_RATE = 0.01f;
@@ -138,8 +151,72 @@ public class WalletApplicationService {
         ordersMapper.setOrderState(orderId,1);
         // 设置支付方式
         ordersMapper.setOrderPaymentMethod(orderId,2);
+        
+        // 订单支付完成，发送消息到RabbitMQ（异步通知营销系统计算积分）
+        // 注意：积分兑换订单不需要发送消息，因为积分已扣除，不需要再发放奖励积分
+        if (!isPointsExchangeOrder(orderId)) {
+            sendOrderPaidMessage(orderId, order);
+        }
 
         return true;
+    }
+    
+    /**
+     * 检查订单是否是积分兑换订单
+     * @param orderId 订单ID
+     * @return 是否是积分兑换订单
+     */
+    private boolean isPointsExchangeOrder(Long orderId) {
+        // 方法1：通过支付方式判断（payment_method = 3 表示积分兑换）
+        Order order = ordersMapper.getOrderById(orderId);
+        if (order != null && order.getPaymentMethod() != null && order.getPaymentMethod() == 3) {
+            return true;
+        }
+        
+        // 方法2：通过积分兑换订单表判断
+        PointsExchangeOrder exchangeOrder = pointsExchangeOrderMapper.selectByOrderId(orderId);
+        return exchangeOrder != null;
+    }
+    
+    /**
+     * 发送订单支付完成消息到RabbitMQ
+     * 设计原则：封装与抽象 - 封装消息构建和发送逻辑
+     */
+    private void sendOrderPaidMessage(Long orderId, Order order) {
+        try {
+            // 1. 查询订单详情（商品列表）
+            List<OrderFoodVO> orderFoodList = orderDetailetMapper.selectOrderDetailList(orderId);
+            
+            // 2. 构建商品详情列表
+            List<OrderPaidMessage.OrderFoodDetail> foodDetails = new ArrayList<>();
+            List<Long> foodIds = new ArrayList<>();
+            
+            for (OrderFoodVO foodVO : orderFoodList) {
+                OrderPaidMessage.OrderFoodDetail detail = new OrderPaidMessage.OrderFoodDetail();
+                detail.setFoodId(foodVO.getFoodId());
+                detail.setFoodPrice(foodVO.getFoodPrice());
+                detail.setQuantity(foodVO.getQuantity());
+                foodDetails.add(detail);
+                foodIds.add(foodVO.getFoodId());
+            }
+            
+            // 3. 构建订单支付完成消息
+            OrderPaidMessage message = new OrderPaidMessage();
+            message.setOrderId(orderId);
+            message.setUserId(order.getCustomerId());
+            message.setOrderAmount(order.getOrderTotal());
+            message.setOrderDate(order.getOrderDate());
+            message.setFoodIds(foodIds);
+            message.setFoodDetails(foodDetails);
+            
+            // 4. 发送消息到RabbitMQ（异步，不阻塞订单状态更新）
+            orderMessageService.sendOrderPaidMessage(message);
+            log.info("虚拟钱包支付订单{}，已发送订单支付完成消息到RabbitMQ", orderId);
+        } catch (Exception e) {
+            // 消息发送失败不影响订单状态更新
+            // 可以考虑记录日志或发送到死信队列
+            log.error("发送订单支付完成消息失败: orderId={}, error={}", orderId, e.getMessage(), e);
+        }
     }
 
 
