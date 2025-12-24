@@ -128,7 +128,7 @@ MySQL版本信息：
 - 配后端置文件
 
   ```
-  frontend-comprehension/elm_bk/src/main/resources/application.yml
+  /elm_bk/src/main/resources/application.yml
   ```
 
   可修改配置：数据库、redis、rabbitmq，若您想尝试使用这些本地服务
@@ -138,7 +138,7 @@ MySQL版本信息：
   使用本地数据库服务时，请新建一个名为 **elm_v2** 的数据库，并运行以下路径中的建表语句：
 
   ```
-  frontend-comprehension/elm_bk/sql/elm_v2.sql
+  /elm_bk/sql/elm_v2.sql
   ```
 
 ##### 部署运行
@@ -153,7 +153,7 @@ MySQL版本信息：
 
 若使用命令行打包：
 
-在 /frontend-comprehension/elm_bk 中打开cmd，执行：
+在 /elm_bk 中打开cmd，执行：
 
 ```bash
 mvn clean package
@@ -166,7 +166,7 @@ mvn clean package
 生成的项目jar包路径在:
 
 ```
-frontend-comprehension/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
+/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
 ```
 
 3.命令行在jar包存放的目录中执行:
@@ -216,7 +216,7 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
   1.可以使用 Visual Studio Code 打开项目前端部分:
 
   ```
-  frontend-comprehension/elmclient
+  /elmclient
   ```
 
   2.在其终端 TERMINAL 安装依赖 (请先确保具有vue环境与npm):
@@ -288,7 +288,7 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
   - 直接将以下路径目录中的所有东西复制到前面创建的 **my_server** 文件夹下的 **public** 中。若之后在下面第7点出现失败，请尝试自己打包(如下一点)
 
     ```
-    frontend-comprehension/elmclient/dist/
+    /elmclient/dist/
     ```
 
   - 自己打包：
@@ -296,7 +296,7 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
     使用ide (Visual Studio Code) 或者是命令行终端打开项目的前端部分:
 
     ```
-    frontend-comprehension/elmclient
+    /elmclient
     ```
 
     执行:
@@ -332,8 +332,6 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 
   855118c99b6b834de79cd181daa44fb3a8da8745
 
-  保留分支：frontend-comprehension
-
 **软件工程综合实践**
 
 - 2025-09-08 开始
@@ -353,8 +351,6 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 - 2025-10-08 软件工程综合实践最终版
 
   8f63541c7e2861148d53ea6d732003642b58fa9c
-
-  保留分支：comprehension
 
 **软件工程中级实践**
 
@@ -377,5 +373,3 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
 - 2025-12-12 积分系统最终版
 
   b85e5e60c423314d371852b9596d1448c680721d
-
-  保留分支：mid-comprehension
