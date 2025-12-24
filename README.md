@@ -13,14 +13,29 @@
 
 欢迎贡献代码、报告问题或提出建议！
 
-### 4.1 提交问题
+### 4.1 提供一些账号
+
+普通用户：
+- username: bob_user
+- password: Bobuser123
+
+商家用户：
+- username: bob_business
+- password: Bobbusiness123
+
+管理员：
+- username: admin
+- password: Admin123
+
+
+### 4.2 提交问题
 
 - 描述问题现象
 - 提供复现步骤
 - 附上错误日志
 - 说明环境信息
 
-### 4.2 提交代码
+### 4.3 提交代码
 
 1. Fork本仓库
 2. 创建功能分支
