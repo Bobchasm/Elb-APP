@@ -77,7 +77,7 @@ export default {
         // 加载商家列表（从后端接口获取）
         const loadBusinesses = async () => {
             try {
-                const response = await request.get('http://localhost:8080/api/businesses/active');
+                const response = await request.get('http://REDACTED_DOMAIN:8080/api/businesses/active');
                 businessList.value = response;
 				console.log('response.data:', response.data);
 				console.log('response:', response);
@@ -129,12 +129,12 @@ export default {
             try {
                 if (editor.mode === 'create') {
                     // 调用新增接口
-                    const response = await request.post('http://localhost:8080/api/businesses', editor.form);
+                    const response = await request.post('http://REDACTED_DOMAIN:8080/api/businesses', editor.form);
                     businessList.value.push(response.data);
                     console.log('新增商家:', response.data);
                 } else {
                     // 调用更新接口
-                    const response = await request.patch(`http://localhost:8080/api/businesses/${editor.form.userId}`, editor.form);
+                    const response = await request.patch(`http://REDACTED_DOMAIN:8080/api/businesses/${editor.form.userId}`, editor.form);
                     const index = businessList.value.findIndex(
                         b => b.userId === editor.form.userId
                     );
