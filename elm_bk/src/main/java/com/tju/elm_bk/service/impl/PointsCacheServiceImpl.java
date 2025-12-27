@@ -51,10 +51,13 @@ public class PointsCacheServiceImpl implements PointsCacheService {
             String key = CACHE_KEY_ACCOUNT + userId;
             Object value = redisTemplate.opsForValue().get(key);
             if (value != null) {
+                log.info("【缓存命中】积分账户缓存，userId: {}, key: {}", userId, key);
                 return objectMapper.convertValue(value, PointsAccountVO.class);
+            } else {
+                log.debug("【缓存未命中】积分账户缓存，userId: {}, key: {}", userId, key);
             }
         } catch (Exception e) {
-            log.warn("获取积分账户缓存失败，userId: {}, error: {}", userId, e.getMessage());
+            log.warn("【缓存异常】获取积分账户缓存失败，userId: {}, error: {}", userId, e.getMessage());
         }
         return null;
     }
@@ -64,8 +67,10 @@ public class PointsCacheServiceImpl implements PointsCacheService {
         try {
             String key = CACHE_KEY_ACCOUNT + userId;
             redisTemplate.opsForValue().set(key, account, CACHE_EXPIRE_ACCOUNT, TimeUnit.SECONDS);
+            log.info("【缓存写入】积分账户缓存，userId: {}, key: {}, 过期时间: {}秒", 
+                    userId, key, CACHE_EXPIRE_ACCOUNT);
         } catch (Exception e) {
-            log.warn("设置积分账户缓存失败，userId: {}, error: {}", userId, e.getMessage());
+            log.warn("【缓存异常】设置积分账户缓存失败，userId: {}, error: {}", userId, e.getMessage());
         }
     }
 
@@ -73,9 +78,14 @@ public class PointsCacheServiceImpl implements PointsCacheService {
     public void deleteAccountCache(Long userId) {
         try {
             String key = CACHE_KEY_ACCOUNT + userId;
-            redisTemplate.delete(key);
+            Boolean deleted = redisTemplate.delete(key);
+            if (Boolean.TRUE.equals(deleted)) {
+                log.info("【缓存删除】积分账户缓存，userId: {}, key: {}", userId, key);
+            } else {
+                log.debug("【缓存删除】积分账户缓存不存在，userId: {}, key: {}", userId, key);
+            }
         } catch (Exception e) {
-            log.warn("删除积分账户缓存失败，userId: {}, error: {}", userId, e.getMessage());
+            log.warn("【缓存异常】删除积分账户缓存失败，userId: {}, error: {}", userId, e.getMessage());
         }
     }
 
@@ -84,14 +94,17 @@ public class PointsCacheServiceImpl implements PointsCacheService {
         try {
             Object value = redisTemplate.opsForValue().get(CACHE_KEY_EXCHANGE_RATIO);
             if (value != null) {
+                log.info("【缓存命中】积分兑换比例缓存，key: {}", CACHE_KEY_EXCHANGE_RATIO);
                 if (value instanceof Number) {
                     return BigDecimal.valueOf(((Number) value).doubleValue());
                 } else if (value instanceof String) {
                     return new BigDecimal((String) value);
                 }
+            } else {
+                log.debug("【缓存未命中】积分兑换比例缓存，key: {}", CACHE_KEY_EXCHANGE_RATIO);
             }
         } catch (Exception e) {
-            log.warn("获取积分兑换比例缓存失败，error: {}", e.getMessage());
+            log.warn("【缓存异常】获取积分兑换比例缓存失败，error: {}", e.getMessage());
         }
         return null;
     }
@@ -101,17 +114,24 @@ public class PointsCacheServiceImpl implements PointsCacheService {
         try {
             redisTemplate.opsForValue().set(CACHE_KEY_EXCHANGE_RATIO, ratio, 
                 CACHE_EXPIRE_EXCHANGE_RATIO, TimeUnit.SECONDS);
+            log.info("【缓存写入】积分兑换比例缓存，key: {}, ratio: {}, 过期时间: {}秒", 
+                    CACHE_KEY_EXCHANGE_RATIO, ratio, CACHE_EXPIRE_EXCHANGE_RATIO);
         } catch (Exception e) {
-            log.warn("设置积分兑换比例缓存失败，error: {}", e.getMessage());
+            log.warn("【缓存异常】设置积分兑换比例缓存失败，error: {}", e.getMessage());
         }
     }
 
     @Override
     public void deleteExchangeRatioCache() {
         try {
-            redisTemplate.delete(CACHE_KEY_EXCHANGE_RATIO);
+            Boolean deleted = redisTemplate.delete(CACHE_KEY_EXCHANGE_RATIO);
+            if (Boolean.TRUE.equals(deleted)) {
+                log.info("【缓存删除】积分兑换比例缓存，key: {}", CACHE_KEY_EXCHANGE_RATIO);
+            } else {
+                log.debug("【缓存删除】积分兑换比例缓存不存在，key: {}", CACHE_KEY_EXCHANGE_RATIO);
+            }
         } catch (Exception e) {
-            log.warn("删除积分兑换比例缓存失败，error: {}", e.getMessage());
+            log.warn("【缓存异常】删除积分兑换比例缓存失败，error: {}", e.getMessage());
         }
     }
 
@@ -122,6 +142,7 @@ public class PointsCacheServiceImpl implements PointsCacheService {
             String key = CACHE_KEY_EXPIRING + userId;
             Object value = redisTemplate.opsForValue().get(key);
             if (value != null) {
+                log.info("【缓存命中】即将过期积分缓存，userId: {}, key: {}", userId, key);
                 // Redis 返回的是 List，直接转换
                 if (value instanceof List) {
                     return (List<?>) value;
@@ -129,9 +150,11 @@ public class PointsCacheServiceImpl implements PointsCacheService {
                 // 如果不是 List，尝试用 ObjectMapper 转换
                 return objectMapper.convertValue(value, 
                     objectMapper.getTypeFactory().constructCollectionType(List.class, PointsExpirationVO.class));
+            } else {
+                log.debug("【缓存未命中】即将过期积分缓存，userId: {}, key: {}", userId, key);
             }
         } catch (Exception e) {
-            log.warn("获取即将过期积分缓存失败，userId: {}, error: {}", userId, e.getMessage());
+            log.warn("【缓存异常】获取即将过期积分缓存失败，userId: {}, error: {}", userId, e.getMessage());
         }
         return null;
     }
@@ -141,8 +164,10 @@ public class PointsCacheServiceImpl implements PointsCacheService {
         try {
             String key = CACHE_KEY_EXPIRING + userId;
             redisTemplate.opsForValue().set(key, expiringPoints, CACHE_EXPIRE_EXPIRING, TimeUnit.SECONDS);
+            log.info("【缓存写入】即将过期积分缓存，userId: {}, key: {}, 过期时间: {}秒, 数据条数: {}", 
+                    userId, key, CACHE_EXPIRE_EXPIRING, expiringPoints != null ? expiringPoints.size() : 0);
         } catch (Exception e) {
-            log.warn("设置即将过期积分缓存失败，userId: {}, error: {}", userId, e.getMessage());
+            log.warn("【缓存异常】设置即将过期积分缓存失败，userId: {}, error: {}", userId, e.getMessage());
         }
     }
 
@@ -150,16 +175,23 @@ public class PointsCacheServiceImpl implements PointsCacheService {
     public void deleteExpiringPointsCache(Long userId) {
         try {
             String key = CACHE_KEY_EXPIRING + userId;
-            redisTemplate.delete(key);
+            Boolean deleted = redisTemplate.delete(key);
+            if (Boolean.TRUE.equals(deleted)) {
+                log.info("【缓存删除】即将过期积分缓存，userId: {}, key: {}", userId, key);
+            } else {
+                log.debug("【缓存删除】即将过期积分缓存不存在，userId: {}, key: {}", userId, key);
+            }
         } catch (Exception e) {
-            log.warn("删除即将过期积分缓存失败，userId: {}, error: {}", userId, e.getMessage());
+            log.warn("【缓存异常】删除即将过期积分缓存失败，userId: {}, error: {}", userId, e.getMessage());
         }
     }
 
     @Override
     public void deleteUserAllCache(Long userId) {
+        log.info("【缓存删除】开始删除用户所有缓存，userId: {}", userId);
         deleteAccountCache(userId);
         deleteExpiringPointsCache(userId);
+        log.info("【缓存删除】用户所有缓存删除完成，userId: {}", userId);
     }
 }
 

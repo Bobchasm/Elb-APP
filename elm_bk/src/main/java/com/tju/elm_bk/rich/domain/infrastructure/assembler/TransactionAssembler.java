@@ -29,6 +29,8 @@ public class TransactionAssembler {
         po.setFee(transaction.getFee());
         po.setStatus(transaction.getStatus());
         po.setFeeRate(feeRate);
+        // 设置创建时间（使用Transaction中的createTime，确保时间正确）
+        po.setCreateTime(transaction.getCreateTime());
 
         return po;
     }

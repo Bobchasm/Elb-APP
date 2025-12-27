@@ -303,10 +303,10 @@
           </div>
           <div class="rule-text" v-else>
             <p>1. 充值金额需大于0.01元</p>
-            <p>2. 充值奖励率：{{ rechargeRules ? (rechargeRules.rewardRate * 100).toFixed(2) + '%' : '待配置' }}</p>
+            <p>2. 充值奖励率：{{ rechargeRules ? (rechargeRules.rewardRate * 100).toFixed(2) + '%' : '充值金额*1%' }}</p>
             <p>3. 奖励金额将在充值成功后立即到账</p>
             <p>4. 提现时将扣除之前获得的充值奖励</p>
-            <p>5. 提现手续费率：{{ withdrawRules ? (withdrawRules.feeRate * 100).toFixed(2) + '%' : '待配置' }}</p>
+            <p>5. 提现手续费率：{{ withdrawRules ? (withdrawRules.feeRate * 100).toFixed(2) + '%' : '提现金额*5%' }}</p>
             <p>6. 具体规则以平台公告为准</p>
           </div>
         </div>
@@ -329,9 +329,9 @@
           </div>
           <div class="rule-text" v-else>
             <p>1. 提现金额需大于0.01元</p>
-            <p>2. 提现手续费率：{{ withdrawRules ? (withdrawRules.feeRate * 100).toFixed(2) + '%' : '待配置' }}</p>
+            <p>2. 提现手续费率：{{ withdrawRules ? (withdrawRules.feeRate * 100).toFixed(2) + '%' : '提现金额*5%' }}</p>
             <p>3. 提现时将扣除之前获得的充值奖励</p>
-            <p>4. 充值奖励率：{{ rechargeRules ? (rechargeRules.rewardRate * 100).toFixed(2) + '%' : '待配置' }}</p>
+            <p>4. 充值奖励率：{{ rechargeRules ? (rechargeRules.rewardRate * 100).toFixed(2) + '%' : '充值金额*1%' }}</p>
             <p>5. 具体规则以平台公告为准</p>
           </div>
         </div>

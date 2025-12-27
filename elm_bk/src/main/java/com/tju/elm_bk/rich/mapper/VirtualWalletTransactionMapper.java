@@ -15,7 +15,23 @@ import java.util.List;
 public interface VirtualWalletTransactionMapper {
     @Select("""
         <script>
-            select vmt.id, vmt.type, vmt.amount, vmt.fee,vmt.create_time,
+            select vmt.id, 
+                CASE
+                    -- 如果是付款方（from_account），保持原始类型
+                    WHEN vmt.from_account = #{walletId} THEN vmt.type
+                    -- 如果是收款方（to_account），需要调整类型
+                    WHEN vmt.to_account = #{walletId} THEN 
+                        CASE
+                            -- 原始类型是支付(0)，对于收款方应该显示为收款(1)
+                            WHEN vmt.type = 0 THEN 1
+                            -- 原始类型是收款(1)，对于付款方应该显示为支付(0)
+                            WHEN vmt.type = 1 THEN 0
+                            -- 其他类型（提现、充值、退款）保持不变
+                            ELSE vmt.type
+                        END
+                    ELSE vmt.type
+                END as type,
+                vmt.amount, vmt.fee, vmt.create_time,
                 CASE
                     WHEN vmt.from_account = #{walletId} THEN 0
                     ELSE 1
@@ -25,7 +41,15 @@ public interface VirtualWalletTransactionMapper {
                 vmt.is_deleted = 0
                 and (vmt.from_account = #{walletId} or vmt.to_account = #{walletId})
                 <if test="type!=null">
-                    and vmt.type = #{type}
+                    -- 根据查询类型过滤，需要考虑双向转换
+                    and (
+                        (vmt.from_account = #{walletId} and vmt.type = #{type}) or
+                        (vmt.to_account = #{walletId} and (
+                            (#{type} = 0 and vmt.type = 1) or
+                            (#{type} = 1 and vmt.type = 0) or
+                            (#{type} != 0 and #{type} != 1 and vmt.type = #{type})
+                        ))
+                    )
                 </if>
                 <if test="status!=null">
                     and vmt.status = #{status}
@@ -34,6 +58,7 @@ public interface VirtualWalletTransactionMapper {
                     and vmt.create_time &gt;= #{startDate} and vmt.create_time &lt;= #{endDate}
                 </if>
             </where>
+            order by vmt.create_time desc
         </script>
     """)
     List<TransactionRecordVO> queryTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate);
@@ -64,8 +89,8 @@ public interface VirtualWalletTransactionMapper {
     TransactionRecordDetailVO queryTransactionByOrder(Long orderId);
 
     @Insert("""
-        insert into virtual_wallet_transaction (type, status, amount, from_account, to_account, fee, fee_rate,order_id) 
-        values (#{type}, #{status}, #{amount}, #{fromAccount}, #{toAccount}, #{fee}, #{feeRate},#{orderId})
+        insert into virtual_wallet_transaction (type, status, amount, from_account, to_account, fee, fee_rate, order_id, create_time) 
+        values (#{type}, #{status}, #{amount}, #{fromAccount}, #{toAccount}, #{fee}, #{feeRate}, #{orderId}, #{createTime})
     """)
     void createTransaction(VirtualWalletTransaction transaction);
 

@@ -51,7 +51,7 @@ export default {
 			try {
 				// 获取商家列表
 				const response = await request.get(
-					"http://REDACTED_DOMAIN:8080/api/businesses/type",
+					"http://localhost:8080/api/businesses/type",
 					{
 						params: {
 							type: orderTypeId

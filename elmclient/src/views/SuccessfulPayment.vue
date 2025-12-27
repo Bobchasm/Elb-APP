@@ -32,8 +32,8 @@
           <span class="value">¥{{ paymentDetails.orderTotal }}</span>
         </div>
 
-        <!-- 积分抵扣 - 仅在有抵扣金额时显示 -->
-        <div class="detail-item deduction-section" v-if="hasPointsDeduction">
+        <!-- 积分抵扣 - 始终显示，未使用时显示为0 -->
+        <div class="detail-item deduction-section">
           <span class="label deduction-label">积分抵扣</span>
           <span class="value deduction-value">- ¥{{ pointsDeductionAmount }}</span>
         </div>

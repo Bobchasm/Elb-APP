@@ -175,15 +175,19 @@
                                 <span class="value amount">¥{{ finalPaymentAmount }}</span>
                             </div>
                             <div class="balance-item">
-                                <span class="label">透支额度：</span>
-                                <span class="value">¥{{ walletInfo?.overdraftLimit?.toFixed(2) || '0.00' }}</span>
+                                <span class="label">可透支额度：</span>
+                                <span class="value">¥{{ walletInfo?.overdraftAmount?.toFixed(2) || '0.00' }}</span>
                             </div>
                             <div class="balance-item">
-                                <span class="label">已透支：</span>
+                                <span class="label">已透支金额：</span>
                                 <span class="value">¥{{ walletInfo?.overdrawnAmount?.toFixed(2) || '0.00' }}</span>
                             </div>
+                            <div class="balance-item highlight">
+                                <span class="label">需要透支：</span>
+                                <span class="value highlight-value">¥{{ (parseFloat(finalPaymentAmount) - (walletInfo?.balance || 0)).toFixed(2) }}</span>
+                            </div>
                         </div>
-                        <p class="overdraft-desc">继续支付将使用透支功能，可能会产生额外费用</p>
+                        <p class="overdraft-desc">您的余额不足，继续支付将使用透支功能。透支会产生贷款，需要按时还款并支付利息。</p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -477,7 +481,43 @@ const handleWalletPayment = async () => {
         return;
     }
 
-    // 直接发起支付，让后端来处理余额不足和透支逻辑
+    // 检查余额是否足够
+    const balance = walletData.balance || 0;
+    const finalAmount = parseFloat(finalPaymentAmount.value);
+    const isVip = (walletData.vipLevel || 0) > 0;
+    const overdraftAmount = walletData.overdraftAmount || 0; // 可透支金额
+    const overdrawnAmount = walletData.overdrawnAmount || 0; // 已透支金额
+    const availableOverdraft = overdraftAmount - overdrawnAmount; // 可用透支额度
+
+    // 如果余额不足
+    if (balance < finalAmount) {
+        // 计算需要透支的金额
+        const needOverdraft = finalAmount - balance;
+        
+        // 如果是VIP且有可用透支额度
+        if (isVip && availableOverdraft > 0) {
+            // 检查透支额度是否足够
+            if (needOverdraft <= availableOverdraft) {
+                // 弹出确认框，让用户选择是否使用透支
+                showOverdraftConfirmModal.value = true;
+                return; // 暂停流程，等待用户确认
+            } else {
+                // 透支额度不足
+                toast.error(`余额不足，且透支额度不足。当前余额：¥${balance.toFixed(2)}，可用透支：¥${availableOverdraft.toFixed(2)}，订单金额：¥${finalAmount.toFixed(2)}`);
+                return;
+            }
+        } else {
+            // 不是VIP或没有透支额度
+            if (!isVip) {
+                toast.error(`余额不足，当前余额：¥${balance.toFixed(2)}，订单金额：¥${finalAmount.toFixed(2)}。VIP用户可使用透支功能。`);
+            } else {
+                toast.error(`余额不足，且透支额度不足。当前余额：¥${balance.toFixed(2)}，可用透支：¥${availableOverdraft.toFixed(2)}，订单金额：¥${finalAmount.toFixed(2)}`);
+            }
+            return;
+        }
+    }
+
+    // 余额足够，直接支付
     await performWalletPayment();
 };
 
@@ -1003,6 +1043,25 @@ onMounted(() => {
 .balance-item .value.amount {
     color: #ff4d4f;
     font-weight: bold;
+}
+
+.balance-item.highlight {
+    background: #fff7e6;
+    padding: 2.5vw;
+    border-radius: 1.5vw;
+    margin-top: 2vw;
+    border: 1px solid #ffd591;
+}
+
+.balance-item.highlight .label {
+    color: #fa8c16;
+    font-weight: 500;
+}
+
+.balance-item.highlight .value.highlight-value {
+    color: #fa8c16;
+    font-weight: bold;
+    font-size: 4vw;
 }
 
 .overdraft-desc {
