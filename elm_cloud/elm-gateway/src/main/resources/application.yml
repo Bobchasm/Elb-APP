@@ -1,0 +1,51 @@
+server:
+  port: 8086
+spring:
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      server-addr: REDACTED_IP:8848
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/addresses/**,/api/admin/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status
+        - id: ai-service
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai/chat/**
+        - id: business-service
+          uri: lb://business-service
+          predicates:
+            - Path=/api/businesses/**
+            - Path=/api/merchant/interaction/**
+        - id: food-service
+          uri: lb://food-service
+          predicates:
+            - Path=/api/carts/**,/api/foods/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+            - Path=/upload/**
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/wallet/**
+        - id: point-service
+          uri: lb://point-service
+          predicates:
+            - Path=/api/points/**
+            - Path=/api/points/lottery/**
+
+elm:
+  auth:
+    excludePaths:
+      - /api/auth
+      - /api/register

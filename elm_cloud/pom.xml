@@ -24,6 +24,7 @@
         <module>payment-service</module>
         <module>elm-common</module>
         <module>elm-api</module>
+        <module>elm-gateway</module>
     </modules>
 
     <properties>
