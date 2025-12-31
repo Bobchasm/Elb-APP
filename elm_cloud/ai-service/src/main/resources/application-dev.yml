@@ -1,0 +1,5 @@
+elm:
+  db:
+    host: REDACTED_IP
+    username: root
+    pw: 123456

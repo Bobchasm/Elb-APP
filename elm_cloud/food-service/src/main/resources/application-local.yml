@@ -1,0 +1,16 @@
+elm:
+  db:
+    host: 127.0.0.1
+    username: root
+    pw: 123456
+
+  data:
+    redis:
+      host: 127.0.0.1
+      password:
+      database: 0
+
+  rabbitmq:
+    host: 127.0.0.1
+    username: rabbit
+    password: rabbit

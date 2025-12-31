@@ -1,0 +1,10 @@
+elm:
+  db:
+    host: 127.0.0.1
+    username: root
+    pw: 123456
+
+  rabbitmq:
+    host: REDACTED_IP
+    username: rabbit
+    password: rabbit

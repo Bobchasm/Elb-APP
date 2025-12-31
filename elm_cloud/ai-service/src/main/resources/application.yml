@@ -3,27 +3,21 @@ server:
 
 spring:
   application:
-    name: elm
+    name: ai-service
+  profiles:
+    active: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://REDACTED_IP:3306/elm_ai_record
-    username: root
-    password: 123456
+    url: jdbc:mysql://${elm.db.host}:3306/elm_ai_record
+    username: ${elm.db.username}
+    password: ${elm.db.pw}
     hikari: # 配置连接池读已提交
       transaction-isolation: TRANSACTION_READ_COMMITTED
-
-logging:
-  level:
-    org.springframework.jdbc.support.JdbcTransactionManager: debug
 
 mybatis:
   configuration:
     #开启驼峰命名
     map-underscore-to-camel-case: true
-  # 指定XML映射文件位置
-  mapper-locations:
-    - classpath*:com/tju/elm/ai/mapper/*.xml
-
 
 
 # swagger
@@ -34,6 +28,15 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui
+
+logging:
+  level:
+    com.tju.elm: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"
+
 
 # DeepSeek AI配置
 deepseek:

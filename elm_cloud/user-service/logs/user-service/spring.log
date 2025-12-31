@@ -51,3 +51,21 @@ Consider defining a bean of type 'org.springframework.security.crypto.password.P
 20:12:26:550  INFO 23956 --- [user-service] [main] c.tju.elm.user.UserServiceApplication    : Started UserServiceApplication in 2.368 seconds (process running for 2.753)
 20:12:29:317  INFO 23956 --- [user-service] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
 20:12:29:408  INFO 23956 --- [user-service] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+20:19:43:866  INFO 13464 --- [user-service] [main] c.tju.elm.user.UserServiceApplication    : Starting UserServiceApplication using Java 17.0.12 with PID 13464 (G:\LE\elm-microservices\elm_cloud\user-service\target\classes started by 26302 in G:\LE\elm-microservices\elm_cloud\user-service)
+20:19:43:867 DEBUG 13464 --- [user-service] [main] c.tju.elm.user.UserServiceApplication    : Running with Spring Boot v3.4.6, Spring v6.2.7
+20:19:43:868  INFO 13464 --- [user-service] [main] c.tju.elm.user.UserServiceApplication    : The following 1 profile is active: "dev"
+20:19:44:417  INFO 13464 --- [user-service] [main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+20:19:44:419  INFO 13464 --- [user-service] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+20:19:44:442  INFO 13464 --- [user-service] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 12 ms. Found 0 Redis repository interfaces.
+20:19:44:849  INFO 13464 --- [user-service] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8888 (http)
+20:19:44:863  INFO 13464 --- [user-service] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+20:19:44:863  INFO 13464 --- [user-service] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.41]
+20:19:44:900  INFO 13464 --- [user-service] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+20:19:44:900  INFO 13464 --- [user-service] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1001 ms
+20:19:44:934 DEBUG 13464 --- [user-service] [main] c.tju.elm.user.zoo.security.JWTFilter    : Filter 'JWTFilter' configured for use
+20:19:45:176  INFO 13464 --- [user-service] [main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+20:19:45:176  WARN 13464 --- [user-service] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+20:19:45:771  INFO 13464 --- [user-service] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8888 (http) with context path '/'
+20:19:45:778  INFO 13464 --- [user-service] [main] c.tju.elm.user.UserServiceApplication    : Started UserServiceApplication in 2.221 seconds (process running for 2.607)
+20:21:46:366  INFO 13464 --- [user-service] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+20:21:46:497  INFO 13464 --- [user-service] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete

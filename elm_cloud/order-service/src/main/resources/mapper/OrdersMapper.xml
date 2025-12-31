@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tju.elm.order.mapper.OrdersMapper">
+
+<!--    <select id="selectBusinessUserAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">-->
+<!--        SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{business_user_id}-->
+<!--    </select>-->
+
+<!--    <select id="selectCustomerUserAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">-->
+<!--        SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{customer_id}-->
+<!--    </select>-->
+
+    <insert id="insertOrderPlus" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (create_time, creator, is_deleted, update_time, updater, order_date, order_state, order_total, business_id, customer_id, address_id,delivery_price,address,contact_sex,contact_name,contact_tel)
+        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{orderDate}, #{orderState}, #{orderTotal}, #{businessId}, #{customerId}, #{addressId},#{deliveryPrice},#{address},#{contactSex},#{contactName},#{contactTel})
+    </insert>
+</mapper>

@@ -1,0 +1,41 @@
+server:
+  port: 8884
+
+spring:
+  application:
+    name: notification-service
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${elm.db.host}:3306/elm_notification
+    username: ${elm.db.username}
+    password: ${elm.db.pw}
+    hikari: # 配置连接池读已提交
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+
+mybatis:
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+  # 指定XML映射文件位置
+  mapper-locations:
+    - classpath*:com/tju/elm/notification/mapper/*.xml
+
+
+# swagger
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+logging:
+  level:
+    com.tju.elm: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"

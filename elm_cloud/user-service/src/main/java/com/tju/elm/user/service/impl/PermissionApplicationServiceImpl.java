@@ -6,7 +6,6 @@ import com.tju.elm.user.mapper.PermissionApplicationMapper;
 import com.tju.elm.user.mapper.UserAuthorityMapper;
 import com.tju.elm.user.mapper.UserMapper;
 import com.tju.elm.user.service.PermissionApplicationService;
-import com.tju.elm.user.zoo.pojo.dto.AuditPermissionDTO;
 import com.tju.elm.user.zoo.pojo.entity.Authority;
 import com.tju.elm.user.zoo.pojo.entity.PermissionApplication;
 import com.tju.elm.user.zoo.pojo.entity.User;
@@ -15,7 +14,6 @@ import com.tju.elm.user.zoo.websocket.WebSocketServer;
 import exception.APIException;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jettison.json.JSONException;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSONObject;
@@ -23,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Slf4j

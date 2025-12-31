@@ -3,6 +3,7 @@ package com.tju.elm.user;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Import;
 
 import java.util.TimeZone;
 
@@ -11,6 +12,7 @@ import java.util.TimeZone;
         basePackages = {"com.tju.elm.user.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class
 )
+@Import(config.RedisConfig.class)
 public class UserServiceApplication {
 
     public static void main(String[] args) {

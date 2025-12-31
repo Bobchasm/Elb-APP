@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tju.elm.food.mapper.FoodMapper">
+
+    <insert id="insertFood" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO food (create_time, creator, is_deleted, update_time, updater, food_explain, food_img, food_name, food_price, remarks, business_id)
+        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
+    </insert>
+
+
+
+
+    <select id="selectFoodItemVOList" resultType="com.tju.elm.food.pojo.vo.FoodItemVO">
+        select f.*, b.business_name
+        from food f
+        left join business b on b.id = f.business_id and b.is_deleted = 0
+        <where>
+            f.is_deleted = 0 and b.id = #{businessId}
+            <if test="shelveStatus != null">
+                and f.shelve_status = #{shelveStatus}
+            </if>
+        </where>
+        order by f.shelve_status desc
+    </select>
+
+
+</mapper>

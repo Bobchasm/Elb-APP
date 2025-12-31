@@ -1,0 +1,16 @@
+elm:
+  db:
+    host: REDACTED_IP
+    username: root
+    pw: 123456
+
+  data:
+    redis:
+      host: REDACTED_IP
+      password:
+      database: 0
+
+  rabbitmq:
+    host: REDACTED_IP
+    username: rabbit
+    password: rabbit
