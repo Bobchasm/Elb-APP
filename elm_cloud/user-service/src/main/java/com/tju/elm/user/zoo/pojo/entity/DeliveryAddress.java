@@ -49,7 +49,4 @@ public class DeliveryAddress {
     @Schema(description = "所属用户")
     private User user;
 
-    @Schema(description = "关联的订单列表")
-    private List<Order> orders;
-
 }

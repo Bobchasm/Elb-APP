@@ -10,13 +10,13 @@ import java.util.List;
 public interface PermissionApplicationService {
     PermissionApplication applyMerchant();
 
-    PermissionApplication auditApplication(AuditPermissionDTO auditDTO);
+//    PermissionApplication auditApplication(AuditPermissionDTO auditDTO);
 
-    BusinessPermissionVO applyShop(BusinessPermissionDTO businessPermissionDTO);
-
-    BusinessPermissionVO auditShopApplication(BusinessPermissionDTO businessPermissionDTO);
-
-    List<MerchantApplicationsVO> getMerchantApplications();
-
-    List<BusinessPermissionVO> getShopApplications();
+//    BusinessPermissionVO applyShop(BusinessPermissionDTO businessPermissionDTO);
+//
+//    BusinessPermissionVO auditShopApplication(BusinessPermissionDTO businessPermissionDTO);
+//
+//    List<MerchantApplicationsVO> getMerchantApplications();
+//
+//    List<BusinessPermissionVO> getShopApplications();
 }

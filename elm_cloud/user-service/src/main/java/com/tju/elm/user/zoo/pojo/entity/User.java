@@ -52,17 +52,8 @@ public class User {
     @Schema(description = "用户个人信息")
     private Person person;
 
-    @Schema(description = "用户拥有的商家列表")
-    private List<Business> businesses;
-
     @Schema(description = "用户的配送地址列表")
     private List<DeliveryAddress> deliveryAddresses;
-
-    @Schema(description = "用户的订单列表")
-    private List<Order> orders;
-
-    @Schema(description = "用户的购物车列表")
-    private List<Cart> carts;
 
     public User(Long id, String username, String password, Boolean activated, LocalDateTime createTime, Long creator, Boolean isDeleted, LocalDateTime updateTime, Long updater, List<Authority> authorities){
         this.id = id;

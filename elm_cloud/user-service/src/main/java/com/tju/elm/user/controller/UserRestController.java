@@ -49,8 +49,8 @@ public class UserRestController {
     private PersonService personService;
     @Autowired
     private UserService userService;
-    @Autowired
-    private PointsAccountMapper pointsAccountMapper;
+//    @Autowired
+//    private PointsAccountMapper pointsAccountMapper;
     @Autowired
     private PersonMapper personMapper;
 
@@ -293,20 +293,20 @@ public class UserRestController {
 //            }
 //        }
 
-        // 创建积分账户
-        PointsAccount pointsAccount = new PointsAccount();
-        pointsAccount.setUserId(user.getId());
-        pointsAccount.setTotalPoints(0L);
-        pointsAccount.setAvailablePoints(0L);
-        pointsAccount.setFrozenPoints(0L);
-        pointsAccount.setMemberLevel(0); // 0-普通会员
-        pointsAccount.setCreateTime(now);
-        pointsAccount.setUpdateTime(now);
-        pointsAccount.setCreator(user.getId());
-        pointsAccount.setUpdater(user.getId());
-        pointsAccount.setIsDeleted(false);
-        pointsAccountMapper.insert(pointsAccount);
-        log.info("为新用户 {} 创建积分账户成功，账户ID: {}", user.getId(), pointsAccount.getId());
+//        // 创建积分账户
+//        PointsAccount pointsAccount = new PointsAccount();
+//        pointsAccount.setUserId(user.getId());
+//        pointsAccount.setTotalPoints(0L);
+//        pointsAccount.setAvailablePoints(0L);
+//        pointsAccount.setFrozenPoints(0L);
+//        pointsAccount.setMemberLevel(0); // 0-普通会员
+//        pointsAccount.setCreateTime(now);
+//        pointsAccount.setUpdateTime(now);
+//        pointsAccount.setCreator(user.getId());
+//        pointsAccount.setUpdater(user.getId());
+//        pointsAccount.setIsDeleted(false);
+//        pointsAccountMapper.insert(pointsAccount);
+//        log.info("为新用户 {} 创建积分账户成功，账户ID: {}", user.getId(), pointsAccount.getId());
 
         User user1 = userService.getUserWithAuthorities(user.getUsername());
         log.info("user1:{}",user1);

@@ -2,7 +2,7 @@ package com.tju.elm.user.zoo.pojo.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.tju.elm_bk.pojo.entity.Authority;
+import com.tju.elm.user.zoo.pojo.entity.Authority;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
