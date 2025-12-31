@@ -3,19 +3,21 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.tju.elm</groupId>
         <artifactId>elm_cloud</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>user-service</artifactId>
+    <artifactId>notification-service</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
 
     <dependencies>
         <dependency>
@@ -24,24 +26,9 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-
-        <!-- ========== 安全认证 ========== -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
     </dependencies>
@@ -52,10 +39,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.tju.elm.user.UserServiceApplication</mainClass>
+                    <mainClass>com.tju.elm.notification.NotificationServiceApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>

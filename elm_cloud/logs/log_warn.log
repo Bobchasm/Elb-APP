@@ -1,0 +1,7 @@
+2025-12-31 17:21:00.713 [main] WARN  org.mybatis.spring.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[com.tju.elm.user.mapper]' package. Please check your configuration.
+2025-12-31 17:21:01.767 [main] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 8f621990-1d0c-4505-a438-dbe41a73e71c
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
