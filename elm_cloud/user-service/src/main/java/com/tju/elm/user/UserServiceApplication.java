@@ -1,4 +1,4 @@
-package com.tju.elm.user.mapper;
+package com.tju.elm.user;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
