@@ -1,6 +1,6 @@
 package com.tju.elm.user.service.impl;
 
-
+import com.alibaba.fastjson.JSONException;
 import com.tju.elm.user.mapper.AuthorityMapper;
 import com.tju.elm.user.mapper.PermissionApplicationMapper;
 import com.tju.elm.user.mapper.UserAuthorityMapper;
@@ -13,7 +13,6 @@ import com.tju.elm.user.zoo.utils.SecurityUtils;
 import com.tju.elm.user.zoo.websocket.WebSocketServer;
 import exception.APIException;
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSONObject;

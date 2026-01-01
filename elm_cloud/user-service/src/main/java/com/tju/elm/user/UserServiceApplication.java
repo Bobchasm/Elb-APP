@@ -9,7 +9,14 @@ import org.springframework.context.annotation.Import;
 
 import java.util.TimeZone;
 
-@SpringBootApplication
+@SpringBootApplication(
+        scanBasePackages = {
+                "com.tju.elm.user",
+                "filters",
+                "interceptor",
+                "com.tju.elm.api.config"
+        }
+)
 @MapperScan(
         basePackages = {"com.tju.elm.user.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class

@@ -14,3 +14,6 @@ elm:
     host: REDACTED_IP
     username: rabbit
     password: rabbit
+
+  nacos:
+    server-addr: REDACTED_IP:8848

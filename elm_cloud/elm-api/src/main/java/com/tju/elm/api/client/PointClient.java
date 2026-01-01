@@ -1,15 +1,14 @@
 package com.tju.elm.api.client;
 
-import com.tju.elm.api.po.User;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import result.HttpResult;
 
 
-@FeignClient("user-service")
-public interface UserClient{
+@FeignClient("point-service")
+public interface PointClient {
 
-    @GetMapping("/api/user/current")
-    HttpResult<User> getCurrentUser(@RequestParam String username);
+    @GetMapping("/api/points/account/create")
+    HttpResult<Long> createAccount(@RequestParam Long userId);
 }

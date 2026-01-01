@@ -3,6 +3,9 @@ package com.tju.elm.point;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
 import java.util.TimeZone;
@@ -10,13 +13,18 @@ import java.util.TimeZone;
 @SpringBootApplication(
         scanBasePackages = {
                 "com.tju.elm.point",
-                "config"
+                "config",
+                "filters",
+                "interceptor",
+                "com.tju.elm.api.config"
         }
 )
 @MapperScan(
         basePackages = {"com.tju.elm.point.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class
 )
+@EnableDiscoveryClient
+@EnableFeignClients(basePackages = "com.tju.elm.api.client")
 public class PointServiceApplication {
 
     public static void main(String[] args) {
