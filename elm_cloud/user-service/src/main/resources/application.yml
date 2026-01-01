@@ -1,9 +1,25 @@
-server:
-  port: 8888
-
 spring:
   application:
     name: user-service
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${elm.nacos.server-addr}
+        namespace: public  # 明确指定 namespace
+        group: DEFAULT_GROUP
+
+        ip: 127.0.0.1  # 本地IP（如果是本机测试）
+        port: ${server.port}  # 服务端口
+        enabled: true  # 明确启用
+        register-enabled: true  # 允许注册
+        # 网络配置
+        metadata:
+          version: 1.0
+        # 健康检查
+        heartbeat:
+          interval: 5000  # 心跳间隔（毫秒）
+
   profiles:
     active: dev
   datasource:
@@ -33,7 +49,7 @@ mybatis:
     #开启驼峰命名
     map-underscore-to-camel-case: true
   mapper-locations:
-    - classpath*:com/tju/elm/user/mapper/*.xml
+    - classpath*:/mapper/*.xml
 
 jwt:
   secret: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz123456
@@ -42,11 +58,8 @@ jwt:
 
 logging:
   level:
-    com.tju.elm: debug
-  pattern:
-    dateformat: HH:mm:ss:SSS
-  file:
-    path: "logs/${spring.application.name}"
+    com.alibaba.nacos: DEBUG
+    org.springframework.cloud: DEBUG
 
 # swagger
 springdoc:

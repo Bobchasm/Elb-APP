@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @Component
 @ConfigurationProperties(prefix = "elm.auth")
-public class AuthConfig {
-    private List<String> includePaths;
+public class AuthProperties {
     private List<String> excludePaths;
+    private List<String> includePaths;
 }

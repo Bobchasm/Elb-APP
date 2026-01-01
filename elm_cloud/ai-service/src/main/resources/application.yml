@@ -24,10 +24,10 @@ mybatis:
 springdoc:
   api-docs:
     enabled: true
-    path: /v3/api-docs
+    path: /ai/v3/api-docs
   swagger-ui:
     enabled: true
-    path: /swagger-ui
+    path: /ai/swagger-ui
 
 logging:
   level:

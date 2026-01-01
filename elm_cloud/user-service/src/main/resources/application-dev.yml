@@ -9,3 +9,10 @@ elm:
       host: REDACTED_IP
       password:
       database: 0
+
+  nacos:
+      server-addr: REDACTED_IP:8848
+
+
+server:
+  port: 8888

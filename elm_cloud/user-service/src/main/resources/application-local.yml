@@ -9,3 +9,6 @@ elm:
       host: 127.0.0.1
       password:
       database: 0
+
+server:
+  port: 8888
