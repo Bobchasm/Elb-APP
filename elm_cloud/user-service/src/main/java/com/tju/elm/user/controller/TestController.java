@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 public class TestController {
 
     @GetMapping
-    public String addDeliveryAddress(@RequestHeader(value = "truth", required = false) String truth) {
-        log.info("truth:"+truth);
+    public String addDeliveryAddress(@RequestHeader(value = "username", required = false) String username) {
+        log.info("username:" + username);
 
         return "test";
     }

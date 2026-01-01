@@ -114,6 +114,13 @@ public class UserRestController {
         return ResponseEntity.ok(userVO);
     }
 
+    @GetMapping("/user/current")
+    @Operation(summary = "获取用户", description = "获取当前登录用户的信息")
+    public ResponseEntity<User> getUserByName(@RequestParam String username) {
+        User user = userService.getUserWithAuthorities(username);
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/person")
     @Operation(summary = "获取当前登录用户及其自然人属性", description = "获取当前登录用户及其自然人信息")
     public ResponseEntity<PersonVO> getActualPerson() {

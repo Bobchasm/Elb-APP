@@ -25,11 +25,8 @@ import reactor.core.publisher.Mono;
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
-
     private final TokenProvider tokenProvider;
-    
     private final AuthProperties authProperties;
-
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Override
@@ -42,14 +39,16 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         if (isExclude(request.getPath().toString())) {
             return chain.filter(exchange);
         }
-;
+
+        String username;
         try {
             String jwt = resolveToken(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 Authentication authentication = tokenProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), uri);
+                username = authentication.getName();
+                log.debug("set Authentication to security context for '{}', uri: {}", username, uri);
             } else {
                 log.debug("no valid JWT token found, uri: {}", uri);
                 ServerHttpResponse serverHttpResponse = exchange.getResponse();
@@ -62,10 +61,12 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
             return serverHttpResponse.setComplete();
         }
-        
-        
-        
-        return chain.filter(exchange);
+
+        ServerWebExchange swe = exchange.mutate()
+                .request(builder -> builder.header("username", username))
+                .build();
+
+        return chain.filter(swe);
     }
 
     @Override
@@ -89,4 +90,5 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         }
         return null;
     }
+
 }
