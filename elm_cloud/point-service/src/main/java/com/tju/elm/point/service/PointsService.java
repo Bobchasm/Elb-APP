@@ -102,5 +102,7 @@ public interface PointsService {
      * @return 是否成功
      */
     Boolean deductFrozenPoints(Long userId, Long orderId);
+
+    Boolean updateStatus(Long orderId,Integer status);
 }
 

@@ -331,9 +331,9 @@ const getStatisticData = async () => {
   try {
     // 并行请求统计接口
     const [userRes, shopRes, revenueRes] = await Promise.all([
-      request.get('/api/admin/countUser'),
-      request.get('/api/admin/countBusiness'),
-      request.get('/api/admin/countPrice'),
+      request.get('/api/user/countUser'),
+      request.get('/api/businesses/countBusiness'),
+      request.get('/api/orders/countPrice'),
     ]);
 
     if (userRes.success) userCount.value = userRes.data;
@@ -375,7 +375,7 @@ const getMerchantApplications = async () => {
 const getShopApplications = async () => {
   loadingShop.value = true;
   try {
-    const res = await request.get('/api/permission/shop-applications');
+    const res = await request.get('/api/businesses/shop-applications');
     if (res.success && Array.isArray(res.data)) {
       shopApplications.value = res.data;
     }
@@ -415,7 +415,7 @@ const submitMerchantAudit = async (id, auditResult) => {
  */
 const submitShopAudit = async (id, auditResult) => {
   try {
-    const res = await request.post('/api/permission/audit-shop', {
+    const res = await request.post('/api/businesses/audit-shop', {
       id,
       status: auditResult, // 1-批准，2-拒绝（与接口字段匹配）
     });

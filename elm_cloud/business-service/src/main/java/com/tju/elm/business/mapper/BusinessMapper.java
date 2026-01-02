@@ -1,6 +1,7 @@
 package com.tju.elm.business.mapper;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.tju.elm.business.pojo.dto.BusinessDTO;
 
@@ -21,6 +22,9 @@ public interface BusinessMapper {
 
     @Select("SELECT * FROM business WHERE id = #{id}")
     BusinessPermissionVO getBusinessPermissionById(Long businessId);
+
+    @Select("SELECT * FROM business WHERE status = 0 AND is_deleted = 0")
+    List<BusinessPermissionVO> listNotAudited();
 
     // 更新商户信息
     int updateBusiness(@Param("id") Long id, @Param("updateDto") BusinessUpdateDTO updateDto);
@@ -55,8 +59,6 @@ public interface BusinessMapper {
     @Select("SELECT COUNT(*) FROM business WHERE is_deleted = 0 AND status = 1")
     Integer count();
 
-    @Select("SELECT * FROM business WHERE status = 0 AND is_deleted = 0")
-    List<BusinessPermissionVO> listNotAudited();
 
 //    下面两个用于搜索+筛选
     List<BusinessSearchVO> searchBusinesses(@Param("keyword") String keyword);
@@ -64,11 +66,6 @@ public interface BusinessMapper {
     Map<String, Object> getInteractionCounts(@Param("businessId") Long businessId);
 
     Integer applyForAddBusiness(Business  business);
-
-    // TODO
-    // 统计已完成的订单数量（ order_state=3 ）
-    @Select("SELECT COUNT(*) FROM `orders` WHERE business_id = #{businessId} AND order_state = 3 AND is_deleted = 0")
-    Integer getSalesCount(@Param("businessId") Long businessId);
 
     /**
      * 根据用户ID查询对应的所有商铺ID
@@ -126,4 +123,18 @@ public interface BusinessMapper {
     @Select("SELECT id FROM business WHERE user_id = #{userId} AND is_deleted = 0 AND status = 1")
     List<Long> getBusinessIdsByUserIds(@Param("userId") Long userId);
 
+    @Select("""
+        <script>
+            SELECT * FROM business b
+                <where>
+                    b.is_deleted = 0
+                    AND
+                    b.id in
+                    <foreach collection='businessIds' item='businessId' open='(' separator=',' close=')'>
+                        #{businessId}
+                    </foreach>
+                </where>
+        </script>
+    """)
+    List<Business> selectBusinessByIds(Set<Long> businessIds);
 }

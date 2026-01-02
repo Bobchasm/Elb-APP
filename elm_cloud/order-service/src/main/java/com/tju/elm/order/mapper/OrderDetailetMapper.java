@@ -16,14 +16,13 @@ public interface OrderDetailetMapper {
 
     Integer saveOrderDetailPlus(OrderDetailet orderDetailet);
 
-//    @Select("""
-//        select od.id,od.quantity,od.food_id,
-//           f.food_name,od.food_price,
-//           o.id as order_id
-//        from orderdetailet od
-//        left join food f on f.id = od.food_id
-//        left join orders o on o.id = od.order_id
-//        where od.order_id = #{orderId}
-//    """)
-//    List<OrderFoodVO> selectOrderDetailList(Long orderId);
+    @Select("""
+        select od.id,od.quantity,od.food_id,
+           od.food_price,
+           o.id as order_id
+        from orderdetailet od
+        left join orders o on o.id = od.order_id
+        where od.order_id = #{orderId}
+    """)
+    List<OrderFoodVO> selectOrderDetailList(Long orderId);
 }

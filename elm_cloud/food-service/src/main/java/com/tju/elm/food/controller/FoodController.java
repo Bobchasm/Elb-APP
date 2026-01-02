@@ -1,18 +1,21 @@
 package com.tju.elm.food.controller;
 
+import com.tju.elm.food.mapper.FoodMapper;
 import com.tju.elm.food.pojo.dto.FoodCreateDTO;
 import com.tju.elm.food.pojo.dto.FoodUpdateDTO;
+import com.tju.elm.food.pojo.entity.Food;
 import com.tju.elm.food.pojo.vo.FoodDetailVO;
 import com.tju.elm.food.pojo.vo.FoodItemVO;
-import com.tju.elm.food.pojo.vo.FoodVO;
 import com.tju.elm.food.service.FoodService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/foods")
@@ -21,6 +24,8 @@ public class FoodController {
 
     @Autowired
     private FoodService foodService;
+    @Autowired
+    private FoodMapper foodMapper;
 
 
 
@@ -64,4 +69,21 @@ public class FoodController {
         return HttpResult.success(foodService.getFoodDetailByFoodId(foodId));
     }
 
+    @PostMapping("/ids")
+    @Operation(summary = "根据id列表商品列表")
+    public HttpResult<List<Food>> gainFoodsByIds(@RequestBody Set<Long> foodIds) {
+        return HttpResult.success(foodService.getFoodsByIds(foodIds));
+    }
+
+    @GetMapping("/id")
+    @Operation(summary = "根据foodId查询已上架且未删除的food详细信息及所属商铺名字")
+    public HttpResult<Food> gainFoodId(@RequestParam Long foodId) {
+        return HttpResult.success(foodService.getFoodByFoodId(foodId));
+    }
+
+    @GetMapping("/ai/keyword")
+    @Operation(summary = "ai服务关键词查询商品")
+    public HttpResult<List<Food>> searchByKeyword(String keyword, Integer limit) {
+        return HttpResult.success(foodMapper.searchByKeyword(keyword, limit));
+    }
 }

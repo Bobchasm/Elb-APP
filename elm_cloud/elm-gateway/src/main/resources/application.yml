@@ -56,7 +56,7 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/test,/api/addresses/**,/api/admin/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status,/api/business/active
+            - Path=/test,/api/addresses/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status,/api/business/active
 
 
 elm:

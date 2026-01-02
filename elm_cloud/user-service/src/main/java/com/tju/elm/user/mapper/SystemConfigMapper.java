@@ -1,6 +1,6 @@
 package com.tju.elm.user.mapper;
 
-import com.tju.elm.user.zoo.config.SystemConfig;
+import com.tju.elm.user.zoo.pojo.entity.SystemConfig;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;

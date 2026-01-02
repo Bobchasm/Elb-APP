@@ -1,8 +1,11 @@
 package com.tju.elm.business.controller;
 
+import com.tju.elm.business.mapper.BusinessMapper;
 import com.tju.elm.business.pojo.dto.BusinessDTO;
+import com.tju.elm.business.pojo.dto.BusinessPermissionDTO;
 import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
+import com.tju.elm.business.pojo.vo.BusinessPermissionVO;
 import com.tju.elm.business.pojo.vo.BusinessSearchVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 import com.tju.elm.business.service.BusinessService;
@@ -12,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +24,7 @@ import result.ResultCodeEnum;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -31,6 +36,9 @@ public class BusinessController {
 
     @Autowired
     private final BusinessService businessService;
+
+    @Autowired
+    private BusinessMapper businessMapper;
 
     /**
      * 根据ID获取店铺详情
@@ -191,5 +199,48 @@ public class BusinessController {
         return HttpResult.success(business);
     }
 
+    @PostMapping("/remote/ids")
+    @Operation(summary = "获取店铺列表")
+    public HttpResult<List<Business>> gainBusinessByIds(@RequestBody Set<Long> businessIds) {
+        List<Business> businesses = businessService.getBusinessInfoList(businessIds);
+        return HttpResult.success(businesses);
+    }
+
+    /**
+     * 顾客申请开店
+     */
+    @PostMapping("/apply-shop")
+    @Operation(summary = "申请开店", description = "顾客提交开店的申请，提交后会通知管理员审核")
+    public HttpResult<BusinessPermissionVO> applyShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
+        return HttpResult.success(businessService.applyShop(businessPermissionDTO));
+    }
+
+    /**
+     * 审核用户的开店申请（同意/拒绝）
+     */
+    @PostMapping("/audit-shop")
+    @Operation(summary = "审核开店申请", description = "管理员审核用户的开店申请")
+    public HttpResult<BusinessPermissionVO> auditShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
+        return HttpResult.success(businessService.auditShopApplication(businessPermissionDTO));
+    }
+
+    @GetMapping("/shop-applications")
+    @Operation(summary = "获取申请开店的待审核列表", description = "获取申请开店的待审核列表")
+    public HttpResult<List<BusinessPermissionVO>> getShopApplications() {
+        return HttpResult.success(businessService.getShopApplications());
+    }
+
+
+    @GetMapping("/countBusiness")
+    @Operation(summary = "获取总店铺数", description = "获取总店铺数")
+    public HttpResult<Integer> countBusiness(){
+        return HttpResult.success(businessMapper.count());
+    }
+
+    @GetMapping("/ai/keyword")
+    @Operation(summary = "ai服务关键词查询店铺")
+    public HttpResult<List<Business>> searchByKeyword(String keyword,Integer limit) {
+        return HttpResult.success(businessMapper.searchByKeyword(keyword,limit));
+    }
 
 }

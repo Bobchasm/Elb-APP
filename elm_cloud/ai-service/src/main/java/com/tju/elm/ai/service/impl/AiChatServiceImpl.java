@@ -8,11 +8,17 @@ import com.tju.elm.ai.service.AiChatService;
 import com.tju.elm.ai.zoo.pojo.*;
 import com.tju.elm.ai.zoo.utils.AiKnowledgeBaseUtil;
 import com.tju.elm.ai.zoo.utils.DeepSeekApiClient;
+import com.tju.elm.api.client.UserClient;
+import com.tju.elm.api.po.Business;
+import com.tju.elm.api.po.Food;
+import com.tju.elm.api.po.Order;
+import com.tju.elm.api.po.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,223 +37,221 @@ public class AiChatServiceImpl implements AiChatService {
     private final DeepSeekApiClient deepSeekApiClient;
     private final AiKnowledgeBaseUtil knowledgeBaseUtil;
     private final AiChatHistoryMapper chatHistoryMapper;
-//    private final UserMapper userMapper;
     private final ObjectMapper objectMapper;
+
+    private final UserClient userClient;
     
-//    /**
-//     * 获取当前用户ID的辅助方法
-//     */
-//    private Long getCurrentUserId() {
-//        try {
-//            String username = SecurityUtils.getCurrentUsername()
-//                    .orElse(null);
-//            if (username == null) return null;
-//
-//            User currentUser = userMapper.findByUsername(username);
-//            return currentUser != null ? currentUser.getId() : null;
-//        } catch (Exception e) {
-//            log.warn("获取当前用户ID失败: {}", e.getMessage());
-//            return null;
-//        }
-//    }
+    /**
+     * 获取当前用户ID的辅助方法
+     */
+    private Long getCurrentUserId() {
+        try {
+
+            User currentUser = knowledgeBaseUtil.getCurrentUser();
+            return currentUser != null ? currentUser.getId() : null;
+        } catch (Exception e) {
+            log.warn("获取当前用户ID失败: {}", e.getMessage());
+            return null;
+        }
+    }
     
-//    @Override
-//    @Transactional
-//    public AiChatResponseVO chat(AiChatRequestDTO request) {
-//        long startTime = System.currentTimeMillis();
-//
-//        try {
-//            // 生成或使用现有的会话ID
-//            String sessionId = request.getSessionId();
-//            if (sessionId == null || sessionId.trim().isEmpty()) {
-//                sessionId = UUID.randomUUID().toString();
-//            }
-//
-//            // 构建AI请求
-//            DeepSeekRequestDTO deepSeekRequest = buildDeepSeekRequest(request);
-//
-//            // 调用DeepSeek API
-//            DeepSeekResponseDTO deepSeekResponse = deepSeekApiClient.chatCompletionSync(deepSeekRequest);
-//
-//            // 解析AI响应
-//            String aiMessage = extractAiMessage(deepSeekResponse);
-//
-//            // 构建响应
-//            AiChatResponseVO response = new AiChatResponseVO();
-//            response.setMessage(aiMessage);
-//            response.setSessionId(sessionId);
-//            response.setResponseType("text");
-//            response.setResponseTime(LocalDateTime.now());
-//
-//            long processingTime = System.currentTimeMillis() - startTime;
-//            response.setProcessingTime(processingTime);
-//
-//            // 保存对话历史
-//            saveChatHistory(request, response, processingTime);
-//
-//            return response;
-//
-//        } catch (Exception e) {
-//            log.error("AI聊天处理失败", e);
-//
-//            // 返回错误响应
-//            AiChatResponseVO errorResponse = new AiChatResponseVO();
-//            errorResponse.setMessage("抱歉，我现在遇到了一些技术问题，请稍后再试或联系人工客服。");
-//            errorResponse.setSessionId(request.getSessionId());
-//            errorResponse.setResponseType("error");
-//            errorResponse.setResponseTime(LocalDateTime.now());
-//            errorResponse.setProcessingTime(System.currentTimeMillis() - startTime);
-//
-//            return errorResponse;
-//        }
-//    }
+    @Override
+    @Transactional
+    public AiChatResponseVO chat(AiChatRequestDTO request) {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // 生成或使用现有的会话ID
+            String sessionId = request.getSessionId();
+            if (sessionId == null || sessionId.trim().isEmpty()) {
+                sessionId = UUID.randomUUID().toString();
+            }
+
+            // 构建AI请求
+            DeepSeekRequestDTO deepSeekRequest = buildDeepSeekRequest(request);
+
+            // 调用DeepSeek API
+            DeepSeekResponseDTO deepSeekResponse = deepSeekApiClient.chatCompletionSync(deepSeekRequest);
+
+            // 解析AI响应
+            String aiMessage = extractAiMessage(deepSeekResponse);
+
+            // 构建响应
+            AiChatResponseVO response = new AiChatResponseVO();
+            response.setMessage(aiMessage);
+            response.setSessionId(sessionId);
+            response.setResponseType("text");
+            response.setResponseTime(LocalDateTime.now());
+
+            long processingTime = System.currentTimeMillis() - startTime;
+            response.setProcessingTime(processingTime);
+
+            // 保存对话历史
+            saveChatHistory(request, response, processingTime);
+
+            return response;
+
+        } catch (Exception e) {
+            log.error("AI聊天处理失败", e);
+
+            // 返回错误响应
+            AiChatResponseVO errorResponse = new AiChatResponseVO();
+            errorResponse.setMessage("抱歉，我现在遇到了一些技术问题，请稍后再试或联系人工客服。");
+            errorResponse.setSessionId(request.getSessionId());
+            errorResponse.setResponseType("error");
+            errorResponse.setResponseTime(LocalDateTime.now());
+            errorResponse.setProcessingTime(System.currentTimeMillis() - startTime);
+
+            return errorResponse;
+        }
+    }
     
-//    /**
-//     * 构建DeepSeek API请求
-//     */
-//    private DeepSeekRequestDTO buildDeepSeekRequest(AiChatRequestDTO request) {
-//        List<DeepSeekRequestDTO.MessageDTO> messages = new ArrayList<>();
-//
-//        // 添加系统提示词
-//        String systemPrompt = buildSystemPrompt(request);
-//        messages.add(new DeepSeekRequestDTO.MessageDTO("system", systemPrompt));
-//
-//        // 添加历史对话（最近3轮）
-//        if (request.getSessionId() != null && !request.getSessionId().trim().isEmpty()) {
-//            List<AiChatHistory> recentHistory = chatHistoryMapper.selectBySessionId(request.getSessionId());
-//            if (recentHistory.size() > 6) { // 保留最近3轮对话
-//                recentHistory = recentHistory.subList(recentHistory.size() - 6, recentHistory.size());
-//            }
-//
-//            for (AiChatHistory history : recentHistory) {
-//                messages.add(new DeepSeekRequestDTO.MessageDTO("user", history.getUserMessage()));
-//                messages.add(new DeepSeekRequestDTO.MessageDTO("assistant", history.getAiResponse()));
-//            }
-//        }
-//
-//        // 添加当前用户消息
-//        String enhancedUserMessage = enhanceUserMessage(request);
-//        messages.add(new DeepSeekRequestDTO.MessageDTO("user", enhancedUserMessage));
-//
-//        // 构建请求
-//        DeepSeekRequestDTO deepSeekRequest = new DeepSeekRequestDTO();
-//        deepSeekRequest.setMessages(messages);
-//        deepSeekRequest.setMaxTokens(1024);
-//        deepSeekRequest.setTemperature(0.7);
-//
-//        return deepSeekRequest;
-//    }
+    /**
+     * 构建DeepSeek API请求
+     */
+    private DeepSeekRequestDTO buildDeepSeekRequest(AiChatRequestDTO request) {
+        List<DeepSeekRequestDTO.MessageDTO> messages = new ArrayList<>();
+
+        // 添加系统提示词
+        String systemPrompt = buildSystemPrompt(request);
+        messages.add(new DeepSeekRequestDTO.MessageDTO("system", systemPrompt));
+
+        // 添加历史对话（最近3轮）
+        if (request.getSessionId() != null && !request.getSessionId().trim().isEmpty()) {
+            List<AiChatHistory> recentHistory = chatHistoryMapper.selectBySessionId(request.getSessionId());
+            if (recentHistory.size() > 6) { // 保留最近3轮对话
+                recentHistory = recentHistory.subList(recentHistory.size() - 6, recentHistory.size());
+            }
+
+            for (AiChatHistory history : recentHistory) {
+                messages.add(new DeepSeekRequestDTO.MessageDTO("user", history.getUserMessage()));
+                messages.add(new DeepSeekRequestDTO.MessageDTO("assistant", history.getAiResponse()));
+            }
+        }
+
+        // 添加当前用户消息
+        String enhancedUserMessage = enhanceUserMessage(request);
+        messages.add(new DeepSeekRequestDTO.MessageDTO("user", enhancedUserMessage));
+
+        // 构建请求
+        DeepSeekRequestDTO deepSeekRequest = new DeepSeekRequestDTO();
+        deepSeekRequest.setMessages(messages);
+        deepSeekRequest.setMaxTokens(1024);
+        deepSeekRequest.setTemperature(0.7);
+
+        return deepSeekRequest;
+    }
     
-//    /**
-//     * 构建系统提示词
-//     */
-//    private String buildSystemPrompt(AiChatRequestDTO request) {
-//        StringBuilder prompt = new StringBuilder(knowledgeBaseUtil.buildSystemPrompt());
-//
-//        // 添加用户上下文信息
-//        if (request.getUserId() != null) {
-//            Map<String, Object> userContext = knowledgeBaseUtil.getUserContext(request.getUserId());
-//            if (!userContext.isEmpty()) {
-//                prompt.append("\n\n用户信息：\n");
-//                userContext.forEach((key, value) ->
-//                    prompt.append("- ").append(key).append(": ").append(value).append("\n"));
-//            }
-//        }
-//
-//        return prompt.toString();
-//    }
+    /**
+     * 构建系统提示词
+     */
+    private String buildSystemPrompt(AiChatRequestDTO request) {
+        StringBuilder prompt = new StringBuilder(knowledgeBaseUtil.buildSystemPrompt());
+
+        // 添加用户上下文信息
+        if (request.getUserId() != null) {
+            Map<String, Object> userContext = knowledgeBaseUtil.getUserContext(request.getUserId());
+            if (!userContext.isEmpty()) {
+                prompt.append("\n\n用户信息：\n");
+                userContext.forEach((key, value) ->
+                    prompt.append("- ").append(key).append(": ").append(value).append("\n"));
+            }
+        }
+
+        return prompt.toString();
+    }
     
-//    /**
-//     * 增强用户消息（添加相关数据上下文）
-//     */
-//    private String enhanceUserMessage(AiChatRequestDTO request) {
-//        String originalMessage = request.getMessage();
-//        StringBuilder enhancedMessage = new StringBuilder(originalMessage);
-//
-//        // 检测消息中是否包含商家、菜品、订单相关关键词
-//        String message = originalMessage.toLowerCase();
-//
-//        // 商家相关
-//        if (containsBusinessKeywords(message)) {
-//            List<String> businessKeywords = extractBusinessKeywords(originalMessage);
-//            for (String keyword : businessKeywords) {
-//                List<Business> businesses = knowledgeBaseUtil.searchBusinesses(keyword, 3);
-//                if (!businesses.isEmpty()) {
-//                    enhancedMessage.append("\n\n相关商家信息：\n");
-//                    for (Business business : businesses) {
-//                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatBusinessInfo(business)).append("\n");
-//                    }
-//                }
-//            }
-//        }
-//
-//        // 菜品相关
-//        if (containsFoodKeywords(message)) {
-//            List<String> foodKeywords = extractFoodKeywords(originalMessage);
-//            for (String keyword : foodKeywords) {
-//                List<Food> foods = knowledgeBaseUtil.searchFoods(keyword, 3);
-//                if (!foods.isEmpty()) {
-//                    enhancedMessage.append("\n\n相关菜品信息：\n");
-//                    for (Food food : foods) {
-//                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatFoodInfo(food)).append("\n");
-//                    }
-//                }
-//            }
-//        }
-//
-//        // 订单相关
-//        if (containsOrderKeywords(message) && request.getUserId() != null) {
-//            log.info("检测到订单相关查询，用户ID: {}, 原始消息: {}", request.getUserId(), originalMessage);
-//
-//            // 首先尝试从消息中提取具体的订单号
-//            List<Long> extractedOrderIds = extractOrderIds(originalMessage);
-//            log.info("提取到的订单号列表: {}", extractedOrderIds);
-//
-//            if (!extractedOrderIds.isEmpty()) {
-//                // 如果用户指定了具体订单号，查询这些订单
-//                enhancedMessage.append("\n\n您查询的订单信息：\n");
-//                log.info("查询特定订单，订单号: {}", extractedOrderIds);
-//
-//                for (Long orderId : extractedOrderIds) {
-//                    log.info("正在查询订单ID: {}", orderId);
-//                    Order order = knowledgeBaseUtil.getOrderById(orderId);
-//                    log.info("查询到的订单: {}", order);
-//
-//                    if (order != null && order.getCustomerId().equals(request.getUserId())) {
-//                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatOrderInfo(order)).append("\n");
-//                        log.info("订单{}属于用户{}，已添加到回复", orderId, request.getUserId());
-//                    } else {
-//                        enhancedMessage.append("- 订单").append(orderId).append("：未找到或不属于您\n");
-//                        log.warn("订单{}不属于用户{}或未找到，订单详情: {}", orderId, request.getUserId(), order);
-//                    }
-//                }
-//            } else {
-//                // 如果没有指定订单号，显示最近的几个订单
-//                log.info("未提取到具体订单号，查询用户{}的最近订单", request.getUserId());
-//                List<Order> recentOrders = knowledgeBaseUtil.getRecentOrdersByUserId(request.getUserId(), 5);
-//                log.info("查询到的最近订单数量: {}, 详情: {}", recentOrders.size(), recentOrders);
-//
-//                if (!recentOrders.isEmpty()) {
-//                    enhancedMessage.append("\n\n您的最近订单信息：\n");
-//                    for (Order order : recentOrders) {
-//                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatOrderInfo(order)).append("\n");
-//                        log.info("添加订单{}到回复: {}", order.getId(), knowledgeBaseUtil.formatOrderInfo(order));
-//                    }
-//
-//                    if (recentOrders.size() >= 5) {
-//                        enhancedMessage.append("- 如需查看更多订单，请在个人中心查看订单历史\n");
-//                    }
-//                } else {
-//                    enhancedMessage.append("\n\n您暂时没有订单记录。\n");
-//                    log.info("用户{}没有找到任何订单记录", request.getUserId());
-//                }
-//            }
-//
-//            log.info("最终增强的消息内容: {}", enhancedMessage.toString());
-//        }
-//
-//        return enhancedMessage.toString();
-//    }
+    /**
+     * 增强用户消息（添加相关数据上下文）
+     */
+    private String enhanceUserMessage(AiChatRequestDTO request) {
+        String originalMessage = request.getMessage();
+        StringBuilder enhancedMessage = new StringBuilder(originalMessage);
+
+        // 检测消息中是否包含商家、菜品、订单相关关键词
+        String message = originalMessage.toLowerCase();
+
+        // 商家相关
+        if (containsBusinessKeywords(message)) {
+            List<String> businessKeywords = extractBusinessKeywords(originalMessage);
+            for (String keyword : businessKeywords) {
+                List<Business> businesses = knowledgeBaseUtil.searchBusinesses(keyword, 3);
+                if (!businesses.isEmpty()) {
+                    enhancedMessage.append("\n\n相关商家信息：\n");
+                    for (Business business : businesses) {
+                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatBusinessInfo(business)).append("\n");
+                    }
+                }
+            }
+        }
+
+        // 菜品相关
+        if (containsFoodKeywords(message)) {
+            List<String> foodKeywords = extractFoodKeywords(originalMessage);
+            for (String keyword : foodKeywords) {
+                List<Food> foods = knowledgeBaseUtil.searchFoods(keyword, 3);
+                if (!foods.isEmpty()) {
+                    enhancedMessage.append("\n\n相关菜品信息：\n");
+                    for (Food food : foods) {
+                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatFoodInfo(food)).append("\n");
+                    }
+                }
+            }
+        }
+
+        // 订单相关
+        if (containsOrderKeywords(message) && request.getUserId() != null) {
+            log.info("检测到订单相关查询，用户ID: {}, 原始消息: {}", request.getUserId(), originalMessage);
+
+            // 首先尝试从消息中提取具体的订单号
+            List<Long> extractedOrderIds = extractOrderIds(originalMessage);
+            log.info("提取到的订单号列表: {}", extractedOrderIds);
+
+            if (!extractedOrderIds.isEmpty()) {
+                // 如果用户指定了具体订单号，查询这些订单
+                enhancedMessage.append("\n\n您查询的订单信息：\n");
+                log.info("查询特定订单，订单号: {}", extractedOrderIds);
+
+                for (Long orderId : extractedOrderIds) {
+                    log.info("正在查询订单ID: {}", orderId);
+                    Order order = knowledgeBaseUtil.getOrderById(orderId);
+                    log.info("查询到的订单: {}", order);
+
+                    if (order != null && order.getCustomerId().equals(request.getUserId())) {
+                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatOrderInfo(order)).append("\n");
+                        log.info("订单{}属于用户{}，已添加到回复", orderId, request.getUserId());
+                    } else {
+                        enhancedMessage.append("- 订单").append(orderId).append("：未找到或不属于您\n");
+                        log.warn("订单{}不属于用户{}或未找到，订单详情: {}", orderId, request.getUserId(), order);
+                    }
+                }
+            } else {
+                // 如果没有指定订单号，显示最近的几个订单
+                log.info("未提取到具体订单号，查询用户{}的最近订单", request.getUserId());
+                List<Order> recentOrders = knowledgeBaseUtil.getRecentOrdersByUserId(request.getUserId(), 5);
+                log.info("查询到的最近订单数量: {}, 详情: {}", recentOrders.size(), recentOrders);
+
+                if (!recentOrders.isEmpty()) {
+                    enhancedMessage.append("\n\n您的最近订单信息：\n");
+                    for (Order order : recentOrders) {
+                        enhancedMessage.append("- ").append(knowledgeBaseUtil.formatOrderInfo(order)).append("\n");
+                        log.info("添加订单{}到回复: {}", order.getId(), knowledgeBaseUtil.formatOrderInfo(order));
+                    }
+
+                    if (recentOrders.size() >= 5) {
+                        enhancedMessage.append("- 如需查看更多订单，请在个人中心查看订单历史\n");
+                    }
+                } else {
+                    enhancedMessage.append("\n\n您暂时没有订单记录。\n");
+                    log.info("用户{}没有找到任何订单记录", request.getUserId());
+                }
+            }
+
+            log.info("最终增强的消息内容: {}", enhancedMessage.toString());
+        }
+
+        return enhancedMessage.toString();
+    }
     
     /**
      * 检测是否包含商家相关关键词
@@ -450,22 +454,22 @@ public class AiChatServiceImpl implements AiChatService {
                 .toList();
     }
     
-//    @Override
-//    @Transactional
-//    public Boolean deleteChatHistory(Long historyId, Long userId) {
-//        try {
-//            Long currentUserId = getCurrentUserId();
-//            if (currentUserId == null) {
-//                currentUserId = userId;
-//            }
-//
-//            int result = chatHistoryMapper.deleteById(historyId, currentUserId);
-//            return result > 0;
-//        } catch (Exception e) {
-//            log.error("删除对话历史失败", e);
-//            return false;
-//        }
-//    }
+    @Override
+    @Transactional
+    public Boolean deleteChatHistory(Long historyId, Long userId) {
+        try {
+            Long currentUserId = getCurrentUserId();
+            if (currentUserId == null) {
+                currentUserId = userId;
+            }
+
+            int result = chatHistoryMapper.deleteById(historyId, currentUserId);
+            return result > 0;
+        } catch (Exception e) {
+            log.error("删除对话历史失败", e);
+            return false;
+        }
+    }
     
     @Override
     @Transactional
@@ -491,4 +495,5 @@ public class AiChatServiceImpl implements AiChatService {
         BeanUtils.copyProperties(history, vo);
         return vo;
     }
+
 }

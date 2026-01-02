@@ -19,6 +19,7 @@ import result.ResultCodeEnum;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class AddressServiceImpl implements AddressService {
@@ -114,5 +115,11 @@ public class AddressServiceImpl implements AddressService {
         Long currentUserId = userMapper.getUserIdByUsername(currentUsername);
         deliveryAddress.setUpdater(currentUserId);
         return HttpResult.success(deliveryAddressMapper.updateDeliveryAddress(deliveryAddress));
+    }
+
+
+    @Override
+    public List<DeliveryAddress> getDeliveryAddressByIds(Set<Long> addressIds) {
+        return deliveryAddressMapper.getDeliveryAddressByIds(addressIds);
     }
 }

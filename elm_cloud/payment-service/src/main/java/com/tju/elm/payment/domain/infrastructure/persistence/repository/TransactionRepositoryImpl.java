@@ -1,5 +1,7 @@
 package com.tju.elm.payment.domain.infrastructure.persistence.repository;
 
+import com.tju.elm.api.client.UserClient;
+import com.tju.elm.api.po.User;
 import com.tju.elm.payment.domain.infrastructure.assembler.TransactionAssembler;
 import com.tju.elm.payment.domain.model.Transaction;
 import com.tju.elm.payment.domain.repository.TransactionRepository;
@@ -11,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TransactionRepositoryImpl implements TransactionRepository {
@@ -20,20 +24,39 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     @Autowired
     private TransactionAssembler transactionAssembler;
 
+    @Autowired
+    private UserClient userClient;
+
     @Override
     public List<TransactionRecordVO> getTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate) {
         return virtualWalletTransactionMapper.queryTransactionRecord(walletId,type,status,startDate,endDate);
     }
 
-//    @Override
-//    public TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId) {
-//        return virtualWalletTransactionMapper.queryTransactionRecordDetail(transactionId);
-//    }
-//
-//    @Override
-//    public TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId) {
-//        return virtualWalletTransactionMapper.queryTransactionByOrder(orderId);
-//    }
+    @Override
+    public TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId) {
+        TransactionRecordDetailVO ret = virtualWalletTransactionMapper.queryTransactionRecordDetail(transactionId);
+
+        User fromUser = userClient.gainUserById(ret.getFromAccount()).getData();
+        ret.setFromAccountName(fromUser != null ? fromUser.getUsername() : null);
+
+        User toUser = userClient.gainUserById(ret.getToAccount()).getData();
+        ret.setToAccountName(toUser != null ? toUser.getUsername() : null);
+
+        return ret;
+    }
+
+    @Override
+    public TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId) {
+        TransactionRecordDetailVO ret = virtualWalletTransactionMapper.queryTransactionByOrder(orderId);
+
+        User fromUser = userClient.gainUserById(ret.getFromAccount()).getData();
+        ret.setFromAccountName(fromUser != null ? fromUser.getUsername() : null);
+
+        User toUser = userClient.gainUserById(ret.getToAccount()).getData();
+        ret.setToAccountName(toUser != null ? toUser.getUsername() : null);
+
+        return ret;
+    }
 
     @Override
     public Transaction getTransactionByOrder(Long orderId) {

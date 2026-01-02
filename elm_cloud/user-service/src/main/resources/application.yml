@@ -56,11 +56,6 @@ jwt:
   token-validity-in-seconds: 86400
   token-validity-in-seconds-for-remember-me: 108000
 
-logging:
-  level:
-    com.alibaba.nacos: DEBUG
-    org.springframework.cloud: DEBUG
-
 # swagger
 springdoc:
   api-docs:
@@ -69,3 +64,11 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui
+
+logging:
+  level:
+    com.tju.elm: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"

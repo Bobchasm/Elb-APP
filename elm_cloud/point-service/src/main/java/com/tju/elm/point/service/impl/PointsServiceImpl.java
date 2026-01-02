@@ -53,6 +53,9 @@ public class PointsServiceImpl implements PointsService {
     
     @Autowired
     private MarketingPointsExchangeRuleMapper exchangeRuleMapper;
+
+    @Autowired
+    private PointsExchangeOrderMapper pointsExchangeOrderMapper;
     
     @Autowired
     private PointsCacheService pointsCacheService;
@@ -854,6 +857,12 @@ public class PointsServiceImpl implements PointsService {
         // 8. 删除相关缓存（写操作后清除缓存，保证数据一致性）
         pointsCacheService.deleteUserAllCache(userId);
 
+        return true;
+    }
+
+    @Override
+    public Boolean updateStatus(Long orderId,Integer status) {
+        pointsExchangeOrderMapper.updateStatus(orderId, status, LocalDateTime.now());
         return true;
     }
 }

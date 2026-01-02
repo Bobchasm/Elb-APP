@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/addresses")
@@ -53,5 +54,11 @@ public class AddressController {
     public HttpResult removeDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress)
     {
         return addressService.deleteDeliveryAddress(deliveryAddress);
+    }
+
+    @PostMapping("/ids")
+    @Operation(summary = "获取所有id中的用户列表")
+    public HttpResult<List<DeliveryAddress>> gainAddressListByIds(@RequestBody Set<Long> addressIds) {
+        return HttpResult.success(addressService.getDeliveryAddressByIds(addressIds));
     }
 }

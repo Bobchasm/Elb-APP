@@ -3,12 +3,14 @@ package com.tju.elm.point.controller;
 import com.tju.elm.api.client.PointClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.PointsAccountMapper;
+import com.tju.elm.point.mapper.PointsExchangeOrderMapper;
 import com.tju.elm.point.service.MarketingPointsExchangeRuleService;
 import com.tju.elm.point.service.MarketingPointsRuleService;
 import com.tju.elm.point.service.PointsExpirationService;
 import com.tju.elm.point.service.PointsService;
 import com.tju.elm.point.zoo.pojo.dto.PointsExchangeDTO;
 import com.tju.elm.point.zoo.pojo.entity.PointsAccount;
+import com.tju.elm.point.zoo.pojo.entity.PointsExchangeOrder;
 import com.tju.elm.point.zoo.pojo.vo.PointsAccountVO;
 import com.tju.elm.point.zoo.pojo.vo.PointsExchangeGoodsVO;
 import com.tju.elm.point.zoo.pojo.vo.PointsExpirationVO;
@@ -49,6 +51,9 @@ public class PointsController {
 
     @Autowired
     private PointsAccountMapper pointsAccountMapper;
+
+    @Autowired
+    private PointsExchangeOrderMapper pointsExchangeOrderMapper;
     
     @Autowired
     private UserClient userClient;
@@ -96,30 +101,29 @@ public class PointsController {
         return HttpResult.success(transactions);
     }
 
-// TODO
 
-//    /**
-//     * 积分兑换商品
-//     */
-//    @PostMapping("/exchange")
-//    @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
-//    public HttpResult<Long> exchangeGoods(@RequestBody PointsExchangeDTO dto,
-//                                          @RequestHeader(value = "username") String username) {
-//        Long userId = userClient.getUserByName(username).getData().getId();
-//        Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
-//        return HttpResult.success(orderId);
-//    }
-//
-//    /**
-//     * 获取可兑换商品列表
-//     */
-//    @GetMapping("/exchange-goods")
-//    @Operation(summary = "获取可兑换商品列表", description = "查询所有可兑换的商品（包含商品信息和所需积分）")
-//    public HttpResult<List<PointsExchangeGoodsVO>> getExchangeGoodsList() {
-//        List<PointsExchangeGoodsVO> goodsList =
-//            exchangeRuleService.getExchangeGoodsList();
-//        return HttpResult.success(goodsList);
-//    }
+    /**
+     * 积分兑换商品
+     */
+    @PostMapping("/exchange")
+    @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
+    public HttpResult<Long> exchangeGoods(@RequestBody PointsExchangeDTO dto,
+                                          @RequestHeader(value = "username") String username) {
+        Long userId = userClient.getUserByName(username).getData().getId();
+        Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
+        return HttpResult.success(orderId);
+    }
+
+    /**
+     * 获取可兑换商品列表
+     */
+    @GetMapping("/exchange-goods")
+    @Operation(summary = "获取可兑换商品列表", description = "查询所有可兑换的商品（包含商品信息和所需积分）")
+    public HttpResult<List<PointsExchangeGoodsVO>> getExchangeGoodsList() {
+        List<PointsExchangeGoodsVO> goodsList =
+            exchangeRuleService.getExchangeGoodsList();
+        return HttpResult.success(goodsList);
+    }
 
     /**
      * 获取积分+现金兑换比例
@@ -129,6 +133,17 @@ public class PointsController {
     public HttpResult<java.math.BigDecimal> getExchangeRatio() {
         java.math.BigDecimal ratio = exchangeRuleService.getCashExchangeRatio();
         return HttpResult.success(ratio);
+    }
+
+    /**
+     * 冻结积分
+     */
+    @GetMapping("/freeze")
+    @Operation(summary = "冻结积分")
+    public HttpResult<Boolean> freezePoints(@RequestParam Long userId,
+                                            @RequestParam Long points,
+                                            @RequestParam Long orderId) {
+        return HttpResult.success(pointsService.freezePoints(userId, points, orderId));
     }
 
     /**
@@ -187,6 +202,47 @@ public class PointsController {
         return HttpResult.success(count);
     }
 
+    @GetMapping("/deduct_rozen")
+    @Operation(summary = "扣除冻结的积分")
+    public HttpResult<Boolean> deductFrozenPoints(@RequestParam Long userId, @RequestParam Long orderId) {
+        return HttpResult.success(pointsService.deductFrozenPoints(userId, orderId));
+    }
+
+    @GetMapping("/unfreeze")
+    @Operation(summary = "解冻奖励积分")
+    public HttpResult<Boolean> unfreezeRewardPoints(@RequestParam Long userId, @RequestParam Long orderId) {
+        return HttpResult.success(pointsService.unfreezeRewardPoints(userId, orderId));
+    }
+
+    @GetMapping("/exchange_order")
+    @Operation(summary = "获取积分兑换订单")
+    public HttpResult<PointsExchangeOrder> gainByOrderId(@RequestParam Long orderId) {
+        return HttpResult.success(pointsExchangeOrderMapper.selectByOrderId(orderId));
+    }
+
+    @GetMapping("/update_status")
+    @Operation(summary = "更新积分兑换订单状态")
+    public HttpResult<Boolean> updateOrderStatusFromPoint(@RequestParam Long orderId,@RequestParam Integer status) {
+        return HttpResult.success(pointsService.updateStatus(orderId,status));
+    }
+
+    @GetMapping("/unfreeze/cancel")
+    @Operation(summary = "解冻奖励积分（订单取消时）")
+    public HttpResult<Boolean> unfreezePointsCanceled(@RequestParam Long userId, @RequestParam Long orderId) {
+        return HttpResult.success(pointsService.unfreezePoints(userId, orderId));
+    }
+
+    @GetMapping("/cancel/cancel")
+    @Operation(summary = "取消奖励积分（订单取消时）")
+    public HttpResult<Boolean> cancelRewardPoints(@RequestParam Long userId, @RequestParam Long orderId) {
+        return HttpResult.success(pointsService.cancelRewardPoints(userId, orderId));
+    }
+
+    @GetMapping("/vip/update")
+    @Operation(summary = "更新会员等级并增加等级积分")
+    public HttpResult<Boolean> updateVip(@RequestParam Long userId, @RequestParam Integer newMemberLevel) {
+        return HttpResult.success(pointsService.upgradeMemberLevel(userId, newMemberLevel));
+    }
 
     /**
      * 获取当前用户ID

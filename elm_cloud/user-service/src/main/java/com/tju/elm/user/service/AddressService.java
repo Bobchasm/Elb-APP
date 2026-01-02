@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import result.HttpResult;
 
 import java.util.List;
+import java.util.Set;
 
 public interface AddressService {
     HttpResult<AddressVO> addDeliveryAddress(@Valid AddressCreateDTO createDTO);
@@ -19,4 +20,7 @@ public interface AddressService {
     HttpResult updateDeliveryAddress(DeliveryAddress deliveryAddress);
 
     HttpResult deleteDeliveryAddress(DeliveryAddress deliveryAddress);
+
+
+    List<DeliveryAddress> getDeliveryAddressByIds(Set<Long> addressIds);
 }

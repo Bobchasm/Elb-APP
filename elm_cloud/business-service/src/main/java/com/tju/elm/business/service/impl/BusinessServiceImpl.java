@@ -1,18 +1,27 @@
 package com.tju.elm.business.service.impl;
 
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
+import com.tju.elm.api.client.NotificationClient;
+import com.tju.elm.api.client.OrderClient;
 import com.tju.elm.api.client.UserClient;
+import com.tju.elm.api.dto.NotificationSendDTO;
 import com.tju.elm.api.po.User;
 import com.tju.elm.business.mapper.BusinessMapper;
 import com.tju.elm.business.mapper.MerchantInteractionMapper;
 import com.tju.elm.business.pojo.dto.BusinessDTO;
+import com.tju.elm.business.pojo.dto.BusinessPermissionDTO;
 import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
+import com.tju.elm.business.pojo.vo.BusinessPermissionVO;
 import com.tju.elm.business.pojo.vo.BusinessSearchVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 import com.tju.elm.business.service.BusinessService;
 import com.tju.elm.business.pojo.vo.BusinessVO;
+import com.tju.elm.business.websocket.WebSocketServer;
 import exception.APIException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +32,8 @@ import utils.UserContext;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +47,14 @@ public class BusinessServiceImpl implements BusinessService {
     private final BusinessMapper businessMapper;
     @Autowired
     private UserClient userClient;
+
+    @Autowired
+    private WebSocketServer webSocketServer;
+
+    @Autowired
+    private NotificationClient notificationClient;
+    @Autowired
+    private OrderClient orderClient;
 
     @Override
     public BusinessVO getBusinessById(Long id) {
@@ -257,7 +272,7 @@ public class BusinessServiceImpl implements BusinessService {
         // 为每个店铺计算评分与销量
         for (BusinessSearchVO business : businesses) {
             Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
-            int salesCount = businessMapper.getSalesCount(business.getId());
+            int salesCount = orderClient.orderCount(business.getId()).getData();
             Integer likeCount = interactionMapper.countLikesByMerchantId(business.getId());
             Integer collectCount = interactionMapper.countCollectionsByMerchantId(business.getId());
             // 计算评分 (点赞权重0.6，收藏权重0.4，归一化到1-5分)
@@ -300,7 +315,7 @@ public class BusinessServiceImpl implements BusinessService {
         // 为每个店铺计算评分与销量
         for (BusinessSearchVO business : businesses) {
             Map<String, Object> interactionCounts = businessMapper.getInteractionCounts(business.getId());
-            int salesCount = businessMapper.getSalesCount(business.getId());
+            int salesCount = orderClient.orderCount(business.getId()).getData();
             Integer likeCount = interactionMapper.countLikesByMerchantId(business.getId());
             Integer collectCount = interactionMapper.countCollectionsByMerchantId(business.getId());
             // 计算评分 (点赞权重0.6，收藏权重0.4，归一化到1-5分)
@@ -433,5 +448,150 @@ public class BusinessServiceImpl implements BusinessService {
         return businessMapper.selectBusinessById(id);
     }
 
+    @Override
+    public List<Business> getBusinessInfoList(Set<Long> businessIds) {
+        return businessMapper.selectBusinessByIds(businessIds);
+    }
+
+
+
+    /**
+     * 顾客申请开店
+     **/
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BusinessPermissionVO applyShop(BusinessPermissionDTO businessPermissionDTO) {
+
+        User currentUser = getCurrentUser();
+        Long currentUserId = currentUser.getId();
+
+        if (currentUser == null) {
+            throw new APIException("当前用户不存在");
+        }
+        businessPermissionDTO.setStatus(0);
+        businessPermissionDTO.setUserId(currentUserId);
+        businessPermissionDTO.setCreator(currentUserId);
+        businessPermissionDTO.setUpdater(currentUserId);
+        businessPermissionDTO.setCreateTime(LocalDateTime.now());
+        businessPermissionDTO.setUpdateTime(LocalDateTime.now());
+        businessMapper.insertBusinessPermission(businessPermissionDTO);
+        try {
+            sendShopApplyNotification(currentUserId, currentUser.getUsername());
+        } catch (JSONException e) {
+            throw new APIException("消息发送失败");
+        }
+        BusinessPermissionVO businessPermissionVO = new BusinessPermissionVO();
+        BeanUtils.copyProperties(businessPermissionDTO, businessPermissionVO);
+        return businessPermissionVO;
+    }
+
+    @Override
+    public BusinessPermissionVO auditShopApplication(BusinessPermissionDTO businessPermissionDTO) {
+        Long currentUserId = getCurrentUser().getId();
+        businessPermissionDTO.setUpdater(currentUserId);
+        businessPermissionDTO.setUpdateTime(LocalDateTime.now());
+        if (businessMapper.selectBusinessById(businessPermissionDTO.getId()) == null) {
+            throw new APIException("申请记录不存在");
+        }
+        businessMapper.updateBusinessStatus(businessPermissionDTO);
+        BusinessPermissionVO businessPermissionVO =businessMapper.getBusinessPermissionById(businessPermissionDTO.getId());
+        Long applicantUserId = businessPermissionVO.getUserId();
+        if (businessPermissionDTO.getStatus() == 1) { // 1-同意
+            sendAuditPassNotification(applicantUserId,1);
+        } else {
+            // 若拒绝，可选择性推送拒绝通知
+            sendAuditRejectNotification(applicantUserId,1);
+        }
+        return businessPermissionVO;
+    }
+
+    @Override
+    public List<BusinessPermissionVO> getShopApplications() {
+        List<BusinessPermissionVO> applications =businessMapper.listNotAudited();
+        return applications;
+    }
+
+
+    /**
+     * 获取当前用户ID
+     */
+    private User getCurrentUser() {
+        return userClient.getUserByName(UserContext.getUsername()).getData();
+    }
+
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+
+    /**
+     * 向管理员推送开店申请通知
+     * @param userId 申请人ID
+     * @param username 申请人用户名
+     */
+    private void sendShopApplyNotification(Long userId, String username) throws JSONException {
+        // 构建消息体（包含type、userId、content）
+        JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
+        message.put("type", 1); // 1表示申请开店
+        message.put("userId", userId);
+        message.put("content", "商家[" + username + "]申请开店，请及时审核");
+
+        // 调用WebSocket服务群发消息（管理员客户端会监听该消息）
+        webSocketServer.sendToAllClient(message.toJSONString());
+    }
+
+    /**
+     * 推送"审核通过"通知给顾客
+     */
+    private void sendAuditPassNotification(Long userId,Integer type) {
+        JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
+
+        NotificationSendDTO notification = new NotificationSendDTO();
+
+        if(type==0){
+            String content = "恭喜！您的成为商家申请已通过审核，现在可以开始营业了";
+            notification.setText(content);
+            message.put("type", 0); // 0表示申请成为商家的回复
+            message.put("content",content);
+        }else if(type==1){
+            String content = "恭喜！您的开店申请已通过审核，现在可以开始营业了";
+            notification.setText(content);
+            message.put("type", 1); // 1表示申请开店的回复
+            message.put("content", content);
+        }
+        message.put("userId", userId);
+        webSocketServer.sendToAllClient(message.toJSONString());
+
+        notification.setReceiverId(userId); // 接收消息的用户ID
+        notification.setType(type); // 0=商家申请，1=开店申请
+        notification.setAuditResult(String.valueOf(1)); // 1=通过，2=拒绝
+        notificationClient.sendNotification(notification);
+    }
+
+    /**
+     * 推送"审核拒绝"通知给顾客
+     */
+    private void sendAuditRejectNotification(Long userId,Integer type) {
+        JSONObject message = new JSONObject();
+        message.put("currentTime", LocalDateTime.now().format(TIME_FORMATTER));
+        NotificationSendDTO notification = new NotificationSendDTO();
+        if(type==0){
+            String content = "抱歉，您的成为商家申请未通过审核";
+            notification.setText(content);
+            message.put("type", 0); // 0表示申请成为商家的回复
+            message.put("content", content);
+        }else if(type==1){
+            String content = "抱歉，您的开店申请未通过审核";
+            notification.setText(content);
+            message.put("type", 1); // 1表示申请开店的回复
+            message.put("content", content);
+        }
+        message.put("userId", userId);
+        webSocketServer.sendToAllClient(message.toJSONString());
+        notification.setReceiverId(userId); // 接收消息的用户ID
+        notification.setType(type); // 0=商家申请，1=开店申请
+        notification.setAuditResult(String.valueOf(2)); // 1=通过，2=拒绝
+        notificationClient.sendNotification(notification);
+    }
 
 }

@@ -22,9 +22,9 @@ public interface PointsExpirationAlertService {
      */
     Boolean updateAlertConfig(PointsExpirationAlertConfig config);
     
-//    /**
-//     * 检查并发送即将过期积分预警（定时任务调用）
-//     */
-//    void checkAndSendExpirationAlerts();
+    /**
+     * 检查并发送即将过期积分预警（定时任务调用）
+     */
+    void checkAndSendExpirationAlerts();
 }
 

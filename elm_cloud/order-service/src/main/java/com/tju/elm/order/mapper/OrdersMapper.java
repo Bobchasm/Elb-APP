@@ -13,59 +13,55 @@ public interface OrdersMapper {
 
     void insertOrderPlus(Order order);
 
-//    @Select("""
-//        <script>
-//            select o.id,o.order_total,o.order_state,o.order_date,o.business_id,o.delivery_price,b.business_name,b.business_img
-//            from orders o
-//            left join business b on b.id = o.business_id
-//            <where>
-//                o.is_deleted = 0
-//                <if test="null != businessId">
-//                    and o.business_id = #{businessId}
-//                </if>
-//                <if test="null != orderState">
-//                    and o.order_state = #{orderState}
-//                </if>
-//                <if test="null != userId">
-//                    and o.customer_id = #{userId}
-//                </if>
-//            </where>
-//              order by o.order_date desc
-//        </script>
-//    """)
-//    List<OrderItemVO> selectOrderItemsList(Long businessId, Integer orderState, Long userId);
-//
-//    @Select("""
-//        <script>
-//            select o.*, uc.username as customerName, b.business_name,b.business_img, da.address,da.contact_name,da.contact_sex,da.contact_tel
-//            from orders o
-//            left join users uc on uc.id = o.customer_id
-//            left join business b on b.id = o.business_id
-//            left join delivery_address da on da.id = o.address_id
-//            <where>
-//                o.is_deleted = 0
-//                <if test="null != businessId">
-//                    and o.business_id = #{businessId}
-//                </if>
-//                <if test="null != orderState">
-//                    and o.order_state = #{orderState}
-//                </if>
-//            </where>
-//              order by o.order_date desc
-//        </script>
-//    """)
-//    List<OrderItemDetailVO> selectOrderDetailetItem(Long businessId, Integer orderState);
-//
-//    @Select("""
-//        <script>
-//            select o.*, uc.username as customerName, b.business_name,b.business_img
-//            from orders o
-//            left join users uc on uc.id = o.customer_id
-//            left join business b on b.id = o.business_id
-//            where o.is_deleted = 0 and o.id = #{orderItemId}
-//        </script>
-//    """)
-//    OrderItemDetailVO selectOrderItemById(Long orderItemId);
+    @Select("""
+        <script>
+            select o.id,o.order_total,o.order_state,o.order_date,o.business_id,o.delivery_price
+            from orders o
+            <where>
+                o.is_deleted = 0
+                <if test="null != businessId">
+                    and o.business_id = #{businessId}
+                </if>
+                <if test="null != orderState">
+                    and o.order_state = #{orderState}
+                </if>
+                <if test="null != userId">
+                    and o.customer_id = #{userId}
+                </if>
+            </where>
+              order by o.order_date desc
+        </script>
+    """)
+    List<OrderItemVO> selectOrderItemsList(Long businessId, Integer orderState, Long userId);
+
+    @Select("""
+        <script>
+            select o.*
+            from orders o
+            <where>
+                o.is_deleted = 0
+                <if test="null != businessId">
+                    and o.business_id = #{businessId}
+                </if>
+                <if test="null != orderState">
+                    and o.order_state = #{orderState}
+                </if>
+            </where>
+              order by o.order_date desc
+        </script>
+    """)
+    List<OrderItemDetailVO> selectOrderDetailetItem(Long businessId, Integer orderState);
+
+    @Select("""
+        <script>
+            select o.*, uc.username as customerName, b.business_name,b.business_img
+            from orders o
+            left join users uc on uc.id = o.customer_id
+            left join business b on b.id = o.business_id
+            where o.is_deleted = 0 and o.id = #{orderItemId}
+        </script>
+    """)
+    OrderItemDetailVO selectOrderItemById(Long orderItemId);
 
 
 
@@ -108,4 +104,8 @@ public interface OrdersMapper {
             "AND order_date <= #{beforeTime}")
     List<Order> selectPaidOrdersBeforeTime(@Param("orderState") Integer orderState, 
                                            @Param("beforeTime") java.time.LocalDateTime beforeTime);
+
+    @Select("SELECT COUNT(*) FROM `orders` WHERE business_id = #{businessId} AND order_state = 3 AND is_deleted = 0")
+    Integer getSalesCount(@Param("businessId") Long businessId);
+
 }

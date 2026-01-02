@@ -1,5 +1,6 @@
 package com.tju.elm.business.service.impl;
 
+import com.tju.elm.api.client.OrderClient;
 import com.tju.elm.api.client.PointClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.business.mapper.BusinessMapper;
@@ -38,6 +39,8 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
     private PointClient pointClient;
     @Autowired
     private UserClient userClient;
+    @Autowired
+    private OrderClient orderClient;
 
 
     @Override
@@ -196,7 +199,7 @@ public class MerchantInteractionServiceImpl implements MerchantInteractionServic
             BusinessSearchVO businessSearchVO=new BusinessSearchVO();
               //计算每一个商铺的评分和销售量
 
-            int salesCount = businessMapper.getSalesCount(businessId);
+            int salesCount = orderClient.orderCount(businessId).getData();
 
             Integer likeCount = interactionMapper.countLikesByMerchantId(businessId);
             Integer collectCount = interactionMapper.countCollectionsByMerchantId(businessId);

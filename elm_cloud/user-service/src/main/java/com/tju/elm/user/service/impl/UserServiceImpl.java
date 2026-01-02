@@ -1,9 +1,11 @@
 package com.tju.elm.user.service.impl;
 
 
+import com.tju.elm.user.mapper.DeliveryAddressMapper;
 import com.tju.elm.user.mapper.UserMapper;
 import com.tju.elm.user.service.UserService;
 import com.tju.elm.user.zoo.pojo.dto.BusinessInfoDTO;
+import com.tju.elm.user.zoo.pojo.entity.DeliveryAddress;
 import com.tju.elm.user.zoo.pojo.entity.User;
 import com.tju.elm.user.zoo.pojo.vo.UserVO;
 import com.tju.elm.user.zoo.utils.SecurityUtils;
@@ -15,12 +17,15 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private DeliveryAddressMapper deliveryAddressMapper;
 
 
     public User getUserWithAuthorities(String username) {
@@ -102,4 +107,15 @@ public class UserServiceImpl implements UserService {
         List<BusinessInfoDTO> businesses = userMapper.getAllActiveBusinesses();
         return businesses;
     }
+
+    @Override
+    public List<User> getUserByIds(Set<Long> userIds) {
+        return userMapper.getUserByIds(userIds);
+    }
+
+    @Override
+    public User getUserById(Long userId) {
+        return userMapper.findById(userId);
+    }
+
 }

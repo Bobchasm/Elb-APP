@@ -1,6 +1,7 @@
 package com.tju.elm.notification.controller;
 
 import com.tju.elm.notification.service.NotificationService;
+import com.tju.elm.notification.zoo.pojo.dto.NotificationSendDTO;
 import com.tju.elm.notification.zoo.pojo.entity.Notification;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +28,12 @@ public class NotificationController {
     public HttpResult readNotification(@PathVariable Long id){
         notificationService.readNotification(id);
         return HttpResult.success();
+    }
+
+    @PostMapping("/notifications/send")
+    @Operation(summary = "发送消息")
+    public HttpResult<Long> sendNotification(@RequestBody NotificationSendDTO notificationSendDTO) {
+        return HttpResult.success(notificationService.sendNotification(notificationSendDTO));
     }
 
 }

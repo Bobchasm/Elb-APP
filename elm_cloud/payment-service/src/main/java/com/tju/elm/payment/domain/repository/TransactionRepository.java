@@ -11,9 +11,9 @@ import java.util.List;
 public interface TransactionRepository {
     List<TransactionRecordVO> getTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate);
 
-//    TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId);
-//
-//    TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId);
+    TransactionRecordDetailVO getTransactionRecordDetail(Long transactionId);
+
+    TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId);
 
     Transaction getTransactionByOrder(Long orderId);
 

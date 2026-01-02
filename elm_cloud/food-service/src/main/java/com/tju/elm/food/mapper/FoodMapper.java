@@ -1,5 +1,6 @@
 package com.tju.elm.food.mapper;
 import java.util.List;
+import java.util.Set;
 
 import com.tju.elm.food.pojo.entity.Food;
 import com.tju.elm.food.pojo.vo.FoodDetailVO;
@@ -54,5 +55,20 @@ public interface FoodMapper {
      * @return FoodDetailVO
      */
     FoodDetailVO selectFoodDetailVOByFoodId(Long foodId);
+
+    @Select("""
+        <script>
+            SELECT * FROM food f
+                <where>
+                    f.is_deleted = 0
+                    AND
+                    f.id in
+                    <foreach collection='foodIds' item='foodId' open='(' separator=',' close=')'>
+                        #{foodId}
+                    </foreach>
+                </where>
+        </script>
+    """)
+    List<Food> getFoodsByIds(Set<Long> foodIds);
 
 }

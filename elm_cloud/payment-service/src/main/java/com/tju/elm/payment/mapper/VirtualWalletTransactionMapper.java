@@ -38,30 +38,26 @@ public interface VirtualWalletTransactionMapper {
     """)
     List<TransactionRecordVO> queryTransactionRecord(Long walletId, Integer type, Integer status, LocalDate startDate, LocalDate endDate);
 
-//    @Select("""
-//        select vmt.*, uf.username as fromAccountName, ut.username as toAccountName
-//        from virtual_wallet_transaction vmt
-//        left join virtual_wallet vf on vmt.from_account = vf.id
-//        left join virtual_wallet vt on vmt.to_account = vt.id
-//        left join users uf on vf.user_id = uf.id
-//        left join users ut on vt.user_id = ut.id
-//        where vmt.id = #{transactionId} and vmt.is_deleted = 0
-//    """)
-//    TransactionRecordDetailVO queryTransactionRecordDetail(Long transactionId);
+    @Select("""
+        select vmt.*
+        from virtual_wallet_transaction vmt
+        left join virtual_wallet vf on vmt.from_account = vf.id
+        left join virtual_wallet vt on vmt.to_account = vt.id
+        where vmt.id = #{transactionId} and vmt.is_deleted = 0
+    """)
+    TransactionRecordDetailVO queryTransactionRecordDetail(Long transactionId);
 
     @Select("select * from virtual_wallet_transaction where order_id = #{orderId} and is_deleted = 0")
     VirtualWalletTransaction getTransactionByOrder(Long orderId);
 
-//    @Select("""
-//        select vmt.*, uf.username as fromAccountName, ut.username as toAccountName
-//        from virtual_wallet_transaction vmt
-//        left join virtual_wallet vf on vmt.from_account = vf.id
-//        left join virtual_wallet vt on vmt.to_account = vt.id
-//        left join users uf on vf.user_id = uf.id
-//        left join users ut on vt.user_id = ut.id
-//        where vmt.order_id = #{orderId} and vmt.is_deleted = 0
-//    """)
-//    TransactionRecordDetailVO queryTransactionByOrder(Long orderId);
+    @Select("""
+        select vmt.*
+        from virtual_wallet_transaction vmt
+        left join virtual_wallet vf on vmt.from_account = vf.id
+        left join virtual_wallet vt on vmt.to_account = vt.id
+        where vmt.order_id = #{orderId} and vmt.is_deleted = 0
+    """)
+    TransactionRecordDetailVO queryTransactionByOrder(Long orderId);
 
     @Insert("""
         insert into virtual_wallet_transaction (type, status, amount, from_account, to_account, fee, fee_rate,order_id) 

@@ -31,6 +31,7 @@ import result.HttpResult;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -131,6 +132,12 @@ public class UserRestController {
         Person person = personService.getPersonByUserId(currentUser.getId());
         BeanUtils.copyProperties(person, personVO);
         return ResponseEntity.ok(personVO);
+    }
+
+    @GetMapping("/person/id")
+    @Operation(summary = "获取用户自然人属性")
+    public ResponseEntity<Person> gainActualPerson(@RequestParam Long userId) {
+        return ResponseEntity.ok(personService.getPersonByUserId(userId));
     }
 
     @GetMapping("/persons")
@@ -393,7 +400,25 @@ public class UserRestController {
 
     @GetMapping("/user/exist")
     @Operation(summary = "判断用户是否存在")
-    public HttpResult<Integer> hasUser(Long userId) {
+    public HttpResult<Integer> hasUser(@RequestParam Long userId) {
         return HttpResult.success(userMapper.countUserById(userId));
+    }
+
+    @PostMapping("/user/ids")
+    @Operation(summary = "获取所有id中的用户列表")
+    public HttpResult<List<User>> getUserListByIds(@RequestBody Set<Long> userIds) {
+        return HttpResult.success(userService.getUserByIds(userIds));
+    }
+
+    @GetMapping("/user/id")
+    @Operation(summary = "获取所有id中的用户列表")
+    public HttpResult<User> gainUserById(@RequestParam Long userId) {
+        return HttpResult.success(userService.getUserById(userId));
+    }
+
+    @GetMapping("/user/countUser")
+    @Operation(summary = "获取总用户数", description = "获取总用户数")
+    public HttpResult<Integer> countUser(){
+        return HttpResult.success(userMapper.count());
     }
 }

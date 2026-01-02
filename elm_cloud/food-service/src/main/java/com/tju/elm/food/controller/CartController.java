@@ -21,12 +21,12 @@ public class CartController {
 
     @GetMapping("/list")
     @Operation(summary = "获取用户在指定商家的购物车商品列表")
-    public HttpResult<List<CartItemVO>> addCartItem(@RequestParam Long businessId) {
+    public HttpResult<List<CartItemVO>> listCartItem(@RequestParam Long businessId) {
         return HttpResult.success(cartService.getCartItemList(businessId));
     }
 
     @GetMapping("/add")
-    @Operation(summary = "(前端用这个)向购物车添加商品")
+    @Operation(summary = "向购物车添加商品")
     public HttpResult<Long> addCartItem(@RequestParam Long foodId, @RequestParam Integer quantity) {
         return HttpResult.success(cartService.addItem(foodId, quantity));
     }
@@ -39,7 +39,7 @@ public class CartController {
 
     @GetMapping("/clear")
     @Operation(summary = "清空用户在指定商家的购物车")
-    public HttpResult<Long> updateItemQuantity(@RequestParam Long businessId) {
+    public HttpResult<Long> clearCart(@RequestParam Long businessId) {
         return HttpResult.success(cartService.clearCart(businessId));
     }
 

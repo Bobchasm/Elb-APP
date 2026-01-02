@@ -2,14 +2,17 @@ package com.tju.elm.business.service;
 
 
 import com.tju.elm.business.pojo.dto.BusinessDTO;
+import com.tju.elm.business.pojo.dto.BusinessPermissionDTO;
 import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
+import com.tju.elm.business.pojo.vo.BusinessPermissionVO;
 import com.tju.elm.business.pojo.vo.BusinessSearchVO;
 import com.tju.elm.business.pojo.vo.BusinessVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface BusinessService {
     BusinessVO getBusinessById(Long id);
@@ -29,4 +32,12 @@ public interface BusinessService {
 
     Business getBusinessInfo(Long id);
 
+    List<Business> getBusinessInfoList(Set<Long> businessIds);
+
+    BusinessPermissionVO applyShop(BusinessPermissionDTO businessPermissionDTO);
+
+    BusinessPermissionVO auditShopApplication(BusinessPermissionDTO businessPermissionDTO);
+
+
+    List<BusinessPermissionVO> getShopApplications();
 }

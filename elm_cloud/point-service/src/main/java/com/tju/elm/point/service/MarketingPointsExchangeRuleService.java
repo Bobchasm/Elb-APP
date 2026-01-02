@@ -47,19 +47,19 @@ public interface MarketingPointsExchangeRuleService {
      */
     List<PointsExchangeRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize);
     
-//    /**
-//     * 查询可兑换商品列表
-//     * @return 可兑换商品列表（包含商品信息和所需积分）
-//     */
-//    List<PointsExchangeGoodsVO> getExchangeGoodsList();
-//
-//    /**
-//     * 兑换商品
-//     * @param userId 用户ID
-//     * @param dto 兑换DTO
-//     * @return 兑换订单ID
-//     */
-//    Long exchangeGoods(Long userId, PointsExchangeDTO dto);
+    /**
+     * 查询可兑换商品列表
+     * @return 可兑换商品列表（包含商品信息和所需积分）
+     */
+    List<PointsExchangeGoodsVO> getExchangeGoodsList();
+
+    /**
+     * 兑换商品
+     * @param userId 用户ID
+     * @param dto 兑换DTO
+     * @return 兑换订单ID
+     */
+    Long exchangeGoods(Long userId, PointsExchangeDTO dto);
     
     /**
      * 获取积分+现金兑换比例

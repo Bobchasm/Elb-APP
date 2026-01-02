@@ -475,7 +475,7 @@ export default {
             return;
           }
           const applicationData = { ...formValues, userId: userResponse.id };
-          const response = await request.post('/api/permission/apply-shop', applicationData, {
+          const response = await request.post('/api/businesses/apply-shop', applicationData, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (response && response.success) {

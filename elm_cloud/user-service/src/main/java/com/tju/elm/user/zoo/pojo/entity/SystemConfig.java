@@ -1,4 +1,4 @@
-package com.tju.elm.user.zoo.config;
+package com.tju.elm.user.zoo.pojo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

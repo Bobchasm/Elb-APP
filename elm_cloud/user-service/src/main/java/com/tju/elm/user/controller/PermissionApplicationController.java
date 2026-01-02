@@ -4,6 +4,7 @@ package com.tju.elm.user.controller;
 import com.tju.elm.user.service.PermissionApplicationService;
 import com.tju.elm.user.zoo.pojo.dto.AuditPermissionDTO;
 import com.tju.elm.user.zoo.pojo.entity.PermissionApplication;
+import com.tju.elm.user.zoo.pojo.vo.MerchantApplicationsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,46 +30,24 @@ public class PermissionApplicationController {
         return HttpResult.success(permissionApplicationService.applyMerchant());
     }
 
-//    /**
-//     * 审核用户的商家申请（同意/拒绝）
-//     */
-//    @PostMapping("/audit")
-//    @Operation(summary = "审核商家申请", description = "管理员审核用户的商家申请，同意后将添加BUSINESS权限并通知用户")
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    public HttpResult<PermissionApplication> auditApplication(@Valid @RequestBody AuditPermissionDTO auditDTO) {
-//        return HttpResult.success(permissionApplicationService.auditApplication(auditDTO));
-//    }
+    /**
+     * 审核用户的商家申请（同意/拒绝）
+     */
+    @PostMapping("/audit")
+    @Operation(summary = "审核商家申请", description = "管理员审核用户的商家申请，同意后将添加BUSINESS权限并通知用户")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public HttpResult<PermissionApplication> auditApplication(@Valid @RequestBody AuditPermissionDTO auditDTO) {
+        return HttpResult.success(permissionApplicationService.auditApplication(auditDTO));
+    }
 
-//    /**
-//     * 顾客申请开店
-//     */
-//    @PostMapping("/apply-shop")
-//    @Operation(summary = "申请开店", description = "顾客提交开店的申请，提交后会通知管理员审核")
-//    public HttpResult<BusinessPermissionVO> applyShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
-//        return HttpResult.success(permissionApplicationService.applyShop(businessPermissionDTO));
-//    }
-//
-//    /**
-//     * 审核用户的开店申请（同意/拒绝）
-//     */
-//    @PostMapping("/audit-shop")
-//    @Operation(summary = "审核开店申请", description = "管理员审核用户的开店申请")
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    public HttpResult<BusinessPermissionVO> auditShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
-//        return HttpResult.success(permissionApplicationService.auditShopApplication(businessPermissionDTO));
-//    }
-//
-//    @GetMapping("/merchant-applications")
-//    @Operation(summary = "获取申请成为商家的待审核列表", description = "获取申请成为商家的待审核列表")
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    public HttpResult<List<MerchantApplicationsVO>> getMerchantApplications() {
-//        return HttpResult.success(permissionApplicationService.getMerchantApplications());
-//    }
-//
-//    @GetMapping("/shop-applications")
-//    @Operation(summary = "获取申请开店的待审核列表", description = "获取申请开店的待审核列表")
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    public HttpResult<List<BusinessPermissionVO>> getShopApplications() {
-//        return HttpResult.success(permissionApplicationService.getShopApplications());
-//    }
+
+
+    @GetMapping("/merchant-applications")
+    @Operation(summary = "获取申请成为商家的待审核列表", description = "获取申请成为商家的待审核列表")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public HttpResult<List<MerchantApplicationsVO>> getMerchantApplications() {
+        return HttpResult.success(permissionApplicationService.getMerchantApplications());
+    }
+
+
 }

@@ -73,6 +73,8 @@ springdoc:
 
 logging:
   level:
-    org.springframework.cloud.gateway.handler.predicate: TRACE
-    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: DEBUG
-    com.tju.elm.gateway: DEBUG
+    com.tju.elm: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"

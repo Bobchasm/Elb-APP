@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface UserMapper {
@@ -45,4 +46,20 @@ public interface UserMapper {
             "    ua.authority_name = 'BUSINESS' " +
             "    AND u.is_deleted = 0 ")
     List<BusinessInfoDTO> getAllActiveBusinesses();
+
+    @Select("""
+        <script>
+            SELECT * FROM users u
+                <where>
+                    u.is_deleted = 0
+                    AND
+                    u.id in
+                    <foreach collection='userIds' item='userId' open='(' separator=',' close=')'>
+                        #{userId}
+                    </foreach>
+                </where>
+        </script>
+    """)
+    List<User> getUserByIds(Set<Long> userIds);
+
 }

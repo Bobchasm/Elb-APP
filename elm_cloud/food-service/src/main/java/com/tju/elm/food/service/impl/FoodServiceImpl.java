@@ -2,6 +2,7 @@ package com.tju.elm.food.service.impl;
 
 import com.tju.elm.api.client.BusinessClient;
 import com.tju.elm.api.client.UserClient;
+import com.tju.elm.api.dto.CreateOrderDTO;
 import com.tju.elm.api.po.Authority;
 import com.tju.elm.api.po.Business;
 import com.tju.elm.api.po.User;
@@ -25,6 +26,7 @@ import utils.UserContext;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 public class FoodServiceImpl implements FoodService {
@@ -159,6 +161,16 @@ public class FoodServiceImpl implements FoodService {
     @Override
     public FoodDetailVO getFoodDetailByFoodId(Long foodId) {
         return foodMapper.selectFoodDetailVOByFoodId(foodId);
+    }
+
+    @Override
+    public List<Food> getFoodsByIds(Set<Long> foodIds) {
+        return foodMapper.getFoodsByIds(foodIds);
+    }
+
+    @Override
+    public Food getFoodByFoodId(Long foodId) {
+        return foodMapper.selectFoodById(foodId);
     }
 
     /**
