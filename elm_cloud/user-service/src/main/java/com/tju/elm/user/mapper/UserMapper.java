@@ -1,9 +1,12 @@
 package com.tju.elm.user.mapper;
 
+import com.tju.elm.user.zoo.pojo.dto.BusinessInfoDTO;
 import com.tju.elm.user.zoo.pojo.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -28,4 +31,18 @@ public interface UserMapper {
 
     @Update("UPDATE users SET activated = #{activated} WHERE id = #{id}")
     void updateActivated(User user);
+
+    @Select("SELECT " +
+            "    p.id AS userId, " +  // 注意这里改为userId，与DTO字段名一致
+            "    u.username, " +
+            "    p.phone, " +
+            "    p.photo " +
+            "FROM " +
+            "    user_authority ua " +
+            "    JOIN users u ON ua.user_id = u.id " +
+            "    JOIN person p ON ua.user_id = p.id " +
+            "WHERE " +
+            "    ua.authority_name = 'BUSINESS' " +
+            "    AND u.is_deleted = 0 ")
+    List<BusinessInfoDTO> getAllActiveBusinesses();
 }

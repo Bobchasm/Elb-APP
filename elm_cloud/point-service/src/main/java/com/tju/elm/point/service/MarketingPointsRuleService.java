@@ -17,27 +17,27 @@ import java.util.List;
  */
 public interface MarketingPointsRuleService {
     
-//    /**
-//     * 创建积分规则
-//     * @param dto 创建规则DTO
-//     * @return 规则ID
-//     */
-//    Long createRule(PointsRuleCreateDTO dto);
-//
-//    /**
-//     * 更新积分规则
-//     * @param ruleId 规则ID
-//     * @param dto 更新规则DTO
-//     * @return 是否成功
-//     */
-//    Boolean updateRule(Long ruleId, PointsRuleUpdateDTO dto);
-//
-//    /**
-//     * 删除积分规则
-//     * @param ruleId 规则ID
-//     * @return 是否成功
-//     */
-//    Boolean deleteRule(Long ruleId);
+    /**
+     * 创建积分规则
+     * @param dto 创建规则DTO
+     * @return 规则ID
+     */
+    Long createRule(PointsRuleCreateDTO dto);
+
+    /**
+     * 更新积分规则
+     * @param ruleId 规则ID
+     * @param dto 更新规则DTO
+     * @return 是否成功
+     */
+    Boolean updateRule(Long ruleId, PointsRuleUpdateDTO dto);
+
+    /**
+     * 删除积分规则
+     * @param ruleId 规则ID
+     * @return 是否成功
+     */
+    Boolean deleteRule(Long ruleId);
     
     /**
      * 查询积分规则列表
@@ -61,13 +61,13 @@ public interface MarketingPointsRuleService {
 //    Long calculatePoints(Long userId, Long orderId, BigDecimal orderAmount,
 //                        LocalDateTime orderDate, List<Long> foodIds);
     
-//    /**
-//     * 根据行为类型计算应获得积分
-//     * @param userId 用户ID
-//     * @param behaviorType 行为类型（like-点赞 collect-收藏 repay_loan-还贷款）
-//     * @return 应获得积分数量
-//     */
-//    Long calculateBehaviorPoints(Long userId, String behaviorType);
+    /**
+     * 根据行为类型计算应获得积分
+     * @param userId 用户ID
+     * @param behaviorType 行为类型（like-点赞 collect-收藏 repay_loan-还贷款）
+     * @return 应获得积分数量
+     */
+    Long calculateBehaviorPoints(Long userId, String behaviorType);
     
 //    /**
 //     * 根据订单支付完成消息计算应获得积分（用于消息队列监听器）

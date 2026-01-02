@@ -1,5 +1,6 @@
 package com.tju.elm.point.service.impl;
 
+import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.MarketingPointsExchangeRuleMapper;
 import com.tju.elm.point.mapper.PointsExchangeOrderMapper;
 import com.tju.elm.point.service.MarketingPointsExchangeRuleService;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import result.ResultCodeEnum;
+import utils.UserContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,6 +49,9 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
     @Autowired
     private PointsCacheService pointsCacheService;
 
+    @Autowired
+    private UserClient userClient;
+
 //    @Autowired
 //    private UserMapper userMapper;
 //
@@ -60,72 +65,73 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
 //    private OrderDetailetMapper orderDetailetMapper;
 
 
-//    @Override
-//    @Transactional
-//    public Long createRule(PointsExchangeRuleCreateDTO dto) {
-//        // 参数验证：积分+现金规则（rule_type=0）必须提供 exchange_ratio
-//        if (dto.getRuleType() != null && dto.getRuleType() == 0) {
-//            if (dto.getExchangeRatio() == null) {
-//                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
-//            }
-//        }
-//        // 兑换商品规则（rule_type=1）不需要 exchange_ratio，可以为空
-//
-//        MarketingPointsExchangeRule rule = new MarketingPointsExchangeRule();
-//        BeanUtils.copyProperties(dto, rule);
-//
-//        if (rule.getRuleStatus() == null) {
-//            rule.setRuleStatus(1); // 默认启用
-//        }
-//
-//        rule.setCreateTime(LocalDateTime.now());
-//        rule.setUpdateTime(LocalDateTime.now());
-//        rule.setIsDeleted(false);
-//        Long currentUserId = getCurrentUserId();
-//        rule.setCreator(currentUserId);
-//        rule.setUpdater(currentUserId);
-//
-//        exchangeRuleMapper.insert(rule);
-//        return rule.getId();
-//    }
-//
-//    @Override
-//    @Transactional
-//    public Boolean updateRule(Long ruleId, PointsExchangeRuleCreateDTO dto) {
-//        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
-//        if (rule == null) {
-//            throw new APIException(ResultCodeEnum.NOT_FOUND);
-//        }
-//
-//        // 参数验证：如果更新为积分+现金规则（rule_type=0），必须提供 exchange_ratio
-//        Integer newRuleType = dto.getRuleType() != null ? dto.getRuleType() : rule.getRuleType();
-//        if (newRuleType == 0) {
-//            BigDecimal newExchangeRatio = dto.getExchangeRatio() != null ? dto.getExchangeRatio() : rule.getExchangeRatio();
-//            if (newExchangeRatio == null) {
-//                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
-//            }
-//        }
-//
-//        BeanUtils.copyProperties(dto, rule);
-//        rule.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        rule.setUpdater(currentUserId);
-//
-//        exchangeRuleMapper.updateById(rule);
-//        return true;
-//    }
 
-//    @Override
-//    @Transactional
-//    public Boolean deleteRule(Long ruleId) {
-//        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
-//        if (rule == null) {
-//            throw new APIException(ResultCodeEnum.NOT_FOUND);
-//        }
-//        Long currentUserId = getCurrentUserId();
-//        exchangeRuleMapper.deleteById(ruleId, currentUserId);
-//        return true;
-//    }
+    @Override
+    @Transactional
+    public Long createRule(PointsExchangeRuleCreateDTO dto) {
+        // 参数验证：积分+现金规则（rule_type=0）必须提供 exchange_ratio
+        if (dto.getRuleType() != null && dto.getRuleType() == 0) {
+            if (dto.getExchangeRatio() == null) {
+                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+            }
+        }
+        // 兑换商品规则（rule_type=1）不需要 exchange_ratio，可以为空
+
+        MarketingPointsExchangeRule rule = new MarketingPointsExchangeRule();
+        BeanUtils.copyProperties(dto, rule);
+
+        if (rule.getRuleStatus() == null) {
+            rule.setRuleStatus(1); // 默认启用
+        }
+
+        rule.setCreateTime(LocalDateTime.now());
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setIsDeleted(false);
+        Long currentUserId = getCurrentUserId();
+        rule.setCreator(currentUserId);
+        rule.setUpdater(currentUserId);
+
+        exchangeRuleMapper.insert(rule);
+        return rule.getId();
+    }
+
+    @Override
+    @Transactional
+    public Boolean updateRule(Long ruleId, PointsExchangeRuleCreateDTO dto) {
+        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        // 参数验证：如果更新为积分+现金规则（rule_type=0），必须提供 exchange_ratio
+        Integer newRuleType = dto.getRuleType() != null ? dto.getRuleType() : rule.getRuleType();
+        if (newRuleType == 0) {
+            BigDecimal newExchangeRatio = dto.getExchangeRatio() != null ? dto.getExchangeRatio() : rule.getExchangeRatio();
+            if (newExchangeRatio == null) {
+                throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+            }
+        }
+
+        BeanUtils.copyProperties(dto, rule);
+        rule.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        rule.setUpdater(currentUserId);
+
+        exchangeRuleMapper.updateById(rule);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Boolean deleteRule(Long ruleId) {
+        MarketingPointsExchangeRule rule = exchangeRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+        Long currentUserId = getCurrentUserId();
+        exchangeRuleMapper.deleteById(ruleId, currentUserId);
+        return true;
+    }
 
     @Override
     public List<PointsExchangeRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize) {
@@ -150,6 +156,8 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
 
         return voList;
     }
+
+// TODO
 
 //    @Override
 //    public List<PointsExchangeGoodsVO> getExchangeGoodsList() {
@@ -319,13 +327,12 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         }
     }
 
-//    /**
-//     * 获取当前用户ID
-//     */
-//    private Long getCurrentUserId() {
-//        Long currentUserId = userMapper.getUserIdByUsername(
-//                SecurityUtils.getCurrentUsername().orElse(null));
-//        return currentUserId;
-//    }
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        Long currentUserId = userClient.getUserByName(UserContext.getUsername()).getData().getId();
+        return currentUserId;
+    }
 }
 

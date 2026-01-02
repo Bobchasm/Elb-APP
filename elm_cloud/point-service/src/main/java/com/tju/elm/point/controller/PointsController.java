@@ -4,6 +4,7 @@ import com.tju.elm.api.client.PointClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.PointsAccountMapper;
 import com.tju.elm.point.service.MarketingPointsExchangeRuleService;
+import com.tju.elm.point.service.MarketingPointsRuleService;
 import com.tju.elm.point.service.PointsExpirationService;
 import com.tju.elm.point.service.PointsService;
 import com.tju.elm.point.zoo.pojo.dto.PointsExchangeDTO;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,6 +52,9 @@ public class PointsController {
     
     @Autowired
     private UserClient userClient;
+
+    @Autowired
+    private MarketingPointsRuleService marketingPointsRuleService;
 
     
     
@@ -84,13 +89,14 @@ public class PointsController {
             @RequestParam(required = false, defaultValue = "1") Integer pageNum,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) Integer transactionType,
-            @RequestParam(required = false) Integer pointsSource,
-            @RequestHeader(value = "username") String username) {
-        Long userId = userClient.getUserByName(username).getData().getId();
+            @RequestParam(required = false) Integer pointsSource) {
+        Long userId = getCurrentUserId();
         List<PointsTransactionVO> transactions = pointsService.getPointsTransactions(
             userId, pageNum, pageSize, transactionType, pointsSource);
         return HttpResult.success(transactions);
     }
+
+// TODO
 
 //    /**
 //     * 积分兑换商品
@@ -131,9 +137,8 @@ public class PointsController {
     @GetMapping("/deductible-amount")
     @Operation(summary = "计算可抵扣金额", description = "根据订单金额和用户可用积分，计算可抵扣的现金金额")
     public HttpResult<java.math.BigDecimal> calculateDeductibleAmount(
-            @RequestParam java.math.BigDecimal orderAmount,
-            @RequestHeader(value = "username") String username) {
-        Long userId = userClient.getUserByName(username).getData().getId();
+            @RequestParam java.math.BigDecimal orderAmount) {
+        Long userId = getCurrentUserId();
         java.math.BigDecimal deductibleAmount = pointsService.calculateDeductibleAmount(userId, orderAmount);
         return HttpResult.success(deductibleAmount);
     }
@@ -143,8 +148,8 @@ public class PointsController {
      */
     @GetMapping("/expiring")
     @Operation(summary = "查询即将过期的积分记录", description = "查询当前用户即将过期的积分记录（按过期时间升序）")
-    public HttpResult<List<PointsExpirationVO>> getExpiringPoints(@RequestHeader(value = "username") String username) {
-        Long userId = userClient.getUserByName(username).getData().getId();
+    public HttpResult<List<PointsExpirationVO>> getExpiringPoints() {
+        Long userId = getCurrentUserId();
         List<PointsExpirationVO> expiringList = pointsExpirationService.getExpiringPoints(userId);
         return HttpResult.success(expiringList);
     }
@@ -154,8 +159,8 @@ public class PointsController {
      */
     @GetMapping("/expired")
     @Operation(summary = "查询已过期的积分记录", description = "查询当前用户已过期的积分记录")
-    public HttpResult<List<PointsExpirationVO>> getExpiredPoints(@RequestHeader(value = "username") String username) {
-        Long userId = userClient.getUserByName(username).getData().getId();
+    public HttpResult<List<PointsExpirationVO>> getExpiredPoints() {
+        Long userId = getCurrentUserId();
         List<PointsExpirationVO> expiredList = pointsExpirationService.getExpiredPoints(userId);
         return HttpResult.success(expiredList);
     }
@@ -165,11 +170,29 @@ public class PointsController {
      */
     @GetMapping("/expiring/count")
     @Operation(summary = "统计即将过期的积分总数", description = "统计当前用户即将过期的积分总数")
-    public HttpResult<Long> countExpiringPoints(@RequestHeader(value = "username") String username) {
-        Long userId = userClient.getUserByName(username).getData().getId();
+    public HttpResult<Long> countExpiringPoints() {
+        Long userId = getCurrentUserId();
         Long count = pointsExpirationService.countExpiringPoints(userId);
         return HttpResult.success(count);
     }
 
+    /**
+     * 统计即将过期的积分总数
+     */
+    @GetMapping("/type/count")
+    @Operation(summary = "统计即将过期的积分总数", description = "统计当前用户即将过期的积分总数")
+    public HttpResult<Long> countPointsByType(@RequestParam String behaviorType) {
+        Long userId = getCurrentUserId();
+        Long count = marketingPointsRuleService.calculateBehaviorPoints(userId,behaviorType);
+        return HttpResult.success(count);
+    }
+
+
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        return userClient.getUserByName(UserContext.getUsername()).getData().getId();
+    }
 }
 

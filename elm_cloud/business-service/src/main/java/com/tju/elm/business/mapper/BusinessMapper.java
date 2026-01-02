@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.tju.elm.business.pojo.dto.BusinessDTO;
+import com.tju.elm.business.pojo.dto.BusinessInfoDTO;
 import com.tju.elm.business.pojo.dto.BusinessPermissionDTO;
 import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
@@ -64,6 +65,7 @@ public interface BusinessMapper {
 
     Integer applyForAddBusiness(Business  business);
 
+    // TODO
     // 统计已完成的订单数量（ order_state=3 ）
     @Select("SELECT COUNT(*) FROM `orders` WHERE business_id = #{businessId} AND order_state = 3 AND is_deleted = 0")
     Integer getSalesCount(@Param("businessId") Long businessId);
@@ -76,23 +78,6 @@ public interface BusinessMapper {
     @Select("SELECT id FROM business WHERE user_id = #{userId}")
     List<Long> getBusinessIdsByUserId(Long userId);
 
-//    /**
-//     * 获取所有已激活的商家信息
-//     * @return 商家信息列表
-//     */
-//    @Select("SELECT " +
-//            "    p.id AS userId, " +  // 注意这里改为userId，与DTO字段名一致
-//            "    u.username, " +
-//            "    p.phone, " +
-//            "    p.photo " +
-//            "FROM " +
-//            "    user_authority ua " +
-//            "    JOIN users u ON ua.user_id = u.id " +
-//            "    JOIN person p ON ua.user_id = p.id " +
-//            "WHERE " +
-//            "    ua.authority_name = 'BUSINESS' " +
-//            "    AND u.is_deleted = 0 ")
-//    List<BusinessInfoDTO>getAllActiveBusinesses();
 
     @Select("<script>" +
             "SELECT id, business_name, business_address, business_img, order_type_id, delivery_price, start_price, remarks, business_explain, status " +

@@ -11,4 +11,7 @@ public interface PointClient {
 
     @GetMapping("/api/points/account/create")
     HttpResult<Long> createAccount(@RequestParam Long userId);
+
+    @GetMapping("/type/count")
+    HttpResult<Long> countPointsByType(@RequestParam String behaviorType);
 }

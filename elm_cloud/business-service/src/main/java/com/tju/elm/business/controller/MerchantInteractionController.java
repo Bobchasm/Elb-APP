@@ -1,9 +1,13 @@
 package com.tju.elm.business.controller;
 
+import com.tju.elm.business.pojo.dto.MerchantInteractionDTO;
+import com.tju.elm.business.pojo.vo.BusinessSearchVO;
+import com.tju.elm.business.pojo.vo.MerchantInteractionVO;
 import com.tju.elm.business.service.MerchantInteractionService;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -23,19 +27,19 @@ public class MerchantInteractionController {
     @Autowired
     private MerchantInteractionService interactionService;
 
-//    @PostMapping("/update")
-//    @Operation(summary = "更新商铺点赞收藏等信息")
-//    public HttpResult<?> updateInteraction(@Valid @RequestBody MerchantInteractionDTO dto) {
-//        interactionService.updateInteraction(dto);
-//        return HttpResult.success("操作成功");
-//    }
-//
-//    @GetMapping("/collections/{userId}")
-//    @Operation(summary = "获取某用户收藏列表")
-//    public HttpResult<List<BusinessSearchVO>> getUserCollections(@PathVariable Long userId) {
-//        List<BusinessSearchVO> collections = interactionService.getUserCollections(userId);
-//        return HttpResult.success(collections);
-//    }
+    @PostMapping("/update")
+    @Operation(summary = "更新商铺点赞收藏等信息")
+    public HttpResult<?> updateInteraction(@Valid @RequestBody MerchantInteractionDTO dto) {
+        interactionService.updateInteraction(dto);
+        return HttpResult.success("操作成功");
+    }
+
+    @GetMapping("/collections/{userId}")
+    @Operation(summary = "获取某用户收藏列表")
+    public HttpResult<List<BusinessSearchVO>> getUserCollections(@PathVariable Long userId) {
+        List<BusinessSearchVO> collections = interactionService.getUserCollections(userId);
+        return HttpResult.success(collections);
+    }
 
     @GetMapping("/stats/{merchantId}")
     @Operation(summary = "获取某商铺点赞收藏总数")
@@ -50,12 +54,12 @@ public class MerchantInteractionController {
         return HttpResult.success(stats);
     }
 
-//    @GetMapping("/status")
-//    @Operation(summary = "获取用户商铺互动状态")
-//    public HttpResult<MerchantInteractionVO> getUserMerchantInteraction(
-//            @RequestParam Long userId,
-//            @RequestParam Long merchantId) {
-//        MerchantInteractionVO status = interactionService.getUserMerchantInteraction(userId, merchantId);
-//        return HttpResult.success(status);
-//    }
+    @GetMapping("/status")
+    @Operation(summary = "获取用户商铺互动状态")
+    public HttpResult<MerchantInteractionVO> getUserMerchantInteraction(
+            @RequestParam Long userId,
+            @RequestParam Long merchantId) {
+        MerchantInteractionVO status = interactionService.getUserMerchantInteraction(userId, merchantId);
+        return HttpResult.success(status);
+    }
 }

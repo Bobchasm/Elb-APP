@@ -67,6 +67,7 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
         return true;
     }
 
+    // TODO
 //    /**
 //     * 检查并发送即将过期积分预警（定时任务调用）
 //     * 设计原则：封装与抽象 - 封装预警逻辑

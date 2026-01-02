@@ -1,5 +1,6 @@
 package com.tju.elm.point.service.impl;
 
+import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.PointsLotteryRuleMapper;
 import com.tju.elm.point.service.PointsLotteryRuleService;
 import com.tju.elm.point.zoo.pojo.dto.PointsLotteryRuleCreateDTO;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import result.ResultCodeEnum;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,106 +31,106 @@ public class PointsLotteryRuleServiceImpl implements PointsLotteryRuleService {
     @Autowired
     private PointsLotteryRuleMapper lotteryRuleMapper;
 
-//    @Autowired
-//    private UserMapper userMapper;
+    @Autowired
+    private UserClient userClient;
 
-//    /**
-//     * 创建积分抽奖规则
-//     */
-//    @Override
-//    @Transactional
-//    public Long createRule(PointsLotteryRuleCreateDTO dto) {
-//        PointsLotteryRule rule = new PointsLotteryRule();
-//        BeanUtils.copyProperties(dto, rule);
-//
-//        // 设置默认值
-//        if (rule.getRuleStatus() == null) {
-//            rule.setRuleStatus(1); // 默认启用
-//        }
-//        if (rule.getPrizeOrder() == null) {
-//            rule.setPrizeOrder(0);
-//        }
-//
-//        rule.setCreateTime(LocalDateTime.now());
-//        rule.setUpdateTime(LocalDateTime.now());
-//        rule.setIsDeleted(false);
-//
-//        // 获取当前用户ID
-//        Long currentUserId = getCurrentUserId();
-//        rule.setCreator(currentUserId);
-//        rule.setUpdater(currentUserId);
-//
-//        lotteryRuleMapper.insert(rule);
-//        return rule.getId();
-//    }
-//
-//    /**
-//     * 更新积分抽奖规则
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean updateRule(Long ruleId, PointsLotteryRuleUpdateDTO dto) {
-//        PointsLotteryRule rule = lotteryRuleMapper.selectById(ruleId);
-//        if (rule == null) {
-//            throw new APIException(ResultCodeEnum.NOT_FOUND);
-//        }
-//
-//        // 更新字段
-//        if (dto.getRuleName() != null) {
-//            rule.setRuleName(dto.getRuleName());
-//        }
-//        if (dto.getMemberLevel() != null) {
-//            rule.setMemberLevel(dto.getMemberLevel());
-//        }
-//        if (dto.getPrizeType() != null) {
-//            rule.setPrizeType(dto.getPrizeType());
-//        }
-//        if (dto.getPrizePoints() != null) {
-//            rule.setPrizePoints(dto.getPrizePoints());
-//        }
-//        if (dto.getPrizeMultiplier() != null) {
-//            rule.setPrizeMultiplier(dto.getPrizeMultiplier());
-//        }
-//        if (dto.getProbability() != null) {
-//            rule.setProbability(dto.getProbability());
-//        }
-//        if (dto.getPrizeOrder() != null) {
-//            rule.setPrizeOrder(dto.getPrizeOrder());
-//        }
-//        if (dto.getPrizeDescription() != null) {
-//            rule.setPrizeDescription(dto.getPrizeDescription());
-//        }
-//        if (dto.getRuleStatus() != null) {
-//            rule.setRuleStatus(dto.getRuleStatus());
-//        }
-//        if (dto.getStartTime() != null) {
-//            rule.setStartTime(dto.getStartTime());
-//        }
-//        if (dto.getEndTime() != null) {
-//            rule.setEndTime(dto.getEndTime());
-//        }
-//
-//        rule.setUpdateTime(LocalDateTime.now());
-//        rule.setUpdater(getCurrentUserId());
-//
-//        lotteryRuleMapper.updateById(rule);
-//        return true;
-//    }
-//
-//    /**
-//     * 删除积分抽奖规则
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean deleteRule(Long ruleId) {
-//        PointsLotteryRule rule = lotteryRuleMapper.selectById(ruleId);
-//        if (rule == null) {
-//            throw new APIException(ResultCodeEnum.NOT_FOUND);
-//        }
-//
-//        lotteryRuleMapper.deleteById(ruleId, LocalDateTime.now(), getCurrentUserId());
-//        return true;
-//    }
+    /**
+     * 创建积分抽奖规则
+     */
+    @Override
+    @Transactional
+    public Long createRule(PointsLotteryRuleCreateDTO dto) {
+        PointsLotteryRule rule = new PointsLotteryRule();
+        BeanUtils.copyProperties(dto, rule);
+
+        // 设置默认值
+        if (rule.getRuleStatus() == null) {
+            rule.setRuleStatus(1); // 默认启用
+        }
+        if (rule.getPrizeOrder() == null) {
+            rule.setPrizeOrder(0);
+        }
+
+        rule.setCreateTime(LocalDateTime.now());
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setIsDeleted(false);
+
+        // 获取当前用户ID
+        Long currentUserId = getCurrentUserId();
+        rule.setCreator(currentUserId);
+        rule.setUpdater(currentUserId);
+
+        lotteryRuleMapper.insert(rule);
+        return rule.getId();
+    }
+
+    /**
+     * 更新积分抽奖规则
+     */
+    @Override
+    @Transactional
+    public Boolean updateRule(Long ruleId, PointsLotteryRuleUpdateDTO dto) {
+        PointsLotteryRule rule = lotteryRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        // 更新字段
+        if (dto.getRuleName() != null) {
+            rule.setRuleName(dto.getRuleName());
+        }
+        if (dto.getMemberLevel() != null) {
+            rule.setMemberLevel(dto.getMemberLevel());
+        }
+        if (dto.getPrizeType() != null) {
+            rule.setPrizeType(dto.getPrizeType());
+        }
+        if (dto.getPrizePoints() != null) {
+            rule.setPrizePoints(dto.getPrizePoints());
+        }
+        if (dto.getPrizeMultiplier() != null) {
+            rule.setPrizeMultiplier(dto.getPrizeMultiplier());
+        }
+        if (dto.getProbability() != null) {
+            rule.setProbability(dto.getProbability());
+        }
+        if (dto.getPrizeOrder() != null) {
+            rule.setPrizeOrder(dto.getPrizeOrder());
+        }
+        if (dto.getPrizeDescription() != null) {
+            rule.setPrizeDescription(dto.getPrizeDescription());
+        }
+        if (dto.getRuleStatus() != null) {
+            rule.setRuleStatus(dto.getRuleStatus());
+        }
+        if (dto.getStartTime() != null) {
+            rule.setStartTime(dto.getStartTime());
+        }
+        if (dto.getEndTime() != null) {
+            rule.setEndTime(dto.getEndTime());
+        }
+
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setUpdater(getCurrentUserId());
+
+        lotteryRuleMapper.updateById(rule);
+        return true;
+    }
+
+    /**
+     * 删除积分抽奖规则
+     */
+    @Override
+    @Transactional
+    public Boolean deleteRule(Long ruleId) {
+        PointsLotteryRule rule = lotteryRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        lotteryRuleMapper.deleteById(ruleId, LocalDateTime.now(), getCurrentUserId());
+        return true;
+    }
 
     /**
      * 查询积分抽奖规则列表
@@ -190,13 +192,11 @@ public class PointsLotteryRuleServiceImpl implements PointsLotteryRuleService {
         }
     }
 
-//    /**
-//     * 获取当前用户ID
-//     */
-//    private Long getCurrentUserId() {
-//        Long currentUserId = userMapper.getUserIdByUsername(
-//                SecurityUtils.getCurrentUsername().orElse(null));
-//        return currentUserId;
-//    }
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        return userClient.getUserByName(UserContext.getUsername()).getData().getId();
+    }
 }
 

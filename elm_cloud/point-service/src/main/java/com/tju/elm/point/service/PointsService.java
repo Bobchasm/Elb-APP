@@ -19,7 +19,7 @@ public interface PointsService {
      * @param pointsAddDTO 积分增加DTO
      * @return 积分明细ID
      */
-    Long addPoints(PointsAddDTO pointsAddDTO,Long userId);
+    Long addPoints(PointsAddDTO pointsAddDTO);
 
     /**
      * 减少积分（优先扣减即将过期的积分）
@@ -46,46 +46,46 @@ public interface PointsService {
      */
     List<PointsTransactionVO> getPointsTransactions(Long userId, Integer pageNum, Integer pageSize, Integer transactionType, Integer pointsSource);
     
-//    /**
-//     * 冻结积分（用于订单处理）
-//     * @param userId 用户ID
-//     * @param points 积分数量
-//     * @param orderId 订单ID
-//     * @return 是否成功
-//     */
-//    Boolean freezePoints(Long userId, Long points, Long orderId);
-//
-//    /**
-//     * 解冻积分（订单取消时）
-//     * @param userId 用户ID
-//     * @param orderId 订单ID
-//     * @return 是否成功
-//     */
-//    Boolean unfreezePoints(Long userId, Long orderId);
-//
-//    /**
-//     * 解冻奖励积分（订单完成时）
-//     * @param userId 用户ID
-//     * @param orderId 订单ID
-//     * @return 是否成功
-//     */
-//    Boolean unfreezeRewardPoints(Long userId, Long orderId);
-//
-//    /**
-//     * 取消奖励积分（订单取消时）
-//     * @param userId 用户ID
-//     * @param orderId 订单ID
-//     * @return 是否成功
-//     */
-//    Boolean cancelRewardPoints(Long userId, Long orderId);
-//
-//    /**
-//     * 更新会员等级并增加等级积分
-//     * @param userId 用户ID
-//     * @param newMemberLevel 新会员等级（1-白银，2-黄金，3-钻石）
-//     * @return 是否成功
-//     */
-//    Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel);
+    /**
+     * 冻结积分（用于订单处理）
+     * @param userId 用户ID
+     * @param points 积分数量
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean freezePoints(Long userId, Long points, Long orderId);
+
+    /**
+     * 解冻积分（订单取消时）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean unfreezePoints(Long userId, Long orderId);
+
+    /**
+     * 解冻奖励积分（订单完成时）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean unfreezeRewardPoints(Long userId, Long orderId);
+
+    /**
+     * 取消奖励积分（订单取消时）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean cancelRewardPoints(Long userId, Long orderId);
+
+    /**
+     * 更新会员等级并增加等级积分
+     * @param userId 用户ID
+     * @param newMemberLevel 新会员等级（1-白银，2-黄金，3-钻石）
+     * @return 是否成功
+     */
+    Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel);
     
     /**
      * 计算可用积分可以抵扣的现金金额
@@ -95,12 +95,12 @@ public interface PointsService {
      */
     java.math.BigDecimal calculateDeductibleAmount(Long userId, java.math.BigDecimal orderAmount);
     
-//    /**
-//     * 真正扣除冻结的积分（订单完成时）
-//     * @param userId 用户ID
-//     * @param orderId 订单ID
-//     * @return 是否成功
-//     */
-//    Boolean deductFrozenPoints(Long userId, Long orderId);
+    /**
+     * 真正扣除冻结的积分（订单完成时）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean deductFrozenPoints(Long userId, Long orderId);
 }
 

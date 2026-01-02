@@ -1,8 +1,9 @@
-package com.tju.elm.business.pojo.dto;
+package com.tju.elm.user.zoo.pojo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 //这是商家信息
 @Data
 @AllArgsConstructor

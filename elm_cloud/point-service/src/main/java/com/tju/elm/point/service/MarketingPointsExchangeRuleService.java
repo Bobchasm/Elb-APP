@@ -15,27 +15,27 @@ import java.util.List;
  */
 public interface MarketingPointsExchangeRuleService {
     
-//    /**
-//     * 创建积分兑换规则
-//     * @param dto 创建规则DTO
-//     * @return 规则ID
-//     */
-//    Long createRule(PointsExchangeRuleCreateDTO dto);
-//
-//    /**
-//     * 更新积分兑换规则
-//     * @param ruleId 规则ID
-//     * @param dto 更新规则DTO
-//     * @return 是否成功
-//     */
-//    Boolean updateRule(Long ruleId, PointsExchangeRuleCreateDTO dto);
-//
-//    /**
-//     * 删除积分兑换规则
-//     * @param ruleId 规则ID
-//     * @return 是否成功
-//     */
-//    Boolean deleteRule(Long ruleId);
+    /**
+     * 创建积分兑换规则
+     * @param dto 创建规则DTO
+     * @return 规则ID
+     */
+    Long createRule(PointsExchangeRuleCreateDTO dto);
+
+    /**
+     * 更新积分兑换规则
+     * @param ruleId 规则ID
+     * @param dto 更新规则DTO
+     * @return 是否成功
+     */
+    Boolean updateRule(Long ruleId, PointsExchangeRuleCreateDTO dto);
+
+    /**
+     * 删除积分兑换规则
+     * @param ruleId 规则ID
+     * @return 是否成功
+     */
+    Boolean deleteRule(Long ruleId);
     
     /**
      * 查询积分兑换规则列表

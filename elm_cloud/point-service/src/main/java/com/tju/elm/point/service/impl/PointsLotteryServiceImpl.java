@@ -52,8 +52,6 @@ public class PointsLotteryServiceImpl implements PointsLotteryService {
     @Autowired
     private PointsExpirationMapper pointsExpirationMapper;
 
-//    @Autowired
-//    private UserMapper userMapper;
 
     private static final Random random = new Random();
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
@@ -148,7 +146,7 @@ public class PointsLotteryServiceImpl implements PointsLotteryService {
             addDTO.setDescription(lotteryResult.getDescription());
             // 积分有效期为15天
             addDTO.setExpireTime(LocalDateTime.now().plusDays(15));
-            transactionId = pointsService.addPoints(addDTO,userId);
+            transactionId = pointsService.addPoints(addDTO);
 
             // 更新抽奖记录的transactionId
             lotteryRecordMapper.updateTransactionId(record.getId(), transactionId,

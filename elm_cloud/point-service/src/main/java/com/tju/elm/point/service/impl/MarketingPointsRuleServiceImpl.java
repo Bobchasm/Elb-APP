@@ -1,5 +1,6 @@
 package com.tju.elm.point.service.impl;
 
+import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.MarketingPointsRuleFoodMapper;
 import com.tju.elm.point.mapper.MarketingPointsRuleMapper;
 import com.tju.elm.point.mapper.PointsAccountMapper;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import result.ResultCodeEnum;
+import utils.UserContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -49,6 +51,9 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
 
     @Autowired
     private PointsService pointsService; // 依赖注入积分服务接口
+
+    @Autowired
+    private UserClient userClient;
     
 //    @Autowired
 //    private OrdersMapper ordersMapper;
@@ -59,131 +64,131 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
     @Autowired
     private MarketingPointsRuleFoodMapper ruleFoodMapper;
 
-//    /**
-//     * 创建积分规则
-//     */
-//    @Override
-//    @Transactional
-//    public Long createRule(PointsRuleCreateDTO dto) {
-//        MarketingPointsRule rule = new MarketingPointsRule();
-//        BeanUtils.copyProperties(dto, rule);
-//
-//        // 设置默认值
-//        if (rule.getRuleStatus() == null) {
-//            rule.setRuleStatus(1); // 默认启用
-//        }
-//        if (rule.getPriority() == null) {
-//            rule.setPriority(0);
-//        }
-//
-//        rule.setCreateTime(LocalDateTime.now());
-//        rule.setUpdateTime(LocalDateTime.now());
-//        rule.setIsDeleted(false);
-//
-//        // 获取当前用户ID
-//        Long currentUserId = getCurrentUserId();
-//        rule.setCreator(currentUserId);
-//        rule.setUpdater(currentUserId);
-//
-//        marketingPointsRuleMapper.insert(rule);
-//
-//        // 保存商品关联关系到中间表
-//        saveRuleFoods(rule.getId(), dto.getFoodIds());
-//
-//        return rule.getId();
-//    }
-//
-//    /**
-//     * 更新积分规则
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean updateRule(Long ruleId, PointsRuleUpdateDTO dto) {
-//        MarketingPointsRule rule = marketingPointsRuleMapper.selectById(ruleId);
-//        if (rule == null) {
-//            throw new APIException(ResultCodeEnum.NOT_FOUND);
-//        }
-//
-//        // 更新字段
-//        if (dto.getRuleName() != null) {
-//            rule.setRuleName(dto.getRuleName());
-//        }
-//        if (dto.getRuleStatus() != null) {
-//            rule.setRuleStatus(dto.getRuleStatus());
-//        }
-//        if (dto.getPointsRatio() != null) {
-//            rule.setPointsRatio(dto.getPointsRatio());
-//        }
-//        if (dto.getPointsMultiplier() != null) {
-//            rule.setPointsMultiplier(dto.getPointsMultiplier());
-//        }
-//        if (dto.getMemberLevel() != null) {
-//            rule.setMemberLevel(dto.getMemberLevel());
-//        }
-//        if (dto.getMinOrderAmount() != null) {
-//            rule.setMinOrderAmount(dto.getMinOrderAmount());
-//        }
-//        if (dto.getMaxOrderAmount() != null) {
-//            rule.setMaxOrderAmount(dto.getMaxOrderAmount());
-//        }
-//        // 如果传入了 foodIds，则更新中间表
-//        if (dto.getFoodIds() != null) {
-//            // 先删除旧的关联
-//            ruleFoodMapper.deleteByRuleId(ruleId, LocalDateTime.now());
-//            // 保存新的关联
-//            saveRuleFoods(ruleId, dto.getFoodIds());
-//        }
-//        if (dto.getHolidayStart() != null) {
-//            rule.setHolidayStart(dto.getHolidayStart());
-//        }
-//        if (dto.getHolidayEnd() != null) {
-//            rule.setHolidayEnd(dto.getHolidayEnd());
-//        }
-//        if (dto.getBehaviorType() != null) {
-//            rule.setBehaviorType(dto.getBehaviorType());
-//        }
-//        if (dto.getPointsAmount() != null) {
-//            rule.setPointsAmount(dto.getPointsAmount());
-//        }
-//        if (dto.getExpireDays() != null) {
-//            rule.setExpireDays(dto.getExpireDays());
-//        }
-//        if (dto.getStartTime() != null) {
-//            rule.setStartTime(dto.getStartTime());
-//        }
-//        if (dto.getEndTime() != null) {
-//            rule.setEndTime(dto.getEndTime());
-//        }
-//        if (dto.getPriority() != null) {
-//            rule.setPriority(dto.getPriority());
-//        }
-//
-//        rule.setUpdateTime(LocalDateTime.now());
-//        rule.setUpdater(getCurrentUserId());
-//
-//        marketingPointsRuleMapper.updateById(rule);
-//        return true;
-//    }
-//
-//    /**
-//     * 删除积分规则
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean deleteRule(Long ruleId) {
-//        MarketingPointsRule rule = marketingPointsRuleMapper.selectById(ruleId);
-//        if (rule == null) {
-//            throw new APIException(ResultCodeEnum.NOT_FOUND);
-//        }
-//
-//        // 逻辑删除规则
-//        marketingPointsRuleMapper.deleteById(ruleId, LocalDateTime.now(), getCurrentUserId());
-//
-//        // 逻辑删除中间表的关联记录
-//        ruleFoodMapper.deleteByRuleId(ruleId, LocalDateTime.now());
-//
-//        return true;
-//    }
+    /**
+     * 创建积分规则
+     */
+    @Override
+    @Transactional
+    public Long createRule(PointsRuleCreateDTO dto) {
+        MarketingPointsRule rule = new MarketingPointsRule();
+        BeanUtils.copyProperties(dto, rule);
+
+        // 设置默认值
+        if (rule.getRuleStatus() == null) {
+            rule.setRuleStatus(1); // 默认启用
+        }
+        if (rule.getPriority() == null) {
+            rule.setPriority(0);
+        }
+
+        rule.setCreateTime(LocalDateTime.now());
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setIsDeleted(false);
+
+        // 获取当前用户ID
+        Long currentUserId = getCurrentUserId();
+        rule.setCreator(currentUserId);
+        rule.setUpdater(currentUserId);
+
+        marketingPointsRuleMapper.insert(rule);
+
+        // 保存商品关联关系到中间表
+        saveRuleFoods(rule.getId(), dto.getFoodIds());
+
+        return rule.getId();
+    }
+
+    /**
+     * 更新积分规则
+     */
+    @Override
+    @Transactional
+    public Boolean updateRule(Long ruleId, PointsRuleUpdateDTO dto) {
+        MarketingPointsRule rule = marketingPointsRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        // 更新字段
+        if (dto.getRuleName() != null) {
+            rule.setRuleName(dto.getRuleName());
+        }
+        if (dto.getRuleStatus() != null) {
+            rule.setRuleStatus(dto.getRuleStatus());
+        }
+        if (dto.getPointsRatio() != null) {
+            rule.setPointsRatio(dto.getPointsRatio());
+        }
+        if (dto.getPointsMultiplier() != null) {
+            rule.setPointsMultiplier(dto.getPointsMultiplier());
+        }
+        if (dto.getMemberLevel() != null) {
+            rule.setMemberLevel(dto.getMemberLevel());
+        }
+        if (dto.getMinOrderAmount() != null) {
+            rule.setMinOrderAmount(dto.getMinOrderAmount());
+        }
+        if (dto.getMaxOrderAmount() != null) {
+            rule.setMaxOrderAmount(dto.getMaxOrderAmount());
+        }
+        // 如果传入了 foodIds，则更新中间表
+        if (dto.getFoodIds() != null) {
+            // 先删除旧的关联
+            ruleFoodMapper.deleteByRuleId(ruleId, LocalDateTime.now());
+            // 保存新的关联
+            saveRuleFoods(ruleId, dto.getFoodIds());
+        }
+        if (dto.getHolidayStart() != null) {
+            rule.setHolidayStart(dto.getHolidayStart());
+        }
+        if (dto.getHolidayEnd() != null) {
+            rule.setHolidayEnd(dto.getHolidayEnd());
+        }
+        if (dto.getBehaviorType() != null) {
+            rule.setBehaviorType(dto.getBehaviorType());
+        }
+        if (dto.getPointsAmount() != null) {
+            rule.setPointsAmount(dto.getPointsAmount());
+        }
+        if (dto.getExpireDays() != null) {
+            rule.setExpireDays(dto.getExpireDays());
+        }
+        if (dto.getStartTime() != null) {
+            rule.setStartTime(dto.getStartTime());
+        }
+        if (dto.getEndTime() != null) {
+            rule.setEndTime(dto.getEndTime());
+        }
+        if (dto.getPriority() != null) {
+            rule.setPriority(dto.getPriority());
+        }
+
+        rule.setUpdateTime(LocalDateTime.now());
+        rule.setUpdater(getCurrentUserId());
+
+        marketingPointsRuleMapper.updateById(rule);
+        return true;
+    }
+
+    /**
+     * 删除积分规则
+     */
+    @Override
+    @Transactional
+    public Boolean deleteRule(Long ruleId) {
+        MarketingPointsRule rule = marketingPointsRuleMapper.selectById(ruleId);
+        if (rule == null) {
+            throw new APIException(ResultCodeEnum.NOT_FOUND);
+        }
+
+        // 逻辑删除规则
+        marketingPointsRuleMapper.deleteById(ruleId, LocalDateTime.now(), getCurrentUserId());
+
+        // 逻辑删除中间表的关联记录
+        ruleFoodMapper.deleteByRuleId(ruleId, LocalDateTime.now());
+
+        return true;
+    }
 
     /**
      * 查询积分规则列表
@@ -342,66 +347,66 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         }
     }
 
-//    /**
-//     * 根据行为类型计算应获得积分
-//     */
-//    @Override
-//    @Transactional
-//    public Long calculateBehaviorPoints(Long userId, String behaviorType) {
-//        log.info("========== 开始计算行为积分 ==========");
-//        log.info("用户ID: {}, 行为类型: {}", userId, behaviorType);
-//
-//        // 查询用户会员等级
-//        PointsAccount pointsAccount = pointsAccountMapper.selectByUserId(userId);
-//        Integer memberLevel = (pointsAccount != null && pointsAccount.getMemberLevel() != null)
-//            ? pointsAccount.getMemberLevel() : 0; // 默认为普通会员（0）
-//        log.info("用户会员等级: {} ({})", memberLevel, getMemberLevelName(memberLevel));
-//
-//        // 根据会员等级查询行为积分规则
-//        MarketingPointsRule behaviorRule = marketingPointsRuleMapper.selectBehaviorRule(behaviorType, memberLevel);
-//        if (behaviorRule == null) {
-//            log.warn("【行为积分规则】未找到匹配的规则: behaviorType={}, memberLevel={}", behaviorType, memberLevel);
-//            return 0L;
-//        }
-//
-//        if (behaviorRule.getPointsAmount() == null || behaviorRule.getPointsAmount() <= 0) {
-//            log.warn("【行为积分规则】规则ID={} 的积分数量为0或NULL: pointsAmount={}",
-//                behaviorRule.getId(), behaviorRule.getPointsAmount());
-//            return 0L;
-//        }
-//
-//        Long points = behaviorRule.getPointsAmount();
-//        log.info("【行为积分规则】规则ID: {}, 规则名称: {}, 积分数量: {}, 会员等级: {}, 有效期: {}天",
-//            behaviorRule.getId(), behaviorRule.getRuleName(), points,
-//            behaviorRule.getMemberLevel(), behaviorRule.getExpireDays());
-//
-//        // 调用积分系统增加积分
-//        PointsAddDTO addDTO = new PointsAddDTO();
-//        addDTO.setUserId(userId);
-//        addDTO.setPoints(points);
-//        addDTO.setPointsSource(3); // 3-行为积分
-//        addDTO.setRelatedRuleId(behaviorRule.getId());
-//        addDTO.setDescription(getBehaviorDescription(behaviorType));
-//
-//        // 计算过期时间（所有积分都必须有有效期）
-//        // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
-//        Integer expireDays = (behaviorRule.getExpireDays() != null)
-//            ? behaviorRule.getExpireDays() : 30; // 默认30天有效期
-//        addDTO.setExpireTime(LocalDateTime.now().plusDays(expireDays));
-//
-//        log.info("【积分添加】准备添加行为积分: 用户ID={}, 积分数量={}, 过期天数={}, 过期时间={}",
-//            userId, points, expireDays, addDTO.getExpireTime());
-//
-//        try {
-//            pointsService.addPoints(addDTO);
-//            log.info("========== 行为积分计算完成，获得积分: {} ==========", points);
-//            return points;
-//        } catch (Exception e) {
-//            log.error("【积分添加失败】用户ID={}, 行为类型={}, 积分数量={}, 错误: {}",
-//                userId, behaviorType, points, e.getMessage(), e);
-//            throw e; // 重新抛出异常，让调用方知道积分添加失败
-//        }
-//    }
+    /**
+     * 根据行为类型计算应获得积分
+     */
+    @Override
+    @Transactional
+    public Long calculateBehaviorPoints(Long userId, String behaviorType) {
+        log.info("========== 开始计算行为积分 ==========");
+        log.info("用户ID: {}, 行为类型: {}", userId, behaviorType);
+
+        // 查询用户会员等级
+        PointsAccount pointsAccount = pointsAccountMapper.selectByUserId(userId);
+        Integer memberLevel = (pointsAccount != null && pointsAccount.getMemberLevel() != null)
+            ? pointsAccount.getMemberLevel() : 0; // 默认为普通会员（0）
+        log.info("用户会员等级: {} ({})", memberLevel, getMemberLevelName(memberLevel));
+
+        // 根据会员等级查询行为积分规则
+        MarketingPointsRule behaviorRule = marketingPointsRuleMapper.selectBehaviorRule(behaviorType, memberLevel);
+        if (behaviorRule == null) {
+            log.warn("【行为积分规则】未找到匹配的规则: behaviorType={}, memberLevel={}", behaviorType, memberLevel);
+            return 0L;
+        }
+
+        if (behaviorRule.getPointsAmount() == null || behaviorRule.getPointsAmount() <= 0) {
+            log.warn("【行为积分规则】规则ID={} 的积分数量为0或NULL: pointsAmount={}",
+                behaviorRule.getId(), behaviorRule.getPointsAmount());
+            return 0L;
+        }
+
+        Long points = behaviorRule.getPointsAmount();
+        log.info("【行为积分规则】规则ID: {}, 规则名称: {}, 积分数量: {}, 会员等级: {}, 有效期: {}天",
+            behaviorRule.getId(), behaviorRule.getRuleName(), points,
+            behaviorRule.getMemberLevel(), behaviorRule.getExpireDays());
+
+        // 调用积分系统增加积分
+        PointsAddDTO addDTO = new PointsAddDTO();
+        addDTO.setUserId(userId);
+        addDTO.setPoints(points);
+        addDTO.setPointsSource(3); // 3-行为积分
+        addDTO.setRelatedRuleId(behaviorRule.getId());
+        addDTO.setDescription(getBehaviorDescription(behaviorType));
+
+        // 计算过期时间（所有积分都必须有有效期）
+        // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
+        Integer expireDays = (behaviorRule.getExpireDays() != null)
+            ? behaviorRule.getExpireDays() : 30; // 默认30天有效期
+        addDTO.setExpireTime(LocalDateTime.now().plusDays(expireDays));
+
+        log.info("【积分添加】准备添加行为积分: 用户ID={}, 积分数量={}, 过期天数={}, 过期时间={}",
+            userId, points, expireDays, addDTO.getExpireTime());
+
+        try {
+            pointsService.addPoints(addDTO);
+            log.info("========== 行为积分计算完成，获得积分: {} ==========", points);
+            return points;
+        } catch (Exception e) {
+            log.error("【积分添加失败】用户ID={}, 行为类型={}, 积分数量={}, 错误: {}",
+                userId, behaviorType, points, e.getMessage(), e);
+            throw e; // 重新抛出异常，让调用方知道积分添加失败
+        }
+    }
 
     /**
      * 保存规则与商品的关联关系
@@ -434,14 +439,12 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         }
     }
 
-//    /**
-//     * 获取当前用户ID
-//     */
-//    private Long getCurrentUserId() {
-//        Long currentUserId = userMapper.getUserIdByUsername(
-//                SecurityUtils.getCurrentUsername().orElse(null));
-//        return currentUserId;
-//    }
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        return userClient.getUserByName(UserContext.getUsername()).getData().getId();
+    }
 
     /**
      * 获取规则类型名称

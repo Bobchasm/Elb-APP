@@ -3,6 +3,7 @@ package com.tju.elm.user.service.impl;
 
 import com.tju.elm.user.mapper.UserMapper;
 import com.tju.elm.user.service.UserService;
+import com.tju.elm.user.zoo.pojo.dto.BusinessInfoDTO;
 import com.tju.elm.user.zoo.pojo.entity.User;
 import com.tju.elm.user.zoo.pojo.vo.UserVO;
 import com.tju.elm.user.zoo.utils.SecurityUtils;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -93,5 +95,11 @@ public class UserServiceImpl implements UserService {
         }
         user.setActivated(activated);
         userMapper.updateActivated(user); // 更新数据库activated字段
+    }
+
+    @Override
+    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+        List<BusinessInfoDTO> businesses = userMapper.getAllActiveBusinesses();
+        return businesses;
     }
 }

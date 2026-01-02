@@ -379,4 +379,21 @@ public class UserRestController {
         }
         return responseVO;
     }
+
+
+    /**
+     * 查所有激活的商家用户信息
+     * @return
+     */
+    @GetMapping("/business/active")
+    @Operation(summary = "查所有激活的商家（管理端商铺管理第一页）")
+    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+        return userService.getAllActiveBusinesses();
+    }
+
+    @GetMapping("/user/exist")
+    @Operation(summary = "判断用户是否存在")
+    public HttpResult<Integer> hasUser(Long userId) {
+        return HttpResult.success(userMapper.countUserById(userId));
+    }
 }

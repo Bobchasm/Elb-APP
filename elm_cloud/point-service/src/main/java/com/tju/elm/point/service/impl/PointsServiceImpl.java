@@ -1,5 +1,6 @@
 package com.tju.elm.point.service.impl;
 
+import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.*;
 import com.tju.elm.point.service.PointsCacheService;
 import com.tju.elm.point.service.PointsService;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import result.ResultCodeEnum;
+import utils.UserContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -55,13 +57,24 @@ public class PointsServiceImpl implements PointsService {
     @Autowired
     private PointsCacheService pointsCacheService;
 
+    @Autowired
+    private UserClient userClient;
+
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        return userClient.getUserByName(UserContext.getUsername()).getData().getId();
+    }
+
     /**
      * 增加积分
      * 设计原则：事务管理 - 保证积分账户和明细的一致性
      */
     @Override
     @Transactional
-    public Long addPoints(PointsAddDTO pointsAddDTO,Long userId) {
+    public Long addPoints(PointsAddDTO pointsAddDTO) {
+        Long userId = getCurrentUserId();
         // 1. 参数校验
         if (pointsAddDTO.getUserId() == null || pointsAddDTO.getPoints() == null ||
             pointsAddDTO.getPoints() <= 0) {
@@ -305,229 +318,229 @@ public class PointsServiceImpl implements PointsService {
         return voList;
     }
 
-//    /**
-//     * 冻结积分（用于订单处理）
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean freezePoints(Long userId, Long points, Long orderId) {
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null || account.getAvailablePoints() < points) {
-//            throw new APIException("POINTS_INSUFFICIENT", "积分不足");
-//        }
-//        Long newAvailablePoints = account.getAvailablePoints() - points;
-//        Long newFrozenPoints = account.getFrozenPoints() + points;
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//        // 记录冻结明细
-//        PointsTransaction transaction = new PointsTransaction();
-//        transaction.setUserId(userId);
-//        transaction.setAccountId(account.getId());
-//        transaction.setTransactionType(3); // 3-冻结
-//        transaction.setPointsSource(5); // 5-积分+现金消费
-//        transaction.setPointsChange(-points);
-//        transaction.setPointsBalance(account.getAvailablePoints());
-//        transaction.setRelatedOrderId(orderId);
-//        transaction.setDescription("订单支付冻结积分");
-//        transaction.setCreateTime(LocalDateTime.now());
-//        transaction.setCreator(currentUserId);
-//        transaction.setUpdateTime(LocalDateTime.now());
-//        transaction.setUpdater(currentUserId);
-//        transaction.setIsDeleted(false);
-//        pointsTransactionMapper.insert(transaction);
-//        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteAccountCache(userId);
-//        return true;
-//    }
-//
-//    /**
-//     * 解冻积分（订单取消时）
-//     * 设计原则：直接查询指定订单的冻结记录，提高查询效率
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean unfreezePoints(Long userId, Long orderId) {
-//        // 1. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null) {
-//            return false;
-//        }
-//
-//        // 2. 直接查询该订单的冻结交易记录（transaction_type = 3）
-//        List<PointsTransaction> freezeTransactions = pointsTransactionMapper.selectByOrderIdAndType(
-//            orderId, 3); // 3-冻结
-//
-//        // 3. 计算需要解冻的积分总数
-//        Long totalFrozen = 0L;
-//        for (PointsTransaction trans : freezeTransactions) {
-//            // 确保是当前用户的冻结记录
-//            if (Objects.equals(trans.getUserId(), userId)) {
-//                totalFrozen += Math.abs(trans.getPointsChange());
-//            }
-//        }
-//
-//        // 4. 如果没有冻结记录，直接返回
-//        if (totalFrozen == 0) {
-//            return true;
-//        }
-//
-//        // 5. 更新积分账户（解冻积分）
-//        Long newAvailablePoints = account.getAvailablePoints() + totalFrozen;
-//        Long newFrozenPoints = account.getFrozenPoints() - totalFrozen;
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//
-//        // 6. 记录解冻明细
-//        PointsTransaction transaction = new PointsTransaction();
-//        transaction.setUserId(userId);
-//        transaction.setAccountId(account.getId());
-//        transaction.setTransactionType(4); // 4-解冻
-//        transaction.setPointsSource(5); // 5-积分+现金消费
-//        transaction.setPointsChange(totalFrozen);
-//        transaction.setPointsBalance(account.getAvailablePoints());
-//        transaction.setRelatedOrderId(orderId);
-//        transaction.setDescription("订单取消解冻积分");
-//        transaction.setCreateTime(LocalDateTime.now());
-//        transaction.setCreator(currentUserId);
-//        transaction.setUpdateTime(LocalDateTime.now());
-//        transaction.setUpdater(currentUserId);
-//        transaction.setIsDeleted(false);
-//        pointsTransactionMapper.insert(transaction);
-//
-//        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteAccountCache(userId);
-//
-//        return true;
-//    }
-//
-//    /**
-//     * 解冻奖励积分（订单完成时）
-//     * 设计原则：将订单奖励积分从冻结状态转为可用状态
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean unfreezeRewardPoints(Long userId, Long orderId) {
-//        // 1. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null) {
-//            return false;
-//        }
-//
-//        // 2. 查询该订单的奖励积分记录（points_source = 0, related_order_id = orderId）
-//        List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
-//            orderId, 0); // 0-消费积分
-//
-//        // 3. 计算需要解冻的积分总数
-//        Long totalRewardPoints = 0L;
-//        for (PointsTransaction trans : rewardTransactions) {
-//            // 确保是当前用户的奖励积分记录
-//            if (Objects.equals(trans.getUserId(), userId) &&
-//                Objects.equals(trans.getRelatedOrderId(), orderId)) {
-//                totalRewardPoints += trans.getPointsChange();
-//            }
-//        }
-//
-//        // 4. 如果没有奖励积分记录，直接返回
-//        if (totalRewardPoints == 0) {
-//            return true;
-//        }
-//
-//        // 5. 更新积分账户（解冻积分：从冻结积分转为可用积分）
-//        Long newAvailablePoints = account.getAvailablePoints() + totalRewardPoints;
-//        Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//
-//        // 6. 记录解冻明细
-//        PointsTransaction transaction = new PointsTransaction();
-//        transaction.setUserId(userId);
-//        transaction.setAccountId(account.getId());
-//        transaction.setTransactionType(4); // 4-解冻
-//        transaction.setPointsSource(0); // 0-消费积分
-//        transaction.setPointsChange(totalRewardPoints);
-//        transaction.setPointsBalance(account.getAvailablePoints());
-//        transaction.setRelatedOrderId(orderId);
-//        transaction.setDescription("订单完成解冻奖励积分");
-//        transaction.setCreateTime(LocalDateTime.now());
-//        transaction.setCreator(currentUserId);
-//        transaction.setUpdateTime(LocalDateTime.now());
-//        transaction.setUpdater(currentUserId);
-//        transaction.setIsDeleted(false);
-//        pointsTransactionMapper.insert(transaction);
-//
-//        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteAccountCache(userId);
-//
-//        return true;
-//    }
+    /**
+     * 冻结积分（用于订单处理）
+     */
+    @Override
+    @Transactional
+    public Boolean freezePoints(Long userId, Long points, Long orderId) {
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null || account.getAvailablePoints() < points) {
+            throw new APIException("POINTS_INSUFFICIENT", "积分不足");
+        }
+        Long newAvailablePoints = account.getAvailablePoints() - points;
+        Long newFrozenPoints = account.getFrozenPoints() + points;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+        // 记录冻结明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(3); // 3-冻结
+        transaction.setPointsSource(5); // 5-积分+现金消费
+        transaction.setPointsChange(-points);
+        transaction.setPointsBalance(account.getAvailablePoints());
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单支付冻结积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteAccountCache(userId);
+        return true;
+    }
+
+    /**
+     * 解冻积分（订单取消时）
+     * 设计原则：直接查询指定订单的冻结记录，提高查询效率
+     */
+    @Override
+    @Transactional
+    public Boolean unfreezePoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+
+        // 2. 直接查询该订单的冻结交易记录（transaction_type = 3）
+        List<PointsTransaction> freezeTransactions = pointsTransactionMapper.selectByOrderIdAndType(
+            orderId, 3); // 3-冻结
+
+        // 3. 计算需要解冻的积分总数
+        Long totalFrozen = 0L;
+        for (PointsTransaction trans : freezeTransactions) {
+            // 确保是当前用户的冻结记录
+            if (Objects.equals(trans.getUserId(), userId)) {
+                totalFrozen += Math.abs(trans.getPointsChange());
+            }
+        }
+
+        // 4. 如果没有冻结记录，直接返回
+        if (totalFrozen == 0) {
+            return true;
+        }
+
+        // 5. 更新积分账户（解冻积分）
+        Long newAvailablePoints = account.getAvailablePoints() + totalFrozen;
+        Long newFrozenPoints = account.getFrozenPoints() - totalFrozen;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 6. 记录解冻明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(4); // 4-解冻
+        transaction.setPointsSource(5); // 5-积分+现金消费
+        transaction.setPointsChange(totalFrozen);
+        transaction.setPointsBalance(account.getAvailablePoints());
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单取消解冻积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteAccountCache(userId);
+
+        return true;
+    }
+
+    /**
+     * 解冻奖励积分（订单完成时）
+     * 设计原则：将订单奖励积分从冻结状态转为可用状态
+     */
+    @Override
+    @Transactional
+    public Boolean unfreezeRewardPoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+
+        // 2. 查询该订单的奖励积分记录（points_source = 0, related_order_id = orderId）
+        List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
+            orderId, 0); // 0-消费积分
+
+        // 3. 计算需要解冻的积分总数
+        Long totalRewardPoints = 0L;
+        for (PointsTransaction trans : rewardTransactions) {
+            // 确保是当前用户的奖励积分记录
+            if (Objects.equals(trans.getUserId(), userId) &&
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                totalRewardPoints += trans.getPointsChange();
+            }
+        }
+
+        // 4. 如果没有奖励积分记录，直接返回
+        if (totalRewardPoints == 0) {
+            return true;
+        }
+
+        // 5. 更新积分账户（解冻积分：从冻结积分转为可用积分）
+        Long newAvailablePoints = account.getAvailablePoints() + totalRewardPoints;
+        Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, account.getTotalPoints(), newAvailablePoints, newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 6. 记录解冻明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(4); // 4-解冻
+        transaction.setPointsSource(0); // 0-消费积分
+        transaction.setPointsChange(totalRewardPoints);
+        transaction.setPointsBalance(account.getAvailablePoints());
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单完成解冻奖励积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteAccountCache(userId);
+
+        return true;
+    }
     
-//    /**
-//     * 取消奖励积分（订单取消时）
-//     * 设计原则：删除订单奖励积分，减少总积分和冻结积分
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean cancelRewardPoints(Long userId, Long orderId) {
-//        // 1. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null) {
-//            return false;
-//        }
-//        // 2. 查询该订单的奖励积分记录
-//        List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
-//            orderId, 0); // 0-消费积分
-//        // 3. 计算需要取消的积分总数
-//        Long totalRewardPoints = 0L;
-//        for (PointsTransaction trans : rewardTransactions) {
-//            // 确保是当前用户的奖励积分记录
-//            if (Objects.equals(trans.getUserId(), userId) &&
-//                Objects.equals(trans.getRelatedOrderId(), orderId)) {
-//                totalRewardPoints += trans.getPointsChange();
-//            }
-//        }
-//        // 4. 如果没有奖励积分记录，直接返回
-//        if (totalRewardPoints == 0) {
-//            return true;
-//        }
-//        // 5. 更新积分账户（减少总积分和冻结积分）
-//        Long newTotalPoints = account.getTotalPoints() - totalRewardPoints;
-//        Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, newTotalPoints, account.getAvailablePoints(), newFrozenPoints);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//
-//        // 6. 标记相关积分明细和过期记录为已删除
-//        for (PointsTransaction trans : rewardTransactions) {
-//            if (Objects.equals(trans.getUserId(), userId) &&
-//                Objects.equals(trans.getRelatedOrderId(), orderId)) {
-//                // 标记积分明细为已删除
-//                pointsTransactionMapper.deleteById(trans.getId(), LocalDateTime.now(), currentUserId);
-//
-//                // 标记过期记录为已删除
-//                pointsExpirationMapper.deleteByTransactionId(trans.getId());
-//            }
-//        }
-//
-//        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteUserAllCache(userId);
-//
-//        return true;
-//    }
+    /**
+     * 取消奖励积分（订单取消时）
+     * 设计原则：删除订单奖励积分，减少总积分和冻结积分
+     */
+    @Override
+    @Transactional
+    public Boolean cancelRewardPoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+        // 2. 查询该订单的奖励积分记录
+        List<PointsTransaction> rewardTransactions = pointsTransactionMapper.selectByOrderIdAndSourceList(
+            orderId, 0); // 0-消费积分
+        // 3. 计算需要取消的积分总数
+        Long totalRewardPoints = 0L;
+        for (PointsTransaction trans : rewardTransactions) {
+            // 确保是当前用户的奖励积分记录
+            if (Objects.equals(trans.getUserId(), userId) &&
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                totalRewardPoints += trans.getPointsChange();
+            }
+        }
+        // 4. 如果没有奖励积分记录，直接返回
+        if (totalRewardPoints == 0) {
+            return true;
+        }
+        // 5. 更新积分账户（减少总积分和冻结积分）
+        Long newTotalPoints = account.getTotalPoints() - totalRewardPoints;
+        Long newFrozenPoints = account.getFrozenPoints() - totalRewardPoints;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, account.getAvailablePoints(), newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 6. 标记相关积分明细和过期记录为已删除
+        for (PointsTransaction trans : rewardTransactions) {
+            if (Objects.equals(trans.getUserId(), userId) &&
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                // 标记积分明细为已删除
+                pointsTransactionMapper.deleteById(trans.getId(), LocalDateTime.now(), currentUserId);
+
+                // 标记过期记录为已删除
+                pointsExpirationMapper.deleteByTransactionId(trans.getId());
+            }
+        }
+
+        // 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(userId);
+
+        return true;
+    }
 
     /**
      * 验证并设置积分账户的值，确保不小于0
@@ -625,109 +638,101 @@ public class PointsServiceImpl implements PointsService {
         }
     }
 
-//    /**
-//     * 获取当前用户ID
-//     */
-//    private Long getCurrentUserId() {
-//        Long currentUserId = userMapper.getUserIdByUsername(
-//                SecurityUtils.getCurrentUsername().orElse(null));
-//        return currentUserId;
-//    }
     
-//    /**
-//     * 更新会员等级并增加等级积分
-//     * 设计原则：
-//     * 1. 单一职责原则 - 只负责积分账户的会员等级更新和积分增加
-//     * 2. 事务管理 - 保证会员等级更新和积分增加的一致性
-//     * 3. 依赖注入 - 从数据库查询等级积分规则，而不是硬编码
-//     *
-//     * 积分奖励规则从 marketing_points_rule 表中查询（rule_type = 2，member_level = 目标等级）
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel) {
-//        // 1. 参数校验
-//        if (userId == null || newMemberLevel == null) {
-//            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
-//        }
-//
-//        if (newMemberLevel < 1 || newMemberLevel > 3) {
-//            throw new APIException("PARAM_NOT_MATCHED", "会员等级必须在1-3之间");
-//        }
-//
-//        // 2. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null) {
-//            // 如果账户不存在，创建新账户
-//            account = new PointsAccount();
-//            account.setUserId(userId);
-//            account.setTotalPoints(0L);
-//            account.setAvailablePoints(0L);
-//            account.setFrozenPoints(0L);
-//            account.setMemberLevel(0); // 默认普通用户
-//            account.setCreateTime(LocalDateTime.now());
-//            account.setUpdateTime(LocalDateTime.now());
-//            account.setIsDeleted(false);
-//            Long currentUserId = getCurrentUserId();
-//            account.setCreator(currentUserId);
-//            account.setUpdater(currentUserId);
-//            pointsAccountMapper.insert(account);
-//        }
-//
-//        // 3. 获取当前会员等级
-//        Integer currentLevel = account.getMemberLevel() != null ? account.getMemberLevel() : 0;
-//
-//        // 4. 检查是否可以升级
-//        if (newMemberLevel <= currentLevel) {
-//            throw new APIException("PARAM_NOT_MATCHED", "新会员等级必须大于当前等级");
-//        }
-//
-//        // 5. 从数据库查询等级积分规则（rule_type = 2，member_level = 目标等级）
-//        MarketingPointsRule levelRule = marketingPointsRuleMapper.selectLevelRule(newMemberLevel);
-//
-//        if (levelRule == null) {
-//            log.warn("未找到会员等级 {} 的积分规则，跳过积分奖励", newMemberLevel);
-//            // 如果没有配置规则，只更新会员等级，不增加积分
-//        } else {
-//            // 6. 获取积分数量和有效期
-//            Long pointsToAdd = levelRule.getPointsAmount() != null ? levelRule.getPointsAmount() : 0L;
-//            String levelName = getMemberLevelName(newMemberLevel);
-//
-//            // 7. 增加等级积分（如果积分大于0）
-//            if (pointsToAdd > 0) {
-//                PointsAddDTO addDTO = new PointsAddDTO();
-//                addDTO.setUserId(userId);
-//                addDTO.setPoints(pointsToAdd);
-//                addDTO.setPointsSource(2); // 2-等级积分
-//                addDTO.setRelatedRuleId(levelRule.getId());
-//                addDTO.setDescription("升级为" + levelName + "获得积分");
-//
-//                // 计算过期时间
-//                // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
-//                Integer expireDays = (levelRule.getExpireDays() != null)
-//                    ? levelRule.getExpireDays() : 30; // 默认30天有效期
-//                addDTO.setExpireTime(LocalDateTime.now().plusDays(expireDays));
-//
-//                addPoints(addDTO);
-//
-//                log.info("用户 {} 升级到会员等级 {}，获得 {} 积分", userId, newMemberLevel, pointsToAdd);
-//            } else {
-//                log.warn("会员等级 {} 的积分规则中 points_amount 为 0 或 NULL，不增加积分", newMemberLevel);
-//            }
-//        }
-//
-//        // 8. 更新会员等级
-//        account.setMemberLevel(newMemberLevel);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//
-//        // 9. 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteUserAllCache(userId);
-//
-//        return true;
-//    }
+    /**
+     * 更新会员等级并增加等级积分
+     * 设计原则：
+     * 1. 单一职责原则 - 只负责积分账户的会员等级更新和积分增加
+     * 2. 事务管理 - 保证会员等级更新和积分增加的一致性
+     * 3. 依赖注入 - 从数据库查询等级积分规则，而不是硬编码
+     *
+     * 积分奖励规则从 marketing_points_rule 表中查询（rule_type = 2，member_level = 目标等级）
+     */
+    @Override
+    @Transactional
+    public Boolean upgradeMemberLevel(Long userId, Integer newMemberLevel) {
+        // 1. 参数校验
+        if (userId == null || newMemberLevel == null) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+
+        if (newMemberLevel < 1 || newMemberLevel > 3) {
+            throw new APIException("PARAM_NOT_MATCHED", "会员等级必须在1-3之间");
+        }
+
+        // 2. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            // 如果账户不存在，创建新账户
+            account = new PointsAccount();
+            account.setUserId(userId);
+            account.setTotalPoints(0L);
+            account.setAvailablePoints(0L);
+            account.setFrozenPoints(0L);
+            account.setMemberLevel(0); // 默认普通用户
+            account.setCreateTime(LocalDateTime.now());
+            account.setUpdateTime(LocalDateTime.now());
+            account.setIsDeleted(false);
+            Long currentUserId = getCurrentUserId();
+            account.setCreator(currentUserId);
+            account.setUpdater(currentUserId);
+            pointsAccountMapper.insert(account);
+        }
+
+        // 3. 获取当前会员等级
+        Integer currentLevel = account.getMemberLevel() != null ? account.getMemberLevel() : 0;
+
+        // 4. 检查是否可以升级
+        if (newMemberLevel <= currentLevel) {
+            throw new APIException("PARAM_NOT_MATCHED", "新会员等级必须大于当前等级");
+        }
+
+        // 5. 从数据库查询等级积分规则（rule_type = 2，member_level = 目标等级）
+        MarketingPointsRule levelRule = marketingPointsRuleMapper.selectLevelRule(newMemberLevel);
+
+        if (levelRule == null) {
+            log.warn("未找到会员等级 {} 的积分规则，跳过积分奖励", newMemberLevel);
+            // 如果没有配置规则，只更新会员等级，不增加积分
+        } else {
+            // 6. 获取积分数量和有效期
+            Long pointsToAdd = levelRule.getPointsAmount() != null ? levelRule.getPointsAmount() : 0L;
+            String levelName = getMemberLevelName(newMemberLevel);
+
+            // 7. 增加等级积分（如果积分大于0）
+            if (pointsToAdd > 0) {
+                PointsAddDTO addDTO = new PointsAddDTO();
+                addDTO.setUserId(userId);
+                addDTO.setPoints(pointsToAdd);
+                addDTO.setPointsSource(2); // 2-等级积分
+                addDTO.setRelatedRuleId(levelRule.getId());
+                addDTO.setDescription("升级为" + levelName + "获得积分");
+
+                // 计算过期时间
+                // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
+                Integer expireDays = (levelRule.getExpireDays() != null)
+                    ? levelRule.getExpireDays() : 30; // 默认30天有效期
+                addDTO.setExpireTime(LocalDateTime.now().plusDays(expireDays));
+
+                addPoints(addDTO);
+
+                log.info("用户 {} 升级到会员等级 {}，获得 {} 积分", userId, newMemberLevel, pointsToAdd);
+            } else {
+                log.warn("会员等级 {} 的积分规则中 points_amount 为 0 或 NULL，不增加积分", newMemberLevel);
+            }
+        }
+
+        // 8. 更新会员等级
+        account.setMemberLevel(newMemberLevel);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 9. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(userId);
+
+        return true;
+    }
     
     /**
      * 计算可用积分可以抵扣的现金金额
@@ -764,92 +769,92 @@ public class PointsServiceImpl implements PointsService {
         return deductibleAmount;
     }
     
-//    /**
-//     * 真正扣除冻结的积分（订单完成时）
-//     * 设计原则：将冻结的积分从冻结状态转为已扣除状态
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean deductFrozenPoints(Long userId, Long orderId) {
-//        // 1. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null) {
-//            return false;
-//        }
-//
-//        // 2. 查询该订单的冻结积分记录（transaction_type = 3, points_source = 5）
-//        List<PointsTransaction> freezeTransactions = pointsTransactionMapper.selectByOrderIdAndType(
-//            orderId, 3); // 3-冻结
-//
-//        // 3. 过滤出积分+现金消费的冻结记录（points_source = 5）
-//        Long totalFrozen = 0L;
-//        for (PointsTransaction trans : freezeTransactions) {
-//            // 确保是积分+现金消费的冻结记录（points_source = 5）
-//            if (Objects.equals(trans.getPointsSource(), 5) &&
-//                Objects.equals(trans.getUserId(), userId) &&
-//                Objects.equals(trans.getRelatedOrderId(), orderId)) {
-//                totalFrozen += Math.abs(trans.getPointsChange()); // 冻结时是负数，取绝对值
-//            }
-//        }
-//
-//        // 4. 如果没有冻结积分记录，直接返回
-//        if (totalFrozen == 0) {
-//            return true;
-//        }
-//
-//        // 5. 真正扣除积分：从冻结积分转为已扣除（减少总积分和冻结积分）
-//        Long newFrozenPoints = account.getFrozenPoints() - totalFrozen;
-//        Long newTotalPoints = account.getTotalPoints() - totalFrozen;
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, newTotalPoints, account.getAvailablePoints(), newFrozenPoints);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//
-//        // 6. 优先扣减即将过期的积分（更新过期记录）
-//        Long remainingPoints = totalFrozen;
-//        LocalDateTime currentTime=LocalDateTime.now();
-//        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(userId,currentTime);
-//
-//        // 按过期时间升序扣减
-//        for (PointsExpiration exp : expiringPoints) {
-//            if (remainingPoints <= 0) {
-//                break;
-//            }
-//
-//            Long deductAmount = Math.min(remainingPoints, exp.getPointsAmount());
-//            exp.setPointsAmount(exp.getPointsAmount() - deductAmount);
-//
-//            if (exp.getPointsAmount() <= 0) {
-//                exp.setIsExpired(true);
-//            }
-//            pointsExpirationMapper.updateById(exp);
-//
-//            remainingPoints -= deductAmount;
-//        }
-//
-//        // 7. 记录消费明细
-//        PointsTransaction transaction = new PointsTransaction();
-//        transaction.setUserId(userId);
-//        transaction.setAccountId(account.getId());
-//        transaction.setTransactionType(1); // 1-消费
-//        transaction.setPointsSource(5); // 5-积分+现金消费
-//        transaction.setPointsChange(-totalFrozen); // 负数表示减少
-//        transaction.setPointsBalance(account.getAvailablePoints()); // 可用积分不变（因为已经从可用转为冻结了）
-//        transaction.setRelatedOrderId(orderId);
-//        transaction.setDescription("订单完成扣除积分");
-//        transaction.setCreateTime(LocalDateTime.now());
-//        transaction.setCreator(currentUserId);
-//        transaction.setUpdateTime(LocalDateTime.now());
-//        transaction.setUpdater(currentUserId);
-//        transaction.setIsDeleted(false);
-//        pointsTransactionMapper.insert(transaction);
-//
-//        // 8. 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteUserAllCache(userId);
-//
-//        return true;
-//    }
+    /**
+     * 真正扣除冻结的积分（订单完成时）
+     * 设计原则：将冻结的积分从冻结状态转为已扣除状态
+     */
+    @Override
+    @Transactional
+    public Boolean deductFrozenPoints(Long userId, Long orderId) {
+        // 1. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            return false;
+        }
+
+        // 2. 查询该订单的冻结积分记录（transaction_type = 3, points_source = 5）
+        List<PointsTransaction> freezeTransactions = pointsTransactionMapper.selectByOrderIdAndType(
+            orderId, 3); // 3-冻结
+
+        // 3. 过滤出积分+现金消费的冻结记录（points_source = 5）
+        Long totalFrozen = 0L;
+        for (PointsTransaction trans : freezeTransactions) {
+            // 确保是积分+现金消费的冻结记录（points_source = 5）
+            if (Objects.equals(trans.getPointsSource(), 5) &&
+                Objects.equals(trans.getUserId(), userId) &&
+                Objects.equals(trans.getRelatedOrderId(), orderId)) {
+                totalFrozen += Math.abs(trans.getPointsChange()); // 冻结时是负数，取绝对值
+            }
+        }
+
+        // 4. 如果没有冻结积分记录，直接返回
+        if (totalFrozen == 0) {
+            return true;
+        }
+
+        // 5. 真正扣除积分：从冻结积分转为已扣除（减少总积分和冻结积分）
+        Long newFrozenPoints = account.getFrozenPoints() - totalFrozen;
+        Long newTotalPoints = account.getTotalPoints() - totalFrozen;
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, account.getAvailablePoints(), newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        Long currentUserId = getCurrentUserId();
+        account.setUpdater(currentUserId);
+        pointsAccountMapper.updateById(account);
+
+        // 6. 优先扣减即将过期的积分（更新过期记录）
+        Long remainingPoints = totalFrozen;
+        LocalDateTime currentTime=LocalDateTime.now();
+        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(userId,currentTime);
+
+        // 按过期时间升序扣减
+        for (PointsExpiration exp : expiringPoints) {
+            if (remainingPoints <= 0) {
+                break;
+            }
+
+            Long deductAmount = Math.min(remainingPoints, exp.getPointsAmount());
+            exp.setPointsAmount(exp.getPointsAmount() - deductAmount);
+
+            if (exp.getPointsAmount() <= 0) {
+                exp.setIsExpired(true);
+            }
+            pointsExpirationMapper.updateById(exp);
+
+            remainingPoints -= deductAmount;
+        }
+
+        // 7. 记录消费明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(userId);
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(1); // 1-消费
+        transaction.setPointsSource(5); // 5-积分+现金消费
+        transaction.setPointsChange(-totalFrozen); // 负数表示减少
+        transaction.setPointsBalance(account.getAvailablePoints()); // 可用积分不变（因为已经从可用转为冻结了）
+        transaction.setRelatedOrderId(orderId);
+        transaction.setDescription("订单完成扣除积分");
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(currentUserId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(currentUserId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        // 8. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(userId);
+
+        return true;
+    }
 }
 

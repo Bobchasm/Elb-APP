@@ -77,7 +77,7 @@ export default {
         // 加载商家列表（从后端接口获取）
         const loadBusinesses = async () => {
             try {
-                const response = await request.get('http://REDACTED_DOMAIN:8086/api/businesses/active');
+                const response = await request.get('http://REDACTED_DOMAIN:8086/api/business/active');
                 businessList.value = response;
 				console.log('response.data:', response.data);
 				console.log('response:', response);
