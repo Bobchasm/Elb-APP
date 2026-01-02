@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -426,5 +427,11 @@ public class BusinessServiceImpl implements BusinessService {
         }
         return businessMapper.getBusinessById(id);
     }
+
+    @Override
+    public Business getBusinessInfo(Long id) {
+        return businessMapper.selectBusinessById(id);
+    }
+
 
 }

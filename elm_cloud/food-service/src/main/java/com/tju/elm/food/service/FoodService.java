@@ -11,15 +11,15 @@ import java.util.List;
 public interface FoodService {
 
 
-//    List<FoodItemVO> getFoodItemList(Long businessId, Integer shelveStatus);
-//
-//    Long addFoodItem(FoodCreateDTO foodCreateDTO);
-//
-//    Long setFoodStatus(Long foodId,Integer shelveStatus);
-//
-//    Long modifyFoodMessage(FoodUpdateDTO foodUpdateDTO);
-//
-//    Long deleteFood(Long foodId);
+    List<FoodItemVO> getFoodItemList(Long businessId, Integer shelveStatus);
+
+    Long addFoodItem(FoodCreateDTO foodCreateDTO);
+
+    Long setFoodStatus(Long foodId,Integer shelveStatus);
+
+    Long modifyFoodMessage(FoodUpdateDTO foodUpdateDTO);
+
+    Long deleteFood(Long foodId);
 
     /**
      * 根据foodId查询已上架且未删除的food详细信息及所属商铺名字

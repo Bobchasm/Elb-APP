@@ -11,7 +11,6 @@ import java.util.TimeZone;
 @SpringBootApplication(
         scanBasePackages = {
                 "com.tju.elm.business",
-                "config",
                 "filters",
                 "com.tju.elm.api.config"
         }

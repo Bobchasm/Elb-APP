@@ -19,6 +19,7 @@ import result.HttpResult;
 import result.ResultCodeEnum;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -99,7 +100,7 @@ public class BusinessController {
      */
     @GetMapping
     @Operation(summary = "获取所有店铺信息--牙膏版本")
-    public HttpResult<List<BusinessVO>> getBusinesses() {
+    public HttpResult<List<BusinessVO>> getBusinessesByUser() {
         List<BusinessVO> businessVos = businessService.getBusinesses();
         return HttpResult.success(businessVos);
     }
@@ -166,7 +167,7 @@ public class BusinessController {
 
     @GetMapping("/carousel")
     @Operation(summary = "获取轮播图商家")
-    public HttpResult<List<BusinessSearchVO>> searchBusiness(){
+    public HttpResult<List<BusinessSearchVO>> searchBusinessCarousel(){
         return HttpResult.success(businessService.getBusinessesInCarousel());
 
     }
@@ -177,6 +178,17 @@ public class BusinessController {
     public HttpResult<BusinessVO> patchBusinessOwn(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
          BusinessVO businessVO = businessService.patchBusinessOwn( id,  updateDto);
          return HttpResult.success(businessVO);
+    }
+
+    /**
+     * 获取所有店铺信息
+     * @return 所有店铺信息
+     */
+    @GetMapping("/remote")
+    @Operation(summary = "获取店铺")
+    public HttpResult<Business> gainBusinessById(@RequestParam Long businessId) {
+        Business business = businessService.getBusinessInfo(businessId);
+        return HttpResult.success(business);
     }
 
 

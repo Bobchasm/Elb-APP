@@ -12,20 +12,14 @@ public interface CartMapper {
 
     void insertCart(Cart cart);
 
-    @Select("SELECT * FROM cart C WHERE C.id = #{cartId} AND C.is_deleted = 0")
-    CartVO selectCart(Long cartId);
-
-
-
-//    @Select("""
-//        select c.id,c.business_id,c.quantity,c.food_id,
-//           f.food_name,f.food_price,f.food_img,b.business_name
-//        from cart c
-//        left join food f on f.id = c.food_id and f.is_deleted = 0
-//        left join business b on c.business_id = b.id and b.is_deleted = 0
-//        where c.customer_id = #{userId} and c.is_deleted = 0 and c.business_id = #{businessId};
-//    """)
-//    List<CartItemVO> selectCartItems(Long userId, Long businessId);
+    @Select("""
+        select c.id,c.business_id,c.quantity,c.food_id,
+           f.food_name,f.food_price,f.food_img
+        from cart c
+        left join food f on f.id = c.food_id and f.is_deleted = 0
+        where c.customer_id = #{userId} and c.is_deleted = 0 and c.business_id = #{businessId};
+    """)
+    List<CartItemVO> selectCartItems(Long userId, Long businessId);
 
     @Select("select * from cart where id = #{cartId} and is_deleted = 0")
     Cart selectCartById(Long cartId);

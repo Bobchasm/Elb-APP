@@ -19,35 +19,35 @@ public class CartController {
     private CartService cartService;
 
 
-//    @GetMapping("/list")
-//    @Operation(summary = "获取用户在指定商家的购物车商品列表")
-//    public HttpResult<List<CartItemVO>> addCartItem(@RequestParam Long businessId) {
-//        return HttpResult.success(cartService.getCartItemList(businessId));
-//    }
-//
-//    @GetMapping("/add")
-//    @Operation(summary = "(前端用这个)向购物车添加商品")
-//    public HttpResult<Long> addCartItem(@RequestParam Long foodId, @RequestParam Integer quantity) {
-//        return HttpResult.success(cartService.addItem(foodId, quantity));
-//    }
-//
-//    @GetMapping("/quantity")
-//    @Operation(summary = "修改购物车指定商品数量",description = "quantity传0时移除该条记录")
-//    public HttpResult<Long> updateItemQuantity(@RequestParam Long cartId, @RequestParam Integer quantity) {
-//        return HttpResult.success(cartService.updateItem(cartId,quantity));
-//    }
-//
-//    @GetMapping("/clear")
-//    @Operation(summary = "清空用户在指定商家的购物车")
-//    public HttpResult<Long> updateItemQuantity(@RequestParam Long businessId) {
-//        return HttpResult.success(cartService.clearCart(businessId));
-//    }
-//
-//    @GetMapping("/remove")
-//    @Operation(summary = "移除指定购物车商品")
-//    public HttpResult<Long> removeItem(@RequestParam Long cartId) {
-//        return HttpResult.success(cartService.removeItem(cartId));
-//    }
+    @GetMapping("/list")
+    @Operation(summary = "获取用户在指定商家的购物车商品列表")
+    public HttpResult<List<CartItemVO>> addCartItem(@RequestParam Long businessId) {
+        return HttpResult.success(cartService.getCartItemList(businessId));
+    }
+
+    @GetMapping("/add")
+    @Operation(summary = "(前端用这个)向购物车添加商品")
+    public HttpResult<Long> addCartItem(@RequestParam Long foodId, @RequestParam Integer quantity) {
+        return HttpResult.success(cartService.addItem(foodId, quantity));
+    }
+
+    @GetMapping("/quantity")
+    @Operation(summary = "修改购物车指定商品数量",description = "quantity传0时移除该条记录")
+    public HttpResult<Long> updateItemQuantity(@RequestParam Long cartId, @RequestParam Integer quantity) {
+        return HttpResult.success(cartService.updateItem(cartId,quantity));
+    }
+
+    @GetMapping("/clear")
+    @Operation(summary = "清空用户在指定商家的购物车")
+    public HttpResult<Long> updateItemQuantity(@RequestParam Long businessId) {
+        return HttpResult.success(cartService.clearCart(businessId));
+    }
+
+    @GetMapping("/remove")
+    @Operation(summary = "移除指定购物车商品")
+    public HttpResult<Long> removeItem(@RequestParam Long cartId) {
+        return HttpResult.success(cartService.removeItem(cartId));
+    }
 
 
 }

@@ -2,7 +2,6 @@ package com.tju.elm.business.service;
 
 
 import com.tju.elm.business.pojo.dto.BusinessDTO;
-import com.tju.elm.business.pojo.dto.BusinessInfoDTO;
 import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
 import com.tju.elm.business.pojo.vo.BusinessSearchVO;
@@ -10,6 +9,7 @@ import com.tju.elm.business.pojo.vo.BusinessVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BusinessService {
     BusinessVO getBusinessById(Long id);
@@ -26,4 +26,7 @@ public interface BusinessService {
     List<MerchantStatsVO> getBusinessIdList();
     List<BusinessSearchVO> getBusinessesInCarousel();
     BusinessVO patchBusinessOwn(Long id, BusinessUpdateDTO updateDto);
+
+    Business getBusinessInfo(Long id);
+
 }

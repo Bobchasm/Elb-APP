@@ -7,14 +7,14 @@ import java.util.List;
 
 public interface CartService {
 
-//    List<CartItemVO> getCartItemList(Long businessId);
-//
-//    Long addItem(Long foodId,Integer quantity);
-//
-//    Long updateItem(Long cartId,Integer quantity);
-//
-//    Long clearCart(Long businessId);
-//
-//    Long removeItem(Long cartId);
+    List<CartItemVO> getCartItemList(Long businessId);
+
+    Long addItem(Long foodId,Integer quantity);
+
+    Long updateItem(Long cartId,Integer quantity);
+
+    Long clearCart(Long businessId);
+
+    Long removeItem(Long cartId);
 
 }
