@@ -13,6 +13,23 @@ spring:
     password: ${elm.db.pw}
     hikari: # 配置连接池读已提交
       transaction-isolation: TRANSACTION_READ_COMMITTED
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${elm.nacos.server-addr}
+        namespace: public  # 明确指定 namespace
+        group: DEFAULT_GROUP
+
+        ip: 127.0.0.1  # 本地IP（如果是本机测试）
+        port: ${server.port}  # 服务端口
+        enabled: true  # 明确启用
+        register-enabled: true  # 允许注册
+        # 网络配置
+        metadata:
+          version: 1.0
+        # 健康检查
+        heartbeat:
+          interval: 5000  # 心跳间隔（毫秒）
 
   data:
     redis:
