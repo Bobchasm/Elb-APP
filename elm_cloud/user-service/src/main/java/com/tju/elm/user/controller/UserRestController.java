@@ -117,9 +117,9 @@ public class UserRestController {
 
     @GetMapping("/user/current")
     @Operation(summary = "获取用户", description = "获取当前登录用户的信息")
-    public ResponseEntity<User> getUserByName(@RequestParam String username) {
+    public HttpResult<User> getUserByName(@RequestParam String username) {
         User user = userService.getUserWithAuthorities(username);
-        return ResponseEntity.ok(user);
+        return HttpResult.success(user);
     }
 
     @GetMapping("/person")

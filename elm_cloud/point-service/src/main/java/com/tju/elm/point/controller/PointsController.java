@@ -86,7 +86,7 @@ public class PointsController {
             @RequestParam(required = false) Integer transactionType,
             @RequestParam(required = false) Integer pointsSource,
             @RequestHeader(value = "username") String username) {
-        Long userId = userClient.getCurrentUser(username).getData().getId();
+        Long userId = userClient.getUserByName(username).getData().getId();
         List<PointsTransactionVO> transactions = pointsService.getPointsTransactions(
             userId, pageNum, pageSize, transactionType, pointsSource);
         return HttpResult.success(transactions);
@@ -99,7 +99,7 @@ public class PointsController {
 //    @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
 //    public HttpResult<Long> exchangeGoods(@RequestBody PointsExchangeDTO dto,
 //                                          @RequestHeader(value = "username") String username) {
-//        Long userId = userClient.getCurrentUser(username).getData().getId();
+//        Long userId = userClient.getUserByName(username).getData().getId();
 //        Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
 //        return HttpResult.success(orderId);
 //    }
@@ -133,7 +133,7 @@ public class PointsController {
     public HttpResult<java.math.BigDecimal> calculateDeductibleAmount(
             @RequestParam java.math.BigDecimal orderAmount,
             @RequestHeader(value = "username") String username) {
-        Long userId = userClient.getCurrentUser(username).getData().getId();
+        Long userId = userClient.getUserByName(username).getData().getId();
         java.math.BigDecimal deductibleAmount = pointsService.calculateDeductibleAmount(userId, orderAmount);
         return HttpResult.success(deductibleAmount);
     }
@@ -144,7 +144,7 @@ public class PointsController {
     @GetMapping("/expiring")
     @Operation(summary = "查询即将过期的积分记录", description = "查询当前用户即将过期的积分记录（按过期时间升序）")
     public HttpResult<List<PointsExpirationVO>> getExpiringPoints(@RequestHeader(value = "username") String username) {
-        Long userId = userClient.getCurrentUser(username).getData().getId();
+        Long userId = userClient.getUserByName(username).getData().getId();
         List<PointsExpirationVO> expiringList = pointsExpirationService.getExpiringPoints(userId);
         return HttpResult.success(expiringList);
     }
@@ -155,7 +155,7 @@ public class PointsController {
     @GetMapping("/expired")
     @Operation(summary = "查询已过期的积分记录", description = "查询当前用户已过期的积分记录")
     public HttpResult<List<PointsExpirationVO>> getExpiredPoints(@RequestHeader(value = "username") String username) {
-        Long userId = userClient.getCurrentUser(username).getData().getId();
+        Long userId = userClient.getUserByName(username).getData().getId();
         List<PointsExpirationVO> expiredList = pointsExpirationService.getExpiredPoints(userId);
         return HttpResult.success(expiredList);
     }
@@ -166,7 +166,7 @@ public class PointsController {
     @GetMapping("/expiring/count")
     @Operation(summary = "统计即将过期的积分总数", description = "统计当前用户即将过期的积分总数")
     public HttpResult<Long> countExpiringPoints(@RequestHeader(value = "username") String username) {
-        Long userId = userClient.getCurrentUser(username).getData().getId();
+        Long userId = userClient.getUserByName(username).getData().getId();
         Long count = pointsExpirationService.countExpiringPoints(userId);
         return HttpResult.success(count);
     }

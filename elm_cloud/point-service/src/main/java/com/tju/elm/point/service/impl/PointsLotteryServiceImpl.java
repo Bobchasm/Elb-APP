@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import result.ResultCodeEnum;
+import utils.UserContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -96,85 +97,84 @@ public class PointsLotteryServiceImpl implements PointsLotteryService {
         return vo;
     }
 
-//    /**
-//     * 执行抽奖
-//     */
-//    @Override
-//    @Transactional
-//    public PointsLotteryResultVO doLottery(Long userId) {
-//        // 1. 检查抽奖资格
-//        PointsLotteryInfoVO info = getLotteryInfo(userId);
-//        if (!info.getCanLottery()) {
-//            throw new APIException("LOTTERY_NO_CHANCE", "本月抽奖次数已用完");
-//        }
-//
-//        // 2. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
-//        if (account == null) {
-//            throw new APIException(ResultCodeEnum.VALUE_MISSED);
-//        }
-//
-//        Integer memberLevel = account.getMemberLevel() != null ? account.getMemberLevel() : 0;
-//
-//        // 3. 执行抽奖算法
-//        LotteryResult lotteryResult = performLottery(memberLevel, account.getAvailablePoints());
-//
-//        // 4. 记录抽奖记录
-//        String currentMonth = LocalDateTime.now().format(MONTH_FORMATTER);
-//        PointsLotteryRecord record = new PointsLotteryRecord();
-//        record.setUserId(userId);
-//        record.setMemberLevel(memberLevel);
-//        record.setLotteryType(lotteryResult.getLotteryType());
-//        record.setPointsReward(lotteryResult.getPointsReward());
-//        record.setPointsMultiplier(lotteryResult.getPointsMultiplier());
-//        record.setOriginalPoints(lotteryResult.getOriginalPoints());
-//        record.setLotteryMonth(currentMonth);
-//        record.setTransactionId(null); // 先设为null，如果中奖再更新
-//        record.setCreateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        record.setCreator(currentUserId);
-//        record.setUpdater(currentUserId);
-//        record.setIsDeleted(false);
-//        record.setUpdateTime(LocalDateTime.now());
-//        lotteryRecordMapper.insert(record);
-//
-//        // 5. 如果中奖，增加积分
-//        Long transactionId = null;
-//        if (lotteryResult.getPointsReward() != null && lotteryResult.getPointsReward() > 0) {
-//            PointsAddDTO addDTO = new PointsAddDTO();
-//            addDTO.setUserId(userId);
-//            addDTO.setPoints(lotteryResult.getPointsReward());
-//            addDTO.setPointsSource(3); // 3-行为积分（抽奖属于行为积分）
-//            addDTO.setDescription(lotteryResult.getDescription());
-//            // 积分有效期为15天
-//            addDTO.setExpireTime(LocalDateTime.now().plusDays(15));
-//            transactionId = pointsService.addPoints(addDTO);
-//
-//            // 更新抽奖记录的transactionId
-//            lotteryRecordMapper.updateTransactionId(record.getId(), transactionId,
-//                    LocalDateTime.now(), currentUserId);
-//        }
-//
-//        // 6. 重新查询剩余次数
-//        Integer usedChances = lotteryRecordMapper.countByUserIdAndMonth(userId, currentMonth);
-//        Integer remainingChances = Math.max(0, getMonthlyLimit(memberLevel) - usedChances);
-//
-//        // 7. 构建返回结果
-//        PointsLotteryResultVO resultVO = new PointsLotteryResultVO();
-//        resultVO.setRecordId(record.getId());
-//        resultVO.setLotteryType(lotteryResult.getLotteryType());
-//        resultVO.setLotteryTypeName(getLotteryTypeName(lotteryResult.getLotteryType()));
-//        resultVO.setPointsReward(lotteryResult.getPointsReward());
-//        resultVO.setPointsMultiplier(lotteryResult.getPointsMultiplier());
-//        resultVO.setOriginalPoints(lotteryResult.getOriginalPoints());
-//        resultVO.setCreateTime(record.getCreateTime());
-//        resultVO.setRemainingChances(remainingChances);
-//        resultVO.setDescription(lotteryResult.getDescription());
-//
-//        log.info("用户 {} 抽奖结果：类型={}, 积分={}", userId, lotteryResult.getLotteryType(), lotteryResult.getPointsReward());
-//
-//        return resultVO;
-//    }
+    /**
+     * 执行抽奖
+     */
+    @Override
+    @Transactional
+    public PointsLotteryResultVO doLottery(Long userId) {
+        // 1. 检查抽奖资格
+        PointsLotteryInfoVO info = getLotteryInfo(userId);
+        if (!info.getCanLottery()) {
+            throw new APIException("LOTTERY_NO_CHANCE", "本月抽奖次数已用完");
+        }
+
+        // 2. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(userId);
+        if (account == null) {
+            throw new APIException(ResultCodeEnum.VALUE_MISSED);
+        }
+
+        Integer memberLevel = account.getMemberLevel() != null ? account.getMemberLevel() : 0;
+
+        // 3. 执行抽奖算法
+        LotteryResult lotteryResult = performLottery(memberLevel, account.getAvailablePoints());
+
+        // 4. 记录抽奖记录
+        String currentMonth = LocalDateTime.now().format(MONTH_FORMATTER);
+        PointsLotteryRecord record = new PointsLotteryRecord();
+        record.setUserId(userId);
+        record.setMemberLevel(memberLevel);
+        record.setLotteryType(lotteryResult.getLotteryType());
+        record.setPointsReward(lotteryResult.getPointsReward());
+        record.setPointsMultiplier(lotteryResult.getPointsMultiplier());
+        record.setOriginalPoints(lotteryResult.getOriginalPoints());
+        record.setLotteryMonth(currentMonth);
+        record.setTransactionId(null); // 先设为null，如果中奖再更新
+        record.setCreateTime(LocalDateTime.now());
+        record.setCreator(userId);
+        record.setUpdater(userId);
+        record.setIsDeleted(false);
+        record.setUpdateTime(LocalDateTime.now());
+        lotteryRecordMapper.insert(record);
+
+        // 5. 如果中奖，增加积分
+        Long transactionId = null;
+        if (lotteryResult.getPointsReward() != null && lotteryResult.getPointsReward() > 0) {
+            PointsAddDTO addDTO = new PointsAddDTO();
+            addDTO.setUserId(userId);
+            addDTO.setPoints(lotteryResult.getPointsReward());
+            addDTO.setPointsSource(3); // 3-行为积分（抽奖属于行为积分）
+            addDTO.setDescription(lotteryResult.getDescription());
+            // 积分有效期为15天
+            addDTO.setExpireTime(LocalDateTime.now().plusDays(15));
+            transactionId = pointsService.addPoints(addDTO,userId);
+
+            // 更新抽奖记录的transactionId
+            lotteryRecordMapper.updateTransactionId(record.getId(), transactionId,
+                    LocalDateTime.now(), userId);
+        }
+
+        // 6. 重新查询剩余次数
+        Integer usedChances = lotteryRecordMapper.countByUserIdAndMonth(userId, currentMonth);
+        Integer remainingChances = Math.max(0, getMonthlyLimit(memberLevel) - usedChances);
+
+        // 7. 构建返回结果
+        PointsLotteryResultVO resultVO = new PointsLotteryResultVO();
+        resultVO.setRecordId(record.getId());
+        resultVO.setLotteryType(lotteryResult.getLotteryType());
+        resultVO.setLotteryTypeName(getLotteryTypeName(lotteryResult.getLotteryType()));
+        resultVO.setPointsReward(lotteryResult.getPointsReward());
+        resultVO.setPointsMultiplier(lotteryResult.getPointsMultiplier());
+        resultVO.setOriginalPoints(lotteryResult.getOriginalPoints());
+        resultVO.setCreateTime(record.getCreateTime());
+        resultVO.setRemainingChances(remainingChances);
+        resultVO.setDescription(lotteryResult.getDescription());
+
+        log.info("用户 {} 抽奖结果：类型={}, 积分={}", userId, lotteryResult.getLotteryType(), lotteryResult.getPointsReward());
+
+        return resultVO;
+    }
 
     /**
      * 查询用户抽奖记录

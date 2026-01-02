@@ -9,11 +9,6 @@ spring:
       server-addr: REDACTED_IP:8848
     gateway:
       routes:
-        # 用户服务路由
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/test,/api/addresses/**,/api/admin/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status
         # AI 服务路由
         - id: ai-service
           uri: lb://ai-service
@@ -31,15 +26,13 @@ spring:
         - id: food-service
           uri: lb://food-service
           predicates:
-            - Path=/api/carts/**
-            - Path=/api/foods/**
+            - Path=/api/carts/**，/api/foods/**
 
         # 通知服务路由
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/api/notifications/**
-            - Path=/upload/**
+            - Path=/api/notifications/**，/upload/**
 
         # 订单服务路由
         - id: order-service
@@ -58,7 +51,12 @@ spring:
           uri: lb://point-service
           predicates:
             - Path=/api/points/**
-            - Path=/api/points/lottery/**
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/test,/api/addresses/**,/api/admin/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status
 
 
 elm:

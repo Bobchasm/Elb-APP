@@ -60,7 +60,6 @@ public class UsernameFilter implements Filter {
             chain.doFilter(request, response);
         } finally {
             // 清理 ThreadLocal 和 MDC，防止内存泄漏
-            UserContext.clear();
             MDC.clear();
         }
     }

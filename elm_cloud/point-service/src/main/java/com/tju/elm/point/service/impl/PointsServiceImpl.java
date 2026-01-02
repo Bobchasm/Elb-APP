@@ -45,8 +45,6 @@ public class PointsServiceImpl implements PointsService {
     @Autowired
     private PointsExpirationMapper pointsExpirationMapper;
 
-//    @Autowired
-//    private UserMapper userMapper;
     
     @Autowired
     private MarketingPointsRuleMapper marketingPointsRuleMapper;
@@ -57,193 +55,190 @@ public class PointsServiceImpl implements PointsService {
     @Autowired
     private PointsCacheService pointsCacheService;
 
-//    /**
-//     * 增加积分
-//     * 设计原则：事务管理 - 保证积分账户和明细的一致性
-//     */
-//    @Override
-//    @Transactional
-//    public Long addPoints(PointsAddDTO pointsAddDTO) {
-//        // 1. 参数校验
-//        if (pointsAddDTO.getUserId() == null || pointsAddDTO.getPoints() == null ||
-//            pointsAddDTO.getPoints() <= 0) {
-//            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
-//        }
-//
-//        if (pointsAddDTO.getExpireTime() == null) {
-//            pointsAddDTO.setExpireTime(LocalDateTime.now().plusMonths(1));
-//        }
-//
-//        // 2. 查询或创建积分账户（带行锁，保证并发安全）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(pointsAddDTO.getUserId());
-//        if (account == null) {
-//            // 如果账户不存在，创建新账户
-//            account = new PointsAccount();
-//            account.setUserId(pointsAddDTO.getUserId());
-//            account.setTotalPoints(0L);
-//            account.setAvailablePoints(0L);
-//            account.setFrozenPoints(0L);
-//            account.setMemberLevel(0);
-//            account.setCreateTime(LocalDateTime.now());
-//            account.setUpdateTime(LocalDateTime.now());
-//            account.setIsDeleted(false);
-//            // 获取当前用户ID作为创建人
-//            Long currentUserId = getCurrentUserId();
-//            account.setCreator(currentUserId);
-//            account.setUpdater(currentUserId);
-//            pointsAccountMapper.insert(account);
-//        }
-//
-//        // 3. 更新积分余额
-//        // 判断是否是订单奖励积分（需要冻结）
-//        boolean isOrderReward = (pointsAddDTO.getPointsSource() == 0 &&
-//                                pointsAddDTO.getRelatedOrderId() != null);
-//
-//        Long newTotalPoints = account.getTotalPoints() + pointsAddDTO.getPoints();
-//        Long newAvailablePoints = account.getAvailablePoints();
-//        Long newFrozenPoints = account.getFrozenPoints();
-//
-//        if (isOrderReward) {
-//            // 订单奖励积分：增加总积分和冻结积分，不增加可用积分
-//            newFrozenPoints = account.getFrozenPoints() + pointsAddDTO.getPoints();
-//        } else {
-//            // 其他积分（行为积分等）：直接增加可用积分
-//            newAvailablePoints = account.getAvailablePoints() + pointsAddDTO.getPoints();
-//        }
-//
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, newFrozenPoints);
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateById(account);
-//
-//        // 4. 记录积分明细
-//        PointsTransaction transaction = new PointsTransaction();
-//        transaction.setUserId(pointsAddDTO.getUserId());
-//        transaction.setAccountId(account.getId());
-//        transaction.setTransactionType(0); // 0-获得
-//        if (isOrderReward) {
-//            // 订单奖励积分：记录为获得类型，但积分是冻结的
-//            transaction.setDescription(pointsAddDTO.getDescription() + "（冻结中，订单完成后解冻）");
-//        } else {
-//            // 其他积分：正常获得
-//            transaction.setDescription(pointsAddDTO.getDescription());
-//        }
-//        transaction.setPointsSource(pointsAddDTO.getPointsSource());
-//        transaction.setPointsChange(pointsAddDTO.getPoints());
-//        transaction.setPointsBalance(newAvailablePoints);
-//        transaction.setExpireTime(pointsAddDTO.getExpireTime());
-//        transaction.setRelatedOrderId(pointsAddDTO.getRelatedOrderId());
-//        transaction.setRelatedFoodId(pointsAddDTO.getRelatedFoodId());
-//        transaction.setRelatedRuleId(pointsAddDTO.getRelatedRuleId());
-//        transaction.setCreateTime(LocalDateTime.now());
-//        transaction.setCreator(currentUserId);
-//        transaction.setUpdateTime(LocalDateTime.now());
-//        transaction.setUpdater(currentUserId);
-//        transaction.setIsDeleted(false);
-//        pointsTransactionMapper.insert(transaction);
-//
-//        // 5. 创建过期记录（所有积分都必须有有效期）
-//        PointsExpiration expiration = new PointsExpiration();
-//        expiration.setUserId(pointsAddDTO.getUserId());
-//        expiration.setTransactionId(transaction.getId());
-//        expiration.setPointsAmount(pointsAddDTO.getPoints());
-//        expiration.setExpireTime(pointsAddDTO.getExpireTime());
-//        expiration.setExpireDate(pointsAddDTO.getExpireTime().toLocalDate());
-//        expiration.setIsExpired(false);
-//        expiration.setCreateTime(LocalDateTime.now());
-//        pointsExpirationMapper.insert(expiration);
-//
-//        // 6. 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteUserAllCache(pointsAddDTO.getUserId());
-//
-//        return transaction.getId();
-//    }
-//
-//    /**
-//     * 减少积分（优先扣减即将过期的积分）
-//     * 设计原则：
-//     * 1. 优先扣减即将过期的积分算法
-//     * 2. 事务管理 - 保证数据一致性
-//     */
-//    @Override
-//    @Transactional
-//    public Boolean deductPoints(PointsDeductDTO pointsDeductDTO) {
-//        // 1. 参数校验
-//        if (pointsDeductDTO.getUserId() == null || pointsDeductDTO.getPoints() == null ||
-//            pointsDeductDTO.getPoints() <= 0) {
-//            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
-//        }
-//
-//        // 2. 查询积分账户（带行锁）
-//        PointsAccount account = pointsAccountMapper.selectForUpdate(pointsDeductDTO.getUserId());
-//        if (account == null || account.getAvailablePoints() < pointsDeductDTO.getPoints()) {
-//            throw new APIException("POINTS_INSUFFICIENT", "积分不足");
-//        }
-//
-//        // 3. 优先扣减即将过期的积分
-//        Long remainingPoints = pointsDeductDTO.getPoints();
-//        LocalDateTime currentTime=LocalDateTime.now();
-//        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(
-//            pointsDeductDTO.getUserId(),currentTime);
-//
-//        // 按过期时间升序扣减
-//        for (PointsExpiration exp : expiringPoints) {
-//            if (remainingPoints <= 0) {
-//                break;
-//            }
-//
-//            Long deductAmount = Math.min(remainingPoints, exp.getPointsAmount());
-//            exp.setPointsAmount(exp.getPointsAmount() - deductAmount);
-//
-//            if (exp.getPointsAmount() <= 0) {
-//                exp.setIsExpired(true);
-//            }
-//            pointsExpirationMapper.updateById(exp);
-//
-//            remainingPoints -= deductAmount;
-//        }
-//
-//        // 4. 如果还有剩余积分需要扣减，说明即将过期的积分不足
-//        // 由于所有积分都有有效期，如果即将过期的积分不足，说明积分不足
-//        if (remainingPoints > 0) {
-//            throw new APIException("POINTS_INSUFFICIENT", "可用积分不足，请检查积分有效期");
-//        }
-//
-//        // 5. 更新积分账户余额
-//        Long newAvailablePoints = account.getAvailablePoints() - pointsDeductDTO.getPoints();
-//        Long newTotalPoints = account.getTotalPoints() - pointsDeductDTO.getPoints();
-//        // 验证并设置积分账户的值，确保不小于0
-//        validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, account.getFrozenPoints());
-//        account.setUpdateTime(LocalDateTime.now());
-//        Long currentUserId = getCurrentUserId();
-//        account.setUpdater(currentUserId);
-//        pointsAccountMapper.updateBalance(account);
-//
-//        // 6. 记录积分明细
-//        PointsTransaction transaction = new PointsTransaction();
-//        transaction.setUserId(pointsDeductDTO.getUserId());
-//        transaction.setAccountId(account.getId());
-//        transaction.setTransactionType(1); // 1-消费
-//        transaction.setPointsSource(pointsDeductDTO.getPointsSource());
-//        transaction.setPointsChange(-pointsDeductDTO.getPoints()); // 负数表示减少
-//        transaction.setPointsBalance(newAvailablePoints);
-//        transaction.setRelatedOrderId(pointsDeductDTO.getRelatedOrderId());
-//        transaction.setRelatedFoodId(pointsDeductDTO.getRelatedFoodId());
-//        transaction.setDescription(pointsDeductDTO.getDescription());
-//        transaction.setCreateTime(LocalDateTime.now());
-//        transaction.setCreator(currentUserId);
-//        transaction.setUpdateTime(LocalDateTime.now());
-//        transaction.setUpdater(currentUserId);
-//        transaction.setIsDeleted(false);
-//        pointsTransactionMapper.insert(transaction);
-//
-//        // 7. 删除相关缓存（写操作后清除缓存，保证数据一致性）
-//        pointsCacheService.deleteUserAllCache(pointsDeductDTO.getUserId());
-//
-//        return true;
-//    }
+    /**
+     * 增加积分
+     * 设计原则：事务管理 - 保证积分账户和明细的一致性
+     */
+    @Override
+    @Transactional
+    public Long addPoints(PointsAddDTO pointsAddDTO,Long userId) {
+        // 1. 参数校验
+        if (pointsAddDTO.getUserId() == null || pointsAddDTO.getPoints() == null ||
+            pointsAddDTO.getPoints() <= 0) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+
+        if (pointsAddDTO.getExpireTime() == null) {
+            pointsAddDTO.setExpireTime(LocalDateTime.now().plusMonths(1));
+        }
+
+        // 2. 查询或创建积分账户（带行锁，保证并发安全）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(pointsAddDTO.getUserId());
+        if (account == null) {
+            // 如果账户不存在，创建新账户
+            account = new PointsAccount();
+            account.setUserId(pointsAddDTO.getUserId());
+            account.setTotalPoints(0L);
+            account.setAvailablePoints(0L);
+            account.setFrozenPoints(0L);
+            account.setMemberLevel(0);
+            account.setCreateTime(LocalDateTime.now());
+            account.setUpdateTime(LocalDateTime.now());
+            account.setIsDeleted(false);
+
+            account.setCreator(userId);
+            account.setUpdater(userId);
+            pointsAccountMapper.insert(account);
+        }
+
+        // 3. 更新积分余额
+        // 判断是否是订单奖励积分（需要冻结）
+        boolean isOrderReward = (pointsAddDTO.getPointsSource() == 0 &&
+                                pointsAddDTO.getRelatedOrderId() != null);
+
+        Long newTotalPoints = account.getTotalPoints() + pointsAddDTO.getPoints();
+        Long newAvailablePoints = account.getAvailablePoints();
+        Long newFrozenPoints = account.getFrozenPoints();
+
+        if (isOrderReward) {
+            // 订单奖励积分：增加总积分和冻结积分，不增加可用积分
+            newFrozenPoints = account.getFrozenPoints() + pointsAddDTO.getPoints();
+        } else {
+            // 其他积分（行为积分等）：直接增加可用积分
+            newAvailablePoints = account.getAvailablePoints() + pointsAddDTO.getPoints();
+        }
+
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, newFrozenPoints);
+        account.setUpdateTime(LocalDateTime.now());
+        account.setUpdater(userId);
+        pointsAccountMapper.updateById(account);
+
+        // 4. 记录积分明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(pointsAddDTO.getUserId());
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(0); // 0-获得
+        if (isOrderReward) {
+            // 订单奖励积分：记录为获得类型，但积分是冻结的
+            transaction.setDescription(pointsAddDTO.getDescription() + "（冻结中，订单完成后解冻）");
+        } else {
+            // 其他积分：正常获得
+            transaction.setDescription(pointsAddDTO.getDescription());
+        }
+        transaction.setPointsSource(pointsAddDTO.getPointsSource());
+        transaction.setPointsChange(pointsAddDTO.getPoints());
+        transaction.setPointsBalance(newAvailablePoints);
+        transaction.setExpireTime(pointsAddDTO.getExpireTime());
+        transaction.setRelatedOrderId(pointsAddDTO.getRelatedOrderId());
+        transaction.setRelatedFoodId(pointsAddDTO.getRelatedFoodId());
+        transaction.setRelatedRuleId(pointsAddDTO.getRelatedRuleId());
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(userId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(userId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        // 5. 创建过期记录（所有积分都必须有有效期）
+        PointsExpiration expiration = new PointsExpiration();
+        expiration.setUserId(pointsAddDTO.getUserId());
+        expiration.setTransactionId(transaction.getId());
+        expiration.setPointsAmount(pointsAddDTO.getPoints());
+        expiration.setExpireTime(pointsAddDTO.getExpireTime());
+        expiration.setExpireDate(pointsAddDTO.getExpireTime().toLocalDate());
+        expiration.setIsExpired(false);
+        expiration.setCreateTime(LocalDateTime.now());
+        pointsExpirationMapper.insert(expiration);
+
+        // 6. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(pointsAddDTO.getUserId());
+
+        return transaction.getId();
+    }
+
+    /**
+     * 减少积分（优先扣减即将过期的积分）
+     * 设计原则：
+     * 1. 优先扣减即将过期的积分算法
+     * 2. 事务管理 - 保证数据一致性
+     */
+    @Override
+    @Transactional
+    public Boolean deductPoints(PointsDeductDTO pointsDeductDTO,Long userId) {
+        // 1. 参数校验
+        if (pointsDeductDTO.getUserId() == null || pointsDeductDTO.getPoints() == null ||
+            pointsDeductDTO.getPoints() <= 0) {
+            throw new APIException(ResultCodeEnum.PARAM_NOT_MATCHED);
+        }
+
+        // 2. 查询积分账户（带行锁）
+        PointsAccount account = pointsAccountMapper.selectForUpdate(pointsDeductDTO.getUserId());
+        if (account == null || account.getAvailablePoints() < pointsDeductDTO.getPoints()) {
+            throw new APIException("POINTS_INSUFFICIENT", "积分不足");
+        }
+
+        // 3. 优先扣减即将过期的积分
+        Long remainingPoints = pointsDeductDTO.getPoints();
+        LocalDateTime currentTime=LocalDateTime.now();
+        List<PointsExpiration> expiringPoints = pointsExpirationMapper.selectExpiringPoints(
+            pointsDeductDTO.getUserId(),currentTime);
+
+        // 按过期时间升序扣减
+        for (PointsExpiration exp : expiringPoints) {
+            if (remainingPoints <= 0) {
+                break;
+            }
+
+            Long deductAmount = Math.min(remainingPoints, exp.getPointsAmount());
+            exp.setPointsAmount(exp.getPointsAmount() - deductAmount);
+
+            if (exp.getPointsAmount() <= 0) {
+                exp.setIsExpired(true);
+            }
+            pointsExpirationMapper.updateById(exp);
+
+            remainingPoints -= deductAmount;
+        }
+
+        // 4. 如果还有剩余积分需要扣减，说明即将过期的积分不足
+        // 由于所有积分都有有效期，如果即将过期的积分不足，说明积分不足
+        if (remainingPoints > 0) {
+            throw new APIException("POINTS_INSUFFICIENT", "可用积分不足，请检查积分有效期");
+        }
+
+        // 5. 更新积分账户余额
+        Long newAvailablePoints = account.getAvailablePoints() - pointsDeductDTO.getPoints();
+        Long newTotalPoints = account.getTotalPoints() - pointsDeductDTO.getPoints();
+        // 验证并设置积分账户的值，确保不小于0
+        validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, account.getFrozenPoints());
+        account.setUpdateTime(LocalDateTime.now());
+        account.setUpdater(userId);
+        pointsAccountMapper.updateBalance(account);
+
+        // 6. 记录积分明细
+        PointsTransaction transaction = new PointsTransaction();
+        transaction.setUserId(pointsDeductDTO.getUserId());
+        transaction.setAccountId(account.getId());
+        transaction.setTransactionType(1); // 1-消费
+        transaction.setPointsSource(pointsDeductDTO.getPointsSource());
+        transaction.setPointsChange(-pointsDeductDTO.getPoints()); // 负数表示减少
+        transaction.setPointsBalance(newAvailablePoints);
+        transaction.setRelatedOrderId(pointsDeductDTO.getRelatedOrderId());
+        transaction.setRelatedFoodId(pointsDeductDTO.getRelatedFoodId());
+        transaction.setDescription(pointsDeductDTO.getDescription());
+        transaction.setCreateTime(LocalDateTime.now());
+        transaction.setCreator(userId);
+        transaction.setUpdateTime(LocalDateTime.now());
+        transaction.setUpdater(userId);
+        transaction.setIsDeleted(false);
+        pointsTransactionMapper.insert(transaction);
+
+        // 7. 删除相关缓存（写操作后清除缓存，保证数据一致性）
+        pointsCacheService.deleteUserAllCache(pointsDeductDTO.getUserId());
+
+        return true;
+    }
 
     /**
      * 查询用户积分账户（带缓存）

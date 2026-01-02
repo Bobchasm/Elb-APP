@@ -1,5 +1,6 @@
 package com.tju.elm.point.controller;
 
+import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.service.PointsLotteryService;
 import com.tju.elm.point.zoo.pojo.vo.PointsLotteryInfoVO;
 import com.tju.elm.point.zoo.pojo.vo.PointsLotteryRecordVO;
@@ -23,51 +24,43 @@ public class PointsLotteryController {
     @Autowired
     private PointsLotteryService pointsLotteryService;
 
-//    @Autowired
-//    private UserMapper userMapper;
+    @Autowired
+    private UserClient userClient;
 
-//    /**
-//     * 获取用户抽奖信息
-//     */
-//    @GetMapping("/info")
-//    @Operation(summary = "获取抽奖信息", description = "获取当前用户的抽奖信息，包括会员等级、剩余次数等")
-//    public HttpResult<PointsLotteryInfoVO> getLotteryInfo() {
-//        Long userId = getCurrentUserId();
-//        PointsLotteryInfoVO info = pointsLotteryService.getLotteryInfo(userId);
-//        return HttpResult.success(info);
-//    }
-//
-//    /**
-//     * 执行抽奖
-//     */
-//    @PostMapping("/draw")
-//    @Operation(summary = "执行抽奖", description = "执行一次抽奖，返回抽奖结果")
-//    public HttpResult<PointsLotteryResultVO> doLottery() {
-//        Long userId = getCurrentUserId();
-//        PointsLotteryResultVO result = pointsLotteryService.doLottery(userId);
-//        return HttpResult.success(result);
-//    }
-//
-//    /**
-//     * 查询抽奖记录
-//     */
-//    @GetMapping("/records")
-//    @Operation(summary = "查询抽奖记录", description = "查询当前用户的抽奖记录")
-//    public HttpResult<List<PointsLotteryRecordVO>> getLotteryRecords(
-//            @RequestParam(required = false, defaultValue = "10") Integer limit) {
-//        Long userId = getCurrentUserId();
-//        List<PointsLotteryRecordVO> records = pointsLotteryService.getLotteryRecords(userId, limit);
-//        return HttpResult.success(records);
-//    }
+    /**
+     * 获取用户抽奖信息
+     */
+    @GetMapping("/info")
+    @Operation(summary = "获取抽奖信息", description = "获取当前用户的抽奖信息，包括会员等级、剩余次数等")
+    public HttpResult<PointsLotteryInfoVO> getLotteryInfo(@RequestHeader(value = "username") String username) {
+        Long userId = userClient.getUserByName(username).getData().getId();
+        PointsLotteryInfoVO info = pointsLotteryService.getLotteryInfo(userId);
+        return HttpResult.success(info);
+    }
 
-//    /**
-//     * 获取当前用户ID
-//     */
-//    private Long getCurrentUserId() {
-//        String username = SecurityUtils.getCurrentUsername()
-//            .orElseThrow(() -> new com.tju.elm_bk.exception.APIException(
-//                com.tju.elm_bk.result.ResultCodeEnum.VALUE_MISSED));
-//        return userMapper.getUserIdByUsername(username);
-//    }
+    /**
+     * 执行抽奖
+     */
+    @PostMapping("/draw")
+    @Operation(summary = "执行抽奖", description = "执行一次抽奖，返回抽奖结果")
+    public HttpResult<PointsLotteryResultVO> doLottery(@RequestHeader(value = "username") String username) {
+        Long userId = userClient.getUserByName(username).getData().getId();
+        PointsLotteryResultVO result = pointsLotteryService.doLottery(userId);
+        return HttpResult.success(result);
+    }
+
+    /**
+     * 查询抽奖记录
+     */
+    @GetMapping("/records")
+    @Operation(summary = "查询抽奖记录", description = "查询当前用户的抽奖记录")
+    public HttpResult<List<PointsLotteryRecordVO>> getLotteryRecords(
+            @RequestParam(required = false, defaultValue = "10") Integer limit,
+            @RequestHeader(value = "username") String username) {
+        Long userId = userClient.getUserByName(username).getData().getId();
+        List<PointsLotteryRecordVO> records = pointsLotteryService.getLotteryRecords(userId, limit);
+        return HttpResult.success(records);
+    }
+
 }
 

@@ -18,12 +18,12 @@ public interface PointsLotteryService {
      */
     PointsLotteryInfoVO getLotteryInfo(Long userId);
     
-//    /**
-//     * 执行抽奖
-//     * @param userId 用户ID
-//     * @return 抽奖结果
-//     */
-//    PointsLotteryResultVO doLottery(Long userId);
+    /**
+     * 执行抽奖
+     * @param userId 用户ID
+     * @return 抽奖结果
+     */
+    PointsLotteryResultVO doLottery(Long userId);
     
     /**
      * 查询用户抽奖记录

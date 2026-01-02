@@ -14,19 +14,19 @@ import java.util.List;
  */
 public interface PointsService {
     
-//    /**
-//     * 增加积分
-//     * @param pointsAddDTO 积分增加DTO
-//     * @return 积分明细ID
-//     */
-//    Long addPoints(PointsAddDTO pointsAddDTO);
-//
-//    /**
-//     * 减少积分（优先扣减即将过期的积分）
-//     * @param pointsDeductDTO 积分扣减DTO
-//     * @return 是否成功
-//     */
-//    Boolean deductPoints(PointsDeductDTO pointsDeductDTO);
+    /**
+     * 增加积分
+     * @param pointsAddDTO 积分增加DTO
+     * @return 积分明细ID
+     */
+    Long addPoints(PointsAddDTO pointsAddDTO,Long userId);
+
+    /**
+     * 减少积分（优先扣减即将过期的积分）
+     * @param pointsDeductDTO 积分扣减DTO
+     * @return 是否成功
+     */
+    Boolean deductPoints(PointsDeductDTO pointsDeductDTO,Long userId);
     
     /**
      * 查询用户积分账户

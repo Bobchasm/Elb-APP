@@ -13,7 +13,6 @@ import java.util.TimeZone;
         scanBasePackages = {
                 "com.tju.elm.user",
                 "filters",
-                "interceptor",
                 "com.tju.elm.api.config"
         }
 )

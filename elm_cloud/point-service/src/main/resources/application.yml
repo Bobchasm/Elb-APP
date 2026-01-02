@@ -66,15 +66,13 @@ mybatis:
 springdoc:
   api-docs:
     enabled: true
-    path: /point/v3/api-docs
+    path: /v3/api-docs
   swagger-ui:
     enabled: true
-    path: /point/swagger-ui
+    path: /swagger-ui
 
 logging:
   level:
-    com.tju.elm: debug
-  pattern:
-    dateformat: HH:mm:ss:SSS
-  file:
-    path: "logs/${spring.application.name}"
+    org.springframework.cloud.gateway.handler.predicate: TRACE
+    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: DEBUG
+    com.tju.elm.gateway: DEBUG
