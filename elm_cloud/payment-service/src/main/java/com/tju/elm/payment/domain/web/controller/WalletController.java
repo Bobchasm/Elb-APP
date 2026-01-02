@@ -103,7 +103,7 @@ public class WalletController {
 
     @GetMapping("/loan/repay")
     @Operation(summary = "还贷款",description = "option 0-第三方支付 1-钱包")
-    public HttpResult<Boolean> repayLoan(Long id,Integer option) {
+    public HttpResult<Boolean> repayLoan(@RequestParam Long id,@RequestParam Integer option) {
         return HttpResult.success(walletApplicationService.repayLoan(id,option));
     }
 
@@ -115,19 +115,19 @@ public class WalletController {
 
     @GetMapping("/loan/detail")
     @Operation(summary = "查看钱包某项贷款")
-    public HttpResult<LoanVO> preLoan(Long loanId) {
+    public HttpResult<LoanVO> preLoan(@RequestParam Long loanId) {
         return HttpResult.success(walletApplicationService.getWalletLoanById(loanId));
     }
 
     @GetMapping("/transaction/thaw")
     @Operation(summary = "解冻交易")
-    public HttpResult<Boolean> thaw(Long  orderId,Integer status) {
+    public HttpResult<Boolean> thaw(@RequestParam Long orderId,@RequestParam Integer status) {
         return HttpResult.success(walletApplicationService.thawTransactionAccount(orderId,status));
     }
 
     @GetMapping("/transaction/income")
     @Operation(summary = "钱包入账")
-    public HttpResult<Boolean> income(Long userId,Long orderId) {
+    public HttpResult<Boolean> income(@RequestParam Long userId, @RequestParam Long orderId) {
         return HttpResult.success(walletApplicationService.income(userId,orderId));
     }
 

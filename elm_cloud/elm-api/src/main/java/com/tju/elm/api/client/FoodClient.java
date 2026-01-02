@@ -29,5 +29,5 @@ public interface FoodClient {
     HttpResult<Long> clearCart(@RequestParam Long businessId);
 
     @GetMapping("/api/foods/ai/keyword")
-    HttpResult<List<Food>> searchByKeyword(String keyword, Integer limit);
+    HttpResult<List<Food>> searchByKeyword(@RequestParam String keyword, @RequestParam Integer limit);
 }

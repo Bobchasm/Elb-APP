@@ -239,7 +239,7 @@ public class BusinessController {
 
     @GetMapping("/ai/keyword")
     @Operation(summary = "ai服务关键词查询店铺")
-    public HttpResult<List<Business>> searchByKeyword(String keyword,Integer limit) {
+    public HttpResult<List<Business>> searchByKeyword(@RequestParam String keyword,@RequestParam Integer limit) {
         return HttpResult.success(businessMapper.searchByKeyword(keyword,limit));
     }
 

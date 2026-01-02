@@ -83,7 +83,7 @@ public class FoodController {
 
     @GetMapping("/ai/keyword")
     @Operation(summary = "ai服务关键词查询商品")
-    public HttpResult<List<Food>> searchByKeyword(String keyword, Integer limit) {
+    public HttpResult<List<Food>> searchByKeyword(@RequestParam String keyword, @RequestParam Integer limit) {
         return HttpResult.success(foodMapper.searchByKeyword(keyword, limit));
     }
 }

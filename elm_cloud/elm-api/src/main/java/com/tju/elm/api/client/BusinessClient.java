@@ -20,6 +20,6 @@ public interface BusinessClient {
     HttpResult<List<Business>> gainBusinessByIds(@RequestBody Set<Long> businessIds);
 
     @GetMapping("/api/businesses/ai/keyword")
-    HttpResult<List<Business>> searchByKeyword(String keyword,Integer limit);
+    HttpResult<List<Business>> searchByKeyword(@RequestParam String keyword,@RequestParam Integer limit);
 
 }
