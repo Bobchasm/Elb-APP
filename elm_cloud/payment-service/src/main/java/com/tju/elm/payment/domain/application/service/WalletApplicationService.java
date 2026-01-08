@@ -32,6 +32,7 @@ import utils.UserContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -127,7 +128,8 @@ public class WalletApplicationService {
 
         // 是否需要贷款，办理贷款
         if (!loadAmount.equals(BigDecimal.ZERO)) {
-            loanRepository.load(fromWallet.getId(),loadAmount,LOAD_RATE);
+            Loan loan = new Loan(fromWallet.getId(), loadAmount, LOAD_RATE, LocalDateTime.now());
+            loanRepository.load(loan);
         }
 
         // 交易，此时商家账户还未进账，金额暂留在交易中

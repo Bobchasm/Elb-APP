@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface LoanRepository {
 
-    void load(Long walletId, BigDecimal amount,Float rate);
+    void load(Loan loan);
 
     void repay(Long id);
 

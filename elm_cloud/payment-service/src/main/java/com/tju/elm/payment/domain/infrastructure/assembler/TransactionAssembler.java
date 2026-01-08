@@ -29,6 +29,7 @@ public class TransactionAssembler {
         po.setFee(transaction.getFee());
         po.setStatus(transaction.getStatus());
         po.setFeeRate(feeRate);
+        po.setCreateTime(transaction.getCreateTime());
 
         return po;
     }

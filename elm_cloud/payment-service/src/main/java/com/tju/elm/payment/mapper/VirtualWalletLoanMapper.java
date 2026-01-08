@@ -13,13 +13,13 @@ import java.util.List;
 @Mapper
 public interface VirtualWalletLoanMapper {
 
-    @Insert("insert into virtual_wallet_loan (wallet_id,loan_amount,rate) values (#{walletId},#{amount},#{rate})")
-    void load(Long walletId, BigDecimal amount,Float rate);
+    @Insert("insert into virtual_wallet_loan (wallet_id,loan_amount,rate,create_time) values (#{walletId},#{loanAmount},#{rate},#{createTime})")
+    void load(VirtualWalletLoan loan);
 
     @Update("update virtual_wallet_loan set repay_time = #{time} where id = #{id}")
     void repay(Long id, LocalDateTime time);
 
-    @Select("select * from virtual_wallet_loan where wallet_id = #{walletId} order by create_time desc")
+    @Select("select * from virtual_wallet_loan where wallet_id = #{walletId} and loan_amount > 0 order by create_time desc")
     List<VirtualWalletLoan> getLoanList(Long walletId);
 
     @Select("select * from virtual_wallet_loan where id = #{id}")
