@@ -57,7 +57,7 @@ public class AddressController {
     }
 
     @PostMapping("/ids")
-    @Operation(summary = "获取所有id中的用户列表")
+    @Operation(summary = "获取所有id中的地址列表")
     public HttpResult<List<DeliveryAddress>> gainAddressListByIds(@RequestBody Set<Long> addressIds) {
         return HttpResult.success(addressService.getDeliveryAddressByIds(addressIds));
     }

@@ -19,8 +19,7 @@ spring:
         - id: business-service
           uri: lb://business-service
           predicates:
-            - Path=/api/businesses/**
-            - Path=/api/merchant/interaction/**
+            - Path=/api/businesses/**,/api/merchant/interaction/**
 
         # 食品服务路由
         - id: food-service
@@ -56,7 +55,7 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/test,/api/addresses/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status,/api/business/active
+            - Path=/test,/api/addresses/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status,/api/business/active,/api/config/**
 
 
 elm:

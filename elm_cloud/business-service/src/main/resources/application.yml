@@ -51,7 +51,7 @@ mybatis:
     map-underscore-to-camel-case: true
   # 指定XML映射文件位置
   mapper-locations:
-    - classpath*:com/tju/elm/business/mapper/*.xml
+    - classpath*:/mapper/*.xml
 
 
 # swagger

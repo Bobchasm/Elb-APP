@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,8 +51,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserVO changeUserStatus(String username) {
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername==null) {
+            throw new APIException("未获取到当前登录用户名");
+        }
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         log.info("当前用户：{}", currentUser);
         User targetUser = userMapper.findByUsernameWithAuthorities(username);
@@ -73,8 +76,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String username) {
         User targetUser = userMapper.findByUsernameWithAuthorities(username);
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername==null) {
+            throw new APIException("未获取到当前登录用户名");
+        }
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         if (targetUser == null) {
             throw new APIException("目标用户不存在");

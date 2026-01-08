@@ -334,7 +334,7 @@ public class UserRestController {
         return HttpResult.success(message);
     }
 
-    @DeleteMapping("/{username}")
+    @DeleteMapping("/user/{username}")
     @Operation(summary = "删除用户", description = "逻辑删除用户（标记isDeleted=true），仅管理员可操作")
     @PreAuthorize("hasAuthority('ADMIN')")
     public HttpResult deleteUser(@PathVariable String username) {
