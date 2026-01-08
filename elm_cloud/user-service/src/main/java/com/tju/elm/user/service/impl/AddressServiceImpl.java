@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import result.HttpResult;
 import result.ResultCodeEnum;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,8 +30,10 @@ public class AddressServiceImpl implements AddressService {
     private DeliveryAddressMapper deliveryAddressMapper;
     @Override
     public HttpResult<AddressVO> addDeliveryAddress(AddressCreateDTO createDTO) {
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("当前用户未登录"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername == null) {
+            throw new APIException("当前用户未登录");
+        }
         User targetUser = userMapper.findByUsernameWithAuthorities(createDTO.getCustomer().getUsername());
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         boolean isAdmin = currentUser.getAuthorities().stream()
@@ -71,8 +74,10 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(Long userId) {
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("当前用户未登录"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername == null) {
+            throw new APIException("当前用户未登录");
+        }
         User targetUser = userMapper.findByUserIdWithAuthorities(userId);
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         boolean isAdmin = currentUser.getAuthorities().stream()
@@ -97,8 +102,10 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public HttpResult updateDeliveryAddress(DeliveryAddress deliveryAddress) {
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername == null) {
+            throw new APIException("当前用户未登录");
+        }
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         LocalDateTime now = LocalDateTime.now();
         deliveryAddress.setUpdateTime(now);
@@ -110,8 +117,10 @@ public class AddressServiceImpl implements AddressService {
     public HttpResult deleteDeliveryAddress(DeliveryAddress deliveryAddress) {
         deliveryAddress.setIsDeleted(true);
         deliveryAddress.setUpdateTime(LocalDateTime.now());
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername == null) {
+            throw new APIException("当前用户未登录");
+        }
         Long currentUserId = userMapper.getUserIdByUsername(currentUsername);
         deliveryAddress.setUpdater(currentUserId);
         return HttpResult.success(deliveryAddressMapper.updateDeliveryAddress(deliveryAddress));

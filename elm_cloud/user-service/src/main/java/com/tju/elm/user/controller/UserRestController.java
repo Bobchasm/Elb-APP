@@ -27,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -356,8 +357,7 @@ public class UserRestController {
 
     // 获取当前登录用户
     private User getCurrentUser() {
-        String username = org.springframework.security.core.context.SecurityContextHolder
-                .getContext().getAuthentication().getName();
+        String username = UserContext.getUsername();
         return userService.getUserWithAuthorities(username);
     }
 

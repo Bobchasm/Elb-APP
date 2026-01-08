@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.transaction.annotation.Transactional;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,8 +58,10 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     @Transactional(rollbackFor = Exception.class)
     public PermissionApplication applyMerchant() {
         // 1. 获取当前登录用户ID
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername == null) {
+            throw new APIException("未获取到当前登录用户名");
+        }
         Long currentUserId = userMapper.getUserIdByUsername(currentUsername);
         log.info("当前用户ID: {}", currentUserId);
 
@@ -101,8 +104,10 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
     @Transactional(rollbackFor = Exception.class)
     public PermissionApplication auditApplication(AuditPermissionDTO auditDTO) {
 
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("未获取到当前登录用户名"));
+        String currentUsername = UserContext.getUsername();
+        if (currentUsername == null) {
+            throw new APIException("未获取到当前登录用户名");
+        }
         Long currentUserId = userMapper.getUserIdByUsername(currentUsername);
 
         // 2. 查询申请记录是否存在

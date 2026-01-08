@@ -46,8 +46,7 @@ public class PersonServiceImpl implements PersonService {
         
         // 如果UserContext中没有，再尝试从SecurityContext获取（本地直接访问的情况）
         if (currentUsername == null || currentUsername.isEmpty()) {
-            currentUsername = SecurityUtils.getCurrentUsername()
-                    .orElseThrow(() -> new APIException("当前用户未登录"));
+            throw new APIException("当前用户未登录");
         }
         
         log.info("updatePerson - 当前用户名: {}", currentUsername);
