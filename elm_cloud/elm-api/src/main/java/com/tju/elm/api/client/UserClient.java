@@ -36,7 +36,7 @@ public interface UserClient{
     HttpResult<List<DeliveryAddress>> gainAddressListByIds(@RequestBody Set<Long> addressIds);
 
     @GetMapping("/api/addresses/getDeliveryAddressById")
-    HttpResult<DeliveryAddress> getDeliveryAddressById(@RequestParam Long id);
+    HttpResult<DeliveryAddress> gainDeliveryAddressById(@RequestParam Long id);
 
 
     @GetMapping("/api/person/id")

@@ -240,7 +240,7 @@ public class MarketingPointsExchangeRuleServiceImpl implements MarketingPointsEx
         }
 
         // 验证地址是否属于当前用户
-        DeliveryAddress address = userClient.getDeliveryAddressById(addressId).getData();
+        DeliveryAddress address = userClient.gainDeliveryAddressById(addressId).getData();
         if (address == null || !address.getUserId().equals(userId)) {
             throw new APIException("ADDRESS_MISSED", "配送地址不存在或不属于当前用户");
         }

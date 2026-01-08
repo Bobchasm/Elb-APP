@@ -24,4 +24,6 @@ public class DeliveryAddress {
     private LocalDateTime updateTime;
     private Long updater;
     private Long userId;
+
+    private User user;
 }

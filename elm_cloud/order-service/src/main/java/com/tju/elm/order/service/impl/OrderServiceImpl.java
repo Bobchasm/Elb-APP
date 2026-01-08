@@ -437,7 +437,7 @@ public class OrderServiceImpl implements OrderService {
         order.setUpdateTime(LocalDateTime.now());
         order.setIsDeleted(false);
 
-        DeliveryAddress deliveryAddress = userClient.getDeliveryAddressById(addressId).getData();
+        DeliveryAddress deliveryAddress = userClient.gainDeliveryAddressById(addressId).getData();
         if (null == deliveryAddress) {
             throw new APIException(ResultCodeEnum.ADDRESS_MISSED);
         }

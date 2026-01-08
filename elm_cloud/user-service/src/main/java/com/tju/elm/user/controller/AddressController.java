@@ -37,7 +37,7 @@ public class AddressController {
 
     @Operation(summary = "根据配送地址id获取地址")
     @GetMapping("/getDeliveryAddressById")
-    public HttpResult<DeliveryAddress> getDeliveryAddressById(Long id)
+    public HttpResult<DeliveryAddress> gainDeliveryAddressById(Long id)
     {
         return addressService.getDeliveryAddressById(id);
     }
