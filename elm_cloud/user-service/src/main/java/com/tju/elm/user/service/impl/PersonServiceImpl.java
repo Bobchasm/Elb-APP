@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import utils.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,8 +41,17 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public Person updatePerson(PersonUpdateDTO updateDTO) {
-        String currentUsername = SecurityUtils.getCurrentUsername()
-                .orElseThrow(() -> new APIException("当前用户未登录"));
+        // 优先从UserContext获取（网关传递的username header）
+        String currentUsername = UserContext.getUsername();
+        
+        // 如果UserContext中没有，再尝试从SecurityContext获取（本地直接访问的情况）
+        if (currentUsername == null || currentUsername.isEmpty()) {
+            currentUsername = SecurityUtils.getCurrentUsername()
+                    .orElseThrow(() -> new APIException("当前用户未登录"));
+        }
+        
+        log.info("updatePerson - 当前用户名: {}", currentUsername);
+        
         User currentUser = userMapper.findByUsernameWithAuthorities(currentUsername);
         if (currentUser == null) {
             throw new APIException("当前用户不存在");

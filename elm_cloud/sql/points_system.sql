@@ -212,13 +212,6 @@ CREATE TABLE `points_expiration_alert_log` (
   INDEX `idx_user_expire` (`user_id`, `expire_date`) USING BTREE COMMENT '用户过期日期联合索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='积分到期预警记录表';
 
--- ----------------------------
--- 9. 扩展orders表字段（积分相关）
--- ----------------------------
-ALTER TABLE `orders` 
-ADD COLUMN `points_used` bigint NULL DEFAULT 0 COMMENT '使用积分数量' AFTER `payment_method`,
-ADD COLUMN `points_amount` bigint NULL DEFAULT 0 COMMENT '获得积分数量' AFTER `points_used`,
-ADD COLUMN `points_discount_amount` decimal(10, 2) NULL DEFAULT 0 COMMENT '积分抵扣的现金金额（元）' AFTER `points_amount`;
 
 -- ----------------------------
 -- 10. 初始化默认积分规则（可选）

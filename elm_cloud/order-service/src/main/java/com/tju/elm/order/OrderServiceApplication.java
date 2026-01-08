@@ -13,7 +13,9 @@ import java.util.TimeZone;
                 "com.tju.elm.order",
                 "filters",
                 "com.tju.elm.api.config",
-                "config"
+                "config",
+                "exception",
+                "result"
         }
 )
 @MapperScan(

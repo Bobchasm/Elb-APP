@@ -12,7 +12,9 @@ import java.util.TimeZone;
         scanBasePackages = {
                 "com.tju.elm.business",
                 "filters",
-                "com.tju.elm.api.config"
+                "com.tju.elm.api.config",
+                "exception",
+                "result"
         }
 )
 @MapperScan(
