@@ -49,7 +49,7 @@ spring:
         - id: point-service
           uri: lb://point-service
           predicates:
-            - Path=/api/points/**
+            - Path=/api/points/**,/api/marketing/**
 
         # 用户服务路由
         - id: user-service
