@@ -14,5 +14,3 @@ elm:
       server-addr: REDACTED_IP:8848
 
 
-server:
-  port: 8888

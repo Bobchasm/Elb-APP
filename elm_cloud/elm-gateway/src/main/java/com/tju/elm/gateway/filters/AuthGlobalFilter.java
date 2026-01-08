@@ -34,9 +34,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         
         String uri = request.getURI().toString();
-        log.info("收到请求 " + uri);
+        String path = request.getPath().toString();
+        log.info("收到请求 URI: {}, Path: {}", uri, path);
 
-        if (isExclude(request.getPath().toString())) {
+        if (isExclude(path)) {
+            log.info("路径 {} 在白名单中,跳过认证", path);
             return chain.filter(exchange);
         }
 
@@ -48,15 +50,15 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                 Authentication authentication = tokenProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 username = authentication.getName();
-                log.debug("set Authentication to security context for '{}', uri: {}", username, uri);
+                log.info("用户 '{}' 认证成功, uri: {}", username, uri);
             } else {
-                log.debug("no valid JWT token found, uri: {}", uri);
+                log.warn("未找到有效的JWT token, uri: {}", uri);
                 ServerHttpResponse serverHttpResponse = exchange.getResponse();
                 serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return serverHttpResponse.setComplete();
             }
         } catch (Exception e) {
-            log.error("Could not set user authentication in security context", e);
+            log.error("认证失败 uri: {}, 错误: {}", uri, e.getMessage(), e);
             ServerHttpResponse serverHttpResponse = exchange.getResponse();
             serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
             return serverHttpResponse.setComplete();
