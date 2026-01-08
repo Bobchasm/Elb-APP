@@ -195,7 +195,7 @@ public class PointsController {
      * 统计即将过期的积分总数
      */
     @GetMapping("/type/count")
-    @Operation(summary = "统计即将过期的积分总数", description = "统计当前用户即将过期的积分总数")
+    @Operation(summary = "按类型统计积分")
     public HttpResult<Long> countPointsByType(@RequestParam String behaviorType) {
         Long userId = getCurrentUserId();
         Long count = marketingPointsRuleService.calculateBehaviorPoints(userId,behaviorType);
