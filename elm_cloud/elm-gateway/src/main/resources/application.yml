@@ -25,13 +25,13 @@ spring:
         - id: food-service
           uri: lb://food-service
           predicates:
-            - Path=/api/carts/**，/api/foods/**
+            - Path=/api/carts/**,/api/foods/**
 
         # 通知服务路由
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/api/notifications/**，/upload/**
+            - Path=/api/notifications/**,/upload/**
 
         # 订单服务路由
         - id: order-service
