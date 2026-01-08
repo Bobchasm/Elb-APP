@@ -160,7 +160,9 @@ public class FoodServiceImpl implements FoodService {
 
     @Override
     public FoodDetailVO getFoodDetailByFoodId(Long foodId) {
-        return foodMapper.selectFoodDetailVOByFoodId(foodId);
+        FoodDetailVO ret = foodMapper.selectFoodDetailVOByFoodId(foodId);
+        ret.setBusinessName(businessClient.gainBusinessById(ret.getBusinessId()).getData().getBusinessName());
+        return ret;
     }
 
     @Override

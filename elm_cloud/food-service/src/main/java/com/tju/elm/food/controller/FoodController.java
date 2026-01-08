@@ -36,7 +36,7 @@ public class FoodController {
     }
 
     @PostMapping("/addItem")
-    @Operation(summary = "(前端用这个)商铺新增商品",description = "管理员可以随便添，商家只能为自己的商铺添")
+    @Operation(summary = "商铺新增商品",description = "管理员可以随便添，商家只能为自己的商铺添")
     //@PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> addFoodItem(@RequestBody FoodCreateDTO foodCreateDTO) {
         return HttpResult.success(foodService.addFoodItem(foodCreateDTO));
@@ -50,7 +50,7 @@ public class FoodController {
     }
 
     @PostMapping("/modifyItem")
-    @Operation(summary = "(前端用这个)商铺修改商品",description = "管理员可以随便改，商家只能为自己的商铺改")
+    @Operation(summary = "商铺修改商品",description = "管理员可以随便改，商家只能为自己的商铺改")
     //@PreAuthorize("hasAuthority('BUSINESS')")
     public HttpResult<Long> modifyFoodItem(@RequestBody FoodUpdateDTO foodUpdateDTO) {
         return HttpResult.success(foodService.modifyFoodMessage(foodUpdateDTO));

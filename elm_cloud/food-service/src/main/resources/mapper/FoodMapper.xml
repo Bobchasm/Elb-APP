@@ -13,11 +13,10 @@
 
 
     <select id="selectFoodItemVOList" resultType="com.tju.elm.food.pojo.vo.FoodItemVO">
-        select f.*, b.business_name
+        select f.*
         from food f
-        left join business b on b.id = f.business_id and b.is_deleted = 0
         <where>
-            f.is_deleted = 0 and b.id = #{businessId}
+            f.is_deleted = 0 and f.business_id = #{businessId}
             <if test="shelveStatus != null">
                 and f.shelve_status = #{shelveStatus}
             </if>
@@ -55,10 +54,8 @@
             f.food_price,
             f.remarks,
             f.business_id,
-            f.shelve_status,
-            b.business_name
+            f.shelve_status
         FROM food f
-                 LEFT JOIN business b ON f.business_id = b.id AND b.is_deleted = 0
         WHERE f.id = #{foodId}
           AND f.is_deleted = 0
           AND f.shelve_status = 1
