@@ -49,11 +49,13 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     public TransactionRecordDetailVO getTransactionRecordDetailByOrder(Long orderId) {
         TransactionRecordDetailVO ret = virtualWalletTransactionMapper.queryTransactionByOrder(orderId);
 
-        User fromUser = userClient.gainUserById(ret.getFromAccount()).getData();
-        ret.setFromAccountName(fromUser != null ? fromUser.getUsername() : null);
+        if (ret != null) {
+            User fromUser = userClient.gainUserById(ret.getFromAccount()).getData();
+            ret.setFromAccountName(fromUser != null ? fromUser.getUsername() : null);
 
-        User toUser = userClient.gainUserById(ret.getToAccount()).getData();
-        ret.setToAccountName(toUser != null ? toUser.getUsername() : null);
+            User toUser = userClient.gainUserById(ret.getToAccount()).getData();
+            ret.setToAccountName(toUser != null ? toUser.getUsername() : null);
+        }
 
         return ret;
     }
