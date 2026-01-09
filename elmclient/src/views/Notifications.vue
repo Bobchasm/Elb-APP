@@ -174,10 +174,9 @@ const initWebSocket = () => {
       return;
     }
     
-    // 创建WebSocket连接
-    const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // 创建WebSocket连接 - 使用userId作为连接标识
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; 
+    const wsUrl = `${wsProtocol}//localhost:8086/ws/${currentUserId}`; 
     
     webSocket.value = new WebSocket(wsUrl);
 
@@ -228,6 +227,20 @@ const initWebSocket = () => {
  * 处理新接收的消息
  */
 const handleNewMessage = (message) => {
+  console.log('Notifications收到WebSocket消息:', message);
+  
+  // 处理订单相关消息(不显示toast,由订单页面处理)
+  if (message.type === 'order_update' || message.type === 'new_order') {
+    console.log('订单消息,不在通知页面显示toast');
+    return; // 订单消息由OrderList/MerchantOrders页面处理
+  }
+  
+  // 处理钱包消息(不显示toast,由钱包页面处理)
+  if (message.type === 'wallet_opened') {
+    console.log('钱包消息,不在通知页面显示toast');
+    return; // 钱包消息由Wallet页面处理
+  }
+  
   // 1. 检查是否为当前用户的消息
   if (message.userId && message.userId !== currentUserId) {
     return;
@@ -240,12 +253,8 @@ const handleNewMessage = (message) => {
     return;
   }
   
-  // 3. 显示即时提示，根据类型调整提示内容
-  let toastContent = `新消息：${message.notificationContent}`;
-  if (message.notificationType === MESSAGE_TYPE.SCORE_EXPIRY) {
-      toastContent = `⚠️ 积分预警：${message.notificationContent}`;
-  }
-  toast.info(toastContent);
+  // 3. 显示即时提示(仅显示"您有新消息啦")
+  toast.info('您有新消息啦');
 
   // 4. 延迟调用接口重新拉取消息列表（保证数据一致性）
   setTimeout(async () => {

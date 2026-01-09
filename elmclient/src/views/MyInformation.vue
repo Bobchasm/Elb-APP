@@ -236,9 +236,9 @@ export default {
             }
 
             try {
-                const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                // 使用userId作为WebSocket连接标识
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+                const wsUrl = `${wsProtocol}//localhost:8086/ws/${userInfo.value.id}`;
 
                 webSocket.value = new WebSocket(wsUrl);
 
@@ -292,25 +292,42 @@ export default {
             }
         });
         const handleNewMessage = (message) => {
-            toast.info(`新消息：${message.content}`);
-            if (message.content.includes('您的成为商家申请已通过审核')) {
-                if (userInfo.value.authorities && Array.isArray(userInfo.value.authorities)) {
-                    const hasBusinessAuth = userInfo.value.authorities.some(auth => auth.name === 'BUSINESS');
-                    if (!hasBusinessAuth) {
-                        userInfo.value.authorities.push({ name: 'BUSINESS' });
-                        const tokenFromLocal = localStorage.getItem('token');
-                        const tokenFromSession = sessionStorage.getItem('token');
-                        const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
-                        storage.setItem('userInfo', JSON.stringify(userInfo.value));
+            console.log('MyInformation收到WebSocket消息:', message);
+            
+            // 处理订单相关消息(不显示toast,由订单页面处理)
+            if (message.type === 'order_update' || message.type === 'new_order') {
+                console.log('订单消息,不在个人信息页面显示toast');
+                return; // 订单消息由OrderList/MerchantOrders页面处理
+            }
+            
+            // 处理钱包消息(不显示toast,由钱包页面处理)
+            if (message.type === 'wallet_opened') {
+                console.log('钱包消息,不在个人信息页面显示toast');
+                return; // 钱包消息由Wallet页面处理
+            }
+            
+            // 处理通知消息(有content字段的消息)
+            if (message.content) {
+                toast.info(`您有新消息啦`);
+                if (message.content.includes('您的成为商家申请已通过审核')) {
+                    if (userInfo.value.authorities && Array.isArray(userInfo.value.authorities)) {
+                        const hasBusinessAuth = userInfo.value.authorities.some(auth => auth.name === 'BUSINESS');
+                        if (!hasBusinessAuth) {
+                            userInfo.value.authorities.push({ name: 'BUSINESS' });
+                            const tokenFromLocal = localStorage.getItem('token');
+                            const tokenFromSession = sessionStorage.getItem('token');
+                            const storage = tokenFromLocal ? localStorage : (tokenFromSession ? sessionStorage : null);
+                            storage.setItem('userInfo', JSON.stringify(userInfo.value));
+                        }
                     }
                 }
+                setTimeout(() => {
+                    checkNewMessages().catch(err => {
+                        console.error('新消息触发重新检查失败:', err);
+                        toast.error('新消息已收到，但加载失败');
+                    });
+                }, 300);
             }
-            setTimeout(() => {
-                checkNewMessages().catch(err => {
-                    console.error('新消息触发重新检查失败:', err);
-                    toast.error('新消息已收到，但加载失败');
-                });
-            }, 300);
         };
         const checkNewMessages = async () => {
             try {

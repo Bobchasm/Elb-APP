@@ -438,22 +438,21 @@ const submitShopAudit = async (id, auditResult) => {
  * 初始化WebSocket连接
  */
 const initWebSocket = () => {
-  // 1. 生成唯一的客户端标识sid（可以使用时间戳+随机数）
-  const sid = `admin-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  // 使用管理员的userId作为WebSocket连接标识
+  if (!currentUser.value?.id) {
+    console.warn('WebSocket初始化失败: 管理员ID不存在');
+    return;
+  }
 
-  // 2. 构造WebSocket连接地址（匹配后端的/ws/{sid}端点）
+  // 构造WebSocket连接地址
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  // 注意：这里的地址需要根据你的后端实际域名/端口修改
-  //const wsUrl = `${wsProtocol}//${window.location.host}/ws/${sid}`;
-  const wsUrl = `${wsProtocol}//localhost:8080/ws/${sid}`;
+  const wsUrl = `${wsProtocol}//localhost:8086/ws/${currentUser.value.id}`;
 
   webSocket.value = new WebSocket(wsUrl);
 
   // 3. 连接成功
   webSocket.value.onopen = () => {
-    console.log(`WebSocket连接成功，客户端标识：${sid}`);
-    // 可以在这里存储sid，用于后续可能的单独消息发送
-    sessionStorage.setItem('websocket_sid', sid);
+    console.log(`WebSocket连接成功，管理员ID：${currentUser.value.id}`);
   };
 
   // 4. 接收消息（保持不变）
@@ -468,14 +467,14 @@ const initWebSocket = () => {
 
   // 5. 连接关闭（保持不变，增加重连逻辑）
   webSocket.value.onclose = (event) => {
-    console.log(`WebSocket连接关闭（sid: ${sid}），正在重连...`, event);
+    console.log(`WebSocket连接关闭，管理员ID: ${currentUser.value.id}，正在重连...`, event);
     // 延迟重连，避免频繁尝试
     setTimeout(initWebSocket, 3000);
   };
 
   // 6. 连接错误（保持不变）
   webSocket.value.onerror = (error) => {
-    console.error(`WebSocket连接错误（sid: ${sid}）:`, error);
+    console.error(`WebSocket连接错误，管理员ID: ${currentUser.value.id}:`, error);
   };
 };
 
@@ -483,9 +482,26 @@ const initWebSocket = () => {
  * 处理WebSocket消息
  */
 const handleWebSocketMessage = (message) => {
+  console.log('AdminHome收到WebSocket消息:', message);
+  
+  // 处理订单相关消息(不显示toast,由订单页面处理)
+  if (message.type === 'order_update' || message.type === 'new_order') {
+    console.log('订单消息,不在管理员页面显示toast');
+    return; // 订单消息由OrderList/MerchantOrders页面处理
+  }
+  
+  // 处理钱包消息(不显示toast,由钱包页面处理)
+  if (message.type === 'wallet_opened') {
+    console.log('钱包消息,不在管理员页面显示toast');
+    return; // 钱包消息由Wallet页面处理
+  }
+  
   const { applicationId, type, userId, username, content } = message;
-  // 提示消息
-  toast.info(content);
+  
+  // 只显示有content字段的消息
+  if (content) {
+    toast.info('您有新消息啦');
+  }
 
   // 1. 商家申请通知（type=0）
   if (type === 0) {

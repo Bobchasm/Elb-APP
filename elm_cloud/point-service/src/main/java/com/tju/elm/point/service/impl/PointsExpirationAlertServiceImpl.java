@@ -3,6 +3,7 @@ package com.tju.elm.point.service.impl;
 import com.tju.elm.api.client.NotificationClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.api.dto.NotificationSendDTO;
+import com.tju.elm.api.dto.WebSocketPushDTO;
 import com.tju.elm.api.po.Person;
 import com.tju.elm.point.mapper.PointsExpirationAlertConfigMapper;
 import com.tju.elm.point.mapper.PointsExpirationAlertLogMapper;
@@ -11,7 +12,6 @@ import com.tju.elm.point.service.PointsExpirationAlertService;
 import com.tju.elm.point.zoo.pojo.entity.PointsExpiration;
 import com.tju.elm.point.zoo.pojo.entity.PointsExpirationAlertConfig;
 import com.tju.elm.point.zoo.pojo.entity.PointsExpirationAlertLog;
-import com.tju.elm.point.zoo.websocket.WebSocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +47,6 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
 //    @Autowired
 //    private NotificationMapper notificationMapper;
 //
-    @Autowired
-    private WebSocketServer webSocketServer;
 
     @Autowired
     private NotificationClient notificationClient;
@@ -239,7 +237,8 @@ public class PointsExpirationAlertServiceImpl implements PointsExpirationAlertSe
                 String wsMessage = String.format("{\"type\": \"points_expiration_alert\", " +
                     "\"notificationId\": %d, \"points\": %d, \"expireDate\": \"%s\"}",
                         notificationId, pointsAmount, expireDate);
-                webSocketServer.sendToClient(userId.toString(), wsMessage);
+
+                notificationClient.pushMessage(new WebSocketPushDTO(userId,wsMessage));
                 log.info("【WebSocket推送】用户ID: {}, 通知ID: {}, 推送成功", userId, notificationId);
             } catch (Exception e) {
                 log.warn("【WebSocket推送】用户ID: {}, 通知ID: {}, 推送失败，错误: {}",

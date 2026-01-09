@@ -2,6 +2,7 @@ package com.tju.elm.order.service.impl;
 
 import com.tju.elm.api.client.*;
 import com.tju.elm.api.dto.TransactionDTO;
+import com.tju.elm.api.dto.WebSocketPushDTO;
 import com.tju.elm.api.po.*;
 import com.tju.elm.api.vo.CartItemVO;
 import com.tju.elm.order.mapper.OrderDetailetMapper;
@@ -13,7 +14,6 @@ import com.tju.elm.order.service.OrderService;
 import com.tju.elm.order.zoo.pojo.vo.*;
 import com.tju.elm.order.zoo.pojo.vo.Order;
 import com.tju.elm.order.zoo.pojo.vo.OrderDetailet;
-import com.tju.elm.order.zoo.websocket.WebSocketServer;
 import exception.APIException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderDetailetMapper orderDetailetMapper;
 
     @Autowired
-    private WebSocketServer webSocketServer;
+    private NotificationClient notificationClient;
 
     @Autowired
     private OrderMessageService orderMessageService;
@@ -359,14 +359,24 @@ public class OrderServiceImpl implements OrderService {
         if (order1.getBusinessId() != null) {
             Business business1 = businessClient.gainBusinessById(order1.getBusinessId()).getData();
             if (business1 != null && business1.getUserId() != null) {
-                webSocketServer.sendToClient(business1.getUserId().toString(),
-                        "{\"type\": \"order_update\", \"orderId\": " + orderId + "}");
+                WebSocketPushDTO pushDTO = new WebSocketPushDTO();
+                pushDTO.setUserId(business1.getUserId());
+                pushDTO.setMessage(String.format(
+                    "{\"type\": \"order_update\", \"orderId\": %d, \"orderState\": %d}",
+                    orderId, orderState
+                ));
+                notificationClient.pushMessage(pushDTO);
             }
         }
         // 2. 推送给顾客（订单的customerId）
         if (order1.getCustomerId() != null) {
-            webSocketServer.sendToClient(order1.getCustomerId().toString(),
-                    "{\"type\": \"order_update\", \"orderId\": " + orderId + "}");
+            WebSocketPushDTO pushDTO = new WebSocketPushDTO();
+            pushDTO.setUserId(order1.getCustomerId());
+            pushDTO.setMessage(String.format(
+                "{\"type\": \"order_update\", \"orderId\": %d, \"orderState\": %d}",
+                orderId, orderState
+            ));
+            notificationClient.pushMessage(pushDTO);
         }
 
         return order.getId();
@@ -440,24 +450,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Long orderSubmit(Long businessId,Long addressId) {
-        log.info("📦 ========== 开始提交订单 ==========");
-        log.info("📦 businessId: {}", businessId);
-        log.info("📦 addressId: {}", addressId);
-        
         // 商家是否存在
         Business business = businessClient.gainBusinessById(businessId).getData();
         if (null == business) {
-            log.error("❌ 商家不存在: {}", businessId);
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
-        log.info("✅ 商家信息获取成功: {}", business.getBusinessName());
 
         // 设置订单信息
         Long userId = getCurrentUserId();
-        log.info("👤 当前用户ID: {}", userId);
         
         List<CartItemVO> cartItemsInBusiness = foodClient.listCartItem(businessId).getData();
-        log.info("🛒 购物车商品数量: {}", cartItemsInBusiness.size());
         
         Order order = new Order();
         order.setBusinessId(businessId);
@@ -474,10 +476,8 @@ public class OrderServiceImpl implements OrderService {
 
         DeliveryAddress deliveryAddress = userClient.gainDeliveryAddressById(addressId).getData();
         if (null == deliveryAddress) {
-            log.error("❌ 地址不存在: {}", addressId);
             throw new APIException(ResultCodeEnum.ADDRESS_MISSED);
         }
-        log.info("✅ 配送地址获取成功: {}", deliveryAddress.getAddress());
         
         order.setAddress(deliveryAddress.getAddress());
         order.setContactName(deliveryAddress.getContactName());
@@ -491,7 +491,6 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (totalPrice == 0.0) {
-            log.error("❌ 订单总价为0");
             throw new APIException(ResultCodeEnum.ORDER_SUBMIT_FAILED);
         }
         totalPrice += business.getDeliveryPrice().doubleValue();
@@ -501,11 +500,9 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderTotal(price.setScale(2, RoundingMode.HALF_UP));
         // 订单保存当前商家配送费,避免商家修改导致的不一致
         order.setDeliveryPrice(business.getDeliveryPrice());
-        log.info("💰 订单总价: {}", order.getOrderTotal());
 
         // 插入订单数据到数据库
         ordersMapper.insertOrderPlus(order);
-        log.info("✅ 订单插入成功, 订单ID: {}", order.getId());
 
         // 插入订单详情
         for (CartItemVO cartItemVO : cartItemsInBusiness) {
@@ -526,13 +523,23 @@ public class OrderServiceImpl implements OrderService {
 
             orderDetailetMapper.saveOrderDetailPlus(orderDetailet);
         }
-        log.info("✅ 订单详情插入成功");
 
         // 清空该用户在当前商家的购物车
         foodClient.clearCart(businessId);
-        log.info("✅ 购物车已清空");
 
-        log.info("🎉 ========== 订单提交成功, 返回orderID: {} ==========", order.getId());
+        // 推送WebSocket消息给商家，通知有新订单
+        if (business.getUserId() != null) {
+            try {
+                WebSocketPushDTO pushDTO = new WebSocketPushDTO();
+                pushDTO.setUserId(business.getUserId());
+                pushDTO.setMessage("{\"type\": \"new_order\", \"orderId\": " + order.getId() + ", \"businessId\": " + businessId + "}");
+                notificationClient.pushMessage(pushDTO);
+                log.info("已推送新订单消息给商家, 商家userID: {}, 订单ID: {}", business.getUserId(), order.getId());
+            } catch (Exception e) {
+                log.error("推送新订单消息失败: businessId={}, orderId={}, error={}", businessId, order.getId(), e.getMessage());
+            }
+        }
+
         return order.getId();
     }
     

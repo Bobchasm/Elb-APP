@@ -6,6 +6,7 @@ import com.tju.elm.api.client.NotificationClient;
 import com.tju.elm.api.client.OrderClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.api.dto.NotificationSendDTO;
+import com.tju.elm.api.dto.WebSocketPushDTO;
 import com.tju.elm.api.po.User;
 import com.tju.elm.business.mapper.BusinessMapper;
 import com.tju.elm.business.mapper.MerchantInteractionMapper;
@@ -18,7 +19,6 @@ import com.tju.elm.business.pojo.vo.BusinessSearchVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 import com.tju.elm.business.service.BusinessService;
 import com.tju.elm.business.pojo.vo.BusinessVO;
-import com.tju.elm.business.websocket.WebSocketServer;
 import exception.APIException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -47,9 +47,6 @@ public class BusinessServiceImpl implements BusinessService {
     private final BusinessMapper businessMapper;
     @Autowired
     private UserClient userClient;
-
-    @Autowired
-    private WebSocketServer webSocketServer;
 
     @Autowired
     private NotificationClient notificationClient;
@@ -536,7 +533,7 @@ public class BusinessServiceImpl implements BusinessService {
         message.put("content", "商家[" + username + "]申请开店，请及时审核");
 
         // 调用WebSocket服务群发消息（管理员客户端会监听该消息）
-        webSocketServer.sendToAllClient(message.toJSONString());
+        notificationClient.pushMessage(new WebSocketPushDTO(null,message.toJSONString()));
     }
 
     /**
@@ -560,7 +557,7 @@ public class BusinessServiceImpl implements BusinessService {
             message.put("content", content);
         }
         message.put("userId", userId);
-        webSocketServer.sendToAllClient(message.toJSONString());
+        notificationClient.pushMessage(new WebSocketPushDTO(userId,message.toJSONString()));
 
         notification.setReceiverId(userId); // 接收消息的用户ID
         notification.setType(type); // 0=商家申请，1=开店申请
@@ -587,7 +584,9 @@ public class BusinessServiceImpl implements BusinessService {
             message.put("content", content);
         }
         message.put("userId", userId);
-        webSocketServer.sendToAllClient(message.toJSONString());
+
+        notificationClient.pushMessage(new WebSocketPushDTO(userId,message.toJSONString()));
+
         notification.setReceiverId(userId); // 接收消息的用户ID
         notification.setType(type); // 0=商家申请，1=开店申请
         notification.setAuditResult(String.valueOf(2)); // 1=通过，2=拒绝

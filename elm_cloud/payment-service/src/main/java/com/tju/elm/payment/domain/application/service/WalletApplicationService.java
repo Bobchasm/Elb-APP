@@ -1,10 +1,8 @@
 package com.tju.elm.payment.domain.application.service;
 
-import com.tju.elm.api.client.BusinessClient;
-import com.tju.elm.api.client.OrderClient;
-import com.tju.elm.api.client.PointClient;
-import com.tju.elm.api.client.UserClient;
+import com.tju.elm.api.client.*;
 import com.tju.elm.api.dto.TransactionDTO;
+import com.tju.elm.api.dto.WebSocketPushDTO;
 import com.tju.elm.api.po.Business;
 import com.tju.elm.api.po.Order;
 import com.tju.elm.api.po.PointsExchangeOrder;
@@ -59,6 +57,8 @@ public class WalletApplicationService {
     private PointClient pointClient;
     @Autowired
     private BusinessClient businessClient;
+    @Autowired
+    private NotificationClient notificationClient;
 
 
     public final static float RECHARGE_RATE = 0.01f;

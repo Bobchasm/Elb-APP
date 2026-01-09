@@ -3,6 +3,7 @@ package com.tju.elm.user.service.impl;
 import com.alibaba.fastjson.JSONException;
 import com.tju.elm.api.client.NotificationClient;
 import com.tju.elm.api.dto.NotificationSendDTO;
+import com.tju.elm.api.dto.WebSocketPushDTO;
 import com.tju.elm.user.mapper.AuthorityMapper;
 import com.tju.elm.user.mapper.PermissionApplicationMapper;
 import com.tju.elm.user.mapper.UserAuthorityMapper;
@@ -13,11 +14,8 @@ import com.tju.elm.user.zoo.pojo.entity.Authority;
 import com.tju.elm.user.zoo.pojo.entity.PermissionApplication;
 import com.tju.elm.user.zoo.pojo.entity.User;
 import com.tju.elm.user.zoo.pojo.vo.MerchantApplicationsVO;
-import com.tju.elm.user.zoo.utils.SecurityUtils;
-import com.tju.elm.user.zoo.websocket.WebSocketServer;
 import exception.APIException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSONObject;
@@ -37,9 +35,6 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
 
     @Autowired
     private UserMapper userMapper;
-
-    @Autowired
-    private WebSocketServer webSocketServer; // 注入WebSocket服务
 
     @Autowired
     private AuthorityMapper authorityMapper;
@@ -200,7 +195,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
             message.put("content", content);
         }
         message.put("userId", userId);
-        webSocketServer.sendToAllClient(message.toJSONString());
+        notificationClient.pushMessage(new WebSocketPushDTO(userId,message.toJSONString()));
 
         notification.setReceiverId(userId); // 接收消息的用户ID
         notification.setType(type); // 0=商家申请，1=开店申请
@@ -227,7 +222,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
             message.put("content", content);
         }
         message.put("userId", userId);
-        webSocketServer.sendToAllClient(message.toJSONString());
+        notificationClient.pushMessage(new WebSocketPushDTO(userId,message.toJSONString()));
         notification.setReceiverId(userId); // 接收消息的用户ID
         notification.setType(type); // 0=商家申请，1=开店申请
         notification.setAuditResult(String.valueOf(2)); // 1=通过，2=拒绝
@@ -249,7 +244,7 @@ public class PermissionApplicationServiceImpl implements PermissionApplicationSe
         message.put("content", "用户[" + username + "]申请成为商家，请及时审核");
 
         // 调用WebSocket服务群发消息（管理员客户端会监听该消息）
-        webSocketServer.sendToAllClient(message.toJSONString());
+        notificationClient.pushMessage(new WebSocketPushDTO(null,message.toJSONString()));
     }
 
 }

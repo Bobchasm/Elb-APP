@@ -334,7 +334,7 @@ export default {
       if (!userId.value) return;
 
       // 连接WebSocket（假设后端地址是 ws://localhost:8080/ws/{userId}）
-      socket.value = new WebSocket(`ws://localhost:8080/ws/${userId.value}`);
+      socket.value = new WebSocket(`ws://localhost:8086/ws/${userId.value}`);
 
       socket.value.onopen = () => {
         console.log("WebSocket 连接成功");
@@ -343,8 +343,31 @@ export default {
       socket.value.onmessage = (event) => {
         const message = JSON.parse(event.data);
         console.log("收到WebSocket消息:", message);
-        // 收到消息后，刷新订单列表
-        fetchOrders();
+        
+        // 处理订单状态更新消息
+        if (message.type === 'order_update') {
+          console.log("🔄 订单状态更新, 订单ID:", message.orderId, ", 新状态:", message.orderState);
+          
+          // 根据订单状态显示不同提示
+          // 0-待支付,1-待接单,2-已接单,3-已完成,4-已取消
+          const statusMessages = {
+            0: '订单待支付',
+            1: '订单已支付，等待商家接单',
+            2: '商家已接单，正在配送',
+            3: '订单已完成',
+            4: '订单已取消'
+          };
+          
+          const statusMsg = statusMessages[message.orderState] || '订单状态已更新';
+          toast.info(statusMsg);
+          
+          // 刷新订单列表
+          fetchOrders();
+        }
+        // 其他消息也刷新列表
+        else {
+          fetchOrders();
+        }
       };
 
       socket.value.onclose = () => {
