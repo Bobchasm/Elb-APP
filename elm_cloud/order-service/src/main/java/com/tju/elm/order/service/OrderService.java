@@ -5,6 +5,7 @@ import com.tju.elm.order.zoo.pojo.dto.CreateOrderDTO;
 import com.tju.elm.order.zoo.pojo.vo.Order;
 import com.tju.elm.order.zoo.pojo.vo.OrderItemDetailVO;
 import com.tju.elm.order.zoo.pojo.vo.OrderItemVO;
+import com.tju.elm.order.zoo.pojo.vo.OrderVO;
 
 import java.util.List;
 
@@ -36,4 +37,6 @@ public interface OrderService {
     void autoCompleteOrders();
 
     boolean create(CreateOrderDTO orderCreateDTO);
+
+    OrderVO getOrderById(Long orderId);
 }

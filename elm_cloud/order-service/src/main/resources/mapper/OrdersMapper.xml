@@ -5,13 +5,26 @@
 
 <mapper namespace="com.tju.elm.order.mapper.OrdersMapper">
 
-<!--    <select id="selectBusinessUserAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">-->
-<!--        SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{business_user_id}-->
-<!--    </select>-->
+    <resultMap id="orderVOResultMap" type="com.tju.elm.order.zoo.pojo.vo.OrderVO">
+        <id property="id" column="id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="creator" column="creator"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="updater" column="updater"/>
+        <result property="orderDate" column="order_date"/>
+        <result property="orderState" column="order_state"/>
+        <result property="orderTotal" column="order_total"/>
+        <result property="pointsUsed" column="points_used"/>
+        <result property="pointsAmount" column="points_amount"/>
+        <result property="pointsDiscountAmount" column="points_discount_amount"/>
+    </resultMap>
 
-<!--    <select id="selectCustomerUserAuthoritiesByUserId" resultType="com.tju.elm_bk.pojo.entity.Authority">-->
-<!--        SELECT ua.authority_name as name FROM user_authority ua WHERE ua.user_id = #{customer_id}-->
-<!--    </select>-->
+    <select id="selectOrderById" resultMap="orderVOResultMap">
+        SELECT O.*
+        FROM orders O
+        WHERE O.id =#{orderId} AND O.is_deleted = 0
+    </select>
 
     <insert id="insertOrderPlus" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO orders (create_time, creator, is_deleted, update_time, updater, order_date, order_state, order_total, business_id, customer_id, address_id,delivery_price,address,contact_sex,contact_name,contact_tel)

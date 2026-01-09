@@ -6,6 +6,7 @@ import com.tju.elm.order.zoo.pojo.vo.Order;
 import com.tju.elm.order.zoo.pojo.vo.OrderItemDetailVO;
 import com.tju.elm.order.zoo.pojo.vo.OrderItemVO;
 import com.tju.elm.order.service.OrderService;
+import com.tju.elm.order.zoo.pojo.vo.OrderVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.ibatis.annotations.Param;
@@ -23,6 +24,13 @@ public class OrderController {
     private OrderService orderService;
     @Autowired
     private OrdersMapper ordersMapper;
+
+
+    @GetMapping("/{id}")
+    @Operation(summary = "根据id获取用户订单")
+    public HttpResult<OrderVO> getOrderById(@PathVariable Long id) {
+        return HttpResult.success(orderService.getOrderById(id));
+    }
 
 
     @GetMapping("/list/business")

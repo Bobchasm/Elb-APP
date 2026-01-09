@@ -54,10 +54,8 @@ public interface OrdersMapper {
 
     @Select("""
         <script>
-            select o.*, uc.username as customerName, b.business_name,b.business_img
+            select o.*
             from orders o
-            left join users uc on uc.id = o.customer_id
-            left join business b on b.id = o.business_id
             where o.is_deleted = 0 and o.id = #{orderItemId}
         </script>
     """)
@@ -108,4 +106,5 @@ public interface OrdersMapper {
     @Select("SELECT COUNT(*) FROM `orders` WHERE business_id = #{businessId} AND order_state = 3 AND is_deleted = 0")
     Integer getSalesCount(@Param("businessId") Long businessId);
 
+    OrderVO selectOrderById(Long orderId);
 }

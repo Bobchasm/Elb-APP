@@ -54,15 +54,24 @@ public class PointsController {
 
     @Autowired
     private PointsExchangeOrderMapper pointsExchangeOrderMapper;
-    
+
     @Autowired
     private UserClient userClient;
 
     @Autowired
     private MarketingPointsRuleService marketingPointsRuleService;
 
-    
-    
+    /**
+     * 查询积分账户
+     */
+    @GetMapping("/account")
+    @Operation(summary = "查询积分账户", description = "查询当前用户的积分账户信息")
+    public HttpResult<PointsAccountVO> getAccount() {
+        Long userId = getCurrentUserId();
+        PointsAccountVO account = pointsService.getPointsAccount(userId);
+        return HttpResult.success(account);
+    }
+
     @GetMapping("/account/create")
     @Operation(summary = "创建积分账户")
     public HttpResult<Long> createAccount(@RequestParam Long userId) {
@@ -80,11 +89,11 @@ public class PointsController {
         pointsAccount.setIsDeleted(false);
         pointsAccountMapper.insert(pointsAccount);
         log.info("为新用户 {} 创建积分账户成功，账户ID: {}", userId, pointsAccount.getId());
-        
+
         return HttpResult.success(pointsAccount.getId());
     }
-    
-    
+
+
     /**
      * 查询积分明细
      */

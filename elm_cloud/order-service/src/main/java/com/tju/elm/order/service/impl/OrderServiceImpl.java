@@ -64,6 +64,25 @@ public class OrderServiceImpl implements OrderService {
         orderStatusList = List.of(0,1,2,3,4);
     }
 
+
+    @Override
+    public OrderVO getOrderById(Long orderId) {
+        OrderVO ret = ordersMapper.selectOrderById(orderId);
+        if (ret == null) {
+            throw new APIException(ResultCodeEnum.ORDER_MISSED);
+        }
+
+        Business business = businessClient.gainBusinessById(ret.getBusinessId()).getData();
+        User customerUser = userClient.gainUserById(ret.getCustomerId()).getData();
+        DeliveryAddress deliveryAddress = userClient.gainDeliveryAddressById(ret.getAddressId()).getData();
+
+        ret.setBusiness(business);
+        ret.setCustomer(customerUser);
+        ret.setDeliveryAddress(deliveryAddress);
+
+        return ret;
+    }
+
     @Override
     public List<OrderItemDetailVO> getOrderItemListByBusiness(Long businessId, Integer orderState) {
         List<OrderItemDetailVO> ret = ordersMapper.selectOrderDetailetItem(businessId, orderState);
@@ -164,6 +183,12 @@ public class OrderServiceImpl implements OrderService {
         OrderItemDetailVO ret = ordersMapper.selectOrderItemById(orderItemId);
 
         ret.setFoodList(orderDetailetMapper.selectOrderDetailList(orderItemId));
+        Business business = businessClient.gainBusinessById(ret.getBusinessId()).getData();
+        User user = userClient.gainUserById(ret.getCustomerId()).getData();
+        ret.setCustomerName(user.getUsername());
+        ret.setBusinessName(business.getBusinessName());
+        ret.setBusinessImg(business.getBusinessImg());
+
         return ret;
     }
 
@@ -415,15 +440,25 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Long orderSubmit(Long businessId,Long addressId) {
+        log.info("📦 ========== 开始提交订单 ==========");
+        log.info("📦 businessId: {}", businessId);
+        log.info("📦 addressId: {}", addressId);
+        
         // 商家是否存在
         Business business = businessClient.gainBusinessById(businessId).getData();
         if (null == business) {
+            log.error("❌ 商家不存在: {}", businessId);
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
+        log.info("✅ 商家信息获取成功: {}", business.getBusinessName());
 
         // 设置订单信息
         Long userId = getCurrentUserId();
+        log.info("👤 当前用户ID: {}", userId);
+        
         List<CartItemVO> cartItemsInBusiness = foodClient.listCartItem(businessId).getData();
+        log.info("🛒 购物车商品数量: {}", cartItemsInBusiness.size());
+        
         Order order = new Order();
         order.setBusinessId(businessId);
         order.setOrderDate(LocalDateTime.now());
@@ -439,8 +474,11 @@ public class OrderServiceImpl implements OrderService {
 
         DeliveryAddress deliveryAddress = userClient.gainDeliveryAddressById(addressId).getData();
         if (null == deliveryAddress) {
+            log.error("❌ 地址不存在: {}", addressId);
             throw new APIException(ResultCodeEnum.ADDRESS_MISSED);
         }
+        log.info("✅ 配送地址获取成功: {}", deliveryAddress.getAddress());
+        
         order.setAddress(deliveryAddress.getAddress());
         order.setContactName(deliveryAddress.getContactName());
         order.setContactSex(deliveryAddress.getContactSex());
@@ -453,6 +491,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (totalPrice == 0.0) {
+            log.error("❌ 订单总价为0");
             throw new APIException(ResultCodeEnum.ORDER_SUBMIT_FAILED);
         }
         totalPrice += business.getDeliveryPrice().doubleValue();
@@ -462,9 +501,11 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderTotal(price.setScale(2, RoundingMode.HALF_UP));
         // 订单保存当前商家配送费,避免商家修改导致的不一致
         order.setDeliveryPrice(business.getDeliveryPrice());
+        log.info("💰 订单总价: {}", order.getOrderTotal());
 
         // 插入订单数据到数据库
         ordersMapper.insertOrderPlus(order);
+        log.info("✅ 订单插入成功, 订单ID: {}", order.getId());
 
         // 插入订单详情
         for (CartItemVO cartItemVO : cartItemsInBusiness) {
@@ -485,10 +526,13 @@ public class OrderServiceImpl implements OrderService {
 
             orderDetailetMapper.saveOrderDetailPlus(orderDetailet);
         }
+        log.info("✅ 订单详情插入成功");
 
         // 清空该用户在当前商家的购物车
         foodClient.clearCart(businessId);
+        log.info("✅ 购物车已清空");
 
+        log.info("🎉 ========== 订单提交成功, 返回orderID: {} ==========", order.getId());
         return order.getId();
     }
     

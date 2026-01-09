@@ -2,6 +2,10 @@ package com.tju.elm.order.zoo.pojo.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.rabbitmq.client.Address;
+import com.tju.elm.api.po.Business;
+import com.tju.elm.api.po.DeliveryAddress;
+import com.tju.elm.api.po.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,6 +39,20 @@ public class OrderVO {
     @Schema(description = "是否删除")
     private Boolean isDeleted;
 
+    @Schema(description = "商铺Id")
+    private Long businessId;
+
+    @Schema(description = "顾客信息id")
+    private Long customerId;
+
+    @Schema(description = "地址id")
+    private Long addressId;
+
+    @Schema(description = "顾客信息对象")
+    private User customer;
+
+    @Schema(description = "所属商家")
+    private Business business;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "下单时间")
@@ -46,6 +64,8 @@ public class OrderVO {
     @Schema(description = "订单状态（0-待支付，1-已支付，2-已取消，3-已完成）")
     private Integer orderState;
 
+    @Schema(description = "地址对象")
+    private DeliveryAddress deliveryAddress;
 
     @Schema(description = "使用积分数量")
     private Long pointsUsed;

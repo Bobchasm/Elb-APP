@@ -46,7 +46,7 @@ public interface BusinessMapper {
     List<BusinessVO> getBusinesses();
 
     @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
-    BusinessVO selectBusinessVO(Long businessId);
+    Business selectBusinessVO(Long businessId);
 
     @Select("SELECT b.* FROM business b WHERE b.id = #{businessId)}")
     Business selectBusinessById(Long businessId);
