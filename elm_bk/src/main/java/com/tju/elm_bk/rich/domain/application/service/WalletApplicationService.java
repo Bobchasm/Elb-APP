@@ -117,20 +117,40 @@ public class WalletApplicationService {
         return wallet;
     }
 
+    /**
+     * 支付订单
+     * 使用悲观锁保证并发安全
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
     public Boolean payOrder(Long orderId) {
         User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        Order order = ordersMapper.getOrderById(orderId);
+        
+        // 悲观锁查询订单，防止并发支付
+        Order order = ordersMapper.getOrderByIdForUpdate(orderId);
         if (null == order) {
             throw new APIException(ResultCodeEnum.ORDER_MISSED);
         }
+        
+        // 校验订单状态，防止重复支付
+        if (order.getOrderState() != null && order.getOrderState() != 0) {
+            throw new APIException(ResultCodeEnum.ORDER_ALREADY_PAID);
+        }
+        
+        // 查询商家信息
         Business business = businessMapper.selectBusinessById(order.getBusinessId());
         if (null == business) {
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
+        
+        // 查询商家钱包
         Wallet toWallet = walletRepository.findByUserId(business.getUserId());
         if (null == toWallet) {
             throw new APIException(ResultCodeEnum.TOUSER_VIRTUAL_WALLET_MISSED);
         }
+        
+        // 查询用户钱包
         Wallet fromWallet = walletRepository.findByUserId(user.getId());
         if (null == fromWallet) {
             throw new APIException(ResultCodeEnum.VIRTUAL_WALLET_MISSED);
@@ -146,7 +166,7 @@ public class WalletApplicationService {
             loanRepository.load(loan);
         }
 
-        // 交易，此时商家账户还未进账，金额暂留在交易中
+        // 创建交易记录，此时商家账户还未进账，金额暂留在交易中
         Transaction transaction = new Transaction(TransactionType.PAYMENT,order.getOrderTotal(),fromWallet.getId(),toWallet.getId(), BigDecimal.ZERO,1);
         transactionRepository.payOrder(transaction,orderId);
         // 设置订单已支付状态

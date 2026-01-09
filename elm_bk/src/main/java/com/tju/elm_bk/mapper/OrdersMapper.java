@@ -95,6 +95,13 @@ public interface OrdersMapper {
 
     @Select("select * from orders where id = #{orderId}")
     Order getOrderById(Long orderId);
+    
+    /**
+     * 使用悲观锁查询订单（FOR UPDATE）
+     * 用于支付等需要并发控制的场景
+     */
+    @Select("select * from orders where id = #{orderId} FOR UPDATE")
+    Order getOrderByIdForUpdate(Long orderId);
 
     @Select("select sum(order_total) from orders where order_state = 3 and is_deleted = 0")
     Double countPrice();
