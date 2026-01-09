@@ -119,15 +119,13 @@ public class WalletApplicationService {
 
     /**
      * 支付订单
-     * 使用悲观锁保证并发安全
      * @param orderId 订单ID
      * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public Boolean payOrder(Long orderId) {
         User user = userMapper.findByUsernameWithAuthorities(SecurityUtils.getCurrentUsername().orElseThrow(() -> new APIException(ResultCodeEnum.VALUE_MISSED)));
-        
-        // 悲观锁查询订单，防止并发支付
+
         Order order = ordersMapper.getOrderByIdForUpdate(orderId);
         if (null == order) {
             throw new APIException(ResultCodeEnum.ORDER_MISSED);
