@@ -1,5 +1,6 @@
 package com.tju.elm.point.service.impl;
 
+import com.tju.elm.api.client.OrderClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.MarketingPointsRuleFoodMapper;
 import com.tju.elm.point.mapper.MarketingPointsRuleMapper;
@@ -54,6 +55,9 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
 
     @Autowired
     private UserClient userClient;
+
+    @Autowired
+    private OrderClient orderClient;
     
 //    @Autowired
 //    private OrdersMapper ordersMapper;
@@ -222,114 +226,114 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         return voList;
     }
 
-//    /**
-//     * 根据订单信息计算应获得积分
-//     * 设计原则：依赖注入 - 调用PointsService接口增加积分
-//     */
-//    @Override
-//    @Transactional
-//    public Long calculatePoints(Long userId, Long orderId, BigDecimal orderAmount,
-//                               LocalDateTime orderDate, List<Long> foodIds) {
-//        log.info("========== 开始计算订单积分 ==========");
-//        log.info("订单ID: {}, 用户ID: {}, 订单金额: {}元, 订单日期: {}, 商品ID列表: {}",
-//            orderId, userId, orderAmount, orderDate, foodIds);
-//
-//        // 1. 查询用户会员等级
-//        PointsAccount account = pointsAccountMapper.selectByUserId(userId);
-//        Integer memberLevel = (account != null) ? account.getMemberLevel() : 0;
-//        log.info("用户会员等级: {} ({})", memberLevel, getMemberLevelName(memberLevel));
-//
-//        // 2. 查询基础消费积分规则
-//        MarketingPointsRule baseRule = marketingPointsRuleMapper.selectBaseConsumptionRule(memberLevel);
-//        Long basePoints = 0L;
-//        if (baseRule != null && baseRule.getPointsRatio() != null) {
-//            basePoints = orderAmount.multiply(baseRule.getPointsRatio())
-//                .setScale(0, RoundingMode.DOWN).longValue();
-//            log.info("【基础消费积分规则】规则ID: {}, 规则名称: {}, 积分比例: {}, 会员等级: {}, 计算出的基础积分: {}",
-//                baseRule.getId(), baseRule.getRuleName(), baseRule.getPointsRatio(),
-//                baseRule.getMemberLevel(), basePoints);
-//        } else {
-//            log.warn("【基础消费积分规则】未找到匹配的规则（会员等级: {}）", memberLevel);
-//        }
-//
-//        // 3. 查询促销积分规则
-//        LocalDate orderDateLocal = orderDate.toLocalDate();
-//        List<MarketingPointsRule> promotionRules = marketingPointsRuleMapper.selectPromotionRules(
-//            orderDateLocal, orderAmount, foodIds, memberLevel);
-//
-//        Long promotionPoints = 0L;
-//        if (!promotionRules.isEmpty()) {
-//            // 取最高优先级的促销规则
-//            MarketingPointsRule topRule = promotionRules.get(0);
-//            log.info("【促销积分规则】使用最高优先级规则: ID={}, 名称={}, 优先级={}, 倍数={}",
-//                topRule.getId(), topRule.getRuleName(), topRule.getPriority(), topRule.getPointsMultiplier());
-//
-//            if (topRule.getPointsMultiplier() != null && basePoints > 0) {
-//                BigDecimal basePointsDecimal = BigDecimal.valueOf(basePoints);
-//                promotionPoints = basePointsDecimal.multiply(
-//                    topRule.getPointsMultiplier().subtract(BigDecimal.ONE))
-//                    .setScale(0, RoundingMode.DOWN).longValue();
-//                log.info("【促销积分计算】基础积分: {}, 倍数: {}, 额外积分: {}, 计算出的促销积分: {}",
-//                    basePoints, topRule.getPointsMultiplier(),
-//                    topRule.getPointsMultiplier().subtract(BigDecimal.ONE), promotionPoints);
-//            } else {
-//                log.warn("【促销积分计算】跳过计算，原因: 倍数={}, 基础积分={}",
-//                    topRule.getPointsMultiplier(), basePoints);
-//            }
-//        } else {
-//            log.info("【促销积分规则】未找到匹配的促销规则");
-//        }
-//
-//        // 4. 查询等级积分规则
-//        MarketingPointsRule levelRule = marketingPointsRuleMapper.selectLevelRule(memberLevel);
-//        Long levelPoints = 0L;
-//        if (levelRule != null && levelRule.getPointsRatio() != null) {
-//            levelPoints = orderAmount.multiply(levelRule.getPointsRatio())
-//                .setScale(0, RoundingMode.DOWN).longValue();
-//            log.info("【等级积分规则】规则ID: {}, 规则名称: {}, 积分比例: {}, 会员等级: {}, 计算出的等级积分: {}",
-//                levelRule.getId(), levelRule.getRuleName(), levelRule.getPointsRatio(),
-//                levelRule.getMemberLevel(), levelPoints);
-//        } else {
-//            log.warn("【等级积分规则】未找到匹配的规则（会员等级: {}）", memberLevel);
-//        }
-//
-//        // 5. 计算总积分（基础积分 + 促销积分 + 等级积分）
-//        Long totalPoints = basePoints + promotionPoints + levelPoints;
-//        log.info("【积分汇总】基础积分: {}, 促销积分: {}, 等级积分: {}, 总积分: {}",
-//            basePoints, promotionPoints, levelPoints, totalPoints);
-//
-//        // 6. 如果积分大于0，调用积分系统增加积分
-//        if (totalPoints > 0) {
-//            PointsAddDTO addDTO = new PointsAddDTO();
-//            addDTO.setUserId(userId);
-//            addDTO.setPoints(totalPoints);
-//            addDTO.setPointsSource(0); // 0-消费积分
-//            addDTO.setRelatedOrderId(orderId);
-//            addDTO.setDescription("订单消费获得积分");
-//
-//            // 计算过期时间（所有积分都必须有有效期）
-//            // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
-//            Integer expireDays = (baseRule != null && baseRule.getExpireDays() != null)
-//                ? baseRule.getExpireDays() : 30; // 默认30天有效期
-//            addDTO.setExpireTime(orderDate.plusDays(expireDays));
-//
-//            log.info("【积分添加】准备添加积分: 用户ID={}, 积分数量={}, 过期天数={}, 过期时间={}",
-//                userId, totalPoints, expireDays, addDTO.getExpireTime());
-//
-//            pointsService.addPoints(addDTO);
-//
-//            // 更新订单的获得积分数量
-//            ordersMapper.updateOrderPointsAmount(orderId, totalPoints);
-//            log.info("【订单更新】已更新订单 {} 的获得积分数量为 {}", orderId, totalPoints);
-//        } else {
-//            // 如果没有获得积分，也要更新订单的points_amount为0
-//            ordersMapper.updateOrderPointsAmount(orderId, 0L);
-//            log.warn("【积分添加】订单 {} 未获得积分，总积分为0", orderId);
-//        }
-//
-//        log.info("========== 订单积分计算完成，总积分: {} ==========", totalPoints);
-//        return totalPoints;
-//    }
+    /**
+     * 根据订单信息计算应获得积分
+     * 设计原则：依赖注入 - 调用PointsService接口增加积分
+     */
+    @Override
+    @Transactional
+    public Long calculatePoints(Long userId, Long orderId, BigDecimal orderAmount,
+                               LocalDateTime orderDate, List<Long> foodIds) {
+        log.info("========== 开始计算订单积分 ==========");
+        log.info("订单ID: {}, 用户ID: {}, 订单金额: {}元, 订单日期: {}, 商品ID列表: {}",
+            orderId, userId, orderAmount, orderDate, foodIds);
+
+        // 1. 查询用户会员等级
+        PointsAccount account = pointsAccountMapper.selectByUserId(userId);
+        Integer memberLevel = (account != null) ? account.getMemberLevel() : 0;
+        log.info("用户会员等级: {} ({})", memberLevel, getMemberLevelName(memberLevel));
+
+        // 2. 查询基础消费积分规则
+        MarketingPointsRule baseRule = marketingPointsRuleMapper.selectBaseConsumptionRule(memberLevel);
+        Long basePoints = 0L;
+        if (baseRule != null && baseRule.getPointsRatio() != null) {
+            basePoints = orderAmount.multiply(baseRule.getPointsRatio())
+                .setScale(0, RoundingMode.DOWN).longValue();
+            log.info("【基础消费积分规则】规则ID: {}, 规则名称: {}, 积分比例: {}, 会员等级: {}, 计算出的基础积分: {}",
+                baseRule.getId(), baseRule.getRuleName(), baseRule.getPointsRatio(),
+                baseRule.getMemberLevel(), basePoints);
+        } else {
+            log.warn("【基础消费积分规则】未找到匹配的规则（会员等级: {}）", memberLevel);
+        }
+
+        // 3. 查询促销积分规则
+        LocalDate orderDateLocal = orderDate.toLocalDate();
+        List<MarketingPointsRule> promotionRules = marketingPointsRuleMapper.selectPromotionRules(
+            orderDateLocal, orderAmount, foodIds, memberLevel);
+
+        Long promotionPoints = 0L;
+        if (!promotionRules.isEmpty()) {
+            // 取最高优先级的促销规则
+            MarketingPointsRule topRule = promotionRules.get(0);
+            log.info("【促销积分规则】使用最高优先级规则: ID={}, 名称={}, 优先级={}, 倍数={}",
+                topRule.getId(), topRule.getRuleName(), topRule.getPriority(), topRule.getPointsMultiplier());
+
+            if (topRule.getPointsMultiplier() != null && basePoints > 0) {
+                BigDecimal basePointsDecimal = BigDecimal.valueOf(basePoints);
+                promotionPoints = basePointsDecimal.multiply(
+                    topRule.getPointsMultiplier().subtract(BigDecimal.ONE))
+                    .setScale(0, RoundingMode.DOWN).longValue();
+                log.info("【促销积分计算】基础积分: {}, 倍数: {}, 额外积分: {}, 计算出的促销积分: {}",
+                    basePoints, topRule.getPointsMultiplier(),
+                    topRule.getPointsMultiplier().subtract(BigDecimal.ONE), promotionPoints);
+            } else {
+                log.warn("【促销积分计算】跳过计算，原因: 倍数={}, 基础积分={}",
+                    topRule.getPointsMultiplier(), basePoints);
+            }
+        } else {
+            log.info("【促销积分规则】未找到匹配的促销规则");
+        }
+
+        // 4. 查询等级积分规则
+        MarketingPointsRule levelRule = marketingPointsRuleMapper.selectLevelRule(memberLevel);
+        Long levelPoints = 0L;
+        if (levelRule != null && levelRule.getPointsRatio() != null) {
+            levelPoints = orderAmount.multiply(levelRule.getPointsRatio())
+                .setScale(0, RoundingMode.DOWN).longValue();
+            log.info("【等级积分规则】规则ID: {}, 规则名称: {}, 积分比例: {}, 会员等级: {}, 计算出的等级积分: {}",
+                levelRule.getId(), levelRule.getRuleName(), levelRule.getPointsRatio(),
+                levelRule.getMemberLevel(), levelPoints);
+        } else {
+            log.warn("【等级积分规则】未找到匹配的规则（会员等级: {}）", memberLevel);
+        }
+
+        // 5. 计算总积分（基础积分 + 促销积分 + 等级积分）
+        Long totalPoints = basePoints + promotionPoints + levelPoints;
+        log.info("【积分汇总】基础积分: {}, 促销积分: {}, 等级积分: {}, 总积分: {}",
+            basePoints, promotionPoints, levelPoints, totalPoints);
+
+        // 6. 如果积分大于0，调用积分系统增加积分
+        if (totalPoints > 0) {
+            PointsAddDTO addDTO = new PointsAddDTO();
+            addDTO.setUserId(userId);
+            addDTO.setPoints(totalPoints);
+            addDTO.setPointsSource(0); // 0-消费积分
+            addDTO.setRelatedOrderId(orderId);
+            addDTO.setDescription("订单消费获得积分");
+
+            // 计算过期时间（所有积分都必须有有效期）
+            // 如果规则设置了积分有效期，使用规则设置的值；否则使用默认值（30天）
+            Integer expireDays = (baseRule != null && baseRule.getExpireDays() != null)
+                ? baseRule.getExpireDays() : 30; // 默认30天有效期
+            addDTO.setExpireTime(orderDate.plusDays(expireDays));
+
+            log.info("【积分添加】准备添加积分: 用户ID={}, 积分数量={}, 过期天数={}, 过期时间={}",
+                userId, totalPoints, expireDays, addDTO.getExpireTime());
+
+            pointsService.addPoints(addDTO);
+
+            // 更新订单的获得积分数量
+            orderClient.updateOrderPointsAmount(orderId, totalPoints);
+            log.info("【订单更新】已更新订单 {} 的获得积分数量为 {}", orderId, totalPoints);
+        } else {
+            // 如果没有获得积分，也要更新订单的points_amount为0
+            orderClient.updateOrderPointsAmount(orderId, 0L);
+            log.warn("【积分添加】订单 {} 未获得积分，总积分为0", orderId);
+        }
+
+        log.info("========== 订单积分计算完成，总积分: {} ==========", totalPoints);
+        return totalPoints;
+    }
     
     /**
      * 获取会员等级名称
@@ -477,23 +481,23 @@ public class MarketingPointsRuleServiceImpl implements MarketingPointsRuleServic
         }
     }
     
-//    /**
-//     * 根据订单支付完成消息计算应获得积分（用于消息队列监听器）
-//     * 设计原则：依赖注入 - 调用PointsService接口增加积分
-//     */
-//    @Override
-//    @Transactional
-//    public Long calculateOrderPoints(Long userId, Long orderId, BigDecimal orderAmount,
-//                                    LocalDateTime orderDate, List<OrderPaidMessage.OrderFoodDetail> foodDetails) {
-//        // 将foodDetails转换为foodIds列表
-//        List<Long> foodIds = foodDetails != null
-//            ? foodDetails.stream()
-//                .map(OrderPaidMessage.OrderFoodDetail::getFoodId)
-//                .collect(Collectors.toList())
-//            : new ArrayList<>();
-//
-//        // 调用原有的calculatePoints方法
-//        return calculatePoints(userId, orderId, orderAmount, orderDate, foodIds);
-//    }
+    /**
+     * 根据订单支付完成消息计算应获得积分（用于消息队列监听器）
+     * 设计原则：依赖注入 - 调用PointsService接口增加积分
+     */
+    @Override
+    @Transactional
+    public Long calculateOrderPoints(Long userId, Long orderId, BigDecimal orderAmount,
+                                    LocalDateTime orderDate, List<OrderPaidMessage.OrderFoodDetail> foodDetails) {
+        // 将foodDetails转换为foodIds列表
+        List<Long> foodIds = foodDetails != null
+            ? foodDetails.stream()
+                .map(OrderPaidMessage.OrderFoodDetail::getFoodId)
+                .collect(Collectors.toList())
+            : new ArrayList<>();
+
+        // 调用原有的calculatePoints方法
+        return calculatePoints(userId, orderId, orderAmount, orderDate, foodIds);
+    }
 }
 

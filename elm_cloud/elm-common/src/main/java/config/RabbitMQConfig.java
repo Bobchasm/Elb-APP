@@ -1,5 +1,8 @@
 package config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -38,7 +41,13 @@ public class RabbitMQConfig {
      */
     @Bean
     public MessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        ObjectMapper objectMapper = new ObjectMapper();
+        // 注册Java 8时间模块，支持LocalDateTime等类型
+        objectMapper.registerModule(new JavaTimeModule());
+        // 禁用将日期写为时间戳的特性
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
     
     /**

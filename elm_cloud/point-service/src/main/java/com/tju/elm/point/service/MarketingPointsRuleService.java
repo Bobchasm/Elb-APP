@@ -49,17 +49,17 @@ public interface MarketingPointsRuleService {
      */
     List<PointsRuleVO> getRules(Integer ruleType, Integer ruleStatus, Integer pageNum, Integer pageSize);
     
-//    /**
-//     * 根据订单信息计算应获得积分（同步调用积分系统）
-//     * @param userId 用户ID
-//     * @param orderId 订单ID
-//     * @param orderAmount 订单金额
-//     * @param orderDate 订单日期
-//     * @param foodIds 商品ID列表
-//     * @return 应获得积分数量
-//     */
-//    Long calculatePoints(Long userId, Long orderId, BigDecimal orderAmount,
-//                        LocalDateTime orderDate, List<Long> foodIds);
+    /**
+     * 根据订单信息计算应获得积分（同步调用积分系统）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @param orderAmount 订单金额
+     * @param orderDate 订单日期
+     * @param foodIds 商品ID列表
+     * @return 应获得积分数量
+     */
+    Long calculatePoints(Long userId, Long orderId, BigDecimal orderAmount,
+                        LocalDateTime orderDate, List<Long> foodIds);
     
     /**
      * 根据行为类型计算应获得积分
@@ -69,17 +69,17 @@ public interface MarketingPointsRuleService {
      */
     Long calculateBehaviorPoints(Long userId, String behaviorType);
     
-//    /**
-//     * 根据订单支付完成消息计算应获得积分（用于消息队列监听器）
-//     * @param userId 用户ID
-//     * @param orderId 订单ID
-//     * @param orderAmount 订单金额
-//     * @param orderDate 订单日期
-//     * @param foodDetails 商品详情列表
-//     * @return 应获得积分数量
-//     */
-//    Long calculateOrderPoints(Long userId, Long orderId, BigDecimal orderAmount,
-//                              LocalDateTime orderDate, List<OrderPaidMessage.OrderFoodDetail> foodDetails);
+    /**
+     * 根据订单支付完成消息计算应获得积分（用于消息队列监听器）
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @param orderAmount 订单金额
+     * @param orderDate 订单日期
+     * @param foodDetails 商品详情列表
+     * @return 应获得积分数量
+     */
+    Long calculateOrderPoints(Long userId, Long orderId, BigDecimal orderAmount,
+                              LocalDateTime orderDate, List<OrderPaidMessage.OrderFoodDetail> foodDetails);
 
 }
 

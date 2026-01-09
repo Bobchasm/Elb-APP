@@ -107,4 +107,10 @@ public class OrderController {
     public HttpResult<List<Order>> selectRecentOrdersByUserId(@RequestParam Long userId, @RequestParam Integer limit) {
         return HttpResult.success(ordersMapper.selectRecentOrdersByUserId(userId,limit));
     }
+
+    @GetMapping("/point/recent_by_user")
+    @Operation(summary = "更新订单的获得积分数量")
+    public Integer updateOrderPointsAmount(@RequestParam Long orderId, @RequestParam Long pointsAmount) {
+        return ordersMapper.updateOrderPointsAmount(orderId,pointsAmount);
+    }
 }

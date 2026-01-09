@@ -40,22 +40,22 @@ public class PointsExpirationSchedule {
         }
     }
     
-//    /**
-//     * 检查并发送积分过期预警
-//     * 每天上午9点执行
-//     * cron表达式：秒 分 时 日 月 周
-//     */
-//    @Scheduled(cron = "0 00 09 * * ?")
-//    public void checkAndSendExpirationAlerts() {
-//        log.info("========== 定时任务：开始检查并发送积分过期预警 ==========");
-//        log.info("【定时任务】任务执行时间: {}", LocalDateTime.now());
-//        try {
-//            pointsExpirationAlertService.checkAndSendExpirationAlerts();
-//            log.info("【定时任务】积分过期预警检查任务执行成功");
-//        } catch (Exception e) {
-//            log.error("【定时任务】积分过期预警检查任务执行失败", e);
-//        }
-//        log.info("========== 定时任务：积分过期预警检查任务结束 ==========");
-//    }
+    /**
+     * 检查并发送积分过期预警
+     * 每天上午9点执行
+     * cron表达式：秒 分 时 日 月 周
+     */
+    @Scheduled(cron = "0 00 09 * * ?")
+    public void checkAndSendExpirationAlerts() {
+        log.info("========== 定时任务：开始检查并发送积分过期预警 ==========");
+        log.info("【定时任务】任务执行时间: {}", LocalDateTime.now());
+        try {
+            pointsExpirationAlertService.checkAndSendExpirationAlerts();
+            log.info("【定时任务】积分过期预警检查任务执行成功");
+        } catch (Exception e) {
+            log.error("【定时任务】积分过期预警检查任务执行失败", e);
+        }
+        log.info("========== 定时任务：积分过期预警检查任务结束 ==========");
+    }
 }
 

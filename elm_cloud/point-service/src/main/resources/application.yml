@@ -35,7 +35,7 @@ spring:
     host: ${elm.rabbitmq.host}
     port: 5672
     username: ${elm.rabbitmq.username}
-    password: ${elm.rabbitmq.password}}
+    password: ${elm.rabbitmq.password}
     virtual-host: /
 
   data:

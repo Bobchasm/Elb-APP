@@ -230,7 +230,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getCustomerId(), order.getOrderTotal()).getData();
 
                     // 2. 如果可抵扣金额大于0，则冻结积分
-                    if (deductibleAmount.compareTo(BigDecimal.ZERO) > 0) {
+                    if (deductibleAmount != null && deductibleAmount.compareTo(BigDecimal.ZERO) > 0) {
                     // 获取积分兑换比例
                     BigDecimal exchangeRatio = pointClient.getExchangeRatio().getData();
                     if (exchangeRatio == null || exchangeRatio.compareTo(BigDecimal.ZERO) <= 0) {

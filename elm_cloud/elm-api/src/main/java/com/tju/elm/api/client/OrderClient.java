@@ -34,4 +34,7 @@ public interface OrderClient {
 
     @GetMapping("/api/orders/ai/recent_by_user")
     HttpResult<List<Order>> selectRecentOrdersByUserId(@RequestParam Long userId, @RequestParam Integer limit);
+
+    @GetMapping("/api/orders/point/recent_by_user")
+    public Integer updateOrderPointsAmount(@RequestParam Long orderId, @RequestParam Long pointsAmount);
 }
