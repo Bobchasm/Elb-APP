@@ -56,3 +56,10 @@ logging:
     dateformat: HH:mm:ss:SSS
   file:
     path: "logs/${spring.application.name}"
+
+txcos:
+  secretId: REDACTED_SECRET_ID
+  secretKey: REDACTED_SECRET_KEY
+  region: ap-beijing
+  bucketName: txcloud-cos1-1375850795
+  enableAccelerate: true
