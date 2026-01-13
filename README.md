@@ -30,7 +30,7 @@
 
 商家端入口位于 **我的** 页面中的 **切换到商家端**
 
-<img src="file:///G:/LE/frontend-comprehension/gra/business_entry.png" title="" alt="" width="151">
+![Alt](./gra/business_entry.png)
 
 管理员：
 
