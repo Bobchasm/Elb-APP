@@ -11,8 +11,6 @@
 **本项目已部署至小组的服务器上** 
 
 - 如果想直接查看效果请访问：[http://REDACTED_DOMAIN:8081/](http://REDACTED_DOMAIN:8081/)
-  
-  特别提供一个项目管理员账号：用户名 admin，密码 Admin123
 
 - 后端部分接口前缀：[http://REDACTED_DOMAIN:8080](http://REDACTED_DOMAIN:8080) 
 
