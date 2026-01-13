@@ -18,6 +18,29 @@
 
 - 接口文档路径：[http://REDACTED_DOMAIN:8080/swagger-ui/index.html](http://REDACTED_DOMAIN:8080/swagger-ui/index.html)
 
+**提供一些测试账号 (非管理员账号也可以自行注册)**
+
+普通用户：
+
+- username: common_user
+- password: Common123
+
+商家用户：
+
+- username: business_user
+- password: Business123
+
+商家端入口位于 **我的** 页面中的 **切换到商家端**
+
+<img src="file:///G:/LE/frontend-comprehension/gra/business_entry.png" title="" alt="" width="151">
+
+管理员：
+
+- username: admin_user
+- password: Admin123
+
+---
+
 **若自己部署请注意：**
 
 1. 如需验收整个项目(即前后端完整效果)，请使用我们提供的sql建库并在配置文件中使用它，以下会详细说明
@@ -81,6 +104,8 @@ MySQL版本信息：
   ```
   frontend-comprehension/elm_bk/sql/elm_v2.sql
   ```
+
+        sql中已包含实例数据的插入
 
 ##### 部署运行
 
