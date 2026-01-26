@@ -4,6 +4,12 @@ elm:
     username: root
     pw: 123456
 
+  data:
+    redis:
+      host: 127.0.0.1
+      password:
+      database: 3
+
   rabbitmq:
     host: REDACTED_IP
     username: rabbit

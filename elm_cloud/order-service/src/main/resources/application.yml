@@ -31,6 +31,20 @@ spring:
         heartbeat:
           interval: 5000  # 心跳间隔（毫秒）
 
+  data:
+    redis:
+      host: ${elm.data.redis.host}
+      port: 6379
+      password: ${elm.data.redis.password}
+      database: ${elm.data.redis.database}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
   rabbitmq:
     host: ${elm.rabbitmq.host}
     port: 5672

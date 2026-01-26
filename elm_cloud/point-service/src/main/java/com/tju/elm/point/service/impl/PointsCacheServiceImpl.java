@@ -9,6 +9,7 @@ import com.tju.elm.point.zoo.pojo.vo.PointsAccountVO;
 import com.tju.elm.point.zoo.pojo.vo.PointsExpirationVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class PointsCacheServiceImpl implements PointsCacheService {
 
     @Autowired
+    @Qualifier("pointsRedisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
     
     // 配置 ObjectMapper 支持 LocalDateTime

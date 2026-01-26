@@ -8,7 +8,7 @@ elm:
     redis:
       host: 127.0.0.1
       password:
-      database: 0
+      database: 5
 
 server:
   port: 8888
