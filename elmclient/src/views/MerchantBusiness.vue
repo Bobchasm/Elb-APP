@@ -130,8 +130,8 @@ export default {
           return;
         }
         const userResponse = await request.get('/api/person', { headers: { 'Authorization': `Bearer ${token}` } });
-        if (userResponse && userResponse.id) {
-          const params = { userId: userResponse.id };
+        if (userResponse.success && userResponse.data.id) {
+          const params = { userId: userResponse.data.id };
           if (status !== null) {
             params.status = status;
           }

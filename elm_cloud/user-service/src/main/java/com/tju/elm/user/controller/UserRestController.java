@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -126,19 +127,20 @@ public class UserRestController {
 
     @GetMapping("/person")
     @Operation(summary = "获取当前登录用户及其自然人属性", description = "获取当前登录用户及其自然人信息")
-    public ResponseEntity<PersonVO> getActualPerson() {
+    @Cacheable(value = "person_info", key = "T(utils.UserContext).getUsername()")
+    public HttpResult<PersonVO> getActualPerson() {
         User currentUser = getCurrentUser();
         PersonVO personVO=new PersonVO();
         BeanUtils.copyProperties(currentUser, personVO);
         Person person = personService.getPersonByUserId(currentUser.getId());
         BeanUtils.copyProperties(person, personVO);
-        return ResponseEntity.ok(personVO);
+        return HttpResult.success(personVO);
     }
 
     @GetMapping("/person/id")
     @Operation(summary = "获取用户自然人属性")
-    public ResponseEntity<Person> gainActualPerson(@RequestParam Long userId) {
-        return ResponseEntity.ok(personService.getPersonByUserId(userId));
+    public HttpResult<Person> gainActualPerson(@RequestParam Long userId) {
+        return HttpResult.success(personService.getPersonByUserId(userId));
     }
 
     @GetMapping("/persons")

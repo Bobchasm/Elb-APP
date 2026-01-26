@@ -106,12 +106,12 @@ export default {
       try {
         const data = await request.get('/api/person');
         
-        if (data && data.id) {
+        if (data.success && data.data.id) {
           merchant.value = {
-            id: data.id,
-            name: data.username,
-            phone: data.phone,
-            avatar: data.photo,
+            id: data.data.id,
+            name: data.data.username,
+            phone: data.data.phone,
+            avatar: data.data.photo,
           };
         } else {
           toast.error('获取商家信息失败：服务器返回数据为空或格式不正确！');
