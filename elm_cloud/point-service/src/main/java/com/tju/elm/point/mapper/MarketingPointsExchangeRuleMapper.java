@@ -81,5 +81,18 @@ public interface MarketingPointsExchangeRuleMapper {
     @Update("UPDATE marketing_points_exchange_rule SET stock_quantity = stock_quantity - #{quantity} " +
             "WHERE id = #{id} AND stock_quantity >= #{quantity}")
     int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+
+
+
+    /**
+     * 使用乐观锁减少库存
+     */
+    @Update("UPDATE marketing_points_exchange_rule " +
+            "SET stock_quantity = stock_quantity - #{quantity}, " +
+            "    update_time = NOW() " +
+            "WHERE id = #{id} " +
+            "  AND stock_quantity >= #{quantity} ")
+    int decreaseStockWithVersion(@Param("id") Long id,
+                                 @Param("quantity") Integer quantityn);
 }
 

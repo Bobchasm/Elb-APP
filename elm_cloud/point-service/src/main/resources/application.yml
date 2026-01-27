@@ -37,6 +37,10 @@ spring:
     username: ${elm.rabbitmq.username}
     password: ${elm.rabbitmq.password}
     virtual-host: /
+    # Points服务特定的连接配置
+    connection-timeout: 5000
+    publisher-confirm-type: correlated  # 发布确认
+    publisher-returns: true  # 返回模式
 
   data:
     redis:
@@ -78,3 +82,15 @@ logging:
     dateformat: HH:mm:ss:SSS
   file:
     path: "logs/${spring.application.name}"
+
+points:
+  rabbitmq:
+    exchange:
+      points-exchange: "points.exchange.topic"
+      points-change: "points.change.topic"
+    queue:
+      points-exchange: "points.exchange.queue"
+      points-change: "points.change.queue"
+  redis:
+    key-prefix: "points:"  # Points服务Redis key前缀
+    timeout: 300  # Redis操作超时时间（秒）

@@ -1,13 +1,9 @@
 package com.tju.elm.point.controller;
 
-import com.tju.elm.api.client.PointClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.point.mapper.PointsAccountMapper;
 import com.tju.elm.point.mapper.PointsExchangeOrderMapper;
-import com.tju.elm.point.service.MarketingPointsExchangeRuleService;
-import com.tju.elm.point.service.MarketingPointsRuleService;
-import com.tju.elm.point.service.PointsExpirationService;
-import com.tju.elm.point.service.PointsService;
+import com.tju.elm.point.service.*;
 import com.tju.elm.point.zoo.pojo.dto.PointsExchangeDTO;
 import com.tju.elm.point.zoo.pojo.entity.PointsAccount;
 import com.tju.elm.point.zoo.pojo.entity.PointsExchangeOrder;
@@ -61,6 +57,9 @@ public class PointsController {
 
     @Autowired
     private MarketingPointsRuleService marketingPointsRuleService;
+
+    @Autowired
+    private ExchangeService exchangeService;
 
     /**
      * 查询积分账户
@@ -117,11 +116,15 @@ public class PointsController {
      */
     @PostMapping("/exchange")
     @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
-    public HttpResult<Long> exchangeGoods(@RequestBody PointsExchangeDTO dto,
-                                          @RequestHeader(value = "username") String username) {
+    public HttpResult<String> exchangeGoods(@RequestBody PointsExchangeDTO dto,
+                                            @RequestHeader(value = "username") String username) {
+//        Long userId = userClient.getUserByName(username).getData().getId();
+//        Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
+//        return HttpResult.success(orderId);
+
         Long userId = userClient.getUserByName(username).getData().getId();
-        Long orderId = exchangeRuleService.exchangeGoods(userId, dto);
-        return HttpResult.success(orderId);
+        String requestId = exchangeService.preDeductForExchange(userId, dto);
+        return HttpResult.success(requestId);
     }
 
     /**

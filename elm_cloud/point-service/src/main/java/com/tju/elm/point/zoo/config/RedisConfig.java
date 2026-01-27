@@ -28,7 +28,52 @@ import java.time.Duration;
 public class RedisConfig {
 
     /**
-     * 积分系统专用
+     * Lua脚本专用RedisTemplate
+     * 使用String序列化器，避免Jackson序列化问题
+     */
+    @Bean(name = "luaRedisTemplate")
+    public RedisTemplate<String, String> luaRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        StringRedisSerializer serializer = new StringRedisSerializer();
+        template.setKeySerializer(serializer);
+        template.setValueSerializer(serializer);
+        template.setHashKeySerializer(serializer);
+        template.setHashValueSerializer(serializer);
+
+        template.afterPropertiesSet();
+
+        log.info("Lua脚本专用RedisTemplate初始化完成（String序列化器）");
+        return template;
+    }
+
+    /**
+     * Lua脚本专用 - 返回Object的RedisTemplate（兼容性更好）
+     */
+    @Bean(name = "luaObjectRedisTemplate")
+    public RedisTemplate<String, Object> luaObjectRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+
+        // Key使用String序列化器
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+
+        // Value使用String序列化器，但可以存放Object（实际上会转为String）
+        template.setValueSerializer(stringSerializer);
+        template.setHashValueSerializer(stringSerializer);
+
+        template.afterPropertiesSet();
+
+        log.info("Lua脚本专用Object RedisTemplate初始化完成");
+        return template;
+    }
+
+    /**
+     * 积分系统专用 - 原有的业务逻辑使用
      */
     @Bean(name = "pointsRedisTemplate")
     @Primary  // 设置为主要的，确保注入时优先使用这个
