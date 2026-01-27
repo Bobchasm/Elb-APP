@@ -32,7 +32,6 @@ public class AddressController {
 
     @Operation(summary = "获取用户地址列表")
     @GetMapping("/listDeliveryAddressByUserId")
-    @Cacheable(value = "address_list", key = "T(utils.UserContext).getUsername()")
     public HttpResult<List<DeliveryAddress>> listDeliveryAddressByUserId(Long userId)
     {
         return addressService.listDeliveryAddressByUserId(userId);
@@ -47,7 +46,6 @@ public class AddressController {
 
     @Operation(summary = "更新配送地址")
     @PostMapping("/updateDeliveryAddress")
-    @CacheEvict(value = "address_list", key = "T(utils.UserContext).getUsername()")
     public HttpResult updateDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress)
     {
         return addressService.updateDeliveryAddress(deliveryAddress);
@@ -55,7 +53,6 @@ public class AddressController {
 
     @Operation(summary = "删除配送地址")
     @PutMapping("/removeDeliveryAddress")
-    @CacheEvict(value = "address_list", key = "T(utils.UserContext).getUsername()")
     public HttpResult removeDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress)
     {
         return addressService.deleteDeliveryAddress(deliveryAddress);
@@ -63,8 +60,6 @@ public class AddressController {
 
     @PostMapping("/ids")
     @Operation(summary = "获取所有id中的地址列表")
-    @Cacheable(value = "address_ids_list",
-            key = "T(com.tju.elm.common.util.CacheKeyUtil).generateKeyForCollection(#addressIds)")
     public HttpResult<List<DeliveryAddress>> gainAddressListByIds(@RequestBody Set<Long> addressIds) {
         return HttpResult.success(addressService.getDeliveryAddressByIds(addressIds));
     }

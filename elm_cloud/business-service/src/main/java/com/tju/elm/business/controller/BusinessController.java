@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
@@ -47,6 +50,7 @@ public class BusinessController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "（牙膏）根据id获取某店铺详情", description = "根据id获取某店铺详情")
+    @Cacheable(value = "business_info", key = "#id")
     public HttpResult<BusinessVO> getBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
 //            log.warn("获取店铺详情请求参数错误: id={}", id);
@@ -70,6 +74,12 @@ public class BusinessController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "（牙膏）更新某店铺信息（覆盖）", description = "更新某店铺信息")
+    @Caching(evict = {
+            @CacheEvict(value ="business_list", allEntries = true, condition = "#result.data.id == #id"),
+            @CacheEvict(value = "business_info", key = "#id"),
+            @CacheEvict(value = "business", key = "'carousel'"),
+            @CacheEvict(value = "business_detail", key = "#id")
+    })
     public HttpResult<BusinessVO> updateBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto){
         if (id == null || id <= 0) {
 //            log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -80,8 +90,14 @@ public class BusinessController {
         return HttpResult.success(businessVo);
     }
 
-     @DeleteMapping("/{id}")
-     @Operation(summary = "（牙膏）删除某店铺")
+    @DeleteMapping("/{id}")
+    @Operation(summary = "（牙膏）删除某店铺")
+    @Caching(evict = {
+            @CacheEvict(value ="business_list", allEntries = true, condition = "#result.data.id == #id"),
+            @CacheEvict(value = "business_info", key = "#id"),
+            @CacheEvict(value = "business", key = "'carousel'"),
+            @CacheEvict(value = "business_detail", key = "#id")
+    })
     public HttpResult<BusinessVO> deleteBusiness(@PathVariable("id") Long id) {
         if (id == null || id <= 0) {
             log.warn("删除店铺信息请求参数错误: id={}", id);
@@ -91,8 +107,14 @@ public class BusinessController {
         return HttpResult.success(businessVo);
     }
 
-     @PatchMapping("/{id}")
-     @Operation(summary = "（牙膏）部分更新某店铺信息")
+    @PatchMapping("/{id}")
+    @Operation(summary = "（牙膏）部分更新某店铺信息")
+    @Caching(evict = {
+            @CacheEvict(value ="business_list", allEntries = true, condition = "#result.data.id == #id"),
+            @CacheEvict(value = "business_info", key = "#id"),
+            @CacheEvict(value = "business", key = "'carousel'"),
+            @CacheEvict(value = "business_detail", key = "#id")
+    })
     public HttpResult<BusinessVO> patchBusiness(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
         if (id == null || id <= 0) {
             log.warn("更新店铺信息请求参数错误: id={}", id);
@@ -108,14 +130,15 @@ public class BusinessController {
      */
     @GetMapping
     @Operation(summary = "获取所有店铺信息--牙膏版本")
+    @Cacheable(value = "business_list", key = "'all'")
     public HttpResult<List<BusinessVO>> getBusinessesByUser() {
         List<BusinessVO> businessVos = businessService.getBusinesses();
         return HttpResult.success(businessVos);
     }
 
 
-     @PostMapping
-     @Operation(summary = "添加新店铺——牙膏版本")
+    @PostMapping
+    @Operation(summary = "添加新店铺——牙膏版本")
     public HttpResult<BusinessVO> addBusiness(@RequestBody BusinessDTO businessDTO) {
         BusinessVO businessVo = businessService.addBusiness(businessDTO);
         return HttpResult.success(businessVo);
@@ -130,7 +153,6 @@ public class BusinessController {
             @RequestParam(required = false)boolean isScore,
             @RequestParam(required = false)boolean isSales){
         return HttpResult.success(businessService.getBusinessesBySearch(keyword,isScore,isSales));
-
     }
 
     @PostMapping("/apply")
@@ -146,6 +168,7 @@ public class BusinessController {
 
     @GetMapping("/merchant")
     @Operation(summary = "(返回需要的)查某商家的所有的店铺，可传状态(管理员商铺管理第二页)")
+    @Cacheable(value = "business_list", key = "'st' + (#userId != null ? 'user' + #userId : '') + 's' + (#status != null ? #status : '')")
     public HttpResult<List<Business>> getMerchantBusinesses(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Integer status) {
@@ -160,6 +183,7 @@ public class BusinessController {
      */
     @GetMapping("/type")
     @Operation(summary = "通过类型查所有店铺")
+    @Cacheable(value = "business_list", key = "'type' + #type != null ? #type : ''")
     public HttpResult<List<Business>> listBusinessByOrderTypeId(@RequestParam(required = false) Integer type) {
         List<Business> businesses = businessService.listBusinessByOrderTypeId(type);
         return HttpResult.success(businesses);
@@ -175,6 +199,7 @@ public class BusinessController {
 
     @GetMapping("/carousel")
     @Operation(summary = "获取轮播图商家")
+    @Cacheable(value = "business", key = "'carousel'", sync = true)
     public HttpResult<List<BusinessSearchVO>> searchBusinessCarousel(){
         return HttpResult.success(businessService.getBusinessesInCarousel());
 
@@ -183,17 +208,21 @@ public class BusinessController {
     //还是更新商铺的接口，但部分跟新且适配数据库版本
     @PatchMapping("/own/{id}")
     @Operation(summary = "（可用）部分更新某店铺信息")
+    @Caching(evict = {
+            @CacheEvict(value ="business_list", allEntries = true, condition = "#result.data.id == #id"),
+            @CacheEvict(value = "business_info", key = "#id"),
+            @CacheEvict(value = "business", key = "'carousel'"),
+            @CacheEvict(value = "business_detail", key = "#id")
+    })
     public HttpResult<BusinessVO> patchBusinessOwn(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
          BusinessVO businessVO = businessService.patchBusinessOwn( id,  updateDto);
          return HttpResult.success(businessVO);
     }
 
-    /**
-     * 获取所有店铺信息
-     * @return 所有店铺信息
-     */
+
     @GetMapping("/remote")
     @Operation(summary = "获取店铺")
+    @Cacheable(value = "business_detail", key = "#businessId")
     public HttpResult<Business> gainBusinessById(@RequestParam Long businessId) {
         Business business = businessService.getBusinessInfo(businessId);
         return HttpResult.success(business);
@@ -220,6 +249,12 @@ public class BusinessController {
      */
     @PostMapping("/audit-shop")
     @Operation(summary = "审核开店申请", description = "管理员审核用户的开店申请")
+    @Caching(evict = {
+            @CacheEvict(value ="business_list", allEntries = true, condition = "#result.data.id == #businessPermissionDTO.id"),
+            @CacheEvict(value = "business_info", key = "#businessPermissionDTO.id"),
+            @CacheEvict(value = "business", key = "'carousel'"),
+            @CacheEvict(value = "business_detail", key = "#businessPermissionDTO.id")
+    })
     public HttpResult<BusinessPermissionVO> auditShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
         return HttpResult.success(businessService.auditShopApplication(businessPermissionDTO));
     }

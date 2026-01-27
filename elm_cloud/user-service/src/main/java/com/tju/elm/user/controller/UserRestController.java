@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -120,6 +121,7 @@ public class UserRestController {
 
     @GetMapping("/user/current")
     @Operation(summary = "获取用户", description = "获取当前登录用户的信息")
+    @Cacheable(value = "user_info", key = "#username")
     public HttpResult<User> getUserByName(@RequestParam String username) {
         User user = userService.getUserWithAuthorities(username);
         return HttpResult.success(user);
@@ -328,6 +330,7 @@ public class UserRestController {
 
     @PutMapping("/{username}/status")
     @Operation(summary = "启用/禁用用户")
+    @CacheEvict(value = "user_info", key = "#username")
     public HttpResult<String> toggleUserStatus(
             @PathVariable String username,
             @RequestParam Boolean activated) { // true-启用，false-禁用
@@ -339,6 +342,7 @@ public class UserRestController {
     @DeleteMapping("/user/{username}")
     @Operation(summary = "删除用户", description = "逻辑删除用户（标记isDeleted=true），仅管理员可操作")
     @PreAuthorize("hasAuthority('ADMIN')")
+    @CacheEvict(value = "user_info", key = "#username")
     public HttpResult deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
         return HttpResult.success();
@@ -346,6 +350,7 @@ public class UserRestController {
 
     @PutMapping("/person/info")
     @Operation(summary = "修改个人信息", description = "支持修改邮箱、姓名、头像（需先调用文件上传接口获取URL）、手机号、性别")
+    @CacheEvict(value = "person_info", allEntries = true)
     public HttpResult<Person> updatePersonInfo(@Valid @RequestBody PersonUpdateDTO updateDTO) {
         Person updatedPerson = personService.updatePerson(updateDTO);
         return HttpResult.success(updatedPerson);
