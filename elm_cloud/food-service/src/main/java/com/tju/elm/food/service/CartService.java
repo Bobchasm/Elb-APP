@@ -1,5 +1,6 @@
 package com.tju.elm.food.service;
 
+import com.tju.elm.food.pojo.entity.Cart;
 import com.tju.elm.food.pojo.vo.CartItemVO;
 import com.tju.elm.food.pojo.vo.CartVO;
 
@@ -17,4 +18,5 @@ public interface CartService {
 
     Long removeItem(Long cartId);
 
+    Cart getCartById(Long cartId);
 }

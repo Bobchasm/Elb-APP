@@ -148,6 +148,7 @@ public class BusinessController {
 
     @GetMapping("/search")
     @Operation(summary = "搜索店铺,可传入字符串keyword，isScore为0/1表示是否按照评分排序，isSales为0/1表示是否按照销售量排序")
+    @Cacheable(value = "business_list", key = "'k' + #keyword + 'k' + 'sc' + #isScore != null ? #isScore : '' + 'sa' + #isSales != null ? #isSales : ''")
     public HttpResult<List<BusinessSearchVO>> searchBusiness(
             @RequestParam(required = false)String  keyword,
             @RequestParam(required = false)boolean isScore,

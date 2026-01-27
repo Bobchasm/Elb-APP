@@ -127,6 +127,11 @@ public class CartServiceImpl implements CartService {
         return cartId;
     }
 
+    @Override
+    public Cart getCartById(Long cartId) {
+        return cartMapper.selectCartById(cartId);
+    }
+
     /**
      * 获取当前用户ID
      */

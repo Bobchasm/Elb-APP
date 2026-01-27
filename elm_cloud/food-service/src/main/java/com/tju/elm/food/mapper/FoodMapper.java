@@ -23,6 +23,8 @@ public interface FoodMapper {
     @Update("update food set update_time = #{updateTime}, updater = #{updater}, foodExplain = #{foodExplain}, foodImg =#{food_img}, foodName = #{food_name}, foodPrice = #{foodPrice}, remarks = #{remarks} where id = #{foodId}")
     void updateFood(Food food,Long foodId);
 
+    @Select("select business_id from food where id = #{foodId}")
+    Long selectFoodBusinessId(Long foodId);
 
 
     List<FoodItemVO> selectFoodItemVOList(Long businessId, Integer shelveStatus);
