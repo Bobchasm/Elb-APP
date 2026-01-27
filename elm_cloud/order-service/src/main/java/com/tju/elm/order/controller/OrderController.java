@@ -11,6 +11,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
 
@@ -28,6 +32,7 @@ public class OrderController {
 
     @GetMapping("/{id}")
     @Operation(summary = "根据id获取用户订单")
+    @Cacheable(value = "order_info", key = "#id")
     public HttpResult<OrderVO> getOrderById(@PathVariable Long id) {
         return HttpResult.success(orderService.getOrderById(id));
     }
@@ -47,12 +52,20 @@ public class OrderController {
 
     @GetMapping("/detail")
     @Operation(summary = "获取订单详情")
+    @Cacheable(value = "order_detail", key = "#orderId")
     public HttpResult<OrderItemDetailVO> listOrdersByUser(@RequestParam Long orderId) {
         return HttpResult.success(orderService.getOrderItemDetail(orderId));
     }
 
     @PutMapping("/status")
     @Operation(summary = "设置订单状态",description = "订单状态(0-待支付,1-待接单,2-已接单,3-已完成,4-已取消)。当orderState=1时，usePoints参数控制是否使用积分抵扣（true-使用积分，false-不使用积分，不传-默认使用积分）")
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "order_detail", key = "#orderId"),
+                    @CacheEvict(value = "order_detail_outer", key = "#orderId"),
+                    @CacheEvict(value = "order_info", key = "#orderId"),
+            }
+    )
     public HttpResult<Long> setOrderStatus(
             @RequestParam Integer orderState,
             @RequestParam Long orderId,
@@ -61,7 +74,7 @@ public class OrderController {
     }
 
     @GetMapping("/submit")
-    @Operation(summary = "下单")
+    @Operation(summary = "常规下单")
     public HttpResult<Long> orderSubmit(@RequestParam Long businessId,@RequestParam Long addressId) {
         return HttpResult.success(orderService.orderSubmit(businessId,addressId));
     }
@@ -80,12 +93,20 @@ public class OrderController {
 
     @GetMapping
     @Operation(summary = "获取订单详情")
+    @Cacheable(value = "order_detail_outer", key = "#orderId")
     public HttpResult<Order> gainOrder(@RequestParam Long orderId) {
         return HttpResult.success(ordersMapper.getOrderById(orderId));
     }
 
     @GetMapping("/payment/status")
     @Operation(summary = "设置订单支付状态")
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "order_detail", key = "#orderId"),
+                    @CacheEvict(value = "order_detail_outer", key = "#orderId"),
+                    @CacheEvict(value = "order_info", key = "#orderId"),
+            }
+    )
     public HttpResult<Integer> setPaymentStatus(@RequestParam Long orderId,@RequestParam Integer orderState) {
         return HttpResult.success(ordersMapper.setOrderPaymentMethod(orderId,orderState));
     }
@@ -110,6 +131,13 @@ public class OrderController {
 
     @GetMapping("/point/recent_by_user")
     @Operation(summary = "更新订单的获得积分数量")
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "order_detail", key = "#orderId"),
+                    @CacheEvict(value = "order_detail_outer", key = "#orderId"),
+                    @CacheEvict(value = "order_info", key = "#orderId"),
+            }
+    )
     public Integer updateOrderPointsAmount(@RequestParam Long orderId, @RequestParam Long pointsAmount) {
         return ordersMapper.updateOrderPointsAmount(orderId,pointsAmount);
     }

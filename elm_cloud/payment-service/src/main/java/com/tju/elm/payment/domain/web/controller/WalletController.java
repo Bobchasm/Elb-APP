@@ -8,6 +8,8 @@ import com.tju.elm.payment.entity.VirtualWalletLoan;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
 
@@ -67,6 +69,7 @@ public class WalletController {
 
     @GetMapping("/rule")
     @Operation(summary = "获取虚拟钱包手续费&奖励规则")
+    @Cacheable(value = "wallet", key = "'fee_rule'")
     public HttpResult<String> walletRule() {
         return HttpResult.success(walletQueryService.walletRule());
     }
@@ -91,6 +94,7 @@ public class WalletController {
 
     @GetMapping("/vip/rule")
     @Operation(summary = "获取虚拟钱包vip规则")
+    @Cacheable(value = "wallet", key = "'vip_rule'")
     public HttpResult<List<WalletVipVO>> walletVipRule() {
         return HttpResult.success(walletQueryService.walletVipRules());
     }
