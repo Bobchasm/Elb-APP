@@ -609,9 +609,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public boolean create(CreateOrderDTO orderCreateDTO) {
-        ordersMapper.insertOrderPlus(orderCreateDTO.getOrder());
-        ordersMapper.setOrderPaymentMethod(orderCreateDTO.getOrder().getId(),3);
+        Order order = orderCreateDTO.getOrder();
+        ordersMapper.insertOrderPlus(order);
+        ordersMapper.setOrderState(order.getId(), 3);
+        ordersMapper.setOrderIsPoint(order.getId());
+        orderCreateDTO.getOrderDetailet().setOrderId(order.getId());
 
         orderDetailetMapper.saveOrderDetailPlus(orderCreateDTO.getOrderDetailet());
         return true;

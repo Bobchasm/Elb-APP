@@ -77,7 +77,7 @@ public class PointsServiceImpl implements PointsService {
     @Override
     @Transactional
     public Long addPoints(PointsAddDTO pointsAddDTO) {
-        Long userId = getCurrentUserId();
+//        Long userId = getCurrentUserId();
         // 1. 参数校验
         if (pointsAddDTO.getUserId() == null || pointsAddDTO.getPoints() == null ||
             pointsAddDTO.getPoints() <= 0) {
@@ -102,8 +102,8 @@ public class PointsServiceImpl implements PointsService {
             account.setUpdateTime(LocalDateTime.now());
             account.setIsDeleted(false);
 
-            account.setCreator(userId);
-            account.setUpdater(userId);
+            account.setCreator(pointsAddDTO.getUserId());
+            account.setUpdater(pointsAddDTO.getUserId());
             pointsAccountMapper.insert(account);
         }
 
@@ -127,7 +127,7 @@ public class PointsServiceImpl implements PointsService {
         // 验证并设置积分账户的值，确保不小于0
         validateAndSetAccountValues(account, newTotalPoints, newAvailablePoints, newFrozenPoints);
         account.setUpdateTime(LocalDateTime.now());
-        account.setUpdater(userId);
+        account.setUpdater(pointsAddDTO.getUserId());
         pointsAccountMapper.updateById(account);
 
         // 4. 记录积分明细
@@ -150,9 +150,9 @@ public class PointsServiceImpl implements PointsService {
         transaction.setRelatedFoodId(pointsAddDTO.getRelatedFoodId());
         transaction.setRelatedRuleId(pointsAddDTO.getRelatedRuleId());
         transaction.setCreateTime(LocalDateTime.now());
-        transaction.setCreator(userId);
+        transaction.setCreator(pointsAddDTO.getUserId());
         transaction.setUpdateTime(LocalDateTime.now());
-        transaction.setUpdater(userId);
+        transaction.setUpdater(pointsAddDTO.getUserId());
         transaction.setIsDeleted(false);
         pointsTransactionMapper.insert(transaction);
 

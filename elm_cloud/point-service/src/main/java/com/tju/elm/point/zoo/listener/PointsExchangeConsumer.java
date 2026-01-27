@@ -1,9 +1,11 @@
 package com.tju.elm.point.zoo.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.Address;
 import com.tju.elm.api.client.FoodClient;
 import com.tju.elm.api.client.OrderClient;
 import com.tju.elm.api.client.UserClient;
+import com.tju.elm.api.dto.CreateOrderDTO;
 import com.tju.elm.api.po.DeliveryAddress;
 import com.tju.elm.api.po.Food;
 import com.tju.elm.api.po.Order;
@@ -23,11 +25,11 @@ import exception.APIException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import result.HttpResult;
 import result.ResultCodeEnum;
 
 import java.math.BigDecimal;
@@ -59,6 +61,9 @@ public class PointsExchangeConsumer {
 
     @Autowired
     private UserClient userClient;
+
+    @Autowired
+    private OrderClient orderClient;
 
     @Autowired
     private RedisLuaService redisLuaService;
@@ -96,7 +101,7 @@ public class PointsExchangeConsumer {
             }
 
             // 3.验证配送地址
-            validateDeliveryAddress(message);
+            DeliveryAddress address = validateDeliveryAddress(message);
 
             // 4.查询商品信息
             Food food = getFoodInfo(message.getFoodId());
@@ -134,6 +139,11 @@ public class PointsExchangeConsumer {
             order.setCreateTime(LocalDateTime.now());
             order.setUpdateTime(LocalDateTime.now());
             order.setIsDeleted(false);
+            order.setAddress(address.getAddress());
+            order.setContactName(address.getContactName());
+            order.setContactTel(address.getContactTel());
+            order.setContactSex(address.getContactSex());
+
 
             // 9.创建订单详情
             OrderDetailet orderDetailet = new OrderDetailet();
@@ -147,7 +157,17 @@ public class PointsExchangeConsumer {
             orderDetailet.setUpdateTime(LocalDateTime.now());
             orderDetailet.setIsDeleted(false);
 
-            // 10. 扣减积分（库存已减少，如果积分不足，库存会自动回滚）
+
+            CreateOrderDTO request = new CreateOrderDTO();
+            request.setOrder(order);
+            request.setOrderDetailet(orderDetailet);
+            HttpResult<Boolean> createResult = orderClient.orderCreate(request);
+
+            if (createResult == null) {
+                throw new APIException("ORDER_SERVICE_UNAVAILABLE", "订单服务不可用");
+            }
+
+            // 10.扣减积分（库存已减少，如果积分不足，库存会自动回滚）
             PointsDeductDTO deductDTO = new PointsDeductDTO();
             deductDTO.setRelatedOrderId(order.getId());
             deductDTO.setUserId(message.getUserId());
@@ -157,7 +177,7 @@ public class PointsExchangeConsumer {
             deductDTO.setDescription("兑换商品：" + food.getFoodName() + " x" + message.getQuantity());
             pointsService.deductPoints(deductDTO,message.getUserId());
 
-            // 11. 创建积分兑换订单记录
+            // 11.创建积分兑换订单记录
             PointsExchangeOrder exchangeOrder = new PointsExchangeOrder();
             exchangeOrder.setUserId(message.getFoodId());
             exchangeOrder.setOrderId(order.getId()); // 关联普通订单
@@ -170,7 +190,7 @@ public class PointsExchangeConsumer {
             exchangeOrder.setIsDeleted(false);
             exchangeOrderMapper.insert(exchangeOrder);
 
-            // 12. 标记消息已处理
+            // 12.标记消息已处理
             markMessageAsProcessed(requestId);
 
             // 清理Redis预扣记录（保留一段时间用于查询）
@@ -207,11 +227,13 @@ public class PointsExchangeConsumer {
     /**
      * 验证配送地址
      */
-    private void validateDeliveryAddress(PointsExchangeMessageDTO message) {
+    private DeliveryAddress validateDeliveryAddress(PointsExchangeMessageDTO message) {
         DeliveryAddress address = userClient.gainDeliveryAddressById(message.getAddressId()).getData();
+        log.info(String.valueOf(address.getUserId().equals(message.getUserId())));
         if (address == null || !address.getUserId().equals(message.getUserId())) {
             throw new APIException(ResultCodeEnum.ADDRESS_MISSED);
         }
+        return address;
     }
 
     /**

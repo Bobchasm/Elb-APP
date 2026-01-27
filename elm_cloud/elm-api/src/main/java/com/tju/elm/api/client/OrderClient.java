@@ -11,7 +11,7 @@ import java.util.List;
 @FeignClient("order-service")
 public interface OrderClient {
     @PostMapping("/api/orders/create")
-    HttpResult<Long> orderCreate(@RequestBody CreateOrderDTO orderCreateDTO);
+    HttpResult<Boolean> orderCreate(@RequestBody CreateOrderDTO orderCreateDTO);
 
     @GetMapping("/api/orders")
     HttpResult<Order> gainOrder(@RequestParam Long orderId);

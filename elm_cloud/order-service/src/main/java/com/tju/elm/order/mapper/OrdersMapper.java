@@ -13,6 +13,9 @@ public interface OrdersMapper {
 
     void insertOrderPlus(Order order);
 
+    @Update("update orders set points_used = 1 where id = #{orderId}")
+    void setOrderIsPoint(Long orderId);
+
     @Select("""
         <script>
             select o.id,o.order_total,o.order_state,o.order_date,o.business_id,o.delivery_price

@@ -1,6 +1,7 @@
 package com.tju.elm.order.zoo.pojo.vo;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.xml.bind.annotation.XmlType;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ public class OrderDetailet {
     private Integer quantity;
 
     @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(description = "创建人ID")
@@ -30,6 +32,7 @@ public class OrderDetailet {
     private Boolean isDeleted;
 
     @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     @Schema(description = "更新人ID")
