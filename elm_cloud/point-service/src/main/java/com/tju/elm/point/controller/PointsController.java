@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
 import utils.UserContext;
@@ -128,6 +129,7 @@ public class PointsController {
      */
     @GetMapping("/exchange-goods")
     @Operation(summary = "获取可兑换商品列表", description = "查询所有可兑换的商品（包含商品信息和所需积分）")
+    @Cacheable(value = "exchange", key = "'good_list'")
     public HttpResult<List<PointsExchangeGoodsVO>> getExchangeGoodsList() {
         List<PointsExchangeGoodsVO> goodsList =
             exchangeRuleService.getExchangeGoodsList();
@@ -139,6 +141,7 @@ public class PointsController {
      */
     @GetMapping("/exchange-ratio")
     @Operation(summary = "获取积分+现金兑换比例", description = "查询积分兑换现金的比例")
+    @Cacheable(value = "exchange", key = "'rate'")
     public HttpResult<java.math.BigDecimal> getExchangeRatio() {
         java.math.BigDecimal ratio = exchangeRuleService.getCashExchangeRatio();
         return HttpResult.success(ratio);
