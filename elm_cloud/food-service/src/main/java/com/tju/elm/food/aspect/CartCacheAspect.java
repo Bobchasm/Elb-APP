@@ -97,6 +97,19 @@ public class CartCacheAspect {
      */
     @Around("@annotation(cartCacheEvict)")
     public Object handleCacheEvict(ProceedingJoinPoint joinPoint, CartCacheEvict cartCacheEvict) throws Throwable {
+        // 在执行前获取businessId(避免执行后实体被删除无法获取)
+        Long businessIdBeforeExecution = null;
+        if (!cartCacheEvict.beforeInvocation()) {
+            try {
+                Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+                Object[] args = joinPoint.getArgs();
+                StandardEvaluationContext context = createEvaluationContext(method, args);
+                businessIdBeforeExecution = evaluateSpEL(cartCacheEvict.businessIdSpEL(), context, Long.class);
+            } catch (Exception e) {
+                log.warn("预获取businessId失败: {}", e.getMessage());
+            }
+        }
+
         // 执行方法
         Object result;
         try {
@@ -109,7 +122,7 @@ public class CartCacheAspect {
 
         // 业务执行成功后清理缓存（默认在执行后清理）
         if (!cartCacheEvict.beforeInvocation()) {
-            evictCacheAfterSuccess(joinPoint, cartCacheEvict);
+            evictCacheAfterSuccess(joinPoint, cartCacheEvict, businessIdBeforeExecution);
         }
 
         return result;
@@ -118,7 +131,7 @@ public class CartCacheAspect {
     /**
      * 业务成功后清理缓存
      */
-    private void evictCacheAfterSuccess(ProceedingJoinPoint joinPoint, CartCacheEvict cartCacheEvict) {
+    private void evictCacheAfterSuccess(ProceedingJoinPoint joinPoint, CartCacheEvict cartCacheEvict, Long businessIdBeforeExecution) {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Object[] args = joinPoint.getArgs();
 
@@ -143,9 +156,14 @@ public class CartCacheAspect {
             // 创建支持Bean解析的EvaluationContext
             StandardEvaluationContext context = createEvaluationContext(method, args);
 
-            // 解析SpEL表达式获取用户名和商家ID
+            // 解析SpEL表达式获取用户名
             String username = evaluateSpEL(cartCacheEvict.username(), context, String.class);
-            Long businessId = evaluateSpEL(cartCacheEvict.businessIdSpEL(), context, Long.class);
+            
+            // 优先使用预获取的businessId，如果没有则尝试再次解析
+            Long businessId = businessIdBeforeExecution;
+            if (businessId == null) {
+                businessId = evaluateSpEL(cartCacheEvict.businessIdSpEL(), context, Long.class);
+            }
 
             // 如果无法获取businessId，记录日志但不清理缓存
             if (businessId == null) {

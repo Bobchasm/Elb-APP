@@ -12,6 +12,7 @@ import com.tju.elm.food.pojo.vo.CartItemVO;
 import com.tju.elm.food.pojo.vo.CartVO;
 import com.tju.elm.food.service.CartService;
 import exception.APIException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class CartServiceImpl implements CartService {
     @Autowired
     private CartMapper cartMapper;
@@ -92,7 +94,7 @@ public class CartServiceImpl implements CartService {
 
         Cart cart = cartMapper.selectCartById(cartId);
         if (cart == null) {
-            throw new APIException(ResultCodeEnum.CART_MISSED);
+            return cartId;
         }
         if (!Objects.equals(cart.getCustomerId(), userId)) {
             throw new APIException(ResultCodeEnum.USER_DENIED);

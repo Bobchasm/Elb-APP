@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
 import result.ResultCodeEnum;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -202,7 +203,7 @@ public class BusinessController {
     @Operation(summary = "获取轮播图商家")
     @Cacheable(value = "business", key = "'carousel'", sync = true)
     public HttpResult<List<BusinessSearchVO>> searchBusinessCarousel(){
-        return HttpResult.success(businessService.getBusinessesInCarousel());
+        return HttpResult.success(new ArrayList<>(businessService.getBusinessesInCarousel()));
 
     }
 

@@ -1,7 +1,9 @@
 package config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,12 +38,23 @@ public class CommonRedisConfig {
 
         // value 序列化配置
         ObjectMapper om = new ObjectMapper();
+
+        // 注册JavaTime模块处理日期时间
         om.registerModule(new JavaTimeModule());
+
+        // 配置忽略未知属性
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        // 配置允许反序列化任何类型
         om.activateDefaultTyping(
-                om.getPolymorphicTypeValidator(),
+                LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
         );
+
+        // 配置避免SubList等内部类的问题
+        om.addMixIn(java.util.List.class, ListMixIn.class);
+        om.addMixIn(java.util.ArrayList.class, ListMixIn.class);
 
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer(om);
@@ -51,4 +64,8 @@ public class CommonRedisConfig {
         redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }
+
+    // 添加MixIn接口处理List类型
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+    abstract static class ListMixIn {}
 }

@@ -182,7 +182,26 @@ public class OrderServiceImpl implements OrderService {
     public OrderItemDetailVO getOrderItemDetail(Long orderItemId) {
         OrderItemDetailVO ret = ordersMapper.selectOrderItemById(orderItemId);
 
-        ret.setFoodList(orderDetailetMapper.selectOrderDetailList(orderItemId));
+        List<OrderFoodVO> orderFoodList = orderDetailetMapper.selectOrderDetailList(orderItemId);
+
+        Set<Long> foodIds = orderFoodList.stream()
+                .map(OrderFoodVO::getFoodId)
+                .collect(Collectors.toSet());
+
+        List<Food> foodList = foodClient.gainFoodsByIds(foodIds).getData();
+
+        for(OrderFoodVO orderFoodVO : orderFoodList){
+            Food food = orderFoodVO.getFoodId() == null ? null : foodList.stream()
+                    .filter(f -> orderFoodVO.getFoodId().equals(f.getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (null != food) {
+                orderFoodVO.setFoodName(food.getFoodName());
+            }
+        }
+
+
+        ret.setFoodList(orderFoodList);
         Business business = businessClient.gainBusinessById(ret.getBusinessId()).getData();
         User user = userClient.gainUserById(ret.getCustomerId()).getData();
         ret.setCustomerName(user.getUsername());
