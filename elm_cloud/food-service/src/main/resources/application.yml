@@ -14,6 +14,10 @@ spring:
     hikari: # 配置连接池读已提交
       transaction-isolation: TRANSACTION_READ_COMMITTED
   cloud:
+    sentinel:
+      transport:
+        dashboard: REDACTED_IP:8090
+      http-method-specify: true
     nacos:
       discovery:
         server-addr: ${elm.nacos.server-addr}
