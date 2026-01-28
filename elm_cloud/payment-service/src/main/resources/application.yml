@@ -19,7 +19,8 @@ spring:
         server-addr: ${elm.nacos.server-addr}
         namespace: public  # 明确指定 namespace
         group: DEFAULT_GROUP
-
+        username: ${elm.nacos.username}
+        password: ${elm.nacos.pw}
         ip: 127.0.0.1  # 本地IP（如果是本机测试）
         port: ${server.port}  # 服务端口
         enabled: true  # 明确启用

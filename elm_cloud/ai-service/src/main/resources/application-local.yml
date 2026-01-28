@@ -3,3 +3,7 @@ elm:
     host: 127.0.0.1
     username: root
     pw: 123456
+  nacos:
+    server-addr: REDACTED_IP:8848
+    username: nacos
+    pw: 123456

@@ -6,3 +6,5 @@ elm:
 
   nacos:
     server-addr: REDACTED_IP:8848
+    username: nacos
+    pw: 123456

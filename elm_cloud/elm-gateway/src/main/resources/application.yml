@@ -7,6 +7,8 @@ spring:
   cloud:
     nacos:
       server-addr: REDACTED_IP:8848
+      username: nacos
+      password: 123456
     gateway:
       routes:
         # AI 服务路由

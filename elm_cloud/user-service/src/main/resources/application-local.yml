@@ -10,5 +10,7 @@ elm:
       password:
       database: 5
 
-server:
-  port: 8888
+  nacos:
+    server-addr: REDACTED_IP:8848
+    username: nacos
+    pw: 123456
