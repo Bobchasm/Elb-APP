@@ -96,6 +96,27 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Spring Cloud Alibaba Sentinel 核心依赖 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <version>2022.0.0.0</version> <!-- 根据你的 Spring Cloud 版本选择 -->
+        </dependency>
+
+        <!-- 网关适配器  -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-sentinel-gateway</artifactId>
+            <version>2022.0.0.0</version>
+        </dependency>
+
+        <!-- Sentinel API 客户端 -->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-transport-simple-http</artifactId>
+            <version>1.8.6</version>
+        </dependency>
+
     </dependencies>
 
     <build>
