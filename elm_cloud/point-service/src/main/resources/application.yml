@@ -1,6 +1,89 @@
 server:
   port: 8887
 
+spring:
+  application:
+    name: point-service
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${elm.db.host}:3306/elm_points_system
+    username: ${elm.db.username}
+    password: ${elm.db.pw}
+    hikari: # 配置连接池读已提交
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${elm.nacos.server-addr}
+        namespace: public  # 明确指定 namespace
+        group: DEFAULT_GROUP
+        username: ${elm.nacos.username}
+        password: ${elm.nacos.pw}
+        ip: 127.0.0.1  # 本地IP（如果是本机测试）
+        port: ${server.port}  # 服务端口
+        enabled: true  # 明确启用
+        register-enabled: true  # 允许注册
+        # 网络配置
+        metadata:
+          version: 1.0
+        # 健康检查
+        heartbeat:
+          interval: 5000  # 心跳间隔（毫秒）
+
+  rabbitmq:
+    host: ${elm.rabbitmq.host}
+    port: 5672
+    username: ${elm.rabbitmq.username}
+    password: ${elm.rabbitmq.password}
+    virtual-host: /
+    # Points服务特定的连接配置
+    connection-timeout: 5000
+    publisher-confirm-type: correlated  # 发布确认
+    publisher-returns: true  # 返回模式
+
+  data:
+    redis:
+      host: ${elm.data.redis.host}
+      port: 6379
+      password: ${elm.data.redis.password}
+      database: ${elm.data.redis.database}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+
+mybatis:
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+  # 指定XML映射文件位置
+  mapper-locations:
+    - classpath*:/mapper/*.xml
+
+
+# swagger
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+logging:
+  level:
+    com.tju.elm: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"
+
 points:
   rabbitmq:
     exchange:
@@ -12,10 +95,3 @@ points:
   redis:
     key-prefix: "points:"  # Points服务Redis key前缀
     timeout: 300  # Redis操作超时时间（秒）
-
-elm:
-  db:
-    database: elm_points_system
-  redis:
-    db: 0
-    pw: ""

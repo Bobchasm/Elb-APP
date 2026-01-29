@@ -2,7 +2,25 @@ server:
   port: 8086
 
 spring:
+  application:
+    name: gateway
   cloud:
+    sentinel:
+      enabled: true
+      transport:
+        dashboard: REDACTED_IP:8090
+        port: 8099
+        client-ip: 172.18.163.226
+        heartbeat-interval-ms: 5000
+      eager: true
+      http-method-specify: true
+      web:
+        servlet:
+          enabled: true  # 启用 Web 适配器
+    nacos:
+      server-addr: REDACTED_IP:8848
+      username: nacos
+      password: 123456
     gateway:
       routes:
         # AI 服务路由
@@ -53,6 +71,32 @@ spring:
           predicates:
             - Path=/test,/api/addresses/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status,/api/business/active,/api/config/**
 
+
+elm:
+  auth:
+    excludePaths:
+      - /api/auth
+      - /api/register
+      - /**/v3/api-docs/**
+      - /**/swagger-ui/**
+      - /**/swagger-ui.html
+      - /upload
+      - /ws/**
+      - /api/ai/chat/health
+      - /api/businesses/search
+      - /api/businesses/carousel
+      - /api/admin/countUser
+
 # JWT配置
 jwt:
   secret: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz123456
+  token-validity-in-seconds: 86400
+  token-validity-in-seconds-for-remember-me: 108000
+
+# 日志配置
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.tju.elm.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty: DEBUG
