@@ -9,21 +9,21 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "deepseek")
 public class DeepSeekConfig {
     
-    private String apiKey = "REDACTED_API_KEY";
+    private String apiKey;
     
-    private String baseUrl = "https://api.deepseek.com";
+    private String baseUrl;
     
-    private String chatEndpoint = "/chat/completions";
+    private String chatEndpoint;
     
-    private String model = "deepseek-chat";
+    private String model;
     
-    private Integer maxTokens = 1024;
+    private Integer maxTokens;
     
-    private Double temperature = 0.7;
+    private Double temperature;
     
-    private Double topP = 0.9;
+    private Double topP;
     
-    private Integer timeoutSeconds = 30;
+    private Integer timeoutSeconds;
     
-    private Integer maxRetries = 3;
+    private Integer maxRetries;
 }
