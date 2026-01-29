@@ -1,65 +1,13 @@
 server:
   port: 8884
 
-spring:
-  application:
-    name: notification-service
-  profiles:
-    active: dev
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${elm.db.host}:3306/elm_notification
-    username: ${elm.db.username}
-    password: ${elm.db.pw}
-    hikari: # 配置连接池读已提交
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${elm.nacos.server-addr}
-        namespace: public  # 明确指定 namespace
-        group: DEFAULT_GROUP
-
-        ip: 127.0.0.1  # 本地IP（如果是本机测试）
-        port: ${server.port}  # 服务端口
-        enabled: true  # 明确启用
-        register-enabled: true  # 允许注册
-        # 网络配置
-        metadata:
-          version: 1.0
-        # 健康检查
-        heartbeat:
-          interval: 5000  # 心跳间隔（毫秒）
-
-mybatis:
-  configuration:
-    #开启驼峰命名
-    map-underscore-to-camel-case: true
-  # 指定XML映射文件位置
-  mapper-locations:
-    - classpath*:/mapper/*.xml
-
-
-# swagger
-springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui
-
-logging:
-  level:
-    com.tju.elm: debug
-  pattern:
-    dateformat: HH:mm:ss:SSS
-  file:
-    path: "logs/${spring.application.name}"
-
 txcos:
   secretId: REDACTED_SECRET_ID
   secretKey: REDACTED_SECRET_KEY
   region: ap-beijing
   bucketName: txcloud-cos1-1375850795
   enableAccelerate: true
+
+elm:
+  db:
+    database: elm_notification

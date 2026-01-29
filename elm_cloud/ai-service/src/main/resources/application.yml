@@ -1,62 +1,6 @@
 server:
   port: 8881
 
-spring:
-  application:
-    name: ai-service
-  profiles:
-    active: dev
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${elm.db.host}:3306/elm_ai_record
-    username: ${elm.db.username}
-    password: ${elm.db.pw}
-    hikari: # 配置连接池读已提交
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${elm.nacos.server-addr}
-        namespace: public  # 明确指定 namespace
-        group: DEFAULT_GROUP
-        username: ${elm.nacos.username}
-        password: ${elm.nacos.pw}
-
-        ip: 127.0.0.1  # 本地IP（如果是本机测试）
-        port: ${server.port}  # 服务端口
-        enabled: true  # 明确启用
-        register-enabled: true  # 允许注册
-        # 网络配置
-        metadata:
-          version: 1.0
-        # 健康检查
-        heartbeat:
-          interval: 5000  # 心跳间隔（毫秒）
-
-mybatis:
-  configuration:
-    #开启驼峰命名
-    map-underscore-to-camel-case: true
-
-
-# swagger
-springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui
-
-logging:
-  level:
-    com.tju.elm: debug
-  pattern:
-    dateformat: HH:mm:ss:SSS
-  file:
-    path: "logs/${spring.application.name}"
-
-
 # DeepSeek AI配置
 deepseek:
   api-key: REDACTED_API_KEY
@@ -68,3 +12,7 @@ deepseek:
   top-p: 0.9
   timeout-seconds: 30
   max-retries: 3
+
+elm:
+  db:
+    database: elm_ai

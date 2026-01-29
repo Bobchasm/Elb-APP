@@ -1,9 +1,9 @@
 spring:
   application:
-    name: user-service
+    name: food-service
   cloud:
     nacos:
-      server-addr: REDACTED_IP:8848
+      server-addr: 172.26.11.128:8848
       username: nacos
       password: 123456
       config:
@@ -13,4 +13,3 @@ spring:
           - data-id: shared-log.yaml
           - data-id: shared-mybatis.yaml
           - data-id: shared-nacos.yaml
-          - data-id: shared-redis.yaml

@@ -1,9 +1,9 @@
 spring:
   application:
-    name: user-service
+    name: payment-service
   cloud:
     nacos:
-      server-addr: REDACTED_IP:8848
+      server-addr: 172.26.11.128:8848
       username: nacos
       password: 123456
       config:
