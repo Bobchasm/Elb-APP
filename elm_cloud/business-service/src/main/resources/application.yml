@@ -21,7 +21,7 @@ spring:
         group: DEFAULT_GROUP
         username: ${elm.nacos.username}
         password: ${elm.nacos.pw}
-        ip: 127.0.0.1  # 本地IP（如果是本机测试）
+        ip: 127.0.0.1  # 运行机器的ip
         port: ${server.port}  # 服务端口
         enabled: true  # 明确启用
         register-enabled: true  # 允许注册

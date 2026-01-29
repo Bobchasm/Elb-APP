@@ -15,8 +15,12 @@ spring:
       transaction-isolation: TRANSACTION_READ_COMMITTED
   cloud:
     sentinel:
+      enabled: true
       transport:
         dashboard: REDACTED_IP:8090
+        port: 8719
+        heartbeat-interval-ms: 5000
+      eager: true
       http-method-specify: true
     nacos:
       discovery:

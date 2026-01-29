@@ -11,11 +11,11 @@ elm:
       database: 3
 
   rabbitmq:
-    host: REDACTED_IP
+    host: 127.0.0.1
     username: rabbit
     password: rabbit
 
   nacos:
-    server-addr: REDACTED_IP:8848
+    server-addr: 172.26.11.128:8848
     username: nacos
     pw: 123456
