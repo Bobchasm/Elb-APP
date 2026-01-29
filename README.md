@@ -24,8 +24,8 @@
 - password: Bobbusiness123
 
 管理员：
-- username: admin
-- password: Admin123
+- username: bob_admin
+- password: Bobadmin123
 
 
 ### 4.2 提交问题
