@@ -11,6 +11,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import utils.UserContext;
 
 import jakarta.servlet.http.HttpServletRequest;
+import com.tju.elm.api.client.fallback.OrderClientFallbackFactory; 
 
 @Slf4j
 @Configuration
@@ -93,5 +94,10 @@ public class DefaultFeignConfig {
     @Bean
     public ErrorDecoder errorDecoder() {
         return new FeignErrorDecoder();
+    }
+
+    @Bean
+    public OrderClientFallbackFactory orderClientFallbackFactory() {
+        return new OrderClientFallbackFactory();
     }
 }

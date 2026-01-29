@@ -5,10 +5,13 @@ import com.tju.elm.api.po.Order;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import result.HttpResult;
-
+import com.tju.elm.api.client.OrderClient;
 import java.util.List;
-
-@FeignClient("order-service")
+import com.tju.elm.api.client.fallback.OrderClientFallbackFactory;
+@FeignClient(
+    name="order-service",
+    fallbackFactory = OrderClientFallbackFactory.class
+)
 public interface OrderClient {
     @PostMapping("/api/orders/create")
     HttpResult<Boolean> orderCreate(@RequestBody CreateOrderDTO orderCreateDTO);
