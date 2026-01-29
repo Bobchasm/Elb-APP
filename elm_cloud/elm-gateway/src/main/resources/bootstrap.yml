@@ -9,8 +9,5 @@ spring:
       config:
         file-extension: yaml
         shared-configs:
-          - data-id: shared-swagger.yaml
           - data-id: shared-log.yaml
-          - data-id: shared-mybatis.yaml
           - data-id: shared-nacos.yaml
-          - data-id: shared-redis.yaml
