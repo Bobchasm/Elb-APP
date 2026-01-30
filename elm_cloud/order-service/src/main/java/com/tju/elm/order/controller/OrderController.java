@@ -55,7 +55,7 @@ public class OrderController {
     @Operation(summary = "获取订单详情")
     @Cacheable(value = "order_detail", key = "#orderId")
     public HttpResult<OrderItemDetailVO> listOrdersByUser(@RequestParam Long orderId) {
-        ThreadUtil.sleep(1000);
+//        ThreadUtil.sleep(1000);
         return HttpResult.success(orderService.getOrderItemDetail(orderId));
     }
 

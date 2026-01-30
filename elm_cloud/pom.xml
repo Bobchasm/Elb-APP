@@ -68,6 +68,10 @@
 
         <!-- 跳过测试 -->
         <skipTests>true</skipTests>
+
+        <!-- Micrometer Tracing 版本 -->
+        <micrometer-tracing.version>1.2.0</micrometer-tracing.version>
+        <brave.version>5.17.0</brave.version>
     </properties>
 
     <!-- 父级依赖 -->
@@ -237,6 +241,15 @@
                 <groupId>org.glassfish.jaxb</groupId>
                 <artifactId>jaxb-runtime</artifactId>
                 <version>4.0.5</version>
+            </dependency>
+
+             <!-- Micrometer Tracing BOM -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-tracing-bom</artifactId>
+                <version>${micrometer-tracing.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
         </dependencies>

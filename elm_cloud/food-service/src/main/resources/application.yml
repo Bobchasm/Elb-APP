@@ -74,6 +74,27 @@ springdoc:
     enabled: true
     path: /swagger-ui
 
+# Jaeger 追踪配置
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 采样率：1.0=100%（开发环境），生产环境建议0.1-0.5
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,tracing
+
+# Jaeger 配置
+tracing:
+  jaeger:
+    enabled: true
+    agent:
+      host: REDACTED_IP  # 主服务器IP
+      port: 6831
+    sampler:
+      type: const  # const=固定采样率, ratelimiting=速率限制, probabilistic=概率采样
+      param: 1     # 1=100%采样，0.1=10%采样
+
 logging:
   level:
     com.tju.elm: debug
