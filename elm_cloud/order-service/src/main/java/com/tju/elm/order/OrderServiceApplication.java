@@ -17,10 +17,11 @@ import java.util.TimeZone;
                 "filters",
                 "com.tju.elm.api.config",
                 "exception",
-                "result"
+                "result",
+                "com.tju.elm.api.client.fallback"
         }
 )
-@Import({config.CacheConfig.class,config.CommonRedisConfig.class,config.RabbitMQConfig.class})
+@Import({config.CacheConfig.class,config.CommonRedisConfig.class,config.RabbitMQConfig.class,com.tju.elm.api.config.DefaultFeignConfig.class, com.tju.elm.api.config.FeignErrorDecoder.class})
 @MapperScan(
         basePackages = {"com.tju.elm.order.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class
