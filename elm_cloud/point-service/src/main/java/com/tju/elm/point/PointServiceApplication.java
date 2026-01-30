@@ -20,7 +20,7 @@ import java.util.TimeZone;
                 "result"
         }
 )
-@Import({config.RabbitMQConfig.class})
+@Import({config.RabbitMQConfig.class,config.JaegerConfig.class})
 @MapperScan(
         basePackages = {"com.tju.elm.point.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class

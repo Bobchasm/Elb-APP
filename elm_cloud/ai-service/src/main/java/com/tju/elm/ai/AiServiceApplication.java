@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Import;
 
 import java.util.TimeZone;
 
@@ -17,6 +18,7 @@ import java.util.TimeZone;
                 "result"
         }
 )
+@Import({config.JaegerConfig.class})
 @MapperScan(
         basePackages = {"com.tju.elm.ai.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class

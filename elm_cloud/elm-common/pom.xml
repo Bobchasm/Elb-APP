@@ -166,6 +166,21 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Zipkin Reporter (用于发送追踪数据到 Jaeger) -->
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+            <version>2.16.4</version>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-sender-okhttp3</artifactId>
+            <version>2.16.4</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Jaeger 客户端  -->
         <dependency>
             <groupId>io.jaegertracing</groupId>

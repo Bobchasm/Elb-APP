@@ -20,7 +20,7 @@ import java.util.TimeZone;
                 "result"
         }
 )
-@Import({config.CacheConfig.class,config.CommonRedisConfig.class,config.RabbitMQConfig.class,com.tju.elm.api.config.DefaultFeignConfig.class, com.tju.elm.api.config.FeignErrorDecoder.class,com.tju.elm.api.client.fallback.OrderClientFallbackFactory.class})
+@Import({config.CacheConfig.class,config.CommonRedisConfig.class,config.RabbitMQConfig.class,config.JaegerConfig.class,com.tju.elm.api.config.DefaultFeignConfig.class, com.tju.elm.api.config.FeignErrorDecoder.class,com.tju.elm.api.client.fallback.OrderClientFallbackFactory.class})
 @MapperScan(
         basePackages = {"com.tju.elm.order.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class

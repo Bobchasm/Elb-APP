@@ -20,7 +20,7 @@ import java.util.TimeZone;
                 "result"
         }
 )
-@Import({config.CacheConfig.class,config.CommonRedisConfig.class})
+@Import({config.CacheConfig.class,config.CommonRedisConfig.class,config.JaegerConfig.class})
 @MapperScan(
         basePackages = {"com.tju.elm.food.mapper"},
         annotationClass = org.apache.ibatis.annotations.Mapper.class

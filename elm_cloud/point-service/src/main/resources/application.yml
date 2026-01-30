@@ -92,7 +92,7 @@ tracing:
     enabled: true
     agent:
       host: REDACTED_IP  # 主服务器IP
-      port: 6831
+      port: 14268  # Jaeger Agent HTTP 端口（UDP 端口是 6831）
     sampler:
       type: const  # const=固定采样率, ratelimiting=速率限制, probabilistic=概率采样
       param: 1     # 1=100%采样，0.1=10%采样
