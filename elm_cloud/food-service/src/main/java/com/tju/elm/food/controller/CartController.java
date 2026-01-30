@@ -1,5 +1,6 @@
 package com.tju.elm.food.controller;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.tju.elm.food.annotation.CartCacheEvict;
 import com.tju.elm.food.annotation.CartCacheable;
 import com.tju.elm.food.aspect.CartCacheHelper;
@@ -35,6 +36,7 @@ public class CartController {
     @Operation(summary = "向购物车添加商品")
     @CartCacheEvict(businessIdSpEL = "@cartCacheHelper.getBusinessIdByFoodId(#foodId)")
     public HttpResult<Long> addCartItem(@RequestParam Long foodId, @RequestParam Integer quantity) {
+        ThreadUtil.sleep(1000);
         return HttpResult.success(cartService.addItem(foodId, quantity));
     }
 

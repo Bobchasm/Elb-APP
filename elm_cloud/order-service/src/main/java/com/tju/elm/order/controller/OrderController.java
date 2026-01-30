@@ -1,5 +1,6 @@
 package com.tju.elm.order.controller;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.tju.elm.order.mapper.OrdersMapper;
 import com.tju.elm.order.zoo.pojo.dto.CreateOrderDTO;
 import com.tju.elm.order.zoo.pojo.vo.Order;
@@ -54,6 +55,7 @@ public class OrderController {
     @Operation(summary = "获取订单详情")
     @Cacheable(value = "order_detail", key = "#orderId")
     public HttpResult<OrderItemDetailVO> listOrdersByUser(@RequestParam Long orderId) {
+        ThreadUtil.sleep(1000);
         return HttpResult.success(orderService.getOrderItemDetail(orderId));
     }
 
