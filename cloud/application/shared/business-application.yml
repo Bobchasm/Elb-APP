@@ -7,3 +7,5 @@ elm:
   redis:
     db: 1
     pw: ""
+  nacos:
+    server: 127.0.0.1

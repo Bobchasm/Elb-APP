@@ -91,7 +91,7 @@ docker load -i <镜像包tar在服务器上的路径>
 
 - 在对应目录上传配置文件以及jar包，带配置管理的需要上传相应的`application.yml`以及`bootstrap`，如果是直接使用的`/cloud/application`中的文件需要去掉文件名的服务前缀；然后jar包需要改名为 `elm-<服务前缀>-app.jar`
 
-- 然后对于配置文件中会有一些参数`client-ip`需要改成所部署的服务器ip
+- 然后对于不支持共享配置的application.yml中会有一些参数`client-ip`需要改成所部署的服务器ip，对于共享配置的application.yml则是`elm.nacos.server`需要改
 
 - 创建并运行容器
   
@@ -100,16 +100,16 @@ docker load -i <镜像包tar在服务器上的路径>
   ```bash
   # 带配置管理
   docker run -d --name elm-notification-app \
-  -p 8884:8884 
-  -v (pwd)/elm-notification-app.jar:/elm-notification-app.jar 
-  -v (pwd)/application.yml:/application.yml 
-  -v $(pwd)/bootstrap.yml:/bootstrap.yml 
+  -p 8884:8884 \
+  -v $(pwd)/elm-notification-app.jar:/elm-notification-app.jar \
+  -v $(pwd)/application.yml:/application.yml \
+  -v $(pwd)/bootstrap.yml:/bootstrap.yml \
   elm-micro-notification:2.0.0
   # 不带配置管理
   docker run -d --name elm-notification-app \
-  -p 8884:8884 
-  -v (pwd)/elm-notification-app.jar:/elm-notification-app.jar 
-  -v (pwd)/application.yml:/application.yml 
+  -p 8884:8884 \
+  -v $(pwd)/elm-notification-app.jar:/elm-notification-app.jar \
+  -v $(pwd)/application.yml:/application.yml \
   elm-micro-notification:1.0.0
   ```
 
