@@ -1,0 +1,23 @@
+spring:
+  cloud:
+    sentinel:
+      enabled: true
+      transport:
+        dashboard: ${elm.nacos.server-addr:REDACTED_IP}:8090
+        port: 8099
+        heartbeat-interval-ms: 5000
+      eager: true
+      http-method-specify: true
+    nacos:
+      discovery:
+        server-addr: ${elm.nacos.server-addr:REDACTED_IP}
+        namespace: public
+        group: DEFAULT_GROUP
+        ip: ${elm.nacos.server:127.0.0.1}
+        port: ${server.port}
+        enabled: true
+        register-enabled: true
+        metadata:
+          version: 1.0
+        heartbeat:
+          interval: 5000  # 心跳间隔（毫秒）

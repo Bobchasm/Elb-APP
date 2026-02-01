@@ -7,5 +7,6 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 COPY /target/business-service-1.0.0-SNAPSHOT.jar /elm-business-app.jar
 # 拷贝 配置文件
 COPY /src/main/resources/application.yml /application.yml
+COPY /src/main/resources/bootstrap.yml /bootstrap.yml
 # 入口，排除配置文件(部署时外置)
-ENTRYPOINT ["java", "-jar", "/elm-business-app.jar", "--spring.config.location=/application.yml"]
+ENTRYPOINT ["java", "-jar", "/elm-business-app.jar", "--spring.config.location=/application.yml,/bootstrap.yml"]

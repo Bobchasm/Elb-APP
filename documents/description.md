@@ -80,15 +80,14 @@
 
 ### 部署计划
 
-| 服务器          | 主要用途                  | 部署内容                                                                                 |
-| ------------ | --------------------- | ------------------------------------------------------------------------------------ |
-| **腾讯云**      | 前端+注册中心+网关+数据库主节点     | `nginx` +`frontend`+`nacos`+`gateway`+`mysql主节点`+`redis主节点`                          |
-| **阿里云ECS A** | 服务集群                  | `payment-service`+`point-service`+`user-service-instance1`+`order-service-instance2` |
-| **阿里云ECS B** | 服务集群                  | `order-service-instance1`+`food-service1`+`business-service1`+`notification-service` |
-| **阿里云ECS C** | 服务集群                  | `user-service-instance2`+`business-service2`+`food-service2`+`ai-service`            |
-| **阿里云ECS D** | 数据库从节点+中间件+其他(服务治理那些) | `mysql从节点`+`redis从节点`+`rocketmq`                                                     |
+| 服务器          | 主要用途     | 部署内容                                                                                 |
+| ------------ | -------- | ------------------------------------------------------------------------------------ |
+| **腾讯云**      | 前端+一些中间件 | `nginx` +`frontend`+`nacos`+`gateway`+`mysql`+`redis` + `sentinel`                   |
+| **阿里云ECS A** | 服务集群     | `payment-service`+`point-service`+`user-service-instance1`+`order-service-instance2` |
+| **阿里云ECS B** | 服务集群     | `order-service-instance1`+`food-service1`+`business-service1`+`notification-service` |
+| **阿里云ECS C** | 服务集群     | `user-service-instance2`+`business-service2`+`food-service2`+`ai-service`            |
 
-现在情况：
+*现在情况：
 
 - 使用的是rabbitmq而非rocketmq，且rabbitmq暂时部署在腾讯云上
 
@@ -217,20 +216,18 @@ docker restart elm-micro-fr
 
 - 重点注意一下依赖管理，有些公共依赖我在整个父工程的pom下进行了版本管理，并在common的pom里引入了。然后common下的pom已经引入了动态数据库的依赖，但是设成optional了，别的服务还得再引，如果不用这个依赖，直接删掉就好
 
-**可能还需要干的**
+***可能还需要干的**
 
-1. 配置管理，共享的搞到nacos上去
+1. 配置管理，共享的搞到nacos上去 ok
 
-2. 服务治理（服务熔断也没做现在）
+2. 服务治理（服务熔断也没做现在）ok
 
-3. 分布式缓存和数据库，现在只有单数据库和缓存在腾讯云的服务器
+3. 分布式缓存和数据库，现在只有单数据库和缓存在腾讯云的服务器 no
 
-4. 现在用的是rabbitmq，考虑改用rocketmq(老师文档写的rocketmq)，现在rabbitmq主要用在下单、订单状态等会增加积分的操作上，其他地方还没用
+4. 现在用的是rabbitmq，考虑改用rocketmq(老师文档写的rocketmq)，现在rabbitmq主要用在下单、订单状态等会增加积分的操作上，其他地方还没用 ok但还是rabbitmq
 
-5. 给下单操作加上高并发支持，缓存+消息队列异步+lua脚本原子操作
+5. 给下单操作加上高并发支持，缓存+消息队列异步+lua脚本原子操作 ok
 
-6. 给更多的接口加上缓存支持
-
-4、5、6可以后面我来，然后分布式缓存可以先构建一个框架和方案，因为现在没几个接口加了缓存
+6. 给更多的接口加上缓存支持 ok 使用redis+caffeine
 
 
