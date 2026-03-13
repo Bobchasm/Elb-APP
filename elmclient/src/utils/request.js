@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const BASE_URL = 'http://REDACTED_DOMAIN:8080';
-export const WS_BASE_URL = 'REDACTED_DOMAIN:8080';
+export const BASE_URL = 'https://REDACTED_DOMAIN';
+export const WS_BASE_URL = 'wss://REDACTED_DOMAIN';
 
 // 1. 创建 Axios 实例
 const request = axios.create({

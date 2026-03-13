@@ -334,7 +334,7 @@ export default {
       userId.value = userInfo.value.id;
       if (!userId.value) return;
 
-      socket.value = new WebSocket(`ws://${WS_BASE_URL}/ws/${userId.value}`);
+      socket.value = new WebSocket(`${WS_BASE_URL}/ws/${userId.value}`);
 
       socket.value.onopen = () => {
         console.log("WebSocket 连接成功");

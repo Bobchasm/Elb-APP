@@ -177,8 +177,7 @@ const initWebSocket = () => {
     
     // 创建WebSocket连接
     const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${WS_BASE_URL}/ws/${sid}`; 
+    const wsUrl = `${WS_BASE_URL}/ws/${sid}`; 
     
     webSocket.value = new WebSocket(wsUrl);
 

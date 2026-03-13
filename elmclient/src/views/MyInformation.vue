@@ -238,8 +238,7 @@ export default {
 
             try {
                 const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${wsProtocol}//${WS_BASE_URL}/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+                const wsUrl = `${WS_BASE_URL}/ws/${sid}`; // 替换为实际后端 WebSocket 地址
 
                 webSocket.value = new WebSocket(wsUrl);
 
