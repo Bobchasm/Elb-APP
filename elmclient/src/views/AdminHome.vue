@@ -214,6 +214,7 @@ import { useRouter } from 'vue-router';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
 import AdminFooter from '@/components/AdminFooter.vue';
+import { WS_BASE_URL } from '../utils/request';
 
 // 路由实例
 const router = useRouter();
@@ -445,7 +446,7 @@ const initWebSocket = () => {
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   // 注意：这里的地址需要根据你的后端实际域名/端口修改
   //const wsUrl = `${wsProtocol}//${window.location.host}/ws/${sid}`;
-  const wsUrl = `${wsProtocol}//REDACTED_DOMAIN:8080/ws/${sid}`;
+  const wsUrl = `${wsProtocol}//${WS_BASE_URL}/ws/${sid}`;
 
   webSocket.value = new WebSocket(wsUrl);
 

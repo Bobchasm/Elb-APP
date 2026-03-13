@@ -169,6 +169,7 @@ import AddressManager from '../components/AddressManager.vue';
 import request from '../utils/request';
 import { useRouter } from 'vue-router';
 import { toast } from '../utils/toast';
+import { WS_BASE_URL } from '../utils/request';
 
 export default {
     name: 'MyApplication',
@@ -238,7 +239,7 @@ export default {
             try {
                 const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${wsProtocol}//REDACTED_DOMAIN:8080/ws/${sid}`; // 替换为实际后端 WebSocket 地址
+                const wsUrl = `${wsProtocol}//${WS_BASE_URL}/ws/${sid}`; // 替换为实际后端 WebSocket 地址
 
                 webSocket.value = new WebSocket(wsUrl);
 

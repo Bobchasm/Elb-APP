@@ -21,8 +21,8 @@
 						<p class="description">{{ business.businessAddress || '暂无地址信息' }}</p>
 						<div class="business-info-bottom">
 							<div class="price-info">
-								<span>起送 ¥{{ business.startPrice.toFixed(2) || 0 }}元</span>
-								<span>配送 ¥{{ business.deliveryPrice.toFixed(2) || 0 }}元</span>
+								<span>起送 ¥{{ business.startPrice ? business.startPrice.toFixed(2) : 0 }}元</span>
+								<span>配送 ¥{{ business.deliveryPrice ? business.deliveryPrice.toFixed(2) : 0 }}元</span>
 							</div>
 						</div>
 					</div>
@@ -49,9 +49,8 @@ export default {
 			const orderTypeId = route.query.orderTypeId || 1; // 默认为类型1
 
 			try {
-				// 获取商家列表
 				const response = await request.get(
-					"http://REDACTED_DOMAIN:8080/api/businesses/type",
+					"/api/businesses/type",
 					{
 						params: {
 							type: orderTypeId

@@ -71,6 +71,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import request from '@/utils/request';
 import { toast } from '@/utils/toast';
+import { WS_BASE_URL } from '../utils/request';
 //import BackButton from "@/components/BackButton.vue";
 
 // 状态管理
@@ -177,7 +178,7 @@ const initWebSocket = () => {
     // 创建WebSocket连接
     const sid = `client-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//REDACTED_DOMAIN:8080/ws/${sid}`; 
+    const wsUrl = `${wsProtocol}//${WS_BASE_URL}/ws/${sid}`; 
     
     webSocket.value = new WebSocket(wsUrl);
 

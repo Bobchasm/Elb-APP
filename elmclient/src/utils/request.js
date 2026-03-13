@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+export const BASE_URL = 'http://REDACTED_DOMAIN:8080';
+export const WS_BASE_URL = 'REDACTED_DOMAIN:8080';
+
 // 1. 创建 Axios 实例
 const request = axios.create({
-  baseURL: 'http://REDACTED_DOMAIN:8080', // 这里填你的后端基础路径（如 http://REDACTED_DOMAIN:8080），如果和前端同域可留空
+  baseURL: BASE_URL, // 这里填你的后端基础路径（如 http://REDACTED_DOMAIN:8080），如果和前端同域可留空
   timeout: 15000, // 请求超时时间增加到15秒
   headers: {
     'Content-Type': 'application/json' // 默认请求格式

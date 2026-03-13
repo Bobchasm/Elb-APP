@@ -120,6 +120,7 @@ import { useRouter } from "vue-router";
 import request from "../utils/request";
 import Footer from '../components/Footer.vue';
 import { toast } from '../utils/toast';
+import { WS_BASE_URL } from '../utils/request';
 
 export default {
   name: "OrderList",
@@ -333,8 +334,7 @@ export default {
       userId.value = userInfo.value.id;
       if (!userId.value) return;
 
-      // 连接WebSocket（假设后端地址是 ws://REDACTED_DOMAIN:8080/ws/{userId}）
-      socket.value = new WebSocket(`ws://REDACTED_DOMAIN:8080/ws/${userId.value}`);
+      socket.value = new WebSocket(`ws://${WS_BASE_URL}/ws/${userId.value}`);
 
       socket.value.onopen = () => {
         console.log("WebSocket 连接成功");

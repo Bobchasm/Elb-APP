@@ -15,8 +15,8 @@
         <div class="business-info">
             <h1>{{ business.businessName || ''}}</h1>
             <p>
-                &#165;{{ business.startPrice.toFixed(2) || 0}}起送 &#165;{{
-                    business.deliveryPrice.toFixed(2) || 0
+                &#165;{{ business.startPrice ? business.startPrice.toFixed(2) : 0}}起送 &#165;{{
+                    business.deliveryPrice ? business.deliveryPrice.toFixed(2) : 0
                 }}配送
             </p>
             <p class="explain-info">{{ business.businessExplain || ''}}</p>

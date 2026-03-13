@@ -27,7 +27,7 @@
             <!-- 商家信息部分 -->
             <div class="business-info">
                 <h1>{{ business.businessName }}</h1>
-                <p>&#165;{{ business.starPrice }}起送 &#165;{{ business.deliveryPrice }}配送</p>
+                <p>&#165;{{ business.startPrice ? business.startPrice.toFixed(2) : 0 }}起送 &#165;{{ business.deliveryPrice ? business.deliveryPrice.toFixed(2) : 0 }}配送</p>
                 <p>{{ business.businessExplain }}</p>
             </div>
 
@@ -39,7 +39,7 @@
                         <div class="food-left-info">
                             <h3>{{ item.foodName }}</h3>
                             <p>{{ item.foodExplain }}</p>
-                            <p>&#165;{{ item.foodPrice }}</p>
+                            <p>&#165;{{ item.foodPrice ? item.foodPrice.toFixed(2) : 0 }}</p>
                         </div>
                     </div>
                 </li>
