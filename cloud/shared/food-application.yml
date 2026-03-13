@@ -1,0 +1,11 @@
+server:
+  port: 8883
+
+elm:
+  db:
+    database: elm_food
+  redis:
+    db: 2
+    pw: ""
+  nacos:
+    server: 127.0.0.1

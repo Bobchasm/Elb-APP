@@ -1,6 +1,0 @@
-  rabbitmq:
-    host: ${elm.rabbitmq.host:REDACTED_IP}
-    port: 5672
-    username: ${elm.rabbitmq.username:rabbit}
-    password: ${elm.rabbitmq.password:rabbit}
-    virtual-host: /

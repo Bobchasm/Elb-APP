@@ -1,0 +1,12 @@
+server:
+  port: 8881
+
+# DeepSeek AI配置
+deepseek:
+  api-key: REDACTED_API_KEY
+
+elm:
+  db:
+    database: elm_ai_record
+  nacos:
+    server: 127.0.0.1
