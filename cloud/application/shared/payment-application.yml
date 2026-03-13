@@ -1,0 +1,11 @@
+server:
+  port: 8886
+
+elm:
+  db:
+    database: elm_virtual_wallet
+  redis:
+    db: 4
+    pw: ""
+  nacos:
+    server: 127.0.0.1

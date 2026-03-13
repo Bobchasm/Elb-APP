@@ -1,0 +1,18 @@
+elm:
+  db:
+    host: REDACTED_IP
+    username: root
+    pw: 123456
+
+  data:
+    redis:
+      host: REDACTED_IP
+      password:
+      database: 5
+
+  nacos:
+    server-addr: REDACTED_IP:8848
+    username: nacos
+    pw: 123456
+
+

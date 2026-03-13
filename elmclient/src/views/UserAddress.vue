@@ -143,17 +143,33 @@ export default {
 				return;
 			}
 			else {
+				console.log('📦 开始提交订单...');
+				console.log('- businessId:', businessId.value);
+				console.log('- addressId:', addressSelectedId.value);
+				
 				request.get("/api/orders/submit?businessId=" + businessId.value + "&addressId=" + addressSelectedId.value)
 				.then(response => {
+					console.log('📦 接收到订单响应:', response);
+					console.log('- response类型:', typeof response);
+					console.log('- response.success:', response.success);
+					console.log('- response.data:', response.data);
+					console.log('- response.data类型:', typeof response.data);
+					
 					if (response.success) {
 						orderId.value = response.data;
+						console.log('✅ 订单提交成功, orderId:', orderId.value);
+						console.log('🛫 准备跳转到支付页面...');
 						router.push({ path: '/payment', query: { businessId: businessId.value, orderId: response.data } });
 					} else {
+						console.error('❌ 下单失败:', response.message || response);
 						toast.error("下单失败，请重试");
 						router.push({path: '/orderList'})
 					}
 				}).catch(error => {
-					console.error('下单失败:', error);
+					console.error('❌ 下单请求失败:', error);
+					console.error('- error.response:', error.response);
+					console.error('- error.message:', error.message);
+					toast.error('下单失败: ' + (error.response?.data?.message || error.message));
 			});
 			}
 		};

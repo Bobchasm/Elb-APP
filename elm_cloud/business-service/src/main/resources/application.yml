@@ -1,0 +1,9 @@
+server:
+  port: 8882
+
+elm:
+  db:
+    database: elm_business
+  redis:
+    db: 1
+    pw: ""

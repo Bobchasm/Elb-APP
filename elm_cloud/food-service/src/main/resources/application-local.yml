@@ -1,0 +1,21 @@
+elm:
+  db:
+    host: 127.0.0.1
+    username: root
+    pw: 123456
+
+  data:
+    redis:
+      host: 127.0.0.1
+      password:
+      database: 2
+
+  rabbitmq:
+    host: 127.0.0.1
+    username: rabbit
+    password: rabbit
+
+  nacos:
+    server-addr: 172.26.11.128:8848
+    username: nacos
+    pw: 123456

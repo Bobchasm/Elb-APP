@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tju.elm.point.mapper.MarketingPointsExchangeRuleMapper">
+
+    <resultMap id="BaseResultMap" type="com.tju.elm.point.zoo.pojo.entity.MarketingPointsExchangeRule">
+        <id column="id" property="id"/>
+        <result column="rule_name" property="ruleName"/>
+        <result column="rule_type" property="ruleType"/>
+        <result column="rule_status" property="ruleStatus"/>
+        <result column="exchange_ratio" property="exchangeRatio"/>
+        <result column="min_points" property="minPoints"/>
+        <result column="max_points" property="maxPoints"/>
+        <result column="food_id" property="foodId"/>
+        <result column="required_points" property="requiredPoints"/>
+        <result column="stock_quantity" property="stockQuantity"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="creator" property="creator"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="updater" property="updater"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.tju.elm.point.zoo.pojo.entity.MarketingPointsExchangeRule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO marketing_points_exchange_rule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            rule_name, rule_type, rule_status,
+            <if test="exchangeRatio != null">exchange_ratio,</if>
+            <if test="minPoints != null">min_points,</if>
+            <if test="maxPoints != null">max_points,</if>
+            <if test="foodId != null">food_id,</if>
+            <if test="requiredPoints != null">required_points,</if>
+            <if test="stockQuantity != null">stock_quantity,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="creator != null">creator,</if>
+            <if test="updater != null">updater,</if>
+            is_deleted
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            #{ruleName}, #{ruleType}, #{ruleStatus},
+            <if test="exchangeRatio != null">#{exchangeRatio},</if>
+            <if test="minPoints != null">#{minPoints},</if>
+            <if test="maxPoints != null">#{maxPoints},</if>
+            <if test="foodId != null">#{foodId},</if>
+            <if test="requiredPoints != null">#{requiredPoints},</if>
+            <if test="stockQuantity != null">#{stockQuantity},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="creator != null">#{creator},</if>
+            <if test="updater != null">#{updater},</if>
+            #{isDeleted}
+        </trim>
+    </insert>
+
+    <update id="updateById" parameterType="com.tju.elm.point.zoo.pojo.entity.MarketingPointsExchangeRule">
+        UPDATE marketing_points_exchange_rule
+        <set>
+            <if test="ruleName != null">rule_name = #{ruleName},</if>
+            <if test="ruleStatus != null">rule_status = #{ruleStatus},</if>
+            <if test="exchangeRatio != null">exchange_ratio = #{exchangeRatio},</if>
+            <if test="minPoints != null">min_points = #{minPoints},</if>
+            <if test="maxPoints != null">max_points = #{maxPoints},</if>
+            <if test="foodId != null">food_id = #{foodId},</if>
+            <if test="requiredPoints != null">required_points = #{requiredPoints},</if>
+            <if test="stockQuantity != null">stock_quantity = #{stockQuantity},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updater != null">updater = #{updater}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectRules" resultMap="BaseResultMap">
+        SELECT * FROM marketing_points_exchange_rule
+        <where>
+            is_deleted = 0
+            <if test="ruleType != null">
+                AND rule_type = #{ruleType}
+            </if>
+            <if test="ruleStatus != null">
+                AND rule_status = #{ruleStatus}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>
+

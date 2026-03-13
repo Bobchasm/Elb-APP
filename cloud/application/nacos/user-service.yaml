@@ -1,0 +1,3 @@
+jwt:
+  token-validity-in-seconds: 86400
+  token-validity-in-seconds-for-remember-me: 1080000

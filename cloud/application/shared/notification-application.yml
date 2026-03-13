@@ -1,0 +1,15 @@
+server:
+  port: 8884
+
+txcos:
+  secretId: REDACTED_SECRET_ID
+  secretKey: REDACTED_SECRET_KEY
+  region: ap-beijing
+  bucketName: txcloud-cos1-1375850795
+  enableAccelerate: true
+
+elm:
+  db:
+    database: elm_notification
+  nacos:
+    server: 127.0.0.1

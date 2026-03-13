@@ -426,7 +426,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
 import { toast } from '../utils/toast';
@@ -479,6 +479,10 @@ export default {
     const withdrawPreview = ref(null); // 提现预览数据
     const rechargePaymentMethod = ref('wechat'); // 充值支付方式：wechat/alipay，默认微信
     const withdrawPaymentMethod = ref('wechat'); // 提现方式：wechat/alipay，默认微信
+
+    // WebSocket相关
+    const webSocket = ref(null);
+    const isConnected = ref(false);
 
     // 获取钱包信息（后端优先；本地模拟仅注释保留）
     const fetchWalletInfo = async () => {
@@ -848,10 +852,73 @@ const fetchVipRules = async () => {
       }
     });
 
+    // 初始化WebSocket
+    const initWebSocket = () => {
+      const user = getCurrentUser();
+      if (!user || !user.id) {
+        console.warn('WebSocket初始化失败: 用户信息不存在');
+        return;
+      }
+
+      try {
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//localhost:8086/ws/${user.id}`;
+        
+        webSocket.value = new WebSocket(wsUrl);
+
+        webSocket.value.onopen = () => {
+          console.log('Wallet WebSocket连接成功');
+          isConnected.value = true;
+        };
+
+        webSocket.value.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            handleWebSocketMessage(message);
+          } catch (err) {
+            console.error('解析WebSocket消息失败:', err);
+          }
+        };
+
+        webSocket.value.onclose = (event) => {
+          console.log('Wallet WebSocket连接关闭', event.code);
+          isConnected.value = false;
+          if (event.code !== 1000) {
+            setTimeout(initWebSocket, 3000);
+          }
+        };
+
+        webSocket.value.onerror = (err) => {
+          console.error('Wallet WebSocket错误:', err);
+          isConnected.value = false;
+        };
+      } catch (err) {
+        console.error('初始化WebSocket失败:', err);
+      }
+    };
+
+    // 处理WebSocket消息
+    const handleWebSocketMessage = (message) => {
+      console.log('收到Wallet WebSocket消息:', message);
+      
+      if (message.type === 'wallet_opened') {
+        toast.success('钱包开通成功！');
+        // 重新获取钱包信息
+        fetchWalletInfo();
+      }
+    };
+
     onMounted(() => {
       fetchWalletInfo();
       fetchRules();
       fetchVipRules();
+      initWebSocket(); // 初始化WebSocket
+    });
+
+    onUnmounted(() => {
+      if (webSocket.value) {
+        webSocket.value.close();
+      }
     });
 
     return {

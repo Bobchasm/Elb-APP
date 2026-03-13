@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tju.elm.food.mapper.FoodMapper">
+
+    <insert id="insertFood" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO food (create_time, creator, is_deleted, update_time, updater, food_explain, food_img, food_name, food_price, remarks, business_id)
+        VALUES (#{createTime}, #{creator}, #{isDeleted}, #{updateTime}, #{updater}, #{foodExplain}, #{foodImg}, #{foodName}, #{foodPrice}, #{remarks}, #{businessId})
+    </insert>
+
+
+
+
+    <select id="selectFoodItemVOList" resultType="com.tju.elm.food.pojo.vo.FoodItemVO">
+        select f.*
+        from food f
+        <where>
+            f.is_deleted = 0 and f.business_id = #{businessId}
+            <if test="shelveStatus != null">
+                and f.shelve_status = #{shelveStatus}
+            </if>
+        </where>
+        order by f.shelve_status desc
+    </select>
+
+    <resultMap id="foodDetailVOResultMap" type="com.tju.elm.food.pojo.vo.FoodDetailVO">
+        <id property="id" column="id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="creator" column="creator"/>
+        <result property="updater" column="updater"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="foodName" column="food_name"/>
+        <result property="foodExplain" column="food_explain"/>
+        <result property="foodImg" column="food_img"/>
+        <result property="foodPrice" column="food_price"/>
+        <result property="remarks" column="remarks"/>
+        <result property="businessId" column="business_id"/>
+        <result property="shelveStatus" column="shelve_status"/>
+        <result property="businessName" column="business_name"/>
+    </resultMap>
+    <select id="selectFoodDetailVOByFoodId" resultMap="foodDetailVOResultMap">
+        SELECT
+            f.id,
+            f.create_time,
+            f.update_time,
+            f.creator,
+            f.updater,
+            f.is_deleted,
+            f.food_name,
+            f.food_explain,
+            f.food_img,
+            f.food_price,
+            f.remarks,
+            f.business_id,
+            f.shelve_status
+        FROM food f
+        WHERE f.id = #{foodId}
+          AND f.is_deleted = 0
+          AND f.shelve_status = 1
+    </select>
+
+
+</mapper>

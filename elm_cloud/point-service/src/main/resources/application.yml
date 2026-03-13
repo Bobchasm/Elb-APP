@@ -1,0 +1,21 @@
+server:
+  port: 8887
+
+points:
+  rabbitmq:
+    exchange:
+      points-exchange: "points.exchange.topic"
+      points-change: "points.change.topic"
+    queue:
+      points-exchange: "points.exchange.queue"
+      points-change: "points.change.queue"
+  redis:
+    key-prefix: "points:"  # Points服务Redis key前缀
+    timeout: 300  # Redis操作超时时间（秒）
+
+elm:
+  db:
+    database: elm_points_system
+  redis:
+    db: 0
+    pw: ""
