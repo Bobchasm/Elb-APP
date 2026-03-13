@@ -22,21 +22,21 @@ public class AdminController {
     @Autowired
     private OrdersMapper ordersMapper;
 
-    @GetMapping("/countUser")
-    @Operation(summary = "获取总用户数", description = "获取总用户数")
-    public HttpResult<Integer> countUser(){
-        return HttpResult.success(userMapper.count());
-    }
+//    @GetMapping("/countUser")
+//    @Operation(summary = "获取总用户数", description = "获取总用户数")
+//    public HttpResult<Integer> countUser(){
+//        return HttpResult.success(userMapper.count());
+//    }
 
-    @GetMapping("/countBusiness")
-    @Operation(summary = "获取总店铺数", description = "获取总店铺数")
-    public HttpResult<Integer> countBusiness(){
-        return HttpResult.success(businessMapper.count());
-    }
+//    @GetMapping("/countBusiness")
+//    @Operation(summary = "获取总店铺数", description = "获取总店铺数")
+//    public HttpResult<Integer> countBusiness(){
+//        return HttpResult.success(businessMapper.count());
+//    }
 
-    @GetMapping("/countPrice")
-    @Operation(summary = "获取总营业额", description = "获取总营业额")
-    public HttpResult<Double> countPrice(){
-        return HttpResult.success(ordersMapper.countPrice());
-    }
+//    @GetMapping("/countPrice")
+//    @Operation(summary = "获取总营业额", description = "获取总营业额")
+//    public HttpResult<Double> countPrice(){
+//        return HttpResult.success(ordersMapper.countPrice());
+//    }
 }

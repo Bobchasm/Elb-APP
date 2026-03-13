@@ -332,9 +332,9 @@ const getStatisticData = async () => {
   try {
     // 并行请求统计接口
     const [userRes, shopRes, revenueRes] = await Promise.all([
-      request.get('/api/admin/countUser'),
-      request.get('/api/admin/countBusiness'),
-      request.get('/api/admin/countPrice'),
+      request.get('/api/user/countUser'),
+      request.get('/api/businesses/countBusiness'),
+      request.get('/api/orders/countPrice'),
     ]);
 
     if (userRes.success) userCount.value = userRes.data;

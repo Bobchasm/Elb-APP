@@ -21,7 +21,7 @@ public interface BusinessService {
     BusinessVO addBusiness(BusinessDTO businessDto);
     List<BusinessSearchVO> getBusinessesBySearch(String keyword, boolean isScore,boolean isSales);
     Integer applyForAddBusiness(Business  business);
-    List<BusinessInfoDTO> getAllActiveBusinesses();
+//    List<BusinessInfoDTO> getAllActiveBusinesses();
     List<Business> getMerchantBusinesses(Long userId, Integer status);
     List<Business>listBusinessByOrderTypeId(Integer type);
     List<MerchantStatsVO> getBusinessIdList();

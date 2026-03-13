@@ -1,15 +1,12 @@
 package com.tju.elm_bk.controller;
 
+import com.tju.elm_bk.mapper.*;
 import com.tju.elm_bk.pojo.dto.*;
 import com.tju.elm_bk.pojo.entity.Authority;
 import com.tju.elm_bk.pojo.entity.Person;
 import com.tju.elm_bk.pojo.entity.PointsAccount;
 import com.tju.elm_bk.pojo.entity.User;
 import com.tju.elm_bk.exception.APIException;
-import com.tju.elm_bk.mapper.AuthorityMapper;
-import com.tju.elm_bk.mapper.PersonMapper;
-import com.tju.elm_bk.mapper.PointsAccountMapper;
-import com.tju.elm_bk.mapper.UserMapper;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.service.PersonService;
 import com.tju.elm_bk.service.UserModelDetailsService;
@@ -22,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -54,6 +52,8 @@ public class UserRestController {
     private PointsAccountMapper pointsAccountMapper;
     @Autowired
     private PersonMapper personMapper;
+    @Autowired
+    private OrdersMapper ordersMapper;
 
     @PostMapping("/users")
     @Operation(summary = "新增用户(仅登录账号)", description = "创建一个新的用户")
@@ -117,13 +117,13 @@ public class UserRestController {
 
     @GetMapping("/person")
     @Operation(summary = "获取当前登录用户及其自然人属性", description = "获取当前登录用户及其自然人信息")
-    public ResponseEntity<PersonVO> getActualPerson() {
+    public HttpResult<PersonVO> getActualPerson() {
         User currentUser = getCurrentUser();
         PersonVO personVO=new PersonVO();
         BeanUtils.copyProperties(currentUser, personVO);
         Person person = personService.getPersonByUserId(currentUser.getId());
         BeanUtils.copyProperties(person, personVO);
-        return ResponseEntity.ok(personVO);
+        return HttpResult.success(personVO);
     }
 
     @GetMapping("/persons")
@@ -381,5 +381,28 @@ public class UserRestController {
             responseVO.setAuthorities(user.getAuthorities());
         }
         return responseVO;
+    }
+
+
+    /**
+     * 查所有激活的商家用户信息
+     * @return
+     */
+    @GetMapping("/business/active")
+    @Operation(summary = "查所有激活的商家（管理端商铺管理第一页）")
+    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+        return userService.getAllActiveBusinesses();
+    }
+
+    @GetMapping("/user/countUser")
+    @Operation(summary = "获取总用户数", description = "获取总用户数")
+    public HttpResult<Integer> countUser(){
+        return HttpResult.success(userMapper.count());
+    }
+
+    @GetMapping("/orders/countPrice")
+    @Operation(summary = "获取总营业额", description = "获取总营业额")
+    public HttpResult<Double> countPrice(){
+        return HttpResult.success(ordersMapper.countPrice());
     }
 }

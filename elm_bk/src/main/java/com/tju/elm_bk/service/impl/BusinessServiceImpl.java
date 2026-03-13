@@ -390,11 +390,11 @@ public class BusinessServiceImpl implements BusinessService {
         return businessMapper.applyForAddBusiness(business);
     }
 
-    @Override
-    public List<BusinessInfoDTO> getAllActiveBusinesses() {
-        List<BusinessInfoDTO> businesses = businessMapper.getAllActiveBusinesses();
-        return businesses;
-    }
+//    @Override
+//    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+//        List<BusinessInfoDTO> businesses = businessMapper.getAllActiveBusinesses();
+//        return businesses;
+//    }
 
     @Override
     public List<Business> getMerchantBusinesses(Long userId, Integer status) {

@@ -401,8 +401,8 @@ export default {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                if (response) {
-                    userInfo.value = response;
+                if (response.success) {
+                    userInfo.value = response.data;
 
                     // 获取积分信息
                     try {

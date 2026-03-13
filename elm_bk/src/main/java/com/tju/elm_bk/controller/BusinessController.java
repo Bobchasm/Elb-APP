@@ -1,17 +1,21 @@
 package com.tju.elm_bk.controller;
 
 
+import com.tju.elm_bk.mapper.BusinessMapper;
 import com.tju.elm_bk.pojo.dto.BusinessDTO;
 import com.tju.elm_bk.pojo.dto.BusinessInfoDTO;
+import com.tju.elm_bk.pojo.dto.BusinessPermissionDTO;
 import com.tju.elm_bk.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm_bk.pojo.entity.Business;
 import com.tju.elm_bk.exception.APIException;
+import com.tju.elm_bk.pojo.vo.BusinessPermissionVO;
 import com.tju.elm_bk.result.HttpResult;
 import com.tju.elm_bk.result.ResultCodeEnum;
 import com.tju.elm_bk.service.BusinessService;
 import com.tju.elm_bk.pojo.vo.BusinessSearchVO;
 import com.tju.elm_bk.pojo.vo.BusinessVO;
 import com.tju.elm_bk.pojo.vo.MerchantStatsVO;
+import com.tju.elm_bk.service.PermissionApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,12 @@ public class BusinessController {
 
     @Autowired
     private final BusinessService businessService;
+
+    @Autowired
+    private final BusinessMapper businessMapper;
+
+    @Autowired
+    private final PermissionApplicationService permissionApplicationService;
 
     /**
      * 根据ID获取店铺详情
@@ -144,15 +154,15 @@ public class BusinessController {
         List<Business> businesses = businessService.getMerchantBusinesses(userId, status);
         return HttpResult.success(businesses);
     }
-    /**
-     * 查所有激活的店铺
-     * @return
-     */
-    @GetMapping("/active")
-    @Operation(summary = "查所有激活的商家（管理端商铺管理第一页）")
-    public List<BusinessInfoDTO> getAllActiveBusinesses() {
-        return businessService.getAllActiveBusinesses();
-    }
+//    /**
+//     * 查所有激活的店铺
+//     * @return
+//     */
+//    @GetMapping("/active")
+//    @Operation(summary = "查所有激活的商家（管理端商铺管理第一页）")
+//    public List<BusinessInfoDTO> getAllActiveBusinesses() {
+//        return businessService.getAllActiveBusinesses();
+//    }
 
 
     /**
@@ -186,6 +196,21 @@ public class BusinessController {
     public HttpResult<BusinessVO> patchBusinessOwn(@PathVariable("id") Long id,@RequestBody BusinessUpdateDTO updateDto) {
          BusinessVO businessVO = businessService.patchBusinessOwn( id,  updateDto);
          return HttpResult.success(businessVO);
+    }
+
+    @GetMapping("/countBusiness")
+    @Operation(summary = "获取总店铺数", description = "获取总店铺数")
+    public HttpResult<Integer> countBusiness(){
+        return HttpResult.success(businessMapper.count());
+    }
+
+    /**
+     * 顾客申请开店
+     */
+    @PostMapping("/apply-shop")
+    @Operation(summary = "申请开店", description = "顾客提交开店的申请，提交后会通知管理员审核")
+    public HttpResult<BusinessPermissionVO> applyShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
+        return HttpResult.success(permissionApplicationService.applyShop(businessPermissionDTO));
     }
 
 

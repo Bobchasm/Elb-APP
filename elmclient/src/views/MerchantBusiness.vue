@@ -470,11 +470,11 @@ export default {
 
         if (formValues) {
           const userResponse = await request.get('/api/person', { headers: { 'Authorization': `Bearer ${token}` } });
-          if (!userResponse || !userResponse.id) {
+          if (!userResponse.success || !userResponse.data.id) {
             toast.error('获取用户信息失败');
             return;
           }
-          const applicationData = { ...formValues, userId: userResponse.id };
+          const applicationData = { ...formValues, userId: userResponse.data.id };
           const response = await request.post('/api/businesses/apply-shop', applicationData, {
             headers: { 'Authorization': `Bearer ${token}` }
           });

@@ -41,14 +41,14 @@ public class PermissionApplicationController {
         return HttpResult.success(permissionApplicationService.auditApplication(auditDTO));
     }
 
-    /**
-     * 顾客申请开店
-     */
-    @PostMapping("/apply-shop")
-    @Operation(summary = "申请开店", description = "顾客提交开店的申请，提交后会通知管理员审核")
-    public HttpResult<BusinessPermissionVO> applyShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
-        return HttpResult.success(permissionApplicationService.applyShop(businessPermissionDTO));
-    }
+//    /**
+//     * 顾客申请开店
+//     */
+//    @PostMapping("/apply-shop")
+//    @Operation(summary = "申请开店", description = "顾客提交开店的申请，提交后会通知管理员审核")
+//    public HttpResult<BusinessPermissionVO> applyShop(@RequestBody BusinessPermissionDTO businessPermissionDTO) {
+//        return HttpResult.success(permissionApplicationService.applyShop(businessPermissionDTO));
+//    }
 
     /**
      * 审核用户的开店申请（同意/拒绝）
