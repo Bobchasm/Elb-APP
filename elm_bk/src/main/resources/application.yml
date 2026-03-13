@@ -6,20 +6,20 @@ spring:
     name: elm
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://REDACTED_IP:3306/elm_v2
+    url: jdbc:mysql://REDACTED_DOMAIN:3306/elm_v2
     username: root
     password: 123456
     hikari: # 配置连接池读已提交
       transaction-isolation: TRANSACTION_READ_COMMITTED
   rabbitmq:
-    host: REDACTED_IP
+    host: REDACTED_DOMAIN
     port: 5672
     username: rabbit
     password: rabbit
     virtual-host: /
   data:
     redis:
-      host: REDACTED_IP
+      host: REDACTED_DOMAIN
       port: 6379
       password: # 无密码，留空
       database: 0
