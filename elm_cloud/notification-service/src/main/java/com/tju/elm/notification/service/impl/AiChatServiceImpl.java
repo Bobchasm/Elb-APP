@@ -1,31 +1,30 @@
-package com.tju.elm.ai.service.impl;
+package com.tju.elm.notification.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.tju.elm.ai.mapper.AiChatHistoryMapper;
-import com.tju.elm.ai.service.AiChatService;
-import com.tju.elm.ai.zoo.pojo.*;
-import com.tju.elm.ai.zoo.utils.AiKnowledgeBaseUtil;
-import com.tju.elm.ai.zoo.utils.DeepSeekApiClient;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.api.po.Business;
 import com.tju.elm.api.po.Food;
 import com.tju.elm.api.po.Order;
 import com.tju.elm.api.po.User;
+import com.tju.elm.notification.mapper.AiChatHistoryMapper;
+import com.tju.elm.notification.service.AiChatService;
+import com.tju.elm.notification.zoo.pojo.dto.AiChatRequestDTO;
+import com.tju.elm.notification.zoo.pojo.dto.DeepSeekRequestDTO;
+import com.tju.elm.notification.zoo.pojo.dto.DeepSeekResponseDTO;
+import com.tju.elm.notification.zoo.pojo.entity.AiChatHistory;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatHistoryVO;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatResponseVO;
+import com.tju.elm.notification.zoo.utils.AiKnowledgeBaseUtil;
+import com.tju.elm.notification.zoo.utils.DeepSeekApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import utils.UserContext;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

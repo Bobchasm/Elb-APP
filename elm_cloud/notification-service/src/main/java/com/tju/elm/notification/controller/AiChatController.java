@@ -1,12 +1,11 @@
-package com.tju.elm.ai.controller;
+package com.tju.elm.notification.controller;
 
-import com.tju.elm.ai.service.AiChatService;
-import com.tju.elm.ai.zoo.pojo.AiChatHistoryVO;
-import com.tju.elm.ai.zoo.pojo.AiChatRequestDTO;
-import com.tju.elm.ai.zoo.pojo.AiChatResponseVO;
-import com.tju.elm.ai.zoo.utils.AiKnowledgeBaseUtil;
 import com.tju.elm.api.client.UserClient;
-import com.tju.elm.api.po.User;
+import com.tju.elm.notification.service.AiChatService;
+import com.tju.elm.notification.zoo.pojo.dto.AiChatRequestDTO;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatHistoryVO;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatResponseVO;
+import com.tju.elm.notification.zoo.utils.AiKnowledgeBaseUtil;
 import exception.APIException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,17 +13,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import result.HttpResult;
 import result.ResultCodeEnum;
-import utils.UserContext;
 
 @Slf4j
 @RestController

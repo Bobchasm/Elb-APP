@@ -1,4 +1,4 @@
-package com.tju.elm.ai.zoo.utils;
+package com.tju.elm.notification.zoo.utils;
 
 
 import com.tju.elm.api.client.BusinessClient;
@@ -11,7 +11,6 @@ import com.tju.elm.api.po.Order;
 import com.tju.elm.api.po.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import utils.UserContext;
 

@@ -1,19 +1,18 @@
-package com.tju.elm.ai.service.impl;
+package com.tju.elm.notification.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.tju.elm.ai.mapper.AiChatHistoryMapper;
-import com.tju.elm.ai.service.AiChatService;
-import com.tju.elm.ai.zoo.pojo.AiChatHistory;
-import com.tju.elm.ai.zoo.pojo.AiChatHistoryVO;
-import com.tju.elm.ai.zoo.pojo.AiChatRequestDTO;
-import com.tju.elm.ai.zoo.pojo.AiChatResponseVO;
-import com.tju.elm.ai.zoo.utils.AiKnowledgeBaseUtil;
 import com.tju.elm.api.client.UserClient;
 import com.tju.elm.api.po.Business;
 import com.tju.elm.api.po.Food;
 import com.tju.elm.api.po.User;
+import com.tju.elm.notification.mapper.AiChatHistoryMapper;
+import com.tju.elm.notification.service.AiChatService;
+import com.tju.elm.notification.zoo.pojo.dto.AiChatRequestDTO;
+import com.tju.elm.notification.zoo.pojo.entity.AiChatHistory;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatHistoryVO;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatResponseVO;
+import com.tju.elm.notification.zoo.utils.AiKnowledgeBaseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

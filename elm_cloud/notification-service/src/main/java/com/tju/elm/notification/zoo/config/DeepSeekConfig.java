@@ -1,4 +1,4 @@
-package com.tju.elm.ai.zoo.config;
+package com.tju.elm.notification.zoo.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

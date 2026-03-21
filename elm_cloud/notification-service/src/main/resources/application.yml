@@ -8,6 +8,10 @@ txcos:
   bucketName: txcloud-cos1-1375850795
   enableAccelerate: true
 
+# DeepSeek AI配置
+deepseek:
+  api-key: REDACTED_API_KEY
+
 elm:
   db:
     database: elm_notification

@@ -1,10 +1,10 @@
-package com.tju.elm.ai.zoo.utils;
+package com.tju.elm.notification.zoo.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tju.elm.ai.zoo.config.DeepSeekConfig;
-import com.tju.elm.ai.zoo.pojo.DeepSeekRequestDTO;
-import com.tju.elm.ai.zoo.pojo.DeepSeekResponseDTO;
+import com.tju.elm.notification.zoo.config.DeepSeekConfig;
+import com.tju.elm.notification.zoo.pojo.dto.DeepSeekRequestDTO;
+import com.tju.elm.notification.zoo.pojo.dto.DeepSeekResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

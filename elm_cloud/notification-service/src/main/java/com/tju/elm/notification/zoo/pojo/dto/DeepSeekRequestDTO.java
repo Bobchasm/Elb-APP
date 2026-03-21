@@ -1,4 +1,4 @@
-package com.tju.elm.ai.zoo.pojo;
+package com.tju.elm.notification.zoo.pojo.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

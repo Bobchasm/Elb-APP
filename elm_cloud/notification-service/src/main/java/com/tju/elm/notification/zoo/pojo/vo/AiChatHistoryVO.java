@@ -1,4 +1,4 @@
-package com.tju.elm.ai.zoo.pojo;
+package com.tju.elm.notification.zoo.pojo.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

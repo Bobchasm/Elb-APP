@@ -1,6 +1,6 @@
-package com.tju.elm.ai.mapper;
+package com.tju.elm.notification.mapper;
 
-import com.tju.elm.ai.zoo.pojo.AiChatHistory;
+import com.tju.elm.notification.zoo.pojo.entity.AiChatHistory;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

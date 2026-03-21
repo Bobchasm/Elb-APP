@@ -1,9 +1,8 @@
-package com.tju.elm.ai.service;
+package com.tju.elm.notification.service;
 
-
-import com.tju.elm.ai.zoo.pojo.AiChatHistoryVO;
-import com.tju.elm.ai.zoo.pojo.AiChatRequestDTO;
-import com.tju.elm.ai.zoo.pojo.AiChatResponseVO;
+import com.tju.elm.notification.zoo.pojo.dto.AiChatRequestDTO;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatHistoryVO;
+import com.tju.elm.notification.zoo.pojo.vo.AiChatResponseVO;
 
 import java.util.List;
 
