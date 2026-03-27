@@ -1,16 +1,10 @@
 server:
-  port: 8086
+  port: 8080
 
 spring:
   cloud:
     gateway:
       routes:
-        # AI 服务路由
-        - id: ai-service
-          uri: lb://ai-service
-          predicates:
-            - Path=/api/ai/chat/**
-
         # 商家服务路由
         - id: business-service
           uri: lb://business-service
@@ -27,7 +21,7 @@ spring:
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/api/notifications/**,/upload/**,/ws/**
+            - Path=/api/notifications/**,/upload/**,/ws/**,/api/ai/chat/**
 
         # 订单服务路由
         - id: order-service
@@ -56,3 +50,18 @@ spring:
 # JWT配置
 jwt:
   secret: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz123456
+
+elm:
+  auth:
+    excludePaths:
+      - /api/auth
+      - /api/register
+      - /**/v3/api-docs/**
+      - /**/swagger-ui/**
+      - /**/swagger-ui.html
+      - /upload
+      - /ws/**
+      - /api/ai/chat/health
+      - /api/businesses/search
+      - /api/businesses/carousel
+      - /api/admin/countUser
