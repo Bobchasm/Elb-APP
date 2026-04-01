@@ -3,7 +3,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${elm.db.host:REDACTED_IP}:3306/${elm.db.database}
     username: ${elm.db.username:root}
-    password: ${elm.db.pw:123456}
+    password: ${elm.db.pw:Elm@2026Secure!}
     hikari:
       transaction-isolation: TRANSACTION_READ_COMMITTED
 
