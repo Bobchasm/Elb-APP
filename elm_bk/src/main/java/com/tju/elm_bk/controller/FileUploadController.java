@@ -14,7 +14,7 @@ import java.util.UUID;
 @RestController
 @Tag(name="文件上传")
 public class FileUploadController {
-    @PostMapping("/upload")
+    @PostMapping("/api/upload")
     @Operation(summary = "上传文件")
     public HttpResult<String> uploadFile(MultipartFile file) throws IOException {
         String originFileName = file.getOriginalFilename();
