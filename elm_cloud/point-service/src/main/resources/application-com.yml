@@ -7,12 +7,20 @@ spring:
   profiles:
     active: dev
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${elm.db.host}:3306/elm_points_system
-    username: ${elm.db.username}
-    password: ${elm.db.pw}
-    hikari: # 配置连接池读已提交
-      transaction-isolation: TRANSACTION_READ_COMMITTED
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://${elm.db.host}:3306/elm_points_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: ${elm.db.username}
+          password: ${elm.db.pw}
+        slave:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://${elm.db.host}:${elm.db.slave.port:3307}/elm_points_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: ${elm.db.slave.username:${elm.db.username}}
+          password: ${elm.db.slave.pw:${elm.db.pw}}
   cloud:
     nacos:
       discovery:

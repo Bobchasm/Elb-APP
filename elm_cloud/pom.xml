@@ -17,7 +17,6 @@
         <module>user-service</module>
         <module>order-service</module>
         <module>business-service</module>
-        <module>ai-service</module>
         <module>notification-service</module>
         <module>food-service</module>
         <module>point-service</module>
@@ -43,7 +42,7 @@
         <!-- 数据库相关 -->
         <mybatis.version>3.0.4</mybatis.version>
         <druid.version>1.1.13</druid.version>
-        <dynamic-datasource.version>2.5.6</dynamic-datasource.version>
+        <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
         <mysql.version>8.0.33</mysql.version>
 
         <!-- 安全相关 -->
@@ -123,7 +122,7 @@
 
             <dependency>
                 <groupId>com.baomidou</groupId>
-                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
                 <version>${dynamic-datasource.version}</version>
             </dependency>
 

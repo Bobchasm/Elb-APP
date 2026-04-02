@@ -7,12 +7,20 @@ spring:
   profiles:
     active: dev
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://REDACTED_IP:3306/elm_notification
-    username: root
-    password: 123456
-    hikari: # 配置连接池读已提交
-      transaction-isolation: TRANSACTION_READ_COMMITTED
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://REDACTED_IP:3306/elm_notification?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: elm_app
+          password: "REDACTED_PASSWORD"
+        slave:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://REDACTED_IP:3307/elm_notification?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: elm_app
+          password: "REDACTED_PASSWORD"
   cloud:
     nacos:
       discovery:

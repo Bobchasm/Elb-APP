@@ -94,8 +94,7 @@
 
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
-            <optional>true</optional>
+            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
         </dependency>
 
         <!-- Spring Data Redis -->

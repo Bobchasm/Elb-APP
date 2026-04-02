@@ -35,11 +35,6 @@
             <version>1.1.13</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
-            <version>2.5.6</version>
-        </dependency>
 
         <dependency>
             <groupId>com.tju.elm</groupId>
