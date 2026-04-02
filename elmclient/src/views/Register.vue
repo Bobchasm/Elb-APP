@@ -227,7 +227,7 @@ const handleFileChange = (event) => {
       try {
         const formData = new FormData();
         formData.append('file', uploadedFile.value);
-        const uploadResponse = await request.post('/upload', formData, {
+        const uploadResponse = await request.post('/api/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
