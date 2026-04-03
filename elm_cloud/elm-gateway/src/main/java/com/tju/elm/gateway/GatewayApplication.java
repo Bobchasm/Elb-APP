@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Import;
                 HibernateJpaAutoConfiguration.class
         }
 )
-@Import({config.JaegerConfig.class})
+//@Import({config.JaegerConfig.class})
 public class GatewayApplication {
         public static void main(String[] args) {
                 SpringApplication.run(GatewayApplication.class, args);

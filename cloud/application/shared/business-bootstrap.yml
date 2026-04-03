@@ -14,3 +14,14 @@ spring:
           - data-id: shared-mybatis.yaml
           - data-id: shared-nacos.yaml
           - data-id: shared-redis.yaml
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  datasource:
+    dynamic:
+      enabled: true
+      primary: master
+      strict: false

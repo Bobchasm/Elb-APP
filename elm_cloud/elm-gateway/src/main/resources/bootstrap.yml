@@ -11,4 +11,3 @@ spring:
         shared-configs:
           - data-id: shared-log.yaml
           - data-id: shared-nacos.yaml
-          - data-id: user-service.yaml

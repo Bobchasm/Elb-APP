@@ -156,3 +156,5 @@ CREATE TABLE `system_config`  (
                                   `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
                                   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+
+INSERT INTO `system_config` VALUES (1, 'VIRTUAL_WALLET_RULES', '虚拟钱包规则', 'STRING', NULL, '2026-04-03 21:00:19');

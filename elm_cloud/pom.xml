@@ -41,8 +41,8 @@
 
         <!-- 数据库相关 -->
         <mybatis.version>3.0.4</mybatis.version>
-        <druid.version>1.1.13</druid.version>
-        <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
+        <dynamic-ds.version>4.3.0</dynamic-ds.version> <!-- 最新稳定版 -->
+        <druid.version>1.2.20</druid.version>
         <mysql.version>8.0.33</mysql.version>
 
         <!-- 安全相关 -->

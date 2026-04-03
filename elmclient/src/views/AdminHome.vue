@@ -376,7 +376,7 @@ const getMerchantApplications = async () => {
 const getShopApplications = async () => {
   loadingShop.value = true;
   try {
-    const res = await request.get('/api/permission/shop-applications');
+    const res = await request.get('/api/businesses/shop-applications');
     if (res.success && Array.isArray(res.data)) {
       shopApplications.value = res.data;
     }

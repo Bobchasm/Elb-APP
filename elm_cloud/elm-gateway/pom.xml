@@ -32,6 +32,11 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-websocket</artifactId>
                 </exclusion>
+<!--                路由不需要数据源,不排除会报错-->
+                <exclusion>
+                    <groupId>com.baomidou</groupId>
+                    <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 

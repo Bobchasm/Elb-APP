@@ -1,6 +1,6 @@
 ### 资源统计
 
-- 腾讯云
+- 腾讯云 (4c4g REDACTED_DOMAIN)
   
   ip：REDACTED_IP
   
@@ -8,37 +8,39 @@
   
   passward：chasm123
 
-- 阿里云A
-  
-  - ip：REDACTED_IP
-  
-  - username：bob
-  
-  - password：bob123
+  ps:已配置ssl证书，有些中间件可能需要使用nginx转发(用户chasm登录,`/ssl/REDACTED_DOMAIN.conf` 添加相应转发配置)
 
-- 阿里云B
+- 阿里云1 (2c2g)
   
-  - ip ：REDACTED_IP
-  
-  - username：chenyuze
-  
-  - password：chenyuze
+  - ip：123.57.102.69
 
-- 阿里云C
-  
-  - ip ：REDACTED_IP
-  
-  - username：lijiali
-  
-  - password：lijiali77
+  - username：elm
 
-- 阿里云D
+  - password：@elm2026#
+
+- 阿里云2 (2c4g)
   
-  - ip：REDACTED_IP
+  - ip ：47.93.197.249
   
-  - username：zy
+  - username：elm
   
-  - password：123
+  - password：@elm2026#
+
+- 阿里云3 (2c4g)
+  
+  - ip ：47.94.95.135
+  
+  - username：elm
+  
+  - password：@elm2026#
+
+- 阿里云4 (2c2g)
+  
+  - ip：123.56.202.25
+  
+  - username：elm
+  
+  - password：@elm2026#
 
 ### 拆分
 
@@ -68,47 +70,36 @@
 
 - notification-service (8884)
   
-  消息+websocket+文件上传
-
-- ai-service (8881)
-  
-  ai相关
+  消息+websocket+文件上传+ai
 
 路由：
 
-- elm-gateway (8086)
+- elm-gateway (8080)
 
 ### 部署计划
 
-| 服务器          | 主要用途     | 部署内容                                                                                 |
-| ------------ | -------- | ------------------------------------------------------------------------------------ |
-| **腾讯云**      | 前端+一些中间件 | `nginx` +`frontend`+`nacos`+`gateway`+`mysql`+`redis` + `sentinel`                   |
-| **阿里云ECS A** | 服务集群     | `payment-service`+`point-service`+`user-service-instance1`+`order-service-instance2` |
-| **阿里云ECS B** | 服务集群     | `order-service-instance1`+`food-service1`+`business-service1`+`notification-service` |
-| **阿里云ECS C** | 服务集群     | `user-service-instance2`+`business-service2`+`food-service2`+`ai-service`            |
+| 服务器          | 主要用途          | 部署内容                                                                                                          |
+|--------------|---------------|---------------------------------------------------------------------------------------------------------------|
+| **腾讯云**      | 前端+一些常规中间件+路由 | `nginx`+`nacos`+`mysql主从`+`redis主从`+`rabbitmq`  +`gateway` + `elasticsearch`                                  |
+| **阿里云ECS 1** | 服务治理中间件       | `sentinel`                                                                                                    |
+| **阿里云ECS 2** | 服务集群          | `order-service1`+`food-service1`+`business-service1`+`user-service1`+`notification-service`+`payment-service` |
+| **阿里云ECS 3** | 服务集群          | `order-service2`+`food-service2`+`business-service2`+`user-service2`+`point-service`                          |
+| **阿里云ECS 4** | 其他中间件         |                                                                                                               |
 
-*现在情况：
-
-- 使用的是rabbitmq而非rocketmq，且rabbitmq暂时部署在腾讯云上
-
-- mysql和redis现在均使用腾讯云上的
-
-- 其他均与计划一致
 
 ### 部署信息
 
-| 服务                   | 端口   | 实例数 | 容器名                  |
-| -------------------- | ---- | --- | -------------------- |
-| 前端                   | 80   | 1   | elm-micro-fr         |
-| gateway              | 8086 | 1   | elm-gateway-app      |
-| user-service         | 8888 | 2   | elm-user-app         |
-| order-service        | 8885 | 2   | elm-order-app        |
-| business-service     | 8882 | 2   | elm-business-app     |
-| food-service         | 8883 | 2   | elm-food-app         |
-| point-service        | 8887 | 1   | elm-point-app        |
-| payment-service      | 8886 | 1   | elm-payment-app      |
-| notification-service | 8884 | 1   | elm-notification-app |
-| ai-service           | 8881 | 1   | elm-ai-app           |
+| 服务                  | 端口   | 实例数 | 容器名                                |
+| ------------------- |------| --- |------------------------------------|
+| 前端                  | 80   | 1   | nginx-proxy (除前端外,还负责部分别的中间件的反向代理) |
+| gateway             | 8080 | 1   | elm-gateway-app                    |
+| user-service        | 8888 | 2   | elm-user-app                       |
+| order-service       | 8885 | 2   | elm-order-app                      |
+| business-service    | 8882 | 2   | elm-business-app                   |
+| food-service        | 8883 | 2   | elm-food-app                       |
+| point-service       | 8887 | 1   | elm-point-app                      |
+| payment-service     | 8886 | 1   | elm-payment-app                    |
+| notification-service | 8884 | 1   | elm-notification-app               |
 
 注意：各个镜像的压缩包放了一份到服务器的 `/docker_images` 下，服务的dockerfile放在项目对应模块下
 

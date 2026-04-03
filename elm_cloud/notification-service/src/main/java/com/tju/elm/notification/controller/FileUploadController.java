@@ -19,7 +19,7 @@ public class FileUploadController {
     @Autowired
     private TXCosUtil txCosUtil;
 
-    @PostMapping("/upload")
+    @PostMapping("/api/upload")
     @Operation(summary = "上传文件")
     public HttpResult<String> uploadFile(MultipartFile file) throws IOException {
         String originFileName = file.getOriginalFilename();
