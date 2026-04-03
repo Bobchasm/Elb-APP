@@ -4,7 +4,6 @@
 
 在网关模块中排除 Web 依赖和WebSocket
 
-
 2 路由swagger与mvc依赖冲突
 
 路由不需要接口文档，直接删除相关应用
