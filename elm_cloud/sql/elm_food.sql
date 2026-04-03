@@ -1,32 +1,70 @@
-CREATE DATABASE elm_food;
+/*
+ Navicat Premium Dump SQL
 
-USE elm_food;
+ Source Server         : TXCloud1
+ Source Server Type    : MySQL
+ Source Server Version : 80044 (8.0.44)
+ Source Host           : REDACTED_IP:3306
+ Source Schema         : elm_food
+
+ Target Server Type    : MySQL
+ Target Server Version : 80044 (8.0.44)
+ File Encoding         : 65001
+
+ Date: 03/04/2026 22:38:39
+*/
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- ----------------------------
+-- Table structure for cart
+-- ----------------------------
+DROP TABLE IF EXISTS `cart`;
+CREATE TABLE `cart`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `creator` bigint NULL DEFAULT NULL,
+  `is_deleted` tinyint(1) NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  `updater` bigint NULL DEFAULT NULL,
+  `quantity` int NULL DEFAULT NULL,
+  `business_id` bigint NOT NULL,
+  `customer_id` bigint NOT NULL,
+  `food_id` bigint NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `business_id`(`business_id` ASC) USING BTREE,
+  INDEX `customer_id`(`customer_id` ASC) USING BTREE,
+  INDEX `food_id`(`food_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of cart
+-- ----------------------------
+INSERT INTO `cart` VALUES (1, '2026-04-03 20:17:26', 7, 1, '2026-04-03 20:17:26', 7, 1, 5, 7, 9);
+INSERT INTO `cart` VALUES (2, '2026-04-03 20:17:27', 7, 1, '2026-04-03 20:17:27', 7, 1, 5, 7, 10);
 
 -- ----------------------------
 -- Table structure for food
 -- ----------------------------
 DROP TABLE IF EXISTS `food`;
 CREATE TABLE `food`  (
-                         `id` bigint NOT NULL AUTO_INCREMENT,
-                         `create_time` timestamp NULL DEFAULT NULL,
-                         `creator` bigint NULL DEFAULT NULL,
-                         `is_deleted` tinyint(1) NULL DEFAULT NULL,
-                         `update_time` timestamp NULL DEFAULT NULL,
-                         `updater` bigint NULL DEFAULT NULL,
-                         `food_explain` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-                         `food_img` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-                         `food_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-                         `food_price` decimal(10, 2) NOT NULL,
-                         `remarks` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-                         `business_id` bigint NOT NULL,
-                         `shelve_status` tinyint NULL DEFAULT 1 COMMENT '0-已下架 1-已上架',
-                         PRIMARY KEY (`id`) USING BTREE,
-                         INDEX `business_id`(`business_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `creator` bigint NULL DEFAULT NULL,
+  `is_deleted` tinyint(1) NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  `updater` bigint NULL DEFAULT NULL,
+  `food_explain` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `food_img` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `food_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `food_price` decimal(10, 2) NOT NULL,
+  `remarks` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `business_id` bigint NOT NULL,
+  `shelve_status` tinyint NULL DEFAULT 1 COMMENT '0-已下架 1-已上架',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `business_id`(`business_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of food
@@ -44,24 +82,4 @@ INSERT INTO `food` VALUES (10, '2025-09-25 17:04:48', 4, 0, '2025-09-25 17:04:48
 INSERT INTO `food` VALUES (12, '2025-09-25 20:09:25', 4, 0, '2025-09-25 20:09:25', 4, '香辣', 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/1eedbc08-91fa-402b-abf3-26c4269e2b85.jpg', '烧土豆炖牛肉', 31.90, NULL, 4, 1);
 INSERT INTO `food` VALUES (13, '2025-09-25 20:10:35', 4, 0, '2025-09-25 20:10:35', 4, '软糯解腻', 'https://sunnybigevent.oss-cn-beijing.aliyuncs.com/89b4b070-841d-4e79-8618-eb895d091d8a.jpg', '石锅营养菜心', 13.60, NULL, 4, 1);
 
-
--- ----------------------------
--- Table structure for cart
--- ----------------------------
-DROP TABLE IF EXISTS `cart`;
-CREATE TABLE `cart`  (
-                         `id` bigint NOT NULL AUTO_INCREMENT,
-                         `create_time` timestamp NULL DEFAULT NULL,
-                         `creator` bigint NULL DEFAULT NULL,
-                         `is_deleted` tinyint(1) NULL DEFAULT NULL,
-                         `update_time` timestamp NULL DEFAULT NULL,
-                         `updater` bigint NULL DEFAULT NULL,
-                         `quantity` int NULL DEFAULT NULL,
-                         `business_id` bigint NOT NULL,
-                         `customer_id` bigint NOT NULL,
-                         `food_id` bigint NOT NULL,
-                         PRIMARY KEY (`id`) USING BTREE,
-                         INDEX `business_id`(`business_id` ASC) USING BTREE,
-                         INDEX `customer_id`(`customer_id` ASC) USING BTREE,
-                         INDEX `food_id`(`food_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+SET FOREIGN_KEY_CHECKS = 1;
