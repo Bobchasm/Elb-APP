@@ -1,51 +1,6 @@
 server:
   port: 8080
 
-spring:
-  cloud:
-    gateway:
-      routes:
-        # 商家服务路由
-        - id: business-service
-          uri: lb://business-service
-          predicates:
-            - Path=/api/businesses/**,/api/merchant/interaction/**
-
-        # 食品服务路由
-        - id: food-service
-          uri: lb://food-service
-          predicates:
-            - Path=/api/carts/**,/api/foods/**
-
-        # 通知服务路由
-        - id: notification-service
-          uri: lb://notification-service
-          predicates:
-            - Path=/api/notifications/**,/api/upload/**,/ws/**,/api/ai/chat/**
-
-        # 订单服务路由
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-
-        # 支付服务路由
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/api/wallet/**
-
-        # 积分服务路由
-        - id: point-service
-          uri: lb://point-service
-          predicates:
-            - Path=/api/points/**,/api/marketing/**
-
-        # 用户服务路由
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/test,/api/addresses/**,/api/auth,/api/permission/**,/api/users/**,/api/user/**,/api/person/**,/api/persons/**,/api/password/**,/api/register,/api/personInfo,/api/*/status,/api/business/active,/api/config/**
 
 # JWT配置
 jwt:
@@ -67,3 +22,11 @@ elm:
       - /api/businesses/search
       - /api/businesses/carousel
       - /api/admin/countUser
+      - /api/test
+
+spring:
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 10s

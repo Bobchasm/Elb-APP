@@ -1,0 +1,366 @@
+[
+    {
+        "id": "business-service-businesses",
+        "uri": "lb://business-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/businesses/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "business-service-merchant",
+        "uri": "lb://business-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/merchant/interaction/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "food-service-carts",
+        "uri": "lb://food-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/carts/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "food-service-foods",
+        "uri": "lb://food-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/foods/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "notification-service-notifications",
+        "uri": "lb://notification-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/notifications/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "notification-service-upload",
+        "uri": "lb://notification-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/upload/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "notification-service-ws",
+        "uri": "lb://notification-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/ws/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "notification-service-ai",
+        "uri": "lb://notification-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/ai/chat/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "order-service",
+        "uri": "lb://order-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/orders/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "payment-service",
+        "uri": "lb://payment-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/wallet/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "point-service-points",
+        "uri": "lb://point-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/points/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "point-service-marketing",
+        "uri": "lb://point-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/marketing/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-test",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/test"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-addresses",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/addresses/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-auth",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/auth"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-permission",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/permission/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-users",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/users/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-user",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/user/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-person",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/person/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-persons",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/persons/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-password",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/password/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-register",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/register"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-personInfo",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/personInfo"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-status",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/*/status"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-business-active",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/business/active"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    },
+    {
+        "id": "user-service-config",
+        "uri": "lb://user-service",
+        "predicates": [
+            {
+                "name": "Path",
+                "args": {
+                    "pattern": "/api/config/**"
+                }
+            }
+        ],
+        "filters": [],
+        "order": 0
+    }
+]
