@@ -40,4 +40,6 @@ public interface BusinessService {
 
 
     List<BusinessPermissionVO> getShopApplications();
+
+    List<BusinessSearchVO> getBusinessesBySearchPlus(String keyword, boolean isScore, boolean isSales);
 }

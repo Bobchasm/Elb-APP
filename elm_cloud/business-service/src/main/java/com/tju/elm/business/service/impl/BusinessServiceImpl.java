@@ -8,6 +8,8 @@ import com.tju.elm.api.client.UserClient;
 import com.tju.elm.api.dto.NotificationSendDTO;
 import com.tju.elm.api.dto.WebSocketPushDTO;
 import com.tju.elm.api.po.User;
+import com.tju.elm.business.es.BusinessDataSyncService;
+import com.tju.elm.business.es.BusinessEsService;
 import com.tju.elm.business.mapper.BusinessMapper;
 import com.tju.elm.business.mapper.MerchantInteractionMapper;
 import com.tju.elm.business.pojo.dto.BusinessDTO;
@@ -16,16 +18,16 @@ import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
 import com.tju.elm.business.pojo.vo.BusinessPermissionVO;
 import com.tju.elm.business.pojo.vo.BusinessSearchVO;
+import com.tju.elm.business.pojo.vo.BusinessVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 import com.tju.elm.business.service.BusinessService;
-import com.tju.elm.business.pojo.vo.BusinessVO;
 import exception.APIException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestHeader;
 import result.ResultCodeEnum;
 import utils.UserContext;
 
@@ -33,10 +35,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class BusinessServiceImpl implements BusinessService {
 
@@ -45,9 +51,14 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Autowired
     private final BusinessMapper businessMapper;
+
+    @Autowired
+    private final BusinessEsService businessEsService;
+
+    private final BusinessDataSyncService businessDataSyncService;
+
     @Autowired
     private UserClient userClient;
-
     @Autowired
     private NotificationClient notificationClient;
     @Autowired
@@ -110,6 +121,7 @@ public class BusinessServiceImpl implements BusinessService {
             //根据商铺id更新user_id
             businessMapper.updateUserIdById(ownerId,id);//id是business的商铺id，更新business表的user_id为传入的username对应的user_id
         }
+        businessDataSyncService.syncSingleData(updateDto.getId());
         if (result == 0) {
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);
         }
@@ -147,6 +159,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
         BusinessVO businessVo =businessMapper.getBusinessById(id);
         int result =businessMapper.deleteBusiness(id);
+        businessDataSyncService.deleteFromEs(id);
         if (result == 0) {
             throw new APIException(ResultCodeEnum.BUSINESS_MISSED);//商铺不存在
         }
@@ -213,6 +226,7 @@ public class BusinessServiceImpl implements BusinessService {
             //部分更新
             businessMapper.patchBusinessOwner(id, updateDto);
         }
+        businessDataSyncService.syncSingleData(updateDto.getId());
         return businessMapper.getBusinessById(id);
     }
 
@@ -249,6 +263,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (result == 0) {//这不对吧..
             throw new APIException(ResultCodeEnum.NOT_FOUND);
         }
+        businessDataSyncService.syncSingleData(businessDTO.getId());
         return businessMapper.getBusinessById(businessDTO.getId());
     }
 
@@ -437,6 +452,8 @@ public class BusinessServiceImpl implements BusinessService {
         if (updateDto.getBusinessOwner() != null) {
             businessMapper.updateBusinessOwner(id, updateDto);
         }
+
+        businessDataSyncService.syncSingleData(updateDto.getId());
         return businessMapper.getBusinessById(id);
     }
 
@@ -495,6 +512,7 @@ public class BusinessServiceImpl implements BusinessService {
         Long applicantUserId = businessPermissionVO.getUserId();
         if (businessPermissionDTO.getStatus() == 1) { // 1-同意
             sendAuditPassNotification(applicantUserId,1);
+            businessDataSyncService.syncSingleData(businessPermissionDTO.getId());
         } else {
             // 若拒绝，可选择性推送拒绝通知
             sendAuditRejectNotification(applicantUserId,1);
@@ -506,6 +524,14 @@ public class BusinessServiceImpl implements BusinessService {
     public List<BusinessPermissionVO> getShopApplications() {
         List<BusinessPermissionVO> applications =businessMapper.listNotAudited();
         return applications;
+    }
+
+
+
+
+    @Override
+    public List<BusinessSearchVO> getBusinessesBySearchPlus(String keyword, boolean isScore, boolean isSales) {
+        return businessEsService.searchBusinesses(keyword, isScore, isSales);
     }
 
 

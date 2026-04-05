@@ -1364,10 +1364,10 @@ const fetchPointsRules = async () => {
                     }
 
                     console.log('搜索参数:', params);
-                    console.log('请求URL:', '/api/businesses/search');
+                    console.log('请求URL:', '/api/businesses/search_plus');
 
                     // 调用搜索接口
-                    const response = await request.get('/api/businesses/search', { params });
+                    const response = await request.get('/api/businesses/search_plus', { params });
 
                     console.log('111搜索响应:', response);
                     console.log('222响应状态:', response?.status);

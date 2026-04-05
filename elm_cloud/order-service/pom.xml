@@ -103,10 +103,10 @@
         </dependency>
        
         <!-- Actuator (用于暴露追踪端点，如果还没有的话) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
+<!--        </dependency>-->
 
         <!-- nacos 配置管理-->
         <dependency>

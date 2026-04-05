@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.tju.elm.business.es.BusinessDocument;
 import com.tju.elm.business.pojo.dto.BusinessDTO;
 
 import com.tju.elm.business.pojo.dto.BusinessPermissionDTO;
@@ -137,4 +138,10 @@ public interface BusinessMapper {
         </script>
     """)
     List<Business> selectBusinessByIds(Set<Long> businessIds);
+
+
+
+    List<BusinessDocument> getAllOnlineBusinessesForEs();
+
+    BusinessDocument getBusinessByIdForEs(@Param("id") Long id);
 }

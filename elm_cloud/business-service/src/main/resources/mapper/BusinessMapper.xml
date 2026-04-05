@@ -305,4 +305,36 @@
     </insert>
 
 
+
+    <!-- BusinessMapper.xml 添加 -->
+    <select id="getAllOnlineBusinessesForEs" resultType="com.tju.elm.business.es.BusinessDocument">
+        SELECT
+            id,
+            business_name as businessName,
+            business_explain as businessExplain,
+            business_address as businessAddress,
+            business_img as businessImg,
+            start_price as startPrice,
+            delivery_price as deliveryPrice,
+            status,
+            is_deleted as isDeleted
+        FROM business
+        WHERE is_deleted = 0 AND status = 1
+    </select>
+
+    <select id="getBusinessByIdForEs" resultType="com.tju.elm.business.es.BusinessDocument">
+        SELECT
+            id,
+            business_name as businessName,
+            business_explain as businessExplain,
+            business_address as businessAddress,
+            business_img as businessImg,
+            start_price as startPrice,
+            delivery_price as deliveryPrice,
+            status,
+            is_deleted as isDeleted
+        FROM business
+        WHERE id = #{id} AND is_deleted = 0 AND status = 1
+    </select>
+
 </mapper>

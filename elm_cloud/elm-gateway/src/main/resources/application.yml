@@ -20,6 +20,7 @@ elm:
       - /ws/**
       - /api/ai/chat/health
       - /api/businesses/search
+      - /api/businesses/search_plus
       - /api/businesses/carousel
       - /api/admin/countUser
       - /api/test

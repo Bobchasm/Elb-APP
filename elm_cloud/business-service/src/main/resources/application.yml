@@ -7,3 +7,7 @@ elm:
   redis:
     db: 1
     pw: ""
+
+elasticsearch:
+  host: REDACTED_IP
+  port: 9200

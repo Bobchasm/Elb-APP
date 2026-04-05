@@ -7,15 +7,14 @@ import com.tju.elm.business.pojo.dto.BusinessUpdateDTO;
 import com.tju.elm.business.pojo.entity.Business;
 import com.tju.elm.business.pojo.vo.BusinessPermissionVO;
 import com.tju.elm.business.pojo.vo.BusinessSearchVO;
+import com.tju.elm.business.pojo.vo.BusinessVO;
 import com.tju.elm.business.pojo.vo.MerchantStatsVO;
 import com.tju.elm.business.service.BusinessService;
-import com.tju.elm.business.pojo.vo.BusinessVO;
 import exception.APIException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,7 +26,6 @@ import result.ResultCodeEnum;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -155,6 +153,15 @@ public class BusinessController {
             @RequestParam(required = false)boolean isScore,
             @RequestParam(required = false)boolean isSales){
         return HttpResult.success(businessService.getBusinessesBySearch(keyword,isScore,isSales));
+    }
+
+    @GetMapping("/search_plus")
+    @Operation(summary = "es升级版搜索店铺", description = "可传入keyword模糊/分词搜索商铺名、描述和地址，isScore为0/1表示是否按照评分排序，isSales为0/1表示是否按照销售量排序")
+    public HttpResult<List<BusinessSearchVO>> searchBusinessPlus(
+            @RequestParam(required = false)String  keyword,
+            @RequestParam(required = false)boolean isScore,
+            @RequestParam(required = false)boolean isSales){
+        return HttpResult.success(businessService.getBusinessesBySearchPlus(keyword,isScore,isSales));
     }
 
     @PostMapping("/apply")
