@@ -1,48 +1,4 @@
-# 微服务整体描述
-
-### 资源统计
-
-- 腾讯云 (4c4g REDACTED_DOMAIN)
-  
-  ip：REDACTED_IP
-  
-  username：chasm
-  
-  passward：chasm123
-
-  ps:已配置ssl证书，有些中间件可能需要使用nginx转发(用户chasm登录,`/ssl/REDACTED_DOMAIN.conf` 添加相应转发配置)
-
-- 阿里云1 (2c2g)
-  
-  - ip：123.57.102.69
-
-  - username：elm
-
-  - password：@elm2026#
-
-- 阿里云2 (2c4g)
-  
-  - ip ：47.93.197.249
-  
-  - username：elm
-  
-  - password：@elm2026#
-
-- 阿里云3 (2c4g)
-  
-  - ip ：47.94.95.135
-  
-  - username：elm
-  
-  - password：@elm2026#
-
-- 阿里云4 (2c2g)
-  
-  - ip：123.56.202.25
-  
-  - username：elm
-  
-  - password：@elm2026#
+# 微服务架构后端
 
 ### 拆分(模块名)
 
@@ -80,54 +36,30 @@
 
 ### 部署计划
 
-| 服务器          | 主要用途          | 部署内容                                                                                                       |
-|--------------|---------------|------------------------------------------------------------------------------------------------------------|
-| **腾讯云**      | 前端+一些常规中间件+路由 | `nginx`+`nacos`+`mysql主从`+`redis主从`+`rabbitmq`  +`gateway` + `elasticsearch`                               |
-| **阿里云ECS 1** | 服务治理中间件       | `sentinel` + `elasticsearch-head` + `jaeger-agent` + `jaegertracing/all-in-one`                            |
+| 服务器          | 主要用途          | 部署内容                                                                                                          |
+| ------------ | ------------- | ------------------------------------------------------------------------------------------------------------- |
+| **腾讯云**      | 前端+一些常规中间件+路由 | `nginx`+`nacos`+`mysql主从`+`redis主从`+`rabbitmq`  +`gateway` + `elasticsearch`                                  |
+| **阿里云ECS 1** | 服务治理中间件       | `sentinel` + `elasticsearch-head` + `jaeger-agent` + `jaegertracing/all-in-one`                               |
 | **阿里云ECS 2** | 服务集群          | `order-service1`+`food-service1`+`business-service1`+`user-service1`+`notification-service`+`payment-service` |
-| **阿里云ECS 3** | 服务集群          | `order-service2`+`food-service2`+`business-service2`+`user-service2`+`point-service`                       |
-| **阿里云ECS 4** | 其他中间件         |                                                                                                            |
-
+| **阿里云ECS 3** | 服务集群          | `order-service2`+`food-service2`+`business-service2`+`user-service2`+`point-service`                          |
 
 ### 部署信息
 
-| 服务                  | 端口   | 实例数 | 容器名                                |
-| ------------------- |------| --- |------------------------------------|
-| 前端                  | 80   | 1   | nginx-proxy (除前端外,还负责部分别的中间件的反向代理) |
-| gateway             | 8080 | 1   | elm-gateway-app                    |
-| user-service        | 8888 | 2   | elm-user-app                       |
-| order-service       | 8885 | 2   | elm-order-app                      |
-| business-service    | 8882 | 2   | elm-business-app                   |
-| food-service        | 8883 | 2   | elm-food-app                       |
-| point-service       | 8887 | 1   | elm-point-app                      |
-| payment-service     | 8886 | 1   | elm-payment-app                    |
-| notification-service | 8884 | 1   | elm-notification-app               |
+| 服务                   | 端口     | 实例数 | 容器名                                |
+| -------------------- | ------ | --- | ---------------------------------- |
+| 前端                   | 80/443 | 1   | nginx-proxy (除前端外,还负责部分别的中间件的反向代理) |
+| gateway              | 8080   | 1   | elm-gateway-app                    |
+| user-service         | 8888   | 2   | elm-user-app                       |
+| order-service        | 8885   | 2   | elm-order-app                      |
+| business-service     | 8882   | 2   | elm-business-app                   |
+| food-service         | 8883   | 2   | elm-food-app                       |
+| point-service        | 8887   | 1   | elm-point-app                      |
+| payment-service      | 8886   | 1   | elm-payment-app                    |
+| notification-service | 8884   | 1   | elm-notification-app               |
 
-注意：各个镜像的压缩包放了一份到服务器的 `/docker_images` 下，服务的dockerfile放在项目对应模块下
+必须有的：**redis**、**rabbitmq**、**nacos**、**elasticsearch**
 
-**rabbitmq** <br>
-  [http://REDACTED_DOMAIN:15672/](http://REDACTED_DOMAIN:15672/) <br>
-  username: rabbit
-  password: rabbit
-
-**nacos** <br>
-  [http://REDACTED_DOMAIN:8848/nacos](http://REDACTED_DOMAIN:8848/nacos) <br>
-  username: nacos <br>
-  password: nacos
-
-**sentinel** <br>
-  [http://123.57.102.69:8858/](http://123.57.102.69:8858/) <br>
-  username: sentinel <br>
-  password: sentinel
-
-**jaeger** <br>
-  [http://123.57.102.69:16686/](http://123.57.102.69:16686/) <br>
-
-**elasticsearch-head (elasticsearch图形化界面)** <br>
-  页面上方的connect的url是 [http://REDACTED_DOMAIN:9200/](http://REDACTED_DOMAIN:9200/) <br>
-  [http://123.57.102.69:9100/](http://123.57.102.69:9100/)
-
-
+可选：**jaeger**、**sentinel**、**elasticsearch-head**
 
 ### 服务部署步骤
 
@@ -260,7 +192,6 @@ docker restart elm-vue-app
 - 前端代码加密
 - https ok
 
-
 ### 计划&与智慧树对比
 
 #### 1 实现概述
@@ -270,7 +201,6 @@ Ribbon
 - 负载均衡器
 
 - 结合 Feign 实现服务间调用
-
 
 网关 gateway
 
@@ -284,13 +214,11 @@ Hystrix
 
 - 延迟 容错
 
-
 Eureka
 
 - 实现服务注册发现
 
 - 多个注册中心，实现一个高可用集群
-
 
 gateway
 
@@ -300,15 +228,13 @@ gateway
 
 - 网关熔断
 
-
 配置中心
 
 - springcloud config
-
+  
   这个是基于git，在这里存配置文件
-
+  
   bus动态刷新
-
 
 #### 2 不同的实现
 
@@ -342,7 +268,6 @@ gateway
 
 我们：redis+caffine
 
-
 #### 3 可能改的东西
 
 **智慧树提到的**
@@ -368,4 +293,3 @@ token存到redis里，真正的退出登录
 单点登录
 
 分布式缓存
-

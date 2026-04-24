@@ -1,22 +1,57 @@
-# 软件工程综合实践饿了么项目
+# 饿了吧
+
+---
+
+本项目起源于tju的软件工程系列实践，是一个使用前后端分离架构完成的饿了吧外卖平台。随着迭代的进行，已分别实现单体架构和微服务架构的后端，`master` 分支最新的前端代码同时支持二者的适配而不需要修改任何代码。
+
+---
 
 ## 1 项目结构
 
-后端代码存放目录  elm_bk
+PS：打 `*` 表示用于微服务架构
 
-前端代码存放目录  elmclient
+```context
+frontend-comprehension/
+├── report/                   # 一些文档
+├── gra/                      # 文档等中的图片
+├── elmclient/                # 前端源码
+├── elm_demo/                 # 初始基建版本后端(已废弃)
+├── elm_bk/                   # 单体架构后端
+├── cloud/                    # *部署用文件
+│   ├── images                # 部署用Docker镜像包(太大了,需要自己构建)
+│   └── application           # 部属用配置文件
+│        ├── nacos            # Nacos 配置中心用配置文件
+│        └── shared           # 服务器部署用各个服务的配置文件
+├── elm_cloud/                # 微服务架构后端
+│   ├── elm-api               # Feign 客户端模块
+│   ├── elm-common            # 公共模块
+│   ├── elm-gateway           # 网关
+│   ├── business-service      # 商铺服务
+│   ├── food-service          # 商品服务
+│   ├── notification-service  # 消息通知服务
+│   ├── order-service         # 订单服务
+│   ├── payment-service       # 支付服务
+│   ├── point-service         # 积分服务
+│   ├── user-service          # 用户服务
+│   ├── sql                   # 数据库建库sql文件
+│   └── pom.xml               # 父工程依赖
+├── .gitignore
+└── README.md
+```
 
-## 2 项目部署
+## 2 启动&部署
 
-**本项目已部署至小组的服务器上** 
+### 2.1 已部署信息
 
-- 如果想直接查看效果请访问：[https://REDACTED_DOMAIN/](https://REDACTED_DOMAIN/)
+**本项目已部署至可用的服务器上** 
 
-- 后端部分接口前缀：[http://REDACTED_DOMAIN:8080](http://REDACTED_DOMAIN:8080) 
+- 完整成果：[https://REDACTED_DOMAIN/](https://REDACTED_DOMAIN/)
+
+- 后端接口前缀：[http://REDACTED_DOMAIN:8080](http://REDACTED_DOMAIN:8080) 
 
 - 接口文档路径：[http://REDACTED_DOMAIN:8080/swagger-ui/index.html](http://REDACTED_DOMAIN:8080/swagger-ui/index.html)
 
-**提供一些测试账号 (非管理员账号也可以自行注册)**
+**一些测试账号 (非管理员账号可以自行注册)**
 
 普通用户：
 
@@ -30,8 +65,6 @@
 
 商家端入口位于 **我的** 页面中的 **切换到商家端**
 
-![Alt](./gra/business_entry.png)
-
 管理员：
 
 - username: admin_user
@@ -39,17 +72,213 @@
 
 ---
 
-**若自己部署请注意：**
+### 2.2 前端部分
 
-1. 如需验收整个项目(即前后端完整效果)，请使用我们提供的sql建库并在配置文件中使用它，以下会详细说明
+**所在目录**
 
-2. 以下部署说明主要针对win系统，Linux系统部署方法命令行操作类似
-   
-   可参考 [从0开始在linux服务器上部署SpringBoot和Vue_vue项目linux部署-CSDN博客](https://blog.csdn.net/m0_53140426/article/details/144745031?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522061248a22aceb1ff2288a8b50a813a59%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=061248a22aceb1ff2288a8b50a813a59&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-2-144745031-null-null.142^v102^pc_search_result_base7&utm_term=Linux%E9%83%A8%E7%BD%B2spingboot%E5%92%8Cvue&spm=1018.2226.3001.4187)
+`/elmclient`
 
-3. 本项目在版本 `4eeb319c5eb4eccae252fffdf04004a9eb6daf05 (积分系统开始)` 后使用了redis、rabbitmq，当前设置均为服务器的配置信息，如需使用自己本地的中间件，请在本地启动相关服务并修改配置文件
+**技术栈**
 
-#### 2.1 后端部分
+- Vue3
+
+- Ngnix
+
+- obfuscate
+
+### 2.2.1 启动
+
+初次运行：
+
+```bash
+# 安装依赖
+cnpm i
+```
+
+启动：
+
+```bash
+npm run serve
+```
+
+### 2.2.2 服务器上部署
+
+1.构建项目
+
+生成 `/dist`
+
+```bash
+cd elmclient
+# ---- 普通版本 ---- 
+npm run build
+
+# ---- 代码混淆版本 ---- 
+# 可能需要补安装依赖
+cnpm install javascript-obfuscator@^4.0.0 --save-dev
+# 验证
+cnpm list javascript-obfuscator webpack-obfuscator
+# 构建
+npm run build:obfuscate
+```
+
+压缩 `/dist` 至 `tar` 格式上传到服务器
+
+2.服务器上部署
+
+基于 `Ngnix`，这里是基于 `Docker` 的容器化部署，挂载的路径替换成你服务器上的路径
+
+注意 `/src/utils/request.js` 中前几行的接口路径 `BASE_URL` `WS_BASE_URL` 可根据实际情况是否支持 `https` 替换，让服务器支持 `https` 可参考一些博客
+
+PS：挂载目录须等根据实际情况，只有第一次部署需要创建容器
+
+**不支持 `https` 版本容器创建：**
+
+```bash
+docker run -d \
+  --name elm-vue-app \
+  -p 80:80 \
+  -v /root/elm/nginx.conf:/etc/nginx/nginx.conf:ro \
+  -v /root/elm/dist:/usr/share/nginx/html \
+  nginx:stable-alpine3.21-perl
+```
+
+**支持 `https` 版本容器创建：**
+
+```bash
+# 创建网络
+docker network create app-network
+docker run -d \
+  --name nginx-proxy \
+  --network app-network \
+  -p 80:80 \
+  -p 443:443 \
+  -v ~/ssl:/etc/nginx/ssl \
+  -v ~/nginx-conf:/etc/nginx/conf.d \
+  -v ~/elm/dist:/usr/share/nginx/html \
+  nginx:latest
+```
+
+适配 `SSL` 证书
+
+```bash
+mkdir -p ~/nginx-conf
+# 创建配置文件
+vim ~/nginx-conf/REDACTED_DOMAIN.conf
+```
+
+配置文件内容如下：
+
+```
+# HTTP -> HTTPS 重定向
+server {
+    listen 8081;  # 写啥不太重要似乎
+    server_name REDACTED_DOMAIN www.REDACTED_DOMAIN; # 换成指定域名
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS 服务器
+server {
+    listen 443 ssl http2;
+    server_name REDACTED_DOMAIN www.REDACTED_DOMAIN;
+
+    # 证书路径（容器内路径）
+    ssl_certificate /etc/nginx/ssl/REDACTED_DOMAIN_bundle.crt;
+    ssl_certificate_key /etc/nginx/ssl/REDACTED_DOMAIN.key;
+
+    # SSL 配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # ========== API 代理配置 (与后端不在统一服务器上时可忽略) ==========
+    location /api/ {
+        # 转发到后端服务
+        proxy_pass http://REDACTED_DOMAIN:8080/api/;
+
+        # 传递真实客户端信息
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # 超时设置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        # 支持 WebSocket
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_request_buffering off;
+    }
+
+    location /ws {
+        # 代理到 WebSocket 后端服务
+        proxy_pass http://REDACTED_DOMAIN:8080/ws;
+
+        # WebSocket 必需的配置
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # 传递真实客户端信息
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket 超时设置（保持长连接）
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 3600s;  # WebSocket 保持连接时间，根据需要调整
+
+        # 关闭缓冲，实时传输
+        proxy_buffering off;
+        client_max_body_size 100M;
+    }
+
+    # 静态文件目录（前端 SPA 应用）
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+每次修改上面的配置文件都需要：
+
+```bash
+docker cp ./REDACTED_DOMAIN.conf nginx-proxy:/etc/nginx/conf.d/
+docker exec nginx-proxy nginx -t
+docker exec nginx-proxy nginx -s reload
+```
+
+验证：
+
+```bash
+curl -I http://REDACTED_DOMAIN
+```
+
+3.后续部署
+
+替换 `/dist`，重启容器
+
+```bash
+docker restart <Ngnix容器名>
+```
+
+### 2.3 单体架构后端
+
+### 2.3.1 配置信息
+
+**所在目录**
+
+`/elm_bk`
 
 **技术栈**
 
@@ -63,7 +292,7 @@
 
 - rabbitmq
 
-##### 开发环境
+**开发环境**
 
 JDK 17
 
@@ -71,225 +300,183 @@ SpringBoot 3.4.6
 
 Mybatis 3.0.4
 
-MySQL版本信息：
+MySQL 8.0.40
 
-```
- Source Server         : localhost
- Source Server Type    : MySQL
- Source Server Version : 80040 (8.0.40)
- Source Host           : localhost:3306
- Source Schema         : elm_v2
-
- Target Server Type    : MySQL
- Target Server Version : 80040 (8.0.40)
- File Encoding         : 65001
-```
-
-##### 配置
-
-- 配后端置文件
-  
-  ```
-  frontend-comprehension/elm_bk/src/main/resources/application.yml
-  ```
-  
-  可修改配置：数据库、redis、rabbitmq，若您想尝试使用这些本地服务
+**配置**
 
 - 数据库
   
-  使用本地数据库服务时，请新建一个名为 **elm_v2** 的数据库，并运行以下路径中的建表语句：
-  
-  ```
-  frontend-comprehension/elm_bk/sql/elm_v2.sql
-  ```
+  `/sql/elm_v2.sql`
 
-        sql中已包含实例数据的插入
+**快速启动**
 
-##### 部署运行
+分支 `mid-comprehension` 开始之后的提交依赖 `redis`、`rabbitmq`，可自行搭建
 
-1.中间件服务准备
-
-如果您想使用自己的中间件(已经修改相关配置文件的情况下)，请先启动自己的服务，否则忽略这一步
-
-2.打包
-
-若使用IDEA打包项目，先 clean，再 package，成功控制台如图![Alt](./gra/success_package.png)
-
-若使用命令行打包：
-
-在 /frontend-comprehension/elm_bk 中打开cmd，执行：
-
-```bash
-mvn clean package
-```
-
-成功如下图：
-
-![Alt](./gra/success_cmd_package.png)
-
-生成的项目jar包路径在:
-
-```
-frontend-comprehension/elm_bk/target/elm_bk-0.0.1-SNAPSHOT.jar
-```
-
-3.命令行在jar包存放的目录中执行:
-
-```bash
-java -jar elm_bk-0.0.1-SNAPSHOT.jar
-```
-
-如果出现报错 "error='页面文件太小，无法完成操作。' (DOS error/errno=1455)" 请重新执行以下命令:
-
-```bash
-java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.1-SNAPSHOT.jar
-```
-
-注：该命令进行了内存配置
-
-后端配置端口为 8080，请注意端口占用
-
-4.当终端出现以下界面，则启动成功：
-
-![Alt](./gra/success_bk_start.png)
-
-如使用IDEA在启动或打包项目时遇到控制台报错如 "找不到符号"，请确保以下位置选择正确
+PS：如使用IDEA在启动或打包项目时遇到控制台报错如 "找不到符号"，请确保以下位置选择正确
 
 ![Alt](./gra/fix1.png)
 
 ![Alt](./gra/fix2.png)
 
-### 2.2 前端部分
+### 2.3.2 服务器上部署
 
-基于 Vue3
+1.准备镜像
 
-##### 环境准备
+本地打包
 
-- 保证npm可用
+```bash
+cd elm_bk
+docker build -t elm_backend:1.0 .
+docker save elm_bk:1.0 -o elm-bk-image.tar
+```
+
+上传至服务器...
+
+加载镜像
+
+```bash
+docker load -i elm-bk-image.tar
+```
+
+2.打包项目
+
+使用 `maven` 打包，生成 `target/elm_bk-0.0.1-SNAPSHOT.jar` 
+
+将 `jar` 包和配置文件 `application.yml` (记得修改成实际部署的配置) 上传至服务器同一目录下，`jar` 包需要重命名为 `app.jar`
+
+3.创建并运行容器(第一次时)
+
+在服务器上 `jar` 包和配置文件的目录下执行：
+
+```bash
+docker run -d --name elm-app \
+    -p 8080:8080 \
+    -v $(pwd)/app.jar:/app.jar \
+    -v $(pwd)/application.yml:/application.yml \
+    elm_bk:1.0
+```
+
+PS：请确保 `8080` 端口开放且不被其他进程占用
+
+查看运行日志：
+
+```bash
+docker logs -f elm-app
+```
+
+4.后续重新部署
+
+替换 `jar` 包或修改的配置文件，重启容器：
+
+```bash
+docker restart elm-app
+```
+
+## 2.4 微服务架构后端
+
+### 2.4.1 一些说明
+
+**所在目录**
+
+`/elm_cloud` 
+
+**新增技术栈**
+
+- Spring Cloud
+
+- Gateway
+
+- OpenFeigin
+
+- Nacos
+
+- Caffeine
+
+- Elasticsearch
+
+- ...
+
+**一些大的改进**
+
+- 主从数据库
+
+- Redis+Caffeine 双层缓存
+
+- 积分系统高并发简单支持
+
+- Nacos上配置管理
+
+- 服务治理一系列
+
+### 2.4.2 本地启动
+
+### 2.4.3 服务器上部署
+
+主要描述与单体不一样的地方，其他细节参照单体时的部署
+
+1.中间件准备
+
+必须有的：**redis**、**rabbitmq**、**nacos**、**elasticsearch**
+
+可选：**jaeger**、**sentinel**、**elasticsearch-head**
+
+2.Nacos配置管理准备
+
+所有部署用配置文件存放在`/cloud/application/`下，`/nacos`下的配置文件为nacos配置中心的文件，把其中所有文件上传到 `Nacos` 的配置中心
+
+PS：记得修改中间件的配置信息
+
+3.服务镜像准备
+
+定义各个服务的前缀为order、food等，路由为gateway
+
+**上传镜像至服务器**
+
+```bash
+# 构建镜像
+docker build -t elm-micro-<服务前缀> .
+# 打包镜像
+docker save elm-micro-<服务前缀> -o elm-micro-<服务前缀>.tar
+```
+
+上传镜像至服务器
+
+**加载镜像**
+
+服务器中
+
+```bash
+docker load -i <镜像包tar在服务器上的路径>
+```
+
+4.创建并运行容器
+
+- 一般创建一个专门存放这个项目的目录`/elm-micro`
+
+- 在这个目录下创建各个服务专属目录如 `/order-service`等，路由为`/gateway`
+
+- 在对应目录上传jar包、相应的 `application.yml`、`bootstrap`，直接使用的`/cloud/application`中的文件需要去掉文件名的服务前缀；然后jar包需要改名为 `elm-<服务前缀>-app.jar`
+
+- application.yml中有一些参数`elm.nacos.server`需要改成所部署的服务器ip
+
+- 创建并运行容器
   
-  可参见 [VUE安装及环境配置（完整版）-CSDN博客](https://blog.csdn.net/qq_52611686/article/details/142653081?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522b9220596f6cbffa1a2f0eb8c533005ed%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=b9220596f6cbffa1a2f0eb8c533005ed&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-142653081-null-null.142^v102^pc_search_result_base7&utm_term=vue%E5%AE%89%E8%A3%85%E5%8F%8A%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE&spm=1018.2226.3001.4187)
-
-- node
-  
-  可参见 [Node.js安装与配置（详细步骤）_nodejs安装及环境配置-CSDN博客](https://blog.csdn.net/qq_42006801/article/details/124830995?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522363c66d0a867fcac896383171b678743%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=363c66d0a867fcac896383171b678743&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-124830995-null-null.142^v102^pc_search_result_base7&utm_term=%E9%85%8D%E7%BD%AEnode&spm=1018.2226.3001.4187)
-
-##### 运行
-
-- 如在ide里直接启动
-  
-  1.可以使用 Visual Studio Code 打开项目前端部分:
-  
-  ```
-  frontend-comprehension/elmclient
-  ```
-  
-  2.在其终端 TERMINAL 安装依赖 (请先确保具有vue环境与npm):
+  如notification-service，容器名一般为 `elm-<服务前缀>-app`，注意有些服务的配置(可看配置文件)如果存在sentinel等服务治理相关的可能需要映射更多的端口，还是注意要与配置文件一致
   
   ```bash
-  npm -i
-  ```
-  
-  如果失败，则尝试:
-  
-  ```bash
-  cnpm -i
-  ```
-  
-  3.启动
-  
-  ```bash
-  npm run serve
-  ```
-  
-  当终端出现访问url，则启动成功。访问url即可跳转至项目首页(在此之前请保证后端项目已启动)
-
-- 如要进行部署(已配置node)
-  
-  以下内容参考 [Vue前端项目部署的三种方案_vue项目部署-CSDN博客](https://blog.csdn.net/qq_44741577/article/details/139236697?ops_request_misc=%257B%2522request%255Fid%2522%253A%252201c3d7a19a919480657fd6784f177099%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=01c3d7a19a919480657fd6784f177099&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-1-139236697-null-null.142^v102^pc_search_result_base7&utm_term=%E5%89%8D%E7%AB%AFvue%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2&spm=1018.2226.3001.4187)
-  
-  注：由于前端请求接口时使用本地路径前缀，请将前后端部署在同一台计算机上，保证可以localhost本地访问，否则需要修改所有前端代码接口请求路径localhost为指定域名或ip，以及前端AdminHome.vue、MerchantOrders.vue、MyInformation.vue、Notifications.vue、OrderList.vue中的WebSocket请求路径（目前是{wsProtocol}//localhost:8080/ws/{sid}）
-  
-  1.在 **/node/nodejs/** 下新建一个名为 **my_server** 的文件夹，在此文件夹下打开cmd命令行终端 (注：最好使用管理员身份打开)
-  
-  2.执行：
-  
-  ```bash
-  npm init -y
-  ```
-  
-  出现以下输出则成功：
-  
-  ![Alt](./gra/init.png)
-  
-  3.安装快速部署插件 **express**
-  
-  ```bash
-  npm i express
-  ```
-  
-  4.在前面创建的 **my_server** 目录下新建文件 server.js，内容如下:
-  
-  ```js
-  // 引入express
-  const express = require("express");
-  // 配置端口号
-  const PORT = 8081;
-  // 创建一个app服务实例
-  const app = express();
-  // 配置静态资源
-  app.use(express.static(__dirname + "/public"));
-  
-  // 绑定端口监听
-  app.listen(PORT, () => {
-    console.log(`本地服务器启动成功，http://localhost:${PORT}`);
-  });
-  ```
-  
-  5.在 **my_server** 文件夹下新建文件夹 **public**，后续用于存放vue项目的文件
-  
-  6.打包前端代码
-  
-  - 直接将以下路径目录中的所有东西复制到前面创建的 **my_server** 文件夹下的 **public** 中。若之后在下面第7点出现失败，请尝试自己打包(如下一点)
-    
-    ```
-    frontend-comprehension/elmclient/dist/
-    ```
-  
-  - 自己打包：
-    
-    使用ide (Visual Studio Code) 或者是命令行终端打开项目的前端部分:
-    
-    ```
-    frontend-comprehension/elmclient
-    ```
-    
-    执行:
-    
-    ```bash
-    npm i    #如失败则尝试 cnpm i
-    npm run build
-    ```
-    
-    项目文件 **elmclient** 下中将出现文件夹 **dist**，之后同上
-  
-  7.在 **my_server** 目录下打开cmd，执行:
-  
-  ```bash
-  node .\server.js
-  ```
-  
-  出现以下输出则启动成功，可以通过输出的url访问到app的首页
-  
-  ```
-  本地服务器启动成功，http://localhost:8081
+  docker run -d --name elm-notification-app \
+  -p 8884:8884 \
+  -v $(pwd)/elm-notification-app.jar:/elm-notification-app.jar \
+  -v $(pwd)/application.yml:/application.yml \
+  -v $(pwd)/bootstrap.yml:/bootstrap.yml \
+  elm-micro-notification:2.0.0
   ```
 
-## 3 开发说明
+5.后续重新部署
 
-。。。
+详情见 `/report/description.md`
 
-
-## 4 迭代记录
+## 3 迭代记录
 
 **仓库创建**
 
@@ -349,25 +536,33 @@ java -Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC -jar elm_bk-0.0.
   
   保留分支：mid-comprehension
 
-## 5 一些说明
+**软件工程高级实践 (微服务)**
+
+- 2026-3-13 开始 import from https://github.com/Bobchasm/elm-microservices.git
+  
+  c5502e51e8757b682ee29978040a0f62d824d9a1
+
+- 2026-
+
+## 4 一些说明
 
 欢迎贡献代码、报告问题或提出建议！
 
-### 5.1 提交问题
+### 4.1 提交问题
 
 - 描述问题现象
 - 提供复现步骤
 - 附上错误日志
 - 说明环境信息
 
-### 5.2 提交代码
+### 4.2 提交代码
 
 1. Fork本仓库
 2. 创建功能分支
 3. 提交代码并编写测试
 4. 提交Pull Request
 
-### 5.3 联系方式
+### 4.3 联系方式
 
 如有问题或建议，请通过以下方式联系：
 

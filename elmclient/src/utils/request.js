@@ -3,7 +3,7 @@ import axios from 'axios';
 // 部署时用
 export const BASE_URL = 'https://REDACTED_DOMAIN';
 export const WS_BASE_URL = 'wss://REDACTED_DOMAIN';
-// 本地需要调试后端时用
+// 本地需要调试后端时用(或者不支持https时)
 // export const BASE_URL = 'http://localhost:8080';
 // export const WS_BASE_URL = 'ws://localhost';
 
