@@ -1,6 +1,6 @@
 spring:
   rabbitmq:
-    host: ${elm.rabbitmq.host:REDACTED_IP}
+    host: ${elm.rabbitmq.host:xxx}
     port: 5672
     username: ${elm.rabbitmq.username:rabbit}
     password: ${elm.rabbitmq.password:rabbit}

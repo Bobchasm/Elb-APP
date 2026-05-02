@@ -3,7 +3,7 @@ server:
 
 # DeepSeek AI配置
 deepseek:
-  api-key: REDACTED_API_KEY
+  api-key: xxx
 
 elm:
   db:

@@ -13,18 +13,18 @@ spring:
       datasource:
         master:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://REDACTED_IP:3306/elm_notification?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-          username: elm_app
-          password: "REDACTED_PASSWORD"
+          url: jdbc:mysql://${elm.db.host}:3306/elm_notification?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: ${elm.db.username}
+          password: ${elm.db.pw}
         slave:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://REDACTED_IP:3307/elm_notification?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-          username: elm_app
-          password: "REDACTED_PASSWORD"
+          url: jdbc:mysql://${elm.db.host}:${elm.db.slave.port:3307}/elm_notification?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: ${elm.db.slave.username:${elm.db.username}}
+          password: ${elm.db.slave.pw:${elm.db.pw}}
   cloud:
     nacos:
       discovery:
-        server-addr: REDACTED_IP
+        server-addr: xxx
         namespace: public  # 明确指定 namespace
         group: DEFAULT_GROUP
         username: ${elm.nacos.username}
@@ -74,7 +74,7 @@ tracing:
   jaeger:
     enabled: true
     agent:
-      host: REDACTED_IP  # 主服务器IP
+      host: xxx  # 主服务器IP
       port: 14268  # Jaeger Agent HTTP 端口（UDP 端口是 6831）
     sampler:
       type: const  # const=固定采样率, ratelimiting=速率限制, probabilistic=概率采样

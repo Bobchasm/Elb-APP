@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "deepseek")
 public class DeepSeekConfig {
     
-    private String apiKey = "REDACTED_API_KEY";
+    private String apiKey = "xxx";
     
     private String baseUrl = "https://api.deepseek.com";
     

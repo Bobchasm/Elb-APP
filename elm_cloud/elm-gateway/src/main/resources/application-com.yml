@@ -8,7 +8,7 @@ spring:
     sentinel:
       enabled: true
       transport:
-        dashboard: REDACTED_IP:8090
+        dashboard: xxx:8090
         port: 8719
         client-ip: 172.18.163.226
         heartbeat-interval-ms: 5000
@@ -18,7 +18,7 @@ spring:
         servlet:
           enabled: true  # 启用 Web 适配器
     nacos:
-      server-addr: REDACTED_IP:8848
+      server-addr: xxx:8848
       username: nacos
       password: 123456
     gateway:
@@ -87,7 +87,7 @@ tracing:
   jaeger:
     enabled: true
     agent:
-      host: REDACTED_IP  # 主服务器IP
+      host: xxx  # 主服务器IP
       port: 14268  # Jaeger Agent HTTP 端口（UDP 端口是 6831）
     sampler:
       type: const  # const=固定采样率, ratelimiting=速率限制, probabilistic=概率采样

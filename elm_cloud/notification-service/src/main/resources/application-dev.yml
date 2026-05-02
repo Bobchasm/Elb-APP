@@ -1,14 +1,14 @@
 elm:
   db:
-    host: REDACTED_IP
-    username: elm_app
-    pw: "REDACTED_PASSWORD"
+    host: xxx
+    username: xxx
+    pw: xxx
     slave:
       port: 3307
-      username: elm_app
-      pw: "REDACTED_PASSWORD"
+      username: xxx
+      pw: xxx
 
   nacos:
-    server-addr: REDACTED_IP:8848
+    server-addr: xxx:8848
     username: nacos
     pw: 123456

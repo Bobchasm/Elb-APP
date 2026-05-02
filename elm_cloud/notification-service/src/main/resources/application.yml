@@ -2,15 +2,15 @@ server:
   port: 8884
 
 txcos:
-  secretId: REDACTED_SECRET_ID
-  secretKey: REDACTED_SECRET_KEY
+  secretId: xxx
+  secretKey: xxx
   region: ap-beijing
-  bucketName: txcloud-cos1-1375850795
+  bucketName: xxx
   enableAccelerate: true
 
 # DeepSeek AI配置
 deepseek:
-  api-key: REDACTED_API_KEY
+  api-key: xxx
 
 elm:
   db:

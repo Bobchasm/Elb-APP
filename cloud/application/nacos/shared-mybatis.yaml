@@ -6,12 +6,12 @@ spring:
       datasource:
         master:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://${elm.db.host:REDACTED_IP}:3306/${elm.db.database}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://${elm.db.host:xxx}:3306/${elm.db.database}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
           username: ${elm.db.username:elm_app}
           password: ${elm.db.pw:REDACTED_PASSWORD}
         slave:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://${elm.db.host:REDACTED_IP}:${elm.db.slave.port:3307}/${elm.db.database}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://${elm.db.host:xxx}:${elm.db.slave.port:3307}/${elm.db.database}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
           username: ${elm.db.slave.username:elm_app}
           password: ${elm.db.slave.pw:REDACTED_PASSWORD}
 

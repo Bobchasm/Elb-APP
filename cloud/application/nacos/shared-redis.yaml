@@ -1,7 +1,7 @@
 spring:
   data:
     redis:
-      host: ${elm.data.redis.host:REDACTED_IP}
+      host: ${elm.data.redis.host:xxx}
       port: 6379
       password: ${elm.redis.pw:}
       database: ${elm.redis.db}

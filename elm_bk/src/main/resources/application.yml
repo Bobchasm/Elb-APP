@@ -6,20 +6,20 @@ spring:
     name: elm
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://REDACTED_DOMAIN:3306/elm_v2
+    url: jdbc:mysql://xxx:3306/elm_v2
     username: root
     password: Elm@2026Secure!
     hikari: # 配置连接池读已提交
       transaction-isolation: TRANSACTION_READ_COMMITTED
   rabbitmq:
-    host: REDACTED_DOMAIN
+    host: xxx
     port: 5672
     username: rabbit
     password: rabbit
     virtual-host: /
   data:
     redis:
-      host: REDACTED_DOMAIN
+      host: xxx
       port: 6379
       password: # 无密码，留空
       database: 0
@@ -61,7 +61,7 @@ springdoc:
 
 # DeepSeek AI配置
 deepseek:
-  api-key: REDACTED_API_KEY
+  api-key: xxx
   base-url: https://api.deepseek.com
   chat-endpoint: /chat/completions
   model: deepseek-chat
